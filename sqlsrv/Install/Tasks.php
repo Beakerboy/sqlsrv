@@ -11,6 +11,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Install\Tasks as InstallTasks;
 use Drupal\Core\Database\Driver\sqlsrv\Connection;
 use Drupal\Core\Database\DatabaseNotFoundException;
+use Drupal\Core\Database\Driver\sqlsrv\Schema;
 
 /**
  * Specifies installation tasks for PostgreSQL databases.
@@ -28,10 +29,6 @@ class Tasks extends InstallTasks {
   public function __construct() {
     $this->tasks[] = array(
       'function' => 'checkEncoding',
-      'arguments' => array(),
-    );
-    $this->tasks[] = array(
-      'function' => 'checkBinaryOutput',
       'arguments' => array(),
     );
     $this->tasks[] = array(
@@ -66,7 +63,7 @@ class Tasks extends InstallTasks {
       $this->pass('Drupal can CONNECT to the database ok.');
     }
     catch (\Exception $e) {
-    // Attempt to create the database if it is not found.
+      // Attempt to create the database if it is not found.
       if ($e->getCode() == Connection::DATABASE_NOT_FOUND) {
         // Remove the database string from connection info.
         $connection_info = Database::getConnectionInfo();
@@ -122,7 +119,7 @@ class Tasks extends InstallTasks {
         $this->fail(t('The %driver database must use %encoding encoding to work with Drupal. Recreate the database with %encoding encoding. See !link for more details.', array(
           '%encoding' => 'UTF8',
           '%driver' => $this->name(),
-          '!link' => '<a href="INSTALL.pgsql.txt">INSTALL.pgsql.txt</a>'
+          '!link' => '<a href="INSTALL.sqlsrv.txt">INSTALL.sqlsrv.txt</a>'
         )));
       }
     }
@@ -132,117 +129,107 @@ class Tasks extends InstallTasks {
   }
 
   /**
-   * Check Binary Output.
-   *
-   * Unserializing does not work on Postgresql 9 when bytea_output is 'hex'.
-   */
-  function checkBinaryOutput() {
-    return;
-    // PostgreSQL < 9 doesn't support bytea_output, so verify we are running
-    // at least PostgreSQL 9.
-    $database_connection = Database::getConnection();
-    if (version_compare($database_connection->version(), '9') >= 0) {
-      if (!$this->checkBinaryOutputSuccess()) {
-        // First try to alter the database. If it fails, raise an error telling
-        // the user to do it themselves.
-        $connection_options = $database_connection->getConnectionOptions();
-        // It is safe to include the database name directly here, because this
-        // code is only called when a connection to the database is already
-        // established, thus the database name is guaranteed to be a correct
-        // value.
-        $query = "ALTER DATABASE \"" . $connection_options['database'] . "\" SET bytea_output = 'escape';";
-        try {
-          db_query($query);
-        }
-        catch (\Exception $e) {
-          // Ignore possible errors when the user doesn't have the necessary
-          // privileges to ALTER the database.
-        }
-
-        // Close the database connection so that the configuration parameter
-        // is applied to the current connection.
-        db_close();
-
-        // Recheck, if it fails, finally just rely on the end user to do the
-        // right thing.
-        if (!$this->checkBinaryOutputSuccess()) {
-          $replacements = array(
-            '%setting' => 'bytea_output',
-            '%current_value' => 'hex',
-            '%needed_value' => 'escape',
-            '!query' => "<code>" . $query . "</code>",
-          );
-          $this->fail(t("The %setting setting is currently set to '%current_value', but needs to be '%needed_value'. Change this by running the following query: !query", $replacements));
-        }
-      }
-    }
-  }
-
-  /**
-   * Verify that a binary data roundtrip returns the original string.
-   */
-  protected function checkBinaryOutputSuccess() {
-    return;
-    $bytea_output = db_query("SELECT 'encoding'::bytea AS output")->fetchField();
-    return ($bytea_output == 'encoding');
-  }
-
-  /**
-   * Make PostgreSQL Drupal friendly.
+   * Make SQLServer Drupal friendly.
    */
   function initializeDatabase() {
-    return;
     // We create some functions using global names instead of prefixing them
     // like we do with table names. This is so that we don't double up if more
     // than one instance of Drupal is running on a single database. We therefore
     // avoid trying to create them again in that case.
 
     try {
-      // Create functions.
-      db_query('CREATE OR REPLACE FUNCTION "greatest"(numeric, numeric) RETURNS numeric AS
-        \'SELECT CASE WHEN (($1 > $2) OR ($2 IS NULL)) THEN $1 ELSE $2 END;\'
-        LANGUAGE \'sql\''
-      );
-      db_query('CREATE OR REPLACE FUNCTION "greatest"(numeric, numeric, numeric) RETURNS numeric AS
-        \'SELECT greatest($1, greatest($2, $3));\'
-        LANGUAGE \'sql\''
-      );
-      // Don't use {} around pg_proc table.
-      if (!db_query("SELECT COUNT(*) FROM pg_proc WHERE proname = 'rand'")->fetchField()) {
-        db_query('CREATE OR REPLACE FUNCTION "rand"() RETURNS float AS
-          \'SELECT random();\'
-          LANGUAGE \'sql\''
-        );
-      }
-
-      db_query('CREATE OR REPLACE FUNCTION "substring_index"(text, text, integer) RETURNS text AS
-        \'SELECT array_to_string((string_to_array($1, $2)) [1:$3], $2);\'
-        LANGUAGE \'sql\''
+      $database = Database::getConnection();
+      $database->bypassQueryPreprocess = TRUE;
+      $schema = $database->schema();
+      // SUBSTRING() function.
+      $substring_exists = $schema->functionExists('SUBSTRING') ? 'ALTER' : 'CREATE';
+      $database->query(<<< EOF
+{$substring_exists} FUNCTION [SUBSTRING](@op1 nvarchar(max), @op2 sql_variant, @op3 sql_variant) RETURNS nvarchar(max) AS
+BEGIN
+  RETURN CAST(SUBSTRING(CAST(@op1 AS nvarchar(max)), CAST(@op2 AS int), CAST(@op3 AS int)) AS nvarchar(max))
+END
+EOF
       );
 
-      // Using || to concatenate in Drupal is not recommended because there are
-      // database drivers for Drupal that do not support the syntax, however
-      // they do support CONCAT(item1, item2) which we can replicate in
-      // PostgreSQL. PostgreSQL requires the function to be defined for each
-      // different argument variation the function can handle.
-      db_query('CREATE OR REPLACE FUNCTION "concat"(anynonarray, anynonarray) RETURNS text AS
-        \'SELECT CAST($1 AS text) || CAST($2 AS text);\'
-        LANGUAGE \'sql\'
-      ');
-      db_query('CREATE OR REPLACE FUNCTION "concat"(text, anynonarray) RETURNS text AS
-        \'SELECT $1 || CAST($2 AS text);\'
-        LANGUAGE \'sql\'
-      ');
-      db_query('CREATE OR REPLACE FUNCTION "concat"(anynonarray, text) RETURNS text AS
-        \'SELECT CAST($1 AS text) || $2;\'
-        LANGUAGE \'sql\'
-      ');
-      db_query('CREATE OR REPLACE FUNCTION "concat"(text, text) RETURNS text AS
-        \'SELECT $1 || $2;\'
-        LANGUAGE \'sql\'
-      ');
+      // SUBSTRING_INDEX() function.
+      $substring_index_exists = $schema->functionExists('SUBSTRING_INDEX') ? 'ALTER' : 'CREATE';
+      $database->query(<<< EOF
+            {$substring_index_exists} FUNCTION [SUBSTRING_INDEX](@string varchar(8000), @delimiter char(1), @count int) RETURNS varchar(8000) AS
+            BEGIN
+              DECLARE @result varchar(8000)
+              DECLARE @end int
+              DECLARE @part int
+              SET @end = 0
+              SET @part = 0
+              IF (@count = 0)
+              BEGIN
+                SET @result = ''
+              END
+              ELSE
+              BEGIN
+                IF (@count < 0)
+                BEGIN
+                  SET @string = REVERSE(@string)
+                END
+                WHILE (@part < ABS(@count))
+                BEGIN
+                  SET @end = CHARINDEX(@delimiter, @string, @end + 1)
+                  IF (@end = 0)
+                  BEGIN
+                    SET @end = LEN(@string) + 1
+                    BREAK
+                  END
+                  SET @part = @part + 1
+                END
+                SET @result = SUBSTRING(@string, 1, @end - 1)
+                IF (@count < 0)
+                BEGIN
+                  SET @result = REVERSE(@result)
+                END
+              END
+              RETURN @result
+            END
+EOF
+      );
 
-      $this->pass(t('PostgreSQL has initialized itself.'));
+      // GREATEST() function.
+      $greatest_exists = $schema->functionExists('GREATEST') ? 'ALTER' : 'CREATE';
+      $database->query(<<< EOF
+            {$greatest_exists} FUNCTION [GREATEST](@op1 sql_variant, @op2 sql_variant) RETURNS sql_variant AS
+            BEGIN
+              DECLARE @result sql_variant
+              SET @result = CASE WHEN @op1 >= @op2 THEN @op1 ELSE @op2 END
+              RETURN @result
+            END
+EOF
+      );
+
+      // CONCAT() function.
+      $concat_exists = $schema->functionExists('CONCAT') ? 'ALTER' : 'CREATE';
+      $database->query(<<< EOF
+            {$concat_exists} FUNCTION [CONCAT](@op1 sql_variant, @op2 sql_variant) RETURNS nvarchar(4000) AS
+            BEGIN
+              DECLARE @result nvarchar(4000)
+              SET @result = CAST(@op1 AS nvarchar(4000)) + CAST(@op2 AS nvarchar(4000))
+              RETURN @result
+            END
+EOF
+      );
+
+      // IF(expr1, expr2, expr3) function.
+      $if_exists = $schema->functionExists('IF') ? 'ALTER' : 'CREATE';
+      $database->query(<<< EOF
+            {$if_exists} FUNCTION [IF](@expr1 sql_variant, @expr2 sql_variant, @expr3 sql_variant) RETURNS sql_variant AS
+            BEGIN
+              DECLARE @result sql_variant
+              SET @result = CASE WHEN CAST(@expr1 AS int) != 0 THEN @expr2 ELSE @expr3 END
+              RETURN @result
+            END
+EOF
+      );
+      $database->bypassQueryPreprocess = FALSE;
+
+      $this->pass(t('SQLServer has initialized itself.'));
     }
     catch (\Exception $e) {
       $this->fail(t('Drupal could not be correctly setup with the existing database. Revise any errors.'));
@@ -255,7 +242,7 @@ class Tasks extends InstallTasks {
   public function getFormOptions(array $database) {
     $form = parent::getFormOptions($database);
     if (empty($form['advanced_options']['port']['#default_value'])) {
-      $form['advanced_options']['port']['#default_value'] = '5432';
+      $form['advanced_options']['port']['#default_value'] = '1433';
     }
     return $form;
   }

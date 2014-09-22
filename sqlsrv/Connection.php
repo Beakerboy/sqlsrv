@@ -12,6 +12,7 @@ use Drupal\Core\Database\Connection as DatabaseConnection;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Database\IntegrityConstraintViolationException;
+use Drupal\Core\Database\Driver\sqlsrv\Schema;
 
 /**
  * @addtogroup database
@@ -24,9 +25,10 @@ class Connection extends DatabaseConnection {
   private $dsn = NULL;
   
   /**
-   * Error code for "Unknown database" error.
+   * Error code for Login Failed, usually happens when
+   * the database does not exist.
    */
-  const DATABASE_NOT_FOUND = 7;
+  const DATABASE_NOT_FOUND = 28000;
 
   public function lastInsertId() {
     return $this->connection->lastInsertId();
@@ -80,7 +82,7 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public static function open(array &$connection_options = array()) {
-    // Default to TCP connection on port 5432.
+    // Default to TCP connection on port 1433.
     if (empty($connection_options['port'])) {
       $connection_options['port'] = 1433;
     }
@@ -529,7 +531,7 @@ WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
 
     try {
       // Create the database and set it as active.
-      $this->connection->exec("CREATE DATABASE $database WITH TEMPLATE template0 ENCODING='utf8' LC_CTYPE='$locale.utf8' LC_COLLATE='$locale.utf8'");
+      $this->connection->exec("CREATE DATABASE $database COLLATE MODERN_SPANISH_CI_AS");
     }
     catch (\Exception $e) {
       throw new DatabaseNotFoundException($e->getMessage());

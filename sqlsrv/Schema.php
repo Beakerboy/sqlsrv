@@ -116,14 +116,36 @@ class Schema extends DatabaseSchema {
 
   }
 
+  /**
+   * Find if a table already exists.
+   *
+   * @param $table
+   *   Name of the table.
+   * @return
+   *   True if the table exists, false otherwise.
+   */
   public function tableExists($table) {
-    try {
-      $this->connection->query('SELECT TOP(1) 1 FROM {' . $table . '}');
-      return TRUE;
-    }
-    catch (DatabaseExceptionWrapper $e) {
-      return FALSE;
-    }
+    return $this->connection
+    ->query("SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $table . "'")
+    ->fetchField() !== FALSE;
+  }
+  
+  /**
+   * Find if a table function exists.
+   *
+   * @param $function
+   *   Name of the function.
+   * @return
+   *   True if the function exists, false otherwise.
+   */
+  public function functionExists($function) {
+    return $this->connection
+    ->query("SELECT 1 FROM Information_schema.Routines where Specific_schema='" . $this->defaultSchema . "' and specific_name = '" . $function . "' and Routine_Type='FUNCTION'")
+    ->fetchField() !== FALSE;
+  }
+  
+  public function setRecoveryModel($model) {
+    $this->connection->query("ALTER " . $this->connection->options['name'] . " model SET RECOVERY " . $model);
   }
 
   /**
