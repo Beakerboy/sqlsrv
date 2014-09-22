@@ -2,16 +2,27 @@
 
 /**
  * @file
- * Database schema code for Microsoft SQL Server database servers.
+ * Definition of Drupal\Core\Database\Driver\sqlsrv\Schema
  */
 
+namespace Drupal\Core\Database\Driver\sqlsrv;
+
+use Drupal\Component\Utility\String;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Database\DatabaseExceptionWrapper;
+use Drupal\Core\Database\Query\Condition;
+use Drupal\Core\Database\SchemaObjectExistsException;
+use Drupal\Core\Database\SchemaObjectDoesNotExistException;
+use Drupal\Core\Database\Schema as DatabaseSchema;
+
 /**
- * @ingroup schemaapi
+ * @addtogroup schemaapi
  * @{
  */
 
-class DatabaseSchema_sqlsrv extends DatabaseSchema {
+class Schema extends DatabaseSchema {
 
+  
   /**
    * Default schema for SQL Server databases.
    */
@@ -19,14 +30,21 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
   protected $additionalColumnInformation = NULL;
 
+  public function resetTableQuerySchemaCache($table){
+    $table_info = $this->getPrefixInfo($table);
+    $key = $table_info['schema'] . '.' . $table_info['table'];
+  }
+  
   /**
    * Database introspection: fetch technical information about a table.
    */
   public function queryColumnInformation($table) {
     $table_info = $this->getPrefixInfo($table);
     $key = $table_info['schema'] . '.' . $table_info['table'];
-
+    
     if (!isset($this->additionalColumnInformation[$key])) {
+
+      
       $this->additionalColumnInformation[$key] = array();
 
       // Don't use {} around information_schema.columns table.
@@ -40,15 +58,21 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       foreach ($result as $column) {
         $this->additionalColumnInformation[$key]['identities'][$column->column_name] = TRUE;
       }
+      
     }
 
     return $this->additionalColumnInformation[$key];
   }
 
+  public function copyTable($name, $table) {
+    throw new \Error("Method not implemented.");
+  }
+  
   // TODO: implement the same for alter table and add/remove fields.
   public function createTable($name, $table) {
     // Reset the additional column information because the schema changed.
     $this->additionalColumnInformation = NULL;
+    $this->resetTableQuerySchemaCache($name);
 
     if ($this->tableExists($name)) {
       throw new DatabaseSchemaObjectExistsException(t('Table %name already exists.', array('%name' => $name)));
@@ -83,7 +107,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
         try {
           $this->connection->query($this->createIndexSql($name, $key_name, $key));
         }
-        catch (Exception $e) {
+        catch (DatabaseExceptionWrapper $e) {
           // Log the exception but do not rollback the transaction.
           watchdog_exception('database', $e);
         }
@@ -97,7 +121,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       $this->connection->query('SELECT TOP(1) 1 FROM {' . $table . '}');
       return TRUE;
     }
-    catch (PDOException $e) {
+    catch (DatabaseExceptionWrapper $e) {
       return FALSE;
     }
   }
@@ -124,7 +148,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       $sql_fields[] = 'CONSTRAINT {' . $name . '}_pkey PRIMARY KEY CLUSTERED (' . implode(', ', $this->connection->quoteIdentifiers($table['primary key'])) . ')';
     }
     else {
-      $sql_fields[] = '__pk UNIQUEIDENTIFIER DEFAULT NEWID()';
+      $sql_fields[] = '__pk UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL';
       $sql_fields[] = 'CONSTRAINT {' . $name . '}_pkey_technical PRIMARY KEY CLUSTERED (__pk)';
     }
 
@@ -289,7 +313,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
     // We don't support renaming tables across schemas (yet).
     if ($old_table_info['schema'] != $new_table_info['schema']) {
-      throw new PDOException(t('Cannot rename a table across schema.'));
+      throw new DatabaseExceptionWrapper(t('Cannot rename a table across schema.'));
     }
 
     $this->connection->query('EXEC sp_rename :old, :new', array(
@@ -331,7 +355,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       $this->connection->query('SELECT TOP(1) [' . $field . '] FROM {' . $table . '}');
       return TRUE;
     }
-    catch (PDOException $e) {
+    catch (DatabaseExceptionWrapper $e) {
       return FALSE;
     }
   }
@@ -342,6 +366,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    * @status complete
    */
   public function addField($table, $field, $spec, $new_keys = array()) {
+    $this->resetTableQuerySchemaCache($table);
     if (!$this->tableExists($table)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", array('%field' => $field, '%table' => $table)));
     }
@@ -389,6 +414,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    * @status complete
    */
   public function changeField($table, $field, $field_new, $spec, $new_keys = array()) {
+    $this->resetTableQuerySchemaCache($table);
     if (!$this->fieldExists($table, $field)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", array('%table' => $table, '%name' => $field)));
     }
@@ -514,6 +540,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    * @status complete
    */
   public function dropField($table, $field) {
+    $this->resetTableQuerySchemaCache($table);
     if (!$this->fieldExists($table, $field)) {
       return FALSE;
     }
@@ -579,7 +606,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       $default = 'NULL';
     }
     elseif (is_string($default)) {
-      $default = "'" . addslashes($spec['default']) . "'";
+      $default = "'" . addslashes($spec['default']) . "'";      
     }
 
     // Try to remove any existing default first.
@@ -668,7 +695,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    */
   protected function createTechnicalPrimaryColumn($table) {
     if (!$this->fieldExists($table, '__pk')) {
-      $this->connection->query('ALTER TABLE {' . $table . '} ADD __pk UNIQUEIDENTIFIER DEFAULT NEWID()');
+      $this->connection->query('ALTER TABLE {' . $table . '} ADD __pk UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL');
     }
   }
 
@@ -794,5 +821,5 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 }
 
 /**
- * @} End of "ingroup schemaapi".
+ * @} End of "addtogroup schemaapi".
  */

@@ -1,22 +1,37 @@
 <?php
 
-class SelectQuery_sqlsrv extends SelectQuery {
+/**
+ * @file
+ * Definition of Drupal\Core\Database\Driver\sqlsrv\Select
+ */
 
+namespace Drupal\Core\Database\Driver\sqlsrv;
+use Drupal\Core\Database\Connection as DatabaseConnection;
+use Drupal\Core\Database\Query\PlaceholderInterface as DatabasePlaceholderInterface;
+use Drupal\Core\Database\Query\SelectInterface as DatabaseSelectInterface;
+use Drupal\Core\Database\Query\Select as QuerySelect;
+
+/**
+ * @addtogroup database
+ * @{
+ */
+
+class Select extends QuerySelect {
   /**
    * Override for SelectQuery::preExecute().
    *
    * Ensure that all the fields in ORDER BY and GROUP BY are part of the
    * main query.
    */
-  public function preExecute(SelectQueryInterface $query = NULL) {
+  public function preExecute(DatabaseSelectInterface $query = NULL) {
     // If no query object is passed in, use $this.
     if (!isset($query)) {
-     $query = $this;
+      $query = $this;
     }
 
     // Only execute this once.
     if ($this->isPrepared()) {
-     return TRUE;
+      return TRUE;
     }
 
     // Execute standard pre-execution first.
@@ -60,7 +75,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
    *
    * Detect when this query is prepared for use in a sub-query.
    */
-  public function compile(DatabaseConnection $connection, QueryPlaceholderInterface $queryPlaceholder) {
+  public function compile(DatabaseConnection $connection, DatabasePlaceholderInterface $queryPlaceholder) {
     $this->inSubQuery = $queryPlaceholder != $this;
     return parent::compile($connection, $queryPlaceholder);
   }
@@ -73,7 +88,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
     if (!$this->compiled()) {
       $this->compile($this->connection, $this);
     }
-  
+    
     // Create a sanitized comment string to prepend to the query.
     $comments = $this->connection->makeComment($this->comments);
 
@@ -109,7 +124,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
       }
 
       // If the table is a subquery, compile it and integrate it into this query.
-      if ($table['table'] instanceof SelectQueryInterface) {
+      if ($table['table'] instanceof DatabaseSelectInterface) {
         // Run preparation steps on this sub-query before converting to string.
         $subquery = $table['table'];
         $subquery->preExecute();
@@ -188,3 +203,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
     return $this;
   }
 }
+
+/**
+ * @} End of "addtogroup database".
+ */
