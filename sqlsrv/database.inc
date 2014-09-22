@@ -287,6 +287,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       'SUBSTRING_INDEX',
       'GREATEST',
       'CONCAT',
+      'GROUP_CONCAT',
       'IF',
     );
     foreach ($functions as $function) {
