@@ -22,7 +22,11 @@ use Drupal\Core\Database\Schema as DatabaseSchema;
 
 class Schema extends DatabaseSchema {
 
-  
+  /**
+   * Maximum length of a comment in SQL Server.
+   */
+  const COMMENT_MAX_BYTES = 7500;
+
   /**
    * Default schema for SQL Server databases.
    */
@@ -97,6 +101,20 @@ class Schema extends DatabaseSchema {
 
     // Everything went well, commit the transaction.
     unset($transaction);
+    
+    // Add table comment.
+    if (!empty($table['description'])) {
+      if ($this->tableExists($name)) {
+        $this->connection->query($this->createDescriptionSql($this->prepareComment($table['description'], self::COMMENT_MAX_BYTES), $name));
+      }
+    }
+
+    // Add column comments.
+    foreach ($table['fields'] as $field_name => $field) {
+      if (!empty($field['description'])) {
+        $this->connection->query($this->createDescriptionSql($this->prepareComment($field['description'], self::COMMENT_MAX_BYTES), $name, $field_name));
+      }
+    }
 
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
@@ -128,6 +146,12 @@ class Schema extends DatabaseSchema {
     return $this->connection
     ->query("SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'")
     ->fetchField() !== FALSE;
+  }
+  
+  public function EngineVersion() {
+    return $this->connection
+    ->query("SELECT SERVERPROPERTY('productversion') AS VERSION, SERVERPROPERTY('productlevel') AS LEVEL, SERVERPROPERTY('edition') AS EDITION")
+    ->fetchObject();
   }
   
   /**
@@ -177,6 +201,11 @@ class Schema extends DatabaseSchema {
     $sql = "CREATE TABLE [{" . $name . "}] (\n\t";
     $sql .= implode(",\n\t", $sql_fields);
     $sql .= "\n)";
+
+    // Add table comment.
+    if (!empty($table['description'])) {
+      $sql .= '; ' . $this->createDescriptionSql($this->prepareComment($table['description'], self::COMMENT_MAX_BYTES), $name, NULL);
+    }
     return $sql;
   }
 
@@ -246,6 +275,62 @@ class Schema extends DatabaseSchema {
     // Here we need to create a computed PERSISTENT column, and index that, when
     // the type is not allowed in an index.
     return 'CREATE INDEX ' . $name . '_idx ON [{' . $table . '}] (' . $this->createKeySql($fields) . ')';
+  }
+  
+  
+  /**
+   * Return the SQL statement to create or update a description.
+   */
+  protected function createDescriptionSql($value, $table = NULL, $column = NULL) {
+    // Inside the same transaction, you won't be able to read uncommited extended properties
+    // leading to SQL Exception if calling sp_addextendedproperty twice on same object.
+    static $columns;
+    if (!isset($columns)) {
+      $columns = array();
+    }
+
+    $schema = $this->defaultSchema;
+    $table_info = $this->getPrefixInfo($table);
+    $table = $table_info['table'];
+    $name = 'MS_Description';
+    
+    // Determine if a value exists for this database object.
+    $key = $this->defaultSchema . '.' .  $table . '.' . $column;
+    if(isset($columns[$key])) {
+      $result = $columns[$key];
+    } else {
+      $result = $this->getComment($table, $column);
+    }
+    $columns[$key] = $value;
+
+    // Only continue if the new value is different from the existing value.
+    $sql = '';
+    if ($result !== $value) {
+      if ($value == '') {
+        $sp = "sp_dropextendedproperty";
+        $sql = "EXEC " . $sp . " @name=N'" . $name;
+      }
+      else {
+        if ($result != '') {
+          $sp = "sp_updateextendedproperty";
+        }
+        else {
+          $sp = "sp_addextendedproperty";
+        }
+        $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value=" . $value . "";
+      }
+      if (isset($schema)) {
+        $sql .= ",@level0type = N'Schema', @level0name = '". $schema ."'";
+        if (isset($table)) {
+          $sql .= ",@level1type = N'Table', @level1name = '". $table ."'";
+          if ($column !== NULL) {
+            $sql .= ",@level2type = N'Column', @level2name = '". $column ."'";
+          }
+        }
+      }
+    }
+
+    return $sql;
   }
 
   /**
@@ -428,6 +513,36 @@ class Schema extends DatabaseSchema {
     if (isset($new_keys)) {
       $this->recreateTableKeys($table, $new_keys);
     }
+
+    // Add column comment.
+    if (!empty($spec['description'])) {
+      $this->connection->query($this->createDescriptionSql($this->prepareComment($spec['description'], self::COMMENT_MAX_BYTES), $table, $field));
+    }
+  }
+  
+  public function prepareComment($comment, $length = NULL) {
+    // Truncate comment to maximum comment length.
+    if (isset($length)) {
+      // Add table prefixes before truncating.
+      $comment = drupal_truncate_bytes($this->connection->prefixTables($comment), $length, TRUE, TRUE);
+    }
+    return $this->connection->quote($comment);
+  }
+  
+  /**
+   * Retrieve a table or column comment.
+   */
+  public function getComment($table, $column = NULL) {
+    $schema = $this->defaultSchema;
+    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','" . $schema . "','Table','" . $table . "',";
+    if (isset($column)) {
+      $sql .= "'Column','" . $column . "')";
+    }
+    else {
+      $sql .= "NULL,NULL)";
+    }
+    $comment = $this->connection->query($sql)->fetchField();
+    return $comment;
   }
 
   /**
