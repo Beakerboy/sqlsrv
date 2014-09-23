@@ -480,6 +480,11 @@ class Schema extends DatabaseSchema {
     if ($this->fieldExists($table, $field)) {
       throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", array('%field' => $field, '%table' => $table)));
     }
+    
+    // Prevent serial from having initial values.
+    if ($spec['type'] == 'serial' && isset($spec['initial'])) {
+	  throw new DatabaseExceptionWrapper('Cannot add serial (IDENTITY) field with initial values in SQL Server.');
+    }
 
     // If the field is declared NOT NULL, we have to first create it NULL insert
     // the initial data then switch to NOT NULL.
@@ -558,7 +563,10 @@ class Schema extends DatabaseSchema {
     if (($field != $field_new) && $this->fieldExists($table, $field_new)) {
       throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", array('%table' => $table, '%name' => $field, '%name_new' => $field_new)));
     }
-
+    if($spec['type'] == 'serial') {
+      throw new Exception(t('Cannot change %table.%field to %field_new with destination serial TYPE (IDENTITY) on SQL SERVER',
+          array('%table' => $table, '%field' => $field, '%field_new' => $field_new)));
+    }
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
     $transaction = $this->connection->startTransaction();
