@@ -227,15 +227,9 @@ hout)
       // Replace reserved words.
       return '[' . $matches[1] . ']';
     }
-    else {
-      // Let other value passthru.
-      for ($i = 2; $i < count($matches); $i++) {
-        if ($matches[$i] !== '') {
-          return $matches[$i];
-        }
-      }
-    }
-    return '';
+    // Let other value passthru.
+    // by the logic of the regex above, this will always be the last match.
+    return end($matches);
   }
 
   public function quoteIdentifier($identifier) {
@@ -372,9 +366,8 @@ hout)
    * Internal function: massage a query to make it compliant with SQL Server.
    */
   public function preprocessQuery($query) {
-		
+
     $initial_query = $query;
-		
 
     // Force quotes around some SQL Server reserved keywords.
     if (preg_match('/^SELECT/i', $query)) {
