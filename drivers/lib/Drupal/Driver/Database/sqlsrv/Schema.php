@@ -126,7 +126,7 @@ class Schema extends DatabaseSchema {
    */
   public function tableExists($table) {
     return $this->connection
-    ->query("SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $table . "'")
+    ->query("SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'")
     ->fetchField() !== FALSE;
   }
   

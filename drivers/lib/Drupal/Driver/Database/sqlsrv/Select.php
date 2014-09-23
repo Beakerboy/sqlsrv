@@ -112,7 +112,11 @@ class Select extends QuerySelect {
       $fields[] = (isset($field['table']) ? $this->connection->escapeTable($field['table']) . '.' : '') . $this->connection->escapeField($field['field']) . ' AS ' . $this->connection->escapeField($field['alias']);
     }
     foreach ($this->expressions as $alias => $expression) {
-      $fields[] = $expression['expression'] . ' AS ' . $expression['alias'];
+      // If we have an AVG expression, the result has the precision
+      // of the source column. This is different in MySQL, so we need to CAST
+      // the input.
+      $exp = preg_replace('/(?<=AVG\().*(?=\))/i', 'CAST($0 AS float)', $expression['expression'], 1);
+      $fields[] = $exp . ' AS ' . $expression['alias'];
     }
     $query .= implode(', ', $fields);
 
