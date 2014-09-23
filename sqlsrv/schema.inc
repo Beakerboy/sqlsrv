@@ -124,7 +124,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       $sql_fields[] = 'CONSTRAINT {' . $name . '}_pkey PRIMARY KEY CLUSTERED (' . implode(', ', $this->connection->quoteIdentifiers($table['primary key'])) . ')';
     }
     else {
-      $sql_fields[] = '__pk UNIQUEIDENTIFIER DEFAULT NEWID()';
+      $sql_fields[] = '__pk UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL';
       $sql_fields[] = 'CONSTRAINT {' . $name . '}_pkey_technical PRIMARY KEY CLUSTERED (__pk)';
     }
 
@@ -668,7 +668,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    */
   protected function createTechnicalPrimaryColumn($table) {
     if (!$this->fieldExists($table, '__pk')) {
-      $this->connection->query('ALTER TABLE {' . $table . '} ADD __pk UNIQUEIDENTIFIER DEFAULT NEWID()');
+      $this->connection->query('ALTER TABLE {' . $table . '} ADD __pk UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL');
     }
   }
 
