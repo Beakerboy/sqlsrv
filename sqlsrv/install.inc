@@ -144,6 +144,19 @@ END
 EOF
       );
 
+      // LPAD(@str, @len, @padstr) function.
+      $database->query(<<< EOF
+IF OBJECT_ID (N'LPAD', N'FN') IS NOT NULL BEGIN DROP FUNCTION [LPAD] END
+EOF
+      );
+      $database->query(<<< EOF
+CREATE FUNCTION [dbo].[LPAD](@str nvarchar(max), @len int, @padstr nvarchar(max)) RETURNS nvarchar(4000) AS
+BEGIN
+  RETURN left(@str + replicate(@padstr,@len),@len);
+END
+EOF
+      );
+
       $database->bypassQueryPreprocess = FALSE;
     }
     catch (Exception $e) {
