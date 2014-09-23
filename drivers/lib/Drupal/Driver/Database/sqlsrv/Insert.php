@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Definition of Drupal\Core\Database\Driver\sqlsrv\Insert
+ * Definition of Drupal\Driver\Database\sqlsrv\Insert
  */
 
-namespace Drupal\Core\Database\Driver\sqlsrv;
+namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\Insert as QueryInsert;

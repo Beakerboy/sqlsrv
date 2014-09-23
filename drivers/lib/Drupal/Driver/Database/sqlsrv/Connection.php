@@ -2,17 +2,16 @@
 
 /**
  * @file
- * Definition of Drupal\Core\Database\Driver\sqlsrv\Connection
+ * Definition of Drupal\Driver\Database\sqlsrv\Connection
  */
 
-namespace Drupal\Core\Database\Driver\sqlsrv;
+namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Connection as DatabaseConnection;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Database\IntegrityConstraintViolationException;
-use Drupal\Core\Database\Driver\sqlsrv\Schema;
 
 /**
  * @addtogroup database
@@ -88,10 +87,14 @@ class Connection extends DatabaseConnection {
     }
     
     // Build the DSN.
-    $options = array(
-'Server=' . $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : ''),
-'Database=' . $connection_options['database'],
-    );
+    $options = array();
+    $options[] = 'Server=' . $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : '');
+    // We might not have a database in the
+    // connection options, for example, during
+    // database creation in Install.
+    if (!empty($connection_options['database'])) {
+      $options[] = 'Database=' . $connection_options['database'];
+    }
 
     $dsn = 'sqlsrv:' . implode(';', $options);
 
@@ -392,23 +395,23 @@ hout)
 
     // Add prefixes to Drupal-specific functions.
     $functions = array(
-'SUBSTRING',
-'SUBSTRING_INDEX',
-'GREATEST',
-'MD5',
-'LPAD',
-'GROUP_CONCAT',
-'CONCAT',
-'IF',
-    );
+        'SUBSTRING',
+        'SUBSTRING_INDEX',
+        'GREATEST',
+        'MD5',
+        'LPAD',
+        'GROUP_CONCAT',
+        'CONCAT',
+        'IF',
+        );
     foreach ($functions as $function) {
       $query = preg_replace('/\b(?<![:.])(' . preg_quote($function) . ')\(/i', $this->schema()->defaultSchema . '.$1(', $query);
     }
 
     $replacements = array(
-'LENGTH' => 'LEN',
-'POW' => 'POWER',
-    );
+        'LENGTH' => 'LEN',
+        'POW' => 'POWER',
+        );
     foreach ($replacements as $function => $replacement) {
       $query = preg_replace('/\b(?<![:.])(' . preg_quote($function) . ')\(/i', $replacement . '(', $query);
     }

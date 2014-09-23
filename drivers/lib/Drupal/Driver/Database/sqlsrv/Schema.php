@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Definition of Drupal\Core\Database\Driver\sqlsrv\Schema
+ * Definition of Drupal\Driver\Database\sqlsrv\Schema
  */
 
-namespace Drupal\Core\Database\Driver\sqlsrv;
+namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Database\Database;

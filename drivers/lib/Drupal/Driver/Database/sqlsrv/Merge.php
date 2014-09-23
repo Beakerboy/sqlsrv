@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Definition of Drupal\Core\Database\Driver\sqlsrv\Merge
+ * Definition of Drupal\Driver\Database\sqlsrv\Merge
  */
 
-namespace Drupal\Core\Database\Driver\sqlsrv;
+namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Query\Merge as QueryMerge;
 

@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Definition of Drupal\Core\Database\Driver\sqlsrv\Transaction
+ * Definition of Drupal\Driver\Database\sqlsrv\Transaction
  */
 
-namespace Drupal\Core\Database\Driver\sqlsrv;
+namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Transaction as DatabaseTransaction;
 

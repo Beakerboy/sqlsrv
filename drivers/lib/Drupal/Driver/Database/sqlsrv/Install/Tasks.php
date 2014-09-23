@@ -2,16 +2,15 @@
 
 /**
  * @file
- * Definition of Drupal\Core\Database\Driver\sqlsrv\Install\Tasks
+ * Definition of Drupal\Driver\Database\sqlsrv\Tasks
  */
 
-namespace Drupal\Core\Database\Driver\sqlsrv\Install;
+namespace Drupal\Driver\Database\sqlsrv\Install;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Install\Tasks as InstallTasks;
-use Drupal\Core\Database\Driver\sqlsrv\Connection;
 use Drupal\Core\Database\DatabaseNotFoundException;
-use Drupal\Core\Database\Driver\sqlsrv\Schema;
+use Drupal\Driver\Database\sqlsrv\Connection;
 
 /**
  * Specifies installation tasks for PostgreSQL databases.
@@ -94,6 +93,13 @@ class Tasks extends InstallTasks {
           // Still no dice; probably a permission issue. Raise the error to the
           // installer.
           $this->fail(t('Database %database not found. The server reports the following message when attempting to create the database: %error.', array('%database' => $database, '%error' => $e->getMessage())));
+          return FALSE;
+        }
+        catch (\PDOException $e) {
+          // Still no dice; probably a permission issue. Raise the error to the
+          // installer.
+          $this->fail(t('Database %database not found. The server reports the following message when attempting to create the database: %error.', array('%database' => $database, '%error' => $e->getMessage())));
+          return FALSE;
         }
       }
       else {
@@ -141,6 +147,7 @@ class Tasks extends InstallTasks {
       $database = Database::getConnection();
       $database->bypassQueryPreprocess = TRUE;
       $schema = $database->schema();
+
       // SUBSTRING() function.
       $substring_exists = $schema->functionExists('SUBSTRING') ? 'ALTER' : 'CREATE';
       $database->query(<<< EOF
@@ -227,6 +234,27 @@ EOF
             END
 EOF
       );
+      
+      // MD5(@value) function.
+      $if_exists = $schema->functionExists('MD5') ? 'ALTER' : 'CREATE';
+      $database->query(<<< EOF
+            {$if_exists} FUNCTION [dbo].[MD5](@value varchar(255)) RETURNS varchar(32) AS
+            BEGIN
+	            RETURN SUBSTRING(sys.fn_sqlvarbasetostr(HASHBYTES('MD5', @value)),3,32);
+            END
+EOF
+      );
+      
+      // LPAD(@str, @len, @padstr) function.
+      $if_exists = $schema->functionExists('LPAD') ? 'ALTER' : 'CREATE';
+      $database->query(<<< EOF
+            {$if_exists} FUNCTION [dbo].[LPAD](@str nvarchar(max), @len int, @padstr nvarchar(max)) RETURNS nvarchar(4000) AS
+            BEGIN
+	            RETURN left(@str + replicate(@padstr,@len),@len);
+            END
+EOF
+      );
+
       $database->bypassQueryPreprocess = FALSE;
 
       $this->pass(t('SQLServer has initialized itself.'));

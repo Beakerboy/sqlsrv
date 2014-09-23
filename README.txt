@@ -1,0 +1,1 @@
+Drop the driver Folder into the root of your Drupal installation.
