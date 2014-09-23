@@ -130,6 +130,20 @@ BEGIN
 END
 EOF
       );
+
+      // MD5(expr1) function.
+      $database->query(<<< EOF
+IF OBJECT_ID (N'MD5', N'FN') IS NOT NULL BEGIN DROP FUNCTION [MD5] END
+EOF
+      );
+      $database->query(<<< EOF
+CREATE FUNCTION [MD5](@value varchar(255)) RETURNS varchar(32) AS
+BEGIN
+  RETURN SUBSTRING(sys.fn_sqlvarbasetostr(HASHBYTES('MD5', @value)),3,32);
+END
+EOF
+      );
+
       $database->bypassQueryPreprocess = FALSE;
     }
     catch (Exception $e) {

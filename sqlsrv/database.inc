@@ -289,6 +289,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       'CONCAT',
       'GROUP_CONCAT',
       'IF',
+      'MD5',
     );
     foreach ($functions as $function) {
       $query = preg_replace('/\b(?<![:.])(' . preg_quote($function) . ')\(/i', $this->schema()->defaultSchema . '.$1(', $query);
