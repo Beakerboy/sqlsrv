@@ -32,7 +32,7 @@ class Connection extends DatabaseConnection {
   /**
    * Default recommended collation for SQL Server.
    */
-  const DEFAULT_COLLATION = 'UTF8_UNICODE_CI';
+  const DEFAULT_COLLATION = 'Latin1_General_CI_AI';
 
   public function lastInsertId() {
     return $this->connection->lastInsertId();

@@ -150,8 +150,12 @@ class Schema extends DatabaseSchema {
   
   public function EngineVersion() {
     return $this->connection
-    ->query("SELECT SERVERPROPERTY('productversion') AS VERSION, SERVERPROPERTY('productlevel') AS LEVEL, SERVERPROPERTY('edition') AS EDITION")
-    ->fetchObject();
+    ->query(<<< EOF
+    SELECT CONVERT (varchar,SERVERPROPERTY('productversion')) AS VERSION, 
+    CONVERT (varchar,SERVERPROPERTY('productlevel')) AS LEVEL, 
+    CONVERT (varchar,SERVERPROPERTY('edition')) AS EDITION
+EOF
+    )->fetchAssoc();
   }
   
   /**
