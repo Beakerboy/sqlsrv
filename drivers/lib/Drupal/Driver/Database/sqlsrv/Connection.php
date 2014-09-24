@@ -28,11 +28,16 @@ class Connection extends DatabaseConnection {
    * the database does not exist.
    */
   const DATABASE_NOT_FOUND = 28000;
+  
+  /**
+   * Default recommended collation for SQL Server.
+   */
+  const DEFAULT_COLLATION = 'UTF8_UNICODE_CI';
 
   public function lastInsertId() {
     return $this->connection->lastInsertId();
   }
-  
+
   /**
    * Constructs a connection object.
    */
@@ -527,7 +532,7 @@ WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
 
     try {
       // Create the database and set it as active.
-      $this->connection->exec("CREATE DATABASE $database COLLATE MODERN_SPANISH_CI_AS");
+      $this->connection->exec("CREATE DATABASE $database COLLATE " . Connection::DEFAULT_COLLATION);
     }
     catch (\Exception $e) {
       throw new DatabaseNotFoundException($e->getMessage());

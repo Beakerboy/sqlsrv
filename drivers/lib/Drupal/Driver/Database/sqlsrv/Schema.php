@@ -483,7 +483,7 @@ class Schema extends DatabaseSchema {
     
     // Prevent serial from having initial values.
     if ($spec['type'] == 'serial' && isset($spec['initial'])) {
-	  throw new DatabaseExceptionWrapper('Cannot add serial (IDENTITY) field with initial values in SQL Server.');
+      throw new DatabaseExceptionWrapper('Cannot add serial (IDENTITY) field with initial values in SQL Server.');
     }
 
     // If the field is declared NOT NULL, we have to first create it NULL insert
@@ -629,6 +629,45 @@ class Schema extends DatabaseSchema {
     }
   }
 
+  /**
+   * Gets collation for current connection,
+   * whether it has or not a database defined in
+   * it.
+   *
+   * @status needs review
+   */
+  public function getCollation($table = NULL, $column = NULL) {
+    // Database is defaulted from active connection.
+    $options = $this->connection->getConnectionOptions();
+    $database = $options['database'];
+    if (!empty($database)) {
+      // Default collation for specific table.
+      $sql = "SELECT CONVERT (varchar, DATABASEPROPERTYEX('$database', 'collation'))";
+      return $this->connection->query($sql)->fetchField();
+    }
+    else {
+      // Server default collation.
+      $sql = "SELECT SERVERPROPERTY ('collation') as collation";
+      return $this->connection->query($sql)->fetchField();
+    }
+    if (!empty($table) && $empty($column)) {
+      $sql = <<< EOF
+      SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, COLLATION_NAME, DATA_TYPE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = ':schema'
+        AND TABLE_NAME = ':table'
+        AND COLUMN_NAME = ':column'
+EOF
+;
+      $params = array();
+      $params[':schema'] = $this->defaultSchema;
+      $params[':table'] = $table;
+      $params[':column'] = $column;
+      $result = $this->connection->query($sql, $params)->fetchObject();
+      return $result->COLLATION_NAME;
+    }
+  }
+  
   protected function introspectPrimaryKey($table, $field) {
     // Fetch the list of columns participating to the primary key.
     $result = $this->connection->query('SELECT i.name, ic.is_descending_key, c.name column_name
