@@ -13,8 +13,29 @@ use Drupal\Core\Database\StatementInterface;
 
 class Statement extends StatementPrefetch implements \Iterator, StatementInterface {
 
+  // Flag to tell if statement should be run insecure.
+  private $insecure = FALSE;
+
+  // Tells the statement to set insecure parameters
+  // such as SQLSRV_ATTR_DIRECT_QUERY and ATTR_EMULATE_PREPARES.
+  // TODO: Should log a warning so the calling code can be looked into
+  // and secured.
+  public function RequireInsecure() {
+    $this->insecure = TRUE;
+  }
+
   protected function getStatement($query, &$args = array()) {
-    return $this->connection->PDOPrepare($query);
+    // Time for the truth, if somebody asks for insecure,
+    // let's give it them!
+    $pdo_options = array();
+    if ($this->insecure) {
+      // We have to log this, prepared statements are a security RISK
+      // \Drupal::logger('sqlsrv')->notice('Running insecure Statement: {$query}');
+      $options = $this->connection->getConnectionOptions();
+      // This are defined in class Connection.
+      $pdo_options = $options['pdo'];
+    }
+    return $this->connection->PDOPrepare($query, $pdo_options);
   }
 
   public function execute($args = array(), $options = array()) {

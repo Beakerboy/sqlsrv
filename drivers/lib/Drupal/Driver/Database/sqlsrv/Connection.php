@@ -110,6 +110,13 @@ class Connection extends DatabaseConnection {
 'pdo' => array(),
     );
     
+    // This PDO options are INSECURE, but will overcome the following issues:
+    // (1) Duplicate placeholders
+    // (2) > 2100 parameter limit
+    // (3) Using expressions for group by with parameters are not detected as equal.
+    // This options are not applied by default, they are just stored in the connection
+    // options and applied when needed. See {Statement} class.
+    
     $connection_options['pdo'] += array(
     // We run the statements in "direct mode" because the way PDO prepares
     // statement in non-direct mode cause temporary tables to be destroyed
@@ -189,6 +196,70 @@ class Connection extends DatabaseConnection {
 
 
     return parent::prepare($query, $options);
+  }
+  
+  /**
+   * TODO: inheritdoc.
+   */
+  public function query($query, array $args = array(), $options = array()) {
+
+    // Use default values if not already set.
+    $options += $this->defaultOptions();
+
+    try {
+      // We allow either a pre-bound statement object or a literal string.
+      // In either case, we want to end up with an executed statement object,
+      // which we pass to PDOStatement::execute.
+      if ($query instanceof StatementInterface) {
+        $stmt = $query;
+        $stmt->execute(NULL, $options);
+      }
+      else {
+        $this->expandArguments($query, $args);
+        $stmt = $this->prepareQuery($query);
+        $insecure = isset($options['insecure']) ? $options['insecure'] : FALSE;
+        if ($insecure === TRUE) {
+          $stmt->RequireInsecure();
+        }
+        $stmt->execute($args, $options);
+      }
+
+      // Depending on the type of query we may need to return a different value.
+      // See DatabaseConnection::defaultOptions() for a description of each
+      // value.
+      switch ($options['return']) {
+        case Database::RETURN_STATEMENT:
+          return $stmt;
+        case Database::RETURN_AFFECTED:
+          $stmt->allowRowCount = TRUE;
+          return $stmt->rowCount();
+        case Database::RETURN_INSERT_ID:
+          return $this->connection->lastInsertId();
+        case Database::RETURN_NULL:
+          return;
+        default:
+          throw new \PDOException('Invalid return directive: ' . $options['return']);
+      }
+    }
+    catch (\PDOException $e) {
+      if ($options['throw_exception']) {
+        // Wrap the exception in another exception, because PHP does not allow
+        // overriding Exception::getMessage(). Its message is the extra database
+        // debug information.
+        $query_string = ($query instanceof StatementInterface) ? $stmt->getQueryString() : $query;
+        $message = $e->getMessage() . ": " . $query_string . "; " . print_r($args, TRUE);
+        // Match all SQLSTATE 23xxx errors.
+        if (substr($e->getCode(), -6, -3) == '23') {
+          $exception = new IntegrityConstraintViolationException($message, $e->getCode(), $e);
+        }
+        else {
+          $exception = new DatabaseExceptionWrapper($message, 0, $e);
+        }
+
+        throw $exception;
+      }
+      return NULL;
+    }
   }
 
   /**

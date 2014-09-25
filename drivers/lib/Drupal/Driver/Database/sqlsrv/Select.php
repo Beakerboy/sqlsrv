@@ -64,6 +64,25 @@ class Select extends QuerySelect {
         else if (isset($this->expressions[$group_field])) {
           $expression = $this->expressions[$group_field];
           $group_field = $expression['expression'];
+          // If the expression has arguments, we now
+          // have duplicate placeholders. Run as insecure.
+          if (is_array($expression['arguments'])) {
+            $this->queryOptions['insecure'] = TRUE;
+          }
+          //$group_field_new = $expression['expression'];
+          // If the expression has arguments, we need to rename them
+          // otherwise we end up with duplicate placeholders, wich is not
+          // allowed in the PDO Driver.
+          //if (is_array($expression['arguments'])) {
+          //  foreach($expression['arguments'] as $argkey => $argvalue) {
+          //    // Rename the argument, and replace it in new expression.
+          //    $newargkey =  $argkey . ($counter++);
+          //    $group_field_new = str_replace($argkey, $newargkey, $group_field_new);
+          //    $this->expressions[$group_field]['arguments'][$newargkey] = $argvalue;
+          //  }
+          //}
+          //// Now replace group field for complete expression.
+          //$group_field = $group_field_new;
         }
       }
     }
