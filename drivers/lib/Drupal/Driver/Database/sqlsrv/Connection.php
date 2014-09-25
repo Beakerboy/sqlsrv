@@ -12,6 +12,7 @@ use Drupal\Core\Database\Connection as DatabaseConnection;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Database\IntegrityConstraintViolationException;
+use Drupal\Core\Database\DatabaseExceptionWrapper;
 
 /**
  * @addtogroup database
@@ -181,20 +182,6 @@ class Connection extends DatabaseConnection {
     if (!$this->bypassQueryPreprocess) {
       $query = $this->preprocessQuery($query);
     }
-
-
-    // If we've reached the 300 parameter,
-    // add the query arguments directly onto the query using the
-    // internal replacePlaceholders() function.
-    // @see DatabaseStatement_sqlsrv::getStatement().
-    if (isset($options['placeholder_args'])) {
-      $args = $options['placeholder_args'];
-      $query = $this->replacePlaceholders($query, $args);
-      // Keeping this around could cause unforseen problems.
-      unset($options['placeholder_args']);
-    }
-
-
     return parent::prepare($query, $options);
   }
   
@@ -218,7 +205,11 @@ class Connection extends DatabaseConnection {
         $this->expandArguments($query, $args);
         $stmt = $this->prepareQuery($query);
         $insecure = isset($options['insecure']) ? $options['insecure'] : FALSE;
-        if ($insecure === TRUE) {
+        // Try to detect duplicate place holders, this check's performance
+        // is not a good addition to the driver, but does a good job preventing
+        // duplicate placeholder errors.
+        $duplicate_holders = count($args) != substr_count($query, ':');
+        if ($insecure === TRUE || count($args) >= 2100 || $duplicate_holders) {
           $stmt->RequireInsecure();
         }
         $stmt->execute($args, $options);

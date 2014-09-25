@@ -13,7 +13,7 @@ use Drupal\Core\Database\Database;
 /**
  * General tests for SQL Server database driver.
  *
- * @group Database
+ * @group SQLServer
  */
 class SelectQueryTest extends WebTestBase {
 
@@ -38,12 +38,7 @@ class SelectQueryTest extends WebTestBase {
   public function setUp() {
     // Get a connection to use during testing.
     $connection = Database::getConnection();
-  }
-
-  /**
-   * Checks that invalid sort directions in ORDER BY get converted to ASC.
-   */
-  public function testGroupByExpansion() {
+    
     $table_spec = array(
         'fields' => array(
           'id'  => array(
@@ -65,6 +60,13 @@ class SelectQueryTest extends WebTestBase {
     db_insert('test_task')->fields(array('task' => 'code'))->execute();
     db_insert('test_task')->fields(array('task' => 'found new band'))->execute();
     db_insert('test_task')->fields(array('task' => 'perform at superbowl'))->execute();
+  }
+  
+  /**
+   * Checks that invalid sort directions in ORDER BY get converted to ASC.
+   */
+  public function testGroupByExpansion() {
+    
 
     // By ANSI SQL, GROUP BY columns cannot use aliases. Test that the
     // driver expands the aliases properly.
@@ -100,4 +102,51 @@ class SelectQueryTest extends WebTestBase {
     $this->assertEqual($num_records, 5, 'Returned the correct number of total rows.');
   }
 
+  
+  /**
+   * Test the 2100 parameter limit per query.
+   */
+  function testParameterLimit() {
+    $values = array();
+    for ($x = 0; $x < 2200; $x ++) {
+      $values[] = uniqid($x, TRUE);
+    }
+    $query = db_select('test_task', 't');
+    $count_field = $query->addExpression('COUNT(task)', 'num');
+    $query->where('t.task IN (:data)', array(':data' => $values));
+    $result = NULL;
+    // If > 2100 we can get SQL Exception! The driver must handle that.
+    try {
+      $result = $query->execute()->fetchField();
+    
+    } catch (\Exception $err)
+    {
+    }
+    
+    $this->assertEqual($result, 0, 'Returned the correct number of total rows.');
+  }
+  
+  /**
+   * Although per official documentation you cannot send
+   * duplicate placeholders in same query, this works in mySQL
+   * and is present in some queries, even in core, wich have not
+   * gotten enough attention.
+   */
+  function testDuplicatePlaceholders() {
+    $query = db_select('test_task', 't');
+    $count_field = $query->addExpression('COUNT(task)', 'num');
+    $query->where('t.task IN (:data0, :data0)', array(':data0' => 'sleep'));
+    $result = NULL;
+    // If > 2100 we can get SQL Exception! The driver must handle that.
+    try {
+      $result = $query->execute()->fetchField();
+      
+    
+    } catch (\Exception $err)
+    {
+    }
+    
+    $this->assertEqual($result, 2, 'Returned the correct number of total rows.');
+  }
+  
 }
