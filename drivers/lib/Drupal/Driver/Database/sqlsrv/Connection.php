@@ -13,12 +13,12 @@ use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Database\IntegrityConstraintViolationException;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
+use Drupal\Core\Database\DatabaseException;
 
 /**
  * @addtogroup database
  * @{
  */
-
 class Connection extends DatabaseConnection {
 
   public $bypassQueryPreprocess = FALSE;
@@ -40,10 +40,9 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Constructs a connection object.
+   * {@inheritdoc}
    */
   public function __construct(\PDO $connection, array $connection_options) {
-    //parent::__construct($connection, $connection_options);
 
     // This driver defaults to transaction support, except if explicitly passed FALSE.
     $this->transactionSupport = !isset($connection_options['transactions']) || ($connection_options['transactions'] !== FALSE);
@@ -53,45 +52,21 @@ class Connection extends DatabaseConnection {
     $this->transactionalDDLSupport = $this->transactionSupport;
 
     $this->connectionOptions = $connection_options;
-    
+
     parent::__construct($connection, $connection_options);
-    
-    // Launch the connection to the server.
-    /*parent::__construct('sqlsrv:' . implode(';', $options), $connection_options['username'], $connection_options['password'], array(
-    // We run the statements in "direct mode" because the way PDO prepares
-    // statement in non-direct mode cause temporary tables to be destroyed
-    // at the end of the statement.
-    \PDO::SQLSRV_ATTR_DIRECT_QUERY => TRUE,
-    // We ask PDO to perform the placeholders replacement itself because
-    // SQL Server is not able to detect duplicated placeholders in
-    // complex statements.
-    // E.g. This query is going to fail because SQL Server cannot
-    // detect that length1 and length2 are equals.
-    // SELECT SUBSTRING(title, 1, :length1)
-    // FROM node
-    // GROUP BY SUBSTRING(title, 1, :length2);
-    // This is only going to work in PDO 3 but doesn't hurt in PDO 2.
-    \PDO::ATTR_EMULATE_PREPARES => TRUE,
-    ));*/
 
-    // Force PostgreSQL to use the UTF-8 character set by default.
-    //$this->connection->exec("SET NAMES 'UTF8'");
-
-    // Execute PostgreSQL init_commands.
-    //if (isset($connection_options['init_commands'])) {
-    //  $this->connection->exec(implode('; ', $connection_options['init_commands']));
-    //}
+    // Fetch the name of the user-bound schema. It is the schema that SQL Server
+    // will use for non-qualified tables.
+    // TODO: This must be cached otherwise we are DOUBLING
+    // database roundtrips!
+    $schema = $this->schema();
+    $schema->defaultSchema = $this->query("SELECT SCHEMA_NAME()")->fetchField();
   }
 
   /**
    * {@inheritdoc}
    */
   public static function open(array &$connection_options = array()) {
-    // Default to TCP connection on port 1433.
-    if (empty($connection_options['port'])) {
-      $connection_options['port'] = 1433;
-    }
-    
     // Build the DSN.
     $options = array();
     $options[] = 'Server=' . $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : '');
@@ -104,12 +79,8 @@ class Connection extends DatabaseConnection {
 
     $dsn = 'sqlsrv:' . implode(';', $options);
 
-    $connection_options['database'] = (!empty($connection_options['database']) ? $connection_options['database'] : 'template1');
-    
     // Allow PDO options to be overridden.
-    $connection_options += array(
-'pdo' => array(),
-    );
+    $connection_options['pdo'] = array();
     
     // This PDO options are INSECURE, but will overcome the following issues:
     // (1) Duplicate placeholders
@@ -117,7 +88,10 @@ class Connection extends DatabaseConnection {
     // (3) Using expressions for group by with parameters are not detected as equal.
     // This options are not applied by default, they are just stored in the connection
     // options and applied when needed. See {Statement} class.
-    
+    // The security of parameterized queries is not in effect when you use PDO::ATTR_EMULATE_PREPARES => true.
+    // Your application should ensure that the data that is bound to the parameter(s) does not contain malicious
+    // Transact-SQL code.
+
     $connection_options['pdo'] += array(
     // We run the statements in "direct mode" because the way PDO prepares
     // statement in non-direct mode cause temporary tables to be destroyed
@@ -134,18 +108,15 @@ class Connection extends DatabaseConnection {
     // This is only going to work in PDO 3 but doesn't hurt in PDO 2.
 \PDO::ATTR_EMULATE_PREPARES => TRUE,
     );
-    
+
+    // Actually instantiate the PDO.
     $pdo = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
 
     $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-    
-    // Fetch the name of the user-bound schema. It is the schema that SQL Server
-    // will use for non-qualified tables.
-    //$this->schema()->defaultSchema = parent::query("SELECT SCHEMA_NAME()")->fetchField();
-    
+
     return $pdo;
   }
-  
+
   /**
    * Override of PDO::prepare(): prepare a prefetching database statement.
    *
@@ -160,6 +131,7 @@ class Connection extends DatabaseConnection {
    *
    * @todo: remove that when DatabaseConnection::prepareQuery() is fixed to call
    *   $this->prepare() and not parent::prepare().
+   *   https://www.drupal.org/node/2345451
    * @status: tested, temporary
    */
   public function prepareQuery($query) {
@@ -168,8 +140,6 @@ class Connection extends DatabaseConnection {
     // Call our overriden prepare.
     return $this->prepare($query);
   }
-  
-  
   
   /**
    * Internal function: prepare a query by calling PDO directly.
@@ -186,7 +156,10 @@ class Connection extends DatabaseConnection {
   }
   
   /**
-   * TODO: inheritdoc.
+   * {@inheritdoc}
+   *
+   * This method is overriden to manage the insecure (EMULATE_PREPARE)
+   * behaviour to prevent some compatibility issues with SQL Server.
    */
   public function query($query, array $args = array(), $options = array()) {
 
@@ -208,7 +181,7 @@ class Connection extends DatabaseConnection {
         // Try to detect duplicate place holders, this check's performance
         // is not a good addition to the driver, but does a good job preventing
         // duplicate placeholder errors.
-        $duplicate_holders = count($args) != substr_count($query, ':');
+        $duplicate_holders = isset($args[1]) ? FALSE : (count($args) != substr_count($query, ':'));
         if ($insecure === TRUE || count($args) >= 2100 || $duplicate_holders) {
           $stmt->RequireInsecure();
         }
@@ -343,54 +316,13 @@ hout)
   }
 
   /**
-   * Internal function: do a manual placeholder replacement for a query.
+   * {@inheritdoc}
+   *
+   * This method is overriden to modify the way placeholder
+   * names are generated. This allows to have plain queries
+   * have a higher degree of repetitivity, allowing for a possible
+   * query manipulation cache.
    */
-  protected function replacePlaceholders($query, array $args = array()) {
-    // Check if $args is a simple numeric array.
-    if (range(0, count($args) - 1) === array_keys($args)) {
-      // In that case, we have unnamed placeholders.
-      $count = 0;
-      $new_args = array();
-      foreach ($args as $value) {
-        if (is_float($value)) {
-          // Force the conversion to float so as not to loose precision
-          // in the automatic cast.
-          $value = sprintf('%F', $value);
-        }
-        elseif (!is_int($value)) {
-          $value = $this->quote($value);
-        }
-        $query = substr_replace($query, $value, strpos($query, '?'), 1);
-      }
-      $args = $new_args;
-    }
-    else {
-      // Else, this is using named placeholders.
-      foreach ($args as $placeholder => $value) {
-        if (is_float($value)) {
-          // Force the conversion to float so as not to loose precision
-          // in the automatic cast.
-          $value = sprintf('%F', $value);
-        }
-        elseif (!is_int($value)) {
-          $value = $this->quote((string) $value);
-        }
-
-        // PDO allows placeholders to not be prefixed by a colon. See
-        // http://marc.info/?l=php-internals&m=111234321827149&w=2 for
-        // more.
-        if ($placeholder[0] != ':') {
-          $placeholder = ":$placeholder";
-        }
-        // When replacing the placeholders, make sure we search for the
-        // exact placeholder. For example, if searching for
-        // ':db_placeholder_1', do not replace ':db_placeholder_11'.
-        $query = preg_replace('/' . preg_quote($placeholder) . '\b/', $value, $query);
-      }
-    }
-    return $query;
-  }
-	
   protected function expandArguments(&$query, &$args) {
     
     $modified = FALSE;
@@ -538,10 +470,9 @@ WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
     // If an exiting value is passed, for its insertion into the sequence table.
     if ($existing > 0) {
       try {
-        $this->query('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', array(':existing' => 
-        $existing));
+        $this->query('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', array(':existing' => $existing));
       }
-      catch (Exception $e) {
+      catch (DatabaseException $e) {
         // Doesn't matter if this fails, it just means that this value is already
         // present in the table.
       }
@@ -557,9 +488,8 @@ WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
    */
   public function escapeTable($table) {
     // Rescue the # prefix from the escaping.
-    $res = ($table[0] == '#' ? '#' : '') . preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
-		
-    return $res;
+    $result = ($table[0] == '#' ? '#' : '') . preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
+    return $result;
   }
   
 
@@ -583,20 +513,11 @@ WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
     // Escape the database name.
     $database = Database::getConnection()->escapeDatabase($database);
 
-    // If the PECL intl extension is installed, use it to determine the proper
-    // locale.  Otherwise, fall back to en_US.
-    if (class_exists('Locale')) {
-      $locale = \Locale::getDefault();
-    }
-    else {
-      $locale = 'en_US';
-    }
-
     try {
       // Create the database and set it as active.
       $this->connection->exec("CREATE DATABASE $database COLLATE " . Connection::DEFAULT_COLLATION);
     }
-    catch (\Exception $e) {
+    catch (DatabaseException $e) {
       throw new DatabaseNotFoundException($e->getMessage());
     }
   }

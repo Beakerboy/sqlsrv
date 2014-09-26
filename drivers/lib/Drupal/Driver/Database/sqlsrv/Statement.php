@@ -18,21 +18,18 @@ class Statement extends StatementPrefetch implements \Iterator, StatementInterfa
 
   // Tells the statement to set insecure parameters
   // such as SQLSRV_ATTR_DIRECT_QUERY and ATTR_EMULATE_PREPARES.
-  // TODO: Should log a warning so the calling code can be looked into
-  // and secured.
   public function RequireInsecure() {
     $this->insecure = TRUE;
   }
 
   protected function getStatement($query, &$args = array()) {
-    // Time for the truth, if somebody asks for insecure,
-    // let's give it them!
     $pdo_options = array();
+    // Set insecure options if requested so.
     if ($this->insecure) {
       // We have to log this, prepared statements are a security RISK
       // \Drupal::logger('sqlsrv')->notice('Running insecure Statement: {$query}');
       $options = $this->connection->getConnectionOptions();
-      // This are defined in class Connection.
+      // These are defined in class Connection.
       $pdo_options = $options['pdo'];
     }
     return $this->connection->PDOPrepare($query, $pdo_options);

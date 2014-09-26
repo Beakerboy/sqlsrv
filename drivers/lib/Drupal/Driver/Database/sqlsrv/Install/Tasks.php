@@ -274,6 +274,10 @@ EOF
     if (empty($form['advanced_options']['port']['#default_value'])) {
       $form['advanced_options']['port']['#default_value'] = '1433';
     }
+    // Make username not required.
+    $form['username']['#required'] = FALSE;
+    // Add a description for about leaving username blank.
+    $form['username']['#description'] = t('Leave username (and password) blank to use Windows authentication.');
     return $form;
   }
 }
