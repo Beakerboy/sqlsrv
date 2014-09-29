@@ -33,6 +33,10 @@ class Tasks extends InstallTasks {
     $this->tasks[] = array(
       'function' => 'initializeDatabase',
       'arguments' => array(),
+    );    
+    $this->tasks[] = array(
+      'function' => 'enableModule',
+      'arguments' => array(),
     );
   }
 
@@ -264,6 +268,16 @@ EOF
     catch (\Exception $e) {
       $this->fail(t('Drupal could not be correctly setup with the existing database. Revise any errors.'));
     }
+  }
+  
+  /**
+   * Enable the SQL Server module.
+   */
+  function enableModule() {
+    // TODO: Looks like the module hanlder service is unavailable during
+    // this installation phase?
+    //$handler = new \Drupal\Core\Extension\ModuleHandler();
+    //$handler->enable(array('sqlsrv'), FALSE);
   }
 
   /**

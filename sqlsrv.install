@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Database\Database;
+use Drupal\Driver\Database\sqlsrv\Connection;
 
 /**
  * Implements hook_uninstall().
@@ -18,20 +19,20 @@ function sqlsrv_uninstall() {
 
 function sqlsrv_REData(ReflectionExtension $re) {
 
-    $_data = [];
+  $_data = [];
 
-    $_data['getName'] = $re->getName() ?: NULL;
-    $_data['getVersion'] = $re->getVersion() ?: NULL;
-    $_data['info'] = $re->info() ?: NULL;
-    $_data['getClassName'] = PHP_EOL.implode(", ",$re->getClassNames()) ?: NULL;     
-    foreach ($re->getConstants() as $key => $value) $_data['getConstants'] .= "\n{$key}:={$value}";
-    $_data['getDependencies'] = $re->getDependencies() ?: NULL;
-    $_data['getFunctions'] = PHP_EOL.implode(", ",array_keys($re->getFunctions())) ?: NULL;
-    $_data['getINIEntries'] = $re->getINIEntries() ?: NULL;
-    $_data['isPersistent'] = $re->isPersistent() ?: NULL;
-    $_data['isTemporary'] = $re->isTemporary() ?: NULL;
+  $_data['getName'] = $re->getName() ?: NULL;
+  $_data['getVersion'] = $re->getVersion() ?: NULL;
+  $_data['info'] = $re->info() ?: NULL;
+  $_data['getClassName'] = PHP_EOL.implode(", ",$re->getClassNames()) ?: NULL;     
+  foreach ($re->getConstants() as $key => $value) $_data['getConstants'] .= "\n{$key}:={$value}";
+  $_data['getDependencies'] = $re->getDependencies() ?: NULL;
+  $_data['getFunctions'] = PHP_EOL.implode(", ",array_keys($re->getFunctions())) ?: NULL;
+  $_data['getINIEntries'] = $re->getINIEntries() ?: NULL;
+  $_data['isPersistent'] = $re->isPersistent() ?: NULL;
+  $_data['isTemporary'] = $re->isTemporary() ?: NULL;
 
-    return $_data;
+  return $_data;
 }
 
 /**
@@ -43,6 +44,7 @@ function sqlsrv_requirements($phase) {
   $requirements = array();
 
   if ($phase == 'runtime') {
+    /* @var Connection $connection Database Connection */
     $connection = Database::getConnection();
     $options = $connection->getConnectionOptions();
     $schema = $connection->schema();
@@ -80,10 +82,28 @@ function sqlsrv_requirements($phase) {
       'value' => t('Current SQL Server PDO: @level', 
         array('@level' => $extensiondata['getVersion'])),
     );
-    
-    // TODO: Report GROUP_CONCAT availability
-    
+
     // TODO: Report install function availability (SUBSTRING, CONCAT, IF, MD5, etc...)
+    $schema = $connection->schema();
+    $functions = $schema->DrupalSpecificFunctions();
+    $briefing = array();
+    $error = FALSE;
+    foreach($functions as $function) {
+      $exists = $schema->functionExists($function);
+      $error = $exists === FALSE ? TRUE : $error;
+      $briefing[] = $function . ':' . ($exists === TRUE ? 'YES' : 'NO');
+    }
+    $exists =$schema->CLREnabled();
+    $error = $exists === FALSE ? TRUE : $error;
+    $briefing[] = 'CLREnabled' . ':' . ($exists === TRUE ? 'YES' : 'NO');
+    
+    $requirements['sqlsrv_pdo'] = array(
+          'title' => t('SQL Server Driver'),
+          'description' => t('SQL Server Custom Functions'),
+          'severity' => $error === TRUE ? REQUIREMENT_ERROR : REQUIREMENT_OK,
+          'value' => implode($briefing, ' | '),
+    );
+    
   }
 
   return $requirements;

@@ -40,6 +40,26 @@ class Schema extends DatabaseSchema {
   }
   
   /**
+   * Returns a list of functions that are not
+   * available by default on SQL Server, but used
+   * in Drupal Core or contributed modules
+   * because they are available in other databases
+   * such as MySQL.
+   */
+  public function DrupalSpecificFunctions() {
+    return array(
+        'SUBSTRING',
+        'SUBSTRING_INDEX',
+        'GREATEST',
+        'MD5',
+        'LPAD',
+        'GROUP_CONCAT',
+        'CONCAT',
+        'IF',
+        );
+  }
+  
+  /**
    * Database introspection: fetch technical information about a table.
    */
   public function queryColumnInformation($table) {
@@ -167,9 +187,28 @@ EOF
    *   True if the function exists, false otherwise.
    */
   public function functionExists($function) {
-    return $this->connection
-    ->query("SELECT 1 FROM Information_schema.Routines where Specific_schema='" . $this->defaultSchema . "' and specific_name = '" . $function . "' and Routine_Type='FUNCTION'")
+     // FN = Scalar Function
+     // IF = Inline Table Function
+     // TF = Table Function
+     // FS | AF = Assembly (CLR) Scalar Function
+     // FT | AT = Assembly (CLR) Table Valued Function
+      return $this->connection
+    ->query(" SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('" . $function . "') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT', N'AF')")
     ->fetchField() !== FALSE;
+    
+    //return $this->connection
+    //->query("SELECT 1 FROM Information_schema.Routines where Specific_schema='" . $this->defaultSchema . "' and specific_name = '" . $function . "' and Routine_Type='FUNCTION'")
+    //->fetchField() !== FALSE;
+  }
+  
+  /**
+   * Check if CLR is enabled, required
+   * to run GROUP_CONCAT.
+   */
+  public function CLREnabled() {
+    return $this->connection
+        ->query("SELECT value FROM sys.configurations WHERE name = 'clr enabled'")
+        ->fetchField() !== 1;
   }
   
   public function setRecoveryModel($model) {

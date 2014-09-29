@@ -57,10 +57,7 @@ class Connection extends DatabaseConnection {
 
     // Fetch the name of the user-bound schema. It is the schema that SQL Server
     // will use for non-qualified tables.
-    // TODO: This must be cached otherwise we are DOUBLING
-    // database roundtrips!
-    $schema = $this->schema();
-    $schema->defaultSchema = $this->query("SELECT SCHEMA_NAME()")->fetchField();
+    $this->schema()->defaultSchema =  $this->query("SELECT SCHEMA_NAME()")->fetchField();
   }
 
   /**
@@ -385,17 +382,7 @@ hout)
     );
     $query = preg_replace(array_keys($replacements), $replacements, $query);
 
-    // Add prefixes to Drupal-specific functions.
-    $functions = array(
-        'SUBSTRING',
-        'SUBSTRING_INDEX',
-        'GREATEST',
-        'MD5',
-        'LPAD',
-        'GROUP_CONCAT',
-        'CONCAT',
-        'IF',
-        );
+    $functions = $this->schema()->DrupalSpecificFunctions();
     foreach ($functions as $function) {
       $query = preg_replace('/\b(?<![:.])(' . preg_quote($function) . ')\(/i', $this->schema()->defaultSchema . '.$1(', $query);
     }
