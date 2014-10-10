@@ -91,4 +91,30 @@ class SqlServerSelectTest extends DatabaseTestCase {
     
     $this->assertEqual($result, 2, 'Returned the correct number of total rows.');
   }
+  
+  /**
+   * Test for weird key names
+   * in array arguments.
+   */
+  function textBadKeysInArrayArguments() {
+    $params[':nids'] = array(
+        'uid1' => -9,
+        'What a bad placeholder name, why should we care?' => -6,
+        );
+
+    try {
+      // The regular expandArguments implementation will fail to
+      // properly expand the associative array with weird keys, OH, and actually
+      // you can perform some SQL Injection through the array keys.
+      $result = db_query('SELECT UID FROM USERS WHERE USERS.UID IN (:nids)', $params);
+    } 
+    catch (\Exception $err) {
+      // Regular drupal will fail with
+      // SQLSTATE[IMSSP]: An error occurred substituting the named parameters.
+      // https://www.drupal.org/node/2146839
+    }
+    
+    // User ID's are negative, so this should return 0 matches.
+    $this->assertEqual($result, 0, 'Returned the correct number of total rows.');
+  }
 }
