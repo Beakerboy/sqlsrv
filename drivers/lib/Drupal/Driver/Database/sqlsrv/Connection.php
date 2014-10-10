@@ -178,8 +178,8 @@ class Connection extends DatabaseConnection {
         // Try to detect duplicate place holders, this check's performance
         // is not a good addition to the driver, but does a good job preventing
         // duplicate placeholder errors.
-        $duplicate_holders = isset($args[1]) ? FALSE : (count($args) != substr_count($query, ':'));
-        if ($insecure === TRUE || count($args) >= 2100 || $duplicate_holders) {
+        $argcount = count($args);
+        if ($insecure === TRUE || $argcount >= 2100 || ($argcount != substr_count($query, ':'))) {
           $stmt->RequireInsecure();
         }
         $stmt->execute($args, $options);
