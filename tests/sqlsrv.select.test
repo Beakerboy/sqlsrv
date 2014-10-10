@@ -48,4 +48,47 @@ class SqlServerSelectTest extends DatabaseTestCase {
 
     $this->assertEqual($num_records, 6, t('Returned the correct number of total rows.'));
   }
+  
+  /**
+   * Test the 2100 parameter limit per query.
+   */
+  function testParameterLimit() {
+    $values = array();
+    for ($x = 0; $x < 2200; $x ++) {
+      $values[] = uniqid($x, TRUE);
+    }
+    $query = db_select('test_task', 't');
+    $count_field = $query->addExpression('COUNT(task)', 'num');
+    $query->where('t.task IN (:data)', array(':data' => $values));
+    $result = NULL;
+    // If > 2100 we can get SQL Exception! The driver must handle that.
+    try {
+      $result = $query->execute()->fetchField();
+    }
+    catch (\Exception $err) {
+    }
+    
+    $this->assertEqual($result, 0, 'Returned the correct number of total rows.');
+  }
+  
+  /**
+   * Although per official documentation you cannot send
+   * duplicate placeholders in same query, this works in mySQL
+   * and is present in some queries, even in core, wich have not
+   * gotten enough attention.
+   */
+  function testDuplicatePlaceholders() {
+    $query = db_select('test_task', 't');
+    $count_field = $query->addExpression('COUNT(task)', 'num');
+    $query->where('t.task IN (:data0, :data0)', array(':data0' => 'sleep'));
+    $result = NULL;
+    // If > 2100 we can get SQL Exception! The driver must handle that.
+    try {
+      $result = $query->execute()->fetchField();
+    } 
+    catch (\Exception $err) { 
+    }
+    
+    $this->assertEqual($result, 2, 'Returned the correct number of total rows.');
+  }
 }

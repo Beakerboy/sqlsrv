@@ -41,7 +41,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    */
   public function __construct(array $connection_options = array()) {
     // Store connection options for future reference.
-    $this->connectionOptions = $connection_options;
+    $this->connectionOptions = &$connection_options;
 
     // We don't need a specific PDOStatement class here, we simulate it using
     // DatabaseStatement_sqlsrv below.
@@ -51,34 +51,56 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     $this->transactionSupport = !isset($connection_options['transactions']) || $connection_options['transactions'] !== FALSE;
 
     // Build the DSN.
-    $options = array(
-      'Server=' . $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : ''),
-      'Database=' . $connection_options['database'],
+    $options = array();
+    $options[] = 'Server=' . $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : '');
+    // We might not have a database in the
+    // connection options, for example, during
+    // database creation in Install.
+    if (!empty($connection_options['database'])) {
+      $options[] = 'Database=' . $connection_options['database'];
+    }
+
+    $dsn = 'sqlsrv:' . implode(';', $options);
+
+    // Allow PDO options to be overridden.
+    $connection_options['pdo'] = array();
+    
+    // This PDO options are INSECURE, but will overcome the following issues:
+    // (1) Duplicate placeholders
+    // (2) > 2100 parameter limit
+    // (3) Using expressions for group by with parameters are not detected as equal.
+    // This options are not applied by default, they are just stored in the connection
+    // options and applied when needed. See {Statement} class.
+    // The security of parameterized queries is not in effect when you use PDO::ATTR_EMULATE_PREPARES => true.
+    // Your application should ensure that the data that is bound to the parameter(s) does not contain malicious
+    // Transact-SQL code.
+
+    $connection_options['pdo'] += array(
+        // We run the statements in "direct mode" because the way PDO prepares
+        // statement in non-direct mode cause temporary tables to be destroyed
+        // at the end of the statement.
+        PDO::SQLSRV_ATTR_DIRECT_QUERY => TRUE,
+        // We ask PDO to perform the placeholders replacement itself because
+        // SQL Server is not able to detect duplicated placeholders in
+        // complex statements.
+        // E.g. This query is going to fail because SQL Server cannot
+        // detect that length1 and length2 are equals.
+        // SELECT SUBSTRING(title, 1, :length1)
+        // FROM node
+        // GROUP BY SUBSTRING(title, 1, :length2);
+        // This is only going to work in PDO 3 but doesn't hurt in PDO 2.
+        PDO::ATTR_EMULATE_PREPARES => TRUE,
     );
 
     // Launch the connection to the server.
-    parent::__construct('sqlsrv:' . implode(';', $options), $connection_options['username'], $connection_options['password'], array(
-      // We run the statements in "direct mode" because the way PDO prepares
-      // statement in non-direct mode cause temporary tables to be destroyed
-      // at the end of the statement.
-      PDO::SQLSRV_ATTR_DIRECT_QUERY => TRUE,
-      // We ask PDO to perform the placeholders replacement itself because
-      // SQL Server is not able to detect duplicated placeholders in
-      // complex statements.
-      // E.g. This query is going to fail because SQL Server cannot
-      // detect that length1 and length2 are equals.
-      // SELECT SUBSTRING(title, 1, :length1)
-      // FROM node
-      // GROUP BY SUBSTRING(title, 1, :length2);
-      // This is only going to work in PDO 3 but doesn't hurt in PDO 2.
-      PDO::ATTR_EMULATE_PREPARES => TRUE,
-    ));
+    parent::__construct($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
 
     $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // Fetch the name of the user-bound schema. It is the schema that SQL Server
     // will use for non-qualified tables.
     $this->schema()->defaultSchema = $this->query("SELECT SCHEMA_NAME()")->fetchField();
+
   }
 
   /**
@@ -259,6 +281,71 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     }
     return $query;
   }
+  
+  /**
+   * {@inheritdoc}
+   *
+   * This method is overriden to manage the insecure (EMULATE_PREPARE)
+   * behaviour to prevent some compatibility issues with SQL Server.
+   */
+  public function query($query, array $args = array(), $options = array()) {
+
+    // Use default values if not already set.
+    $options += $this->defaultOptions();
+
+    try {
+      // We allow either a pre-bound statement object or a literal string.
+      // In either case, we want to end up with an executed statement object,
+      // which we pass to PDOStatement::execute.
+      if ($query instanceof DatabaseStatementInterface) {
+        $stmt = $query;
+        $stmt->execute(NULL, $options);
+      }
+      else {
+        $this->expandArguments($query, $args);
+        $stmt = $this->prepareQuery($query);
+        $insecure = isset($options['insecure']) ? $options['insecure'] : FALSE;
+        // Try to detect duplicate place holders, this check's performance
+        // is not a good addition to the driver, but does a good job preventing
+        // duplicate placeholder errors.
+        $duplicate_holders = isset($args[1]) ? FALSE : (count($args) != substr_count($query, ':'));
+        if ($insecure === TRUE || count($args) >= 2100 || $duplicate_holders) {
+          $stmt->RequireInsecure();
+        }
+        $stmt->execute($args, $options);
+      }
+
+      // Depending on the type of query we may need to return a different value.
+      // See DatabaseConnection::defaultOptions() for a description of each
+      // value.
+      switch ($options['return']) {
+        case Database::RETURN_STATEMENT:
+          return $stmt;
+        case Database::RETURN_AFFECTED:
+          return $stmt->rowCount();
+        case Database::RETURN_INSERT_ID:
+          return $this->lastInsertId();
+        case Database::RETURN_NULL:
+          return;
+        default:
+          throw new PDOException('Invalid return directive: ' . $options['return']);
+      }
+    }
+    catch (PDOException $e) {
+      if ($options['throw_exception']) {
+        // Add additional debug information.
+        if ($query instanceof DatabaseStatementInterface) {
+          $e->query_string = $stmt->getQueryString();
+        }
+        else {
+          $e->query_string = $query;
+        }
+        $e->args = $args;
+        throw $e;
+      }
+      return NULL;
+    }
+  }
 
   /**
    * Internal function: massage a query to make it compliant with SQL Server.
@@ -383,8 +470,27 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
 }
 
 class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iterator, DatabaseStatementInterface {
+  
+  // Flag to tell if statement should be run insecure.
+  private $insecure = FALSE;
+
+  // Tells the statement to set insecure parameters
+  // such as SQLSRV_ATTR_DIRECT_QUERY and ATTR_EMULATE_PREPARES.
+  public function RequireInsecure() {
+    $this->insecure = TRUE;
+  }
+
   protected function getStatement($query, &$args = array()) {
-    return $this->dbh->PDOPrepare($query);
+    $pdo_options = array();
+    // Set insecure options if requested so.
+    if ($this->insecure) {
+      // We have to log this, prepared statements are a security RISK
+      // \Drupal::logger('sqlsrv')->notice('Running insecure Statement: {$query}');
+      $options = $this->dbh->getConnectionOptions();
+      // These are defined in class Connection.
+      $pdo_options = $options['pdo'];
+    }  
+    return $this->dbh->PDOPrepare($query, $pdo_options);
   }
 
   public function execute($args = array(), $options = array()) {
