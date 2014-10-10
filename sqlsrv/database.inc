@@ -74,7 +74,6 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // The security of parameterized queries is not in effect when you use PDO::ATTR_EMULATE_PREPARES => true.
     // Your application should ensure that the data that is bound to the parameter(s) does not contain malicious
     // Transact-SQL code.
-
     $connection_options['pdo'] += array(
         // We run the statements in "direct mode" because the way PDO prepares
         // statement in non-direct mode cause temporary tables to be destroyed
@@ -233,55 +232,6 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     return $tablename;
   }
 
-  /**
-   * Internal function: do a manual placeholder replacement for a query.
-   */
-  protected function replacePlaceholders($query, array $args = array()) {
-    // Check if $args is a simple numeric array.
-    if (range(0, count($args) - 1) === array_keys($args)) {
-      // In that case, we have unnamed placeholders.
-      $count = 0;
-      $new_args = array();
-      foreach ($args as $value) {
-        if (is_float($value)) {
-          // Force the conversion to float so as not to loose precision
-          // in the automatic cast.
-          $value = sprintf('%F', $value);
-        }
-        elseif (!is_int($value)) {
-          $value = $this->quote($value);
-        }
-        $query = substr_replace($query, $value, strpos($query, '?'), 1);
-      }
-      $args = $new_args;
-    }
-    else {
-      // Else, this is using named placeholders.
-      foreach ($args as $placeholder => $value) {
-        if (is_float($value)) {
-          // Force the conversion to float so as not to loose precision
-          // in the automatic cast.
-          $value = sprintf('%F', $value);
-        }
-        elseif (!is_int($value)) {
-          $value = $this->quote((string) $value);
-        }
-
-        // PDO allows placeholders to not be prefixed by a colon. See
-        // http://marc.info/?l=php-internals&m=111234321827149&w=2 for
-        // more.
-        if ($placeholder[0] != ':') {
-          $placeholder = ":$placeholder";
-        }
-        // When replacing the placeholders, make sure we search for the
-        // exact placeholder. For example, if searching for
-        // ':db_placeholder_1', do not replace ':db_placeholder_11'.
-        $query = preg_replace('/' . preg_quote($placeholder) . '\b/', $value, $query);
-      }
-    }
-    return $query;
-  }
-  
   /**
    * {@inheritdoc}
    *

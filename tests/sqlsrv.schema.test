@@ -4,7 +4,6 @@
  * @file
  * Support tests for SQL Server.
  */
-
 class SqlServerSchemaTest extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
@@ -40,7 +39,8 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
       db_insert('test_table')->fields(array('id' => 1))->execute();
       $this->fail(t('Duplicate values in the table should not be allowed when the primary key is there.'));
     }
-    catch (Exception $e) {}
+    catch (Exception $e) {
+    }
 
     // Drop the primary key and retry.
     db_drop_primary_key('test_table');
@@ -53,7 +53,8 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
       db_add_primary_key('test_table', array('id'));
       $this->fail(t('Trying to add a primary key should fail with duplicate rows in the table.'));
     }
-    catch (Exception $e) {}
+    catch (Exception $e) {
+    }
   }
 
   /**
@@ -100,7 +101,10 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
       db_insert('test_table')->fields(array('id' => -1))->execute();
       $failed = FALSE;
     }
-    catch (Exception $e) { $failed = TRUE; }
+    catch (Exception $e) {
+      $failed = TRUE;
+    }
+    
     $this->assertTrue($failed, t('Inserting a negative value in an unsigned field failed.'));
 
     $this->assertUnsignedField('test_table', 'id');
@@ -109,7 +113,9 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
       db_insert('test_table')->fields(array('id' => 1))->execute();
       $failed = FALSE;
     }
-    catch (Exception $e) { $failed = TRUE; }
+    catch (Exception $e) {
+      $failed = TRUE;
+    }
     $this->assertFalse($failed, t('Inserting a positive value in an unsigned field succeeded.'));
 
     // Change the field to signed.
@@ -130,37 +136,51 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
     $this->assertUnsignedField('test_table', 'id');
   }
 
+  /**
+   * Test insert data in unsigned field.
+   */
   protected function assertUnsignedField($table, $field_name) {
     try {
       db_insert('test_table')->fields(array('id' => -1))->execute();
       $success = TRUE;
     }
-    catch (Exception $e) { $success = FALSE; }
+    catch (Exception $e) {
+      $success = FALSE;
+    }
     $this->assertFalse($success, t('Inserting a negative value in an unsigned field failed.'));
 
     try {
       db_insert('test_table')->fields(array('id' => 1))->execute();
       $success = TRUE;
     }
-    catch (Exception $e) { $success = FALSE; }
+    catch (Exception $e) {
+      $success = FALSE;
+    }
     $this->assertTrue($success, t('Inserting a positive value in an unsigned field succeeded.'));
 
     db_delete('test_table')->execute();
   }
 
+  /**
+   * Test inserting data in signed field.
+   */
   protected function assertSignedField($table, $field_name) {
     try {
       db_insert('test_table')->fields(array('id' => -1))->execute();
       $success = TRUE;
     }
-    catch (Exception $e) { $success = FALSE; }
+    catch (Exception $e) {
+      $success = FALSE;
+    }
     $this->assertTrue($success, t('Inserting a negative value in a signed field succeeded.'));
 
     try {
       db_insert('test_table')->fields(array('id' => 1))->execute();
       $success = TRUE;
     }
-    catch (Exception $e) { $success = FALSE; }
+    catch (Exception $e) {
+      $success = FALSE;
+    }
     $this->assertTrue($success, t('Inserting a positive value in a signed field succeeded.'));
 
     db_delete('test_table')->execute();

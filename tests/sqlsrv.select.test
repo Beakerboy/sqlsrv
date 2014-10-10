@@ -58,7 +58,7 @@ class SqlServerSelectTest extends DatabaseTestCase {
       $values[] = uniqid($x, TRUE);
     }
     $query = db_select('test_task', 't');
-    $count_field = $query->addExpression('COUNT(task)', 'num');
+    $query->addExpression('COUNT(task)', 'num');
     $query->where('t.task IN (:data)', array(':data' => $values));
     $result = NULL;
     // If > 2100 we can get SQL Exception! The driver must handle that.
@@ -79,7 +79,7 @@ class SqlServerSelectTest extends DatabaseTestCase {
    */
   function testDuplicatePlaceholders() {
     $query = db_select('test_task', 't');
-    $count_field = $query->addExpression('COUNT(task)', 'num');
+    $query->addExpression('COUNT(task)', 'num');
     $query->where('t.task IN (:data0, :data0)', array(':data0' => 'sleep'));
     $result = NULL;
     // If > 2100 we can get SQL Exception! The driver must handle that.
