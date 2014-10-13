@@ -20,6 +20,48 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
   protected $additionalColumnInformation = NULL;
 
   /**
+   * Returns a list of functions that are not
+   * available by default on SQL Server, but used
+   * in Drupal Core or contributed modules
+   * because they are available in other databases
+   * such as MySQL.
+   */
+  public function DrupalSpecificFunctions() {
+    $functions = array(
+        'SUBSTRING',
+        'SUBSTRING_INDEX',
+        'GREATEST',
+        'MD5',
+        'LPAD',
+        'GROUP_CONCAT',
+        'CONCAT',
+        'IF',
+        );
+    
+    // Since SQL Server 2012 (11), there
+    // is a native CONCAT implementation
+    if ($this->EngineVersionNumber() >= 11) {
+      unset($functions['CONCAT']);
+    }
+
+    return $functions;
+  }
+  
+  /**
+   * Return active default Schema.
+   */
+  public function GetDefaultSchema() {
+    $schema = &drupal_static(__FUNCTION__);
+    if (!isset($functions)) {
+      $state = $this->connection->bypassQueryPreprocess;
+      $this->connection->bypassQueryPreprocess = true;
+      $schema = $this->connection->query("SELECT SCHEMA_NAME()")->fetchField();
+      $this->connection->bypassQueryPreprocess = $state;
+    }
+    return $schema;
+  }
+  
+  /**
    * Database introspection: fetch technical information about a table.
    */
   public function queryColumnInformation($table) {
@@ -92,14 +134,83 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
   }
 
+  /**
+   * Find if a table already exists.
+   *
+   * @param $table
+   *   Name of the table.
+   * @return
+   *   True if the table exists, false otherwise.
+   */
   public function tableExists($table) {
-    try {
-      $this->connection->query('SELECT TOP(1) 1 FROM {' . $table . '}');
-      return TRUE;
+    return $this->connection
+    ->query("SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'")
+    ->fetchField() !== FALSE;
+  }
+  
+  /**
+   * Retrieve Engine Version information.
+   */
+  public function EngineVersion() {
+    $version = &drupal_static(__FUNCTION__);
+    if (!isset($version)) {
+      $state = $this->connection->bypassQueryPreprocess;
+      $this->connection->bypassQueryPreprocess = true;
+      $version = $this->connection
+      ->query(<<< EOF
+    SELECT CONVERT (varchar,SERVERPROPERTY('productversion')) AS VERSION, 
+    CONVERT (varchar,SERVERPROPERTY('productlevel')) AS LEVEL, 
+    CONVERT (varchar,SERVERPROPERTY('edition')) AS EDITION
+EOF
+      )->fetchAssoc();
+      $this->connection->bypassQueryPreprocess = $state;
     }
-    catch (PDOException $e) {
-      return FALSE;
-    }
+    return $version;
+  }
+
+  /**
+   * Retrieve Major Engine Version Number as integer.
+   */
+  public function EngineVersionNumber() {
+    $version = $this->EngineVersion();
+    $start = strpos($version['VERSION'], '.');
+    return intval(substr($version['VERSION'], 0, $start));
+  }
+
+  /**
+   * Find if a table function exists.
+   *
+   * @param $function
+   *   Name of the function.
+   * @return
+   *   True if the function exists, false otherwise.
+   */
+  public function functionExists($function) {
+    // FN = Scalar Function
+    // IF = Inline Table Function
+    // TF = Table Function
+    // FS | AF = Assembly (CLR) Scalar Function
+    // FT | AT = Assembly (CLR) Table Valued Function
+    return $this->connection
+      ->query("SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('" . $function . "') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT', N'AF')")
+      ->fetchField() !== FALSE;
+  }
+
+  /**
+   * Check if CLR is enabled, required
+   * to run GROUP_CONCAT.
+   */
+  public function CLREnabled() {
+    return $this->connection
+        ->query("SELECT value FROM sys.configurations WHERE name = 'clr enabled'")
+        ->fetchField() !== 1;
+  }
+
+  /**
+   * Change Database recovery model.
+   */
+  public function setRecoveryModel($model) {
+    $this->connection->query("ALTER " . $this->connection->options['name'] . " model SET RECOVERY " . $model);
   }
 
   /**
@@ -455,6 +566,45 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     // Add the new keys.
     if (isset($new_keys)) {
       $this->recreateTableKeys($table, $new_keys);
+    }
+  }
+
+  /**
+   * Gets collation for current connection,
+   * whether it has or not a database defined in
+   * it.
+   *
+   * @status needs review
+   */
+  public function getCollation($table = NULL, $column = NULL) {
+    // Database is defaulted from active connection.
+    $options = $this->connection->getConnectionOptions();
+    $database = $options['database'];
+    if (!empty($database)) {
+      // Default collation for specific table.
+      $sql = "SELECT CONVERT (varchar, DATABASEPROPERTYEX('$database', 'collation'))";
+      return $this->connection->query($sql)->fetchField();
+    }
+    else {
+      // Server default collation.
+      $sql = "SELECT SERVERPROPERTY ('collation') as collation";
+      return $this->connection->query($sql)->fetchField();
+    }
+    if (!empty($table) && $empty($column)) {
+      $sql = <<< EOF
+      SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, COLLATION_NAME, DATA_TYPE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = ':schema'
+        AND TABLE_NAME = ':table'
+        AND COLUMN_NAME = ':column'
+EOF
+;
+      $params = array();
+      $params[':schema'] = $this->defaultSchema;
+      $params[':table'] = $table;
+      $params[':column'] = $column;
+      $result = $this->connection->query($sql, $params)->fetchObject();
+      return $result->COLLATION_NAME;
     }
   }
 

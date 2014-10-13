@@ -89,6 +89,9 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
         // GROUP BY SUBSTRING(title, 1, :length2);
         // This is only going to work in PDO 3 but doesn't hurt in PDO 2.
         PDO::ATTR_EMULATE_PREPARES => TRUE,
+        // The security of parameterized queries is not in effect when you use PDO::ATTR_EMULATE_PREPARES => true. 
+        // Your application should ensure that the data that is bound to the parameter(s) does not contain malicious
+        // Transact-SQL code.
     );
 
     // Launch the connection to the server.
@@ -98,7 +101,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
     // Fetch the name of the user-bound schema. It is the schema that SQL Server
     // will use for non-qualified tables.
-    $this->schema()->defaultSchema = $this->query("SELECT SCHEMA_NAME()")->fetchField();
+    $this->schema()->defaultSchema = $this->schema()->GetDefaultSchema();
 
   }
 
@@ -176,15 +179,9 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       // Replace reserved words.
       return '[' . $matches[1] . ']';
     }
-    else {
-      // Let other value passthru.
-      for ($i = 2; $i < count($matches); $i++) {
-        if ($matches[$i] !== '') {
-          return $matches[$i];
-        }
-      }
-    }
-    return '';
+    // Let other value passthru.
+    // by the logic of the regex above, this will always be the last match.
+    return end($matches);
   }
 
   public function quoteIdentifier($identifier) {
@@ -366,16 +363,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     $query = preg_replace(array_keys($replacements), $replacements, $query);
 
     // Add prefixes to Drupal-specific functions.
-    $functions = array(
-      'SUBSTRING',
-      'SUBSTRING_INDEX',
-      'GREATEST',
-      'CONCAT',
-      'GROUP_CONCAT',
-      'IF',
-      'MD5',
-      'LPAD',
-    );
+    $functions = $this->schema()->DrupalSpecificFunctions();
     foreach ($functions as $function) {
       $query = preg_replace('/\b(?<![:.])(' . preg_quote($function) . ')\(/i', $this->schema()->defaultSchema . '.$1(', $query);
     }
@@ -481,8 +469,8 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
     $pdo_options = array();
     // Set insecure options if requested so.
     if ($this->insecure) {
-      // We have to log this, prepared statements are a security RISK
-      // \Drupal::logger('sqlsrv')->notice('Running insecure Statement: {$query}');
+      // We have to log this, prepared statements are a security RISK.
+      watchdog('SQL Server Driver', 'An insecure query has been executed against the database. This is not critical, but worth looking into.');
       $options = $this->dbh->getConnectionOptions();
       // These are defined in class Connection.
       $pdo_options = $options['pdo'];
