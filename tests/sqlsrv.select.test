@@ -6,14 +6,20 @@
  */
 
 class SqlServerSelectTest extends DatabaseTestCase {
+  /**
+   * {inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Select tests',
       'description' => 'Extended tests for SELECT handling.',
-      'group' => 'Database (SQL Server)'
+      'group' => 'Database (SQL Server)',
     );
   }
 
+  /**
+   * Test group by expansion.
+   */
   public function testGroupByExpansion() {
     // By ANSI SQL, GROUP BY columns cannot use aliases. Test that the
     // driver expands the aliases properly.
@@ -48,11 +54,11 @@ class SqlServerSelectTest extends DatabaseTestCase {
 
     $this->assertEqual($num_records, 6, t('Returned the correct number of total rows.'));
   }
-  
+
   /**
    * Test the 2100 parameter limit per query.
    */
-  function testParameterLimit() {
+  public function testParameterLimit() {
     $values = array();
     for ($x = 0; $x < 2200; $x ++) {
       $values[] = uniqid($x, TRUE);
@@ -67,17 +73,17 @@ class SqlServerSelectTest extends DatabaseTestCase {
     }
     catch (\Exception $err) {
     }
-    
+
     $this->assertEqual($result, 0, 'Returned the correct number of total rows.');
   }
-  
+
   /**
    * Although per official documentation you cannot send
    * duplicate placeholders in same query, this works in mySQL
    * and is present in some queries, even in core, wich have not
    * gotten enough attention.
    */
-  function testDuplicatePlaceholders() {
+  public function testDuplicatePlaceholders() {
     $query = db_select('test_task', 't');
     $query->addExpression('COUNT(task)', 'num');
     $query->where('t.task IN (:data0, :data0)', array(':data0' => 'sleep'));
@@ -88,15 +94,15 @@ class SqlServerSelectTest extends DatabaseTestCase {
     } 
     catch (\Exception $err) { 
     }
-    
+
     $this->assertEqual($result, 2, 'Returned the correct number of total rows.');
   }
-  
+
   /**
    * Test for weird key names
    * in array arguments.
    */
-  function textBadKeysInArrayArguments() {
+  public function testBadKeysInArrayArguments() {
     $params[':nids'] = array(
         'uid1' => -9,
         'What a bad placeholder name, why should we care?' => -6,
@@ -106,14 +112,14 @@ class SqlServerSelectTest extends DatabaseTestCase {
       // The regular expandArguments implementation will fail to
       // properly expand the associative array with weird keys, OH, and actually
       // you can perform some SQL Injection through the array keys.
-      $result = db_query('SELECT UID FROM USERS WHERE USERS.UID IN (:nids)', $params);
+      $result = db_query('SELECT COUNT(*) FROM USERS WHERE USERS.UID IN (:nids)', $params)->execute()->fetchField();
     } 
     catch (\Exception $err) {
       // Regular drupal will fail with
       // SQLSTATE[IMSSP]: An error occurred substituting the named parameters.
       // https://www.drupal.org/node/2146839
     }
-    
+
     // User ID's are negative, so this should return 0 matches.
     $this->assertEqual($result, 0, 'Returned the correct number of total rows.');
   }
