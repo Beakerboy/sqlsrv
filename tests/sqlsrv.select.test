@@ -107,7 +107,7 @@ class SqlServerSelectTest extends DatabaseTestCase {
         'uid1' => -9,
         'What a bad placeholder name, why should we care?' => -6,
         );
-
+    $result = NULL;
     try {
       // The regular expandArguments implementation will fail to
       // properly expand the associative array with weird keys, OH, and actually
