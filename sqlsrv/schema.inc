@@ -18,6 +18,16 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
   public $defaultSchema = 'dbo';
 
   protected $additionalColumnInformation = NULL;
+  /**
+   * Default recommended collation for SQL Server.
+   */
+  const DEFAULT_COLLATION_CI = 'Latin1_General_CI_AI';
+  
+  /**
+   * Default recommended collation for SQL Server.
+   * when case sensitivity is required.
+   */
+  const DEFAULT_COLLATION_CS = 'Latin1_General_CS_AI';
 
   /**
    * Returns a list of functions that are not
@@ -36,6 +46,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
         'GROUP_CONCAT',
         'CONCAT',
         'IF',
+        'CONNECTION_ID'
         );
     
     // Since SQL Server 2012 (11), there
@@ -261,12 +272,28 @@ EOF
    */
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
     $sql = $this->connection->quoteIdentifier($name) . ' ' . $spec['sqlsrv_type'];
-
-    if (in_array($spec['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext')) && !empty($spec['length'])) {
+    $is_text = in_array($spec['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
+    if ($is_text === TRUE && !empty($spec['length'])) {
       $sql .= '(' . $spec['length'] . ')';
     }
     elseif (in_array($spec['sqlsrv_type'], array('numeric', 'decimal')) && isset($spec['precision']) && isset($spec['scale'])) {
+      // Maximum precision for SQL Server 2008 orn greater is 38.
+      // For previous versions it's 28.
+      if ($spec['precision'] > 38) {
+        watchdog('SQL Server Driver', "Field '@field' in table '@table' has had it's precision dropped from @precision to 38", 
+                array('@field' => $name, 
+                      '@table' => $table,
+                      '@precision' => $spec['precision']
+                  )
+                );
+        $spec['precision'] = 38;
+      }
       $sql .= '(' . $spec['precision'] . ', ' . $spec['scale'] . ')';
+    }
+
+    // When binary is true, case sensitivity is requested.
+    if ($is_text === TRUE && isset($spec['binary']) && $spec['binary'] === TRUE) {
+      $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
     }
 
     if (isset($spec['not null']) && $spec['not null']) {

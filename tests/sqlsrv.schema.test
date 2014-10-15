@@ -231,4 +231,60 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
 
     $this->assertTrue(db_index_exists('test_table', 'id_test'), t('The index has been recreated by db_change_field().'));
   }
+  
+  
+  /**
+   * Test db_add_field() and db_change_field() with binary spec.
+   */
+  public function testAddChangeWithBinary() {
+    $table_spec = array(
+      'fields' => array(
+        'id'  => array(
+          'type' => 'serial',
+          'not null' => TRUE,
+        ),
+        'name' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'binary' => false
+        ),
+      ),
+      'primary key' => array('id'),
+    );
+
+    db_create_table('test_table_binary', $table_spec);
+    
+    // Insert a value in name
+    db_insert('test_table_binary')
+      ->fields(array(
+        'name' => 'Sandra',
+      ))->execute();
+      
+    // Insert a value in name
+    db_insert('test_table_binary')
+      ->fields(array(
+        'name' => 'sandra',
+      ))->execute();
+      
+    // By default, datase collation
+    // should be case insensitive, returning both rows.
+    $result = db_query('SELECT COUNT(*) FROM test_table_binary WHERE name = :name', array(':name' => 'SANDRA'))->fetchField();
+    $this->assertEqual($result, 2, 'Returned the correct number of total rows.');
+    
+    // Now let's change the field
+    // to case sensistive
+    db_change_field('test_table_binary', 'name', 'name', array(
+          'type' => 'varchar',
+          'length' => 255,
+          'binary' => true
+        ));
+        
+    // With case sensitivity, no results.
+    $result = db_query('SELECT COUNT(*) FROM test_table_binary WHERE name = :name', array(':name' => 'SANDRA'))->fetchField();
+    $this->assertEqual($result, 0, 'Returned the correct number of total rows.');
+    
+    // Now one result.
+    $result = db_query('SELECT COUNT(*) FROM test_table_binary WHERE name = :name', array(':name' => 'sandra'))->fetchField();
+    $this->assertEqual($result, 1, 'Returned the correct number of total rows.');
+  }
 }

@@ -157,6 +157,22 @@ END
 EOF
       );
 
+      // CONNECTION_ID() function.
+      $database->query(<<< EOF
+IF OBJECT_ID (N'CONNECTION_ID', N'FN') IS NOT NULL BEGIN DROP FUNCTION [CONNECTION_ID] END
+EOF
+      );
+
+      $database->query(<<< EOF
+CREATE FUNCTION [dbo].[CONNECTION_ID]() RETURNS smallint AS
+BEGIN
+  DECLARE @var smallint
+  SELECT @var = @@SPID
+  RETURN @Var
+END
+EOF
+      );
+
       $database->bypassQueryPreprocess = FALSE;
     }
     catch (Exception $e) {
