@@ -322,7 +322,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     foreach (array_filter($args, 'is_array') as $key => $data) {
       $new_keys = array();
       $pos = 0;
-      foreach ($data as $i => $value) {
+      foreach (array_values($data) as $i => $value) {
         // This assumes that there are no other placeholders that use the same
         // name.  For example, if the array placeholder is defined as :example
         // and there is already an :example_2 placeholder, this will generate
