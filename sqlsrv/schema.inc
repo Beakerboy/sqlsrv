@@ -63,7 +63,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    */
   public function GetDefaultSchema() {
     $schema = &drupal_static(__FUNCTION__);
-    if (!isset($functions)) {
+    if (!isset($schema)) {
       $state = $this->connection->bypassQueryPreprocess;
       $this->connection->bypassQueryPreprocess = true;
       $schema = $this->connection->query("SELECT SCHEMA_NAME()")->fetchField();
