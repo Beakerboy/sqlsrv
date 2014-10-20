@@ -106,13 +106,13 @@ class SelectQueryTest extends WebTestBase {
   /**
    * Test the 2100 parameter limit per query.
    */
-  function testParameterLimit() {
+  public function testParameterLimit() {
     $values = array();
     for ($x = 0; $x < 2200; $x ++) {
       $values[] = uniqid($x, TRUE);
     }
     $query = db_select('test_task', 't');
-    $count_field = $query->addExpression('COUNT(task)', 'num');
+    $query->addExpression('COUNT(task)', 'num');
     $query->where('t.task IN (:data)', array(':data' => $values));
     $result = NULL;
     // If > 2100 we can get SQL Exception! The driver must handle that.
@@ -132,9 +132,9 @@ class SelectQueryTest extends WebTestBase {
    * and is present in some queries, even in core, wich have not
    * gotten enough attention.
    */
-  function testDuplicatePlaceholders() {
+  public function testDuplicatePlaceholders() {
     $query = db_select('test_task', 't');
-    $count_field = $query->addExpression('COUNT(task)', 'num');
+    $query->addExpression('COUNT(task)', 'num');
     $query->where('t.task IN (:data0, :data0)', array(':data0' => 'sleep'));
     $result = NULL;
     // If > 2100 we can get SQL Exception! The driver must handle that.
@@ -147,6 +147,32 @@ class SelectQueryTest extends WebTestBase {
     }
     
     $this->assertEqual($result, 2, 'Returned the correct number of total rows.');
+  }
+
+  /**
+   * Test for weird key names
+   * in array arguments.
+   */
+  public function testBadKeysInArrayArguments() {
+    $params[':nids'] = array(
+        'uid1' => -9,
+        'What a bad placeholder name, why should we care?' => -6,
+        );
+    $result = NULL;
+    try {
+      // The regular expandArguments implementation will fail to
+      // properly expand the associative array with weird keys, OH, and actually
+      // you can perform some SQL Injection through the array keys.
+      $result = db_query('SELECT COUNT(*) FROM USERS WHERE USERS.UID IN (:nids)', $params)->execute()->fetchField();
+    } 
+    catch (\Exception $err) {
+      // Regular drupal will fail with
+      // SQLSTATE[IMSSP]: An error occurred substituting the named parameters.
+      // https://www.drupal.org/node/2146839
+    }
+
+    // User ID's are negative, so this should return 0 matches.
+    $this->assertEqual($result, 0, 'Returned the correct number of total rows.');
   }
   
 }

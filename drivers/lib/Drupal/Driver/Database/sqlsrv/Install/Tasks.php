@@ -11,6 +11,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Install\Tasks as InstallTasks;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Driver\Database\sqlsrv\Connection;
+use Drupal\Driver\Database\sqlsrv\Schema;
 
 /**
  * Specifies installation tasks for PostgreSQL databases.
@@ -124,12 +125,12 @@ class Tasks extends InstallTasks {
       $database = Database::getConnection();
       $schema = $database->schema();
       $collation = $schema->getCollation();
-      if ($collation == Connection::DEFAULT_COLLATION || stristr($collation, '_CI') !== FALSE) {
+      if ($collation == Schema::DEFAULT_COLLATION_CI || stristr($collation, '_CI') !== FALSE) {
         $this->pass(t('Database is encoded in case insensitive collation: $collation'));
       }
       else {
         $this->fail(t('The %driver database must use case insensitive encoding (recomended %encoding) to work with Drupal. Recreate the database with %encoding encoding. See !link for more details.', array(
-          '%encoding' => Connection::DEFAULT_COLLATION,
+          '%encoding' => Schema::DEFAULT_COLLATION_CI,
           '%driver' => $this->name(),
           '!link' => '<a href="INSTALL.sqlsrv.txt">INSTALL.sqlsrv.txt</a>'
         )));
@@ -257,6 +258,18 @@ EOF
             {$if_exists} FUNCTION [dbo].[LPAD](@str nvarchar(max), @len int, @padstr nvarchar(max)) RETURNS nvarchar(4000) AS
             BEGIN
 	            RETURN left(@str + replicate(@padstr,@len),@len);
+            END
+EOF
+      );
+      
+      // CONNECTION_ID() function.
+      $if_exists = $schema->functionExists('CONNECTION_ID') ? 'ALTER' : 'CREATE';
+      $database->query(<<< EOF
+            {$if_exists} FUNCTION [dbo].[CONNECTION_ID]() RETURNS smallint AS
+            BEGIN
+              DECLARE @var smallint
+              SELECT @var = @@SPID
+              RETURN @Var
             END
 EOF
       );

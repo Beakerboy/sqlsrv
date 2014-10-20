@@ -29,11 +29,6 @@ class Connection extends DatabaseConnection {
    * the database does not exist.
    */
   const DATABASE_NOT_FOUND = 28000;
-  
-  /**
-   * Default recommended collation for SQL Server.
-   */
-  const DEFAULT_COLLATION = 'Latin1_General_CI_AI';
 
   public function lastInsertId() {
     return $this->connection->lastInsertId();
@@ -57,7 +52,7 @@ class Connection extends DatabaseConnection {
 
     // Fetch the name of the user-bound schema. It is the schema that SQL Server
     // will use for non-qualified tables.
-    $this->schema()->defaultSchema =  $this->query("SELECT SCHEMA_NAME()")->fetchField();
+    $this->schema()->defaultSchema = $this->schema()->GetDefaultSchema();
   }
 
   /**
@@ -262,7 +257,7 @@ hout)
   protected function replaceReservedCallback($matches) {
     if ($matches[1] !== '') {
       // Replace reserved words.
-      return '[' . $matches[1] . ']';
+      return $this->quoteIdentifier($matches[1]);
     }
     // Let other value passthru.
     // by the logic of the regex above, this will always be the last match.
@@ -270,7 +265,16 @@ hout)
   }
 
   public function quoteIdentifier($identifier) {
-    return '[' . $identifier .']';
+    // Only quote reserved keywords. Strpos faster than regex.
+    // We could quote all without looking for reserved
+    // but that won't allow us to pass some core tests.
+    $is_reserved = stripos(sqlsrv_RESERVED_KEYWORDS, "\r\n" . $identifier . "\r\n");
+    if ($is_reserved !== FALSE) {
+      return '[' . $identifier .']';
+    }
+    else {
+      return $identifier;
+    }
   }
 
   public function escapeField($field) {
@@ -313,52 +317,6 @@ hout)
   }
 
   /**
-   * {@inheritdoc}
-   *
-   * This method is overriden to modify the way placeholder
-   * names are generated. This allows to have plain queries
-   * have a higher degree of repetitivity, allowing for a possible
-   * query manipulation cache.
-   */
-  protected function expandArguments(&$query, &$args) {
-    
-    $modified = FALSE;
-
-    // If the placeholder value to insert is an array, assume that we need
-    // to expand it out into a comma-delimited set of placeholders.
-    foreach (array_filter($args, 'is_array') as $key => $data) {
-      $new_keys = array();
-      $pos = 0;
-      foreach ($data as $i => $value) {
-        // This assumes that there are no other placeholders that use the same
-        // name.  For example, if the array placeholder is defined as :example
-        // and there is already an :example_2 placeholder, this will generate
-        // a duplicate key.  We do not account for that as the calling code
-        // is already broken if that happens.
-        $new_keys[$key . '_' . $pos] = $value;
-        $pos++;
-      }
-
-      // Update the query with the new placeholders.
-      // preg_replace is necessary to ensure the replacement does not affect
-      // placeholders that start with the same exact text. For example, if the
-      // query contains the placeholders :foo and :foobar, and :foo has an
-      // array of values, using str_replace would affect both placeholders,
-      // but using the following preg_replace would only affect :foo because
-      // it is followed by a non-word character.
-      $query = preg_replace('#' . $key . '\b#', implode(', ', array_keys($new_keys)), $query);
-
-      // Update the args array with the new placeholders.
-      unset($args[$key]);
-      $args += $new_keys;
-
-      $modified = TRUE;
-    }
-
-    return $modified;
-  }
-
-  /**
    * Internal function: massage a query to make it compliant with SQL Server.
    */
   public function preprocessQuery($query) {
@@ -372,13 +330,22 @@ hout)
 
     // Last chance to modify some SQL Server-specific syntax.
     $replacements = array(
-    // Normalize SAVEPOINT syntax to the SQL Server one.
-'/^SAVEPOINT (.*)$/' => 'SAVE TRANSACTION $1',
-'/^ROLLBACK TO SAVEPOINT (.*)$/' => 'ROLLBACK TRANSACTION $1',
-    // SQL Server doesn't need an explicit RELEASE SAVEPOINT.
-    // Run a non-operaiton query to avoid a fatal error
-    // when no query is runned.
-'/^RELEASE SAVEPOINT (.*)$/' => 'SELECT 1 /* $0 */',
+      // Normalize SAVEPOINT syntax to the SQL Server one.
+      '/^SAVEPOINT (.*)$/' => 'SAVE TRANSACTION $1',
+      '/^ROLLBACK TO SAVEPOINT (.*)$/' => 'ROLLBACK TRANSACTION $1',
+      // SQL Server doesn't need an explicit RELEASE SAVEPOINT.
+      // Run a non-operaiton query to avoid a fatal error
+      // when no query is runned.
+      '/^RELEASE SAVEPOINT (.*)$/' => 'SELECT 1 /* $0 */',
+      // TODO: For improved compatiblity with MySQL
+      // we should create a StoredProcedure that
+      // maps sp_who to a MySQL compatible approach.
+      // http://stackoverflow.com/questions/2234691/sql-server-filter-output-of-sp-who2
+      '/^SHOW PROCESSLIST$/' => 'EXEC sp_who',
+      // List all table names
+      '/^SHOW TABLES$/' => 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = \'BASE TABLE\'',
+      // List all table and view names.
+      '/^SHOW FULL TABLES$/' => 'SELECT TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES',
     );
     $query = preg_replace(array_keys($replacements), $replacements, $query);
 
@@ -502,7 +469,7 @@ WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
 
     try {
       // Create the database and set it as active.
-      $this->connection->exec("CREATE DATABASE $database COLLATE " . Connection::DEFAULT_COLLATION);
+      $this->connection->exec("CREATE DATABASE $database COLLATE " . Schema::DEFAULT_COLLATION_CI);
     }
     catch (DatabaseException $e) {
       throw new DatabaseNotFoundException($e->getMessage());
@@ -513,3 +480,496 @@ WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
 /**
  * @} End of "addtogroup database".
  */
+
+/**
+ * List of reserved keywords for query escaping.
+ */
+const sqlsrv_RESERVED_KEYWORDS = <<< EOF
+
+ADD
+ALL
+ALTER
+AND
+ANY
+AS
+ASC
+AUTHORIZATION
+BACKUP
+BEGIN
+BETWEEN
+BREAK
+BROWSE
+BULK
+BY
+CASCADE
+CASE
+CHECK
+CHECKPOINT
+CLOSE
+CLUSTERED
+COALESCE
+COLLATE
+COLUMN
+COMMIT
+COMPUTE
+CONSTRAINT
+CONTAINS
+CONTAINSTABLE
+CONTINUE
+CONVERT
+CREATE
+CROSS
+CURRENT
+CURRENT_DATE
+CURRENT_TIME
+CURRENT_TIMESTAMP
+CURRENT_USER
+CURSOR
+DATABASE
+DBCC
+DEALLOCATE
+DECLARE
+DEFAULT
+DELETE
+DENY
+DESC
+DISK
+DISTINCT
+DISTRIBUTED
+DOUBLE
+DROP
+DUMMY
+DUMP
+ELSE
+END
+ERRLVL
+ESCAPE
+EXCEPT
+EXEC
+EXECUTE
+EXISTS
+EXIT
+EXTERNAL
+FETCH
+FILE
+FILLFACTOR
+FOR
+FOREIGN
+FREETEXT
+FREETEXTTABLE
+FROM
+FULL
+FUNCTION
+GOTO
+GRANT
+GROUP
+HAVING
+HOLDLOCK
+IDENTITY
+IDENTITY_INSERT
+IDENTITYCOL
+IF
+IN
+INDEX
+INNER
+INSERT
+INTERSECT
+INTO
+IS
+JOIN
+KEY
+KILL
+LEFT
+LIKE
+LINENO
+LOAD
+MERGE
+NATIONAL
+NOCHECK
+NONCLUSTERED
+NOT
+NULL
+NULLIF
+OF
+OFF
+OFFSETS
+ON
+OPEN
+OPENDATASOURCE
+OPENQUERY
+OPENROWSET
+OPENXML
+OPTION
+OR
+ORDER
+OUTER
+OVER
+PERCENT
+PIVOT
+PLAN
+PRECISION
+PRIMARY
+PRINT
+PROC
+PROCEDURE
+PUBLIC
+RAISERROR
+READ
+READTEXT
+RECONFIGURE
+REFERENCES
+REPLICATION
+RESTORE
+RESTRICT
+RETURN
+REVERT
+REVOKE
+RIGHT
+ROLLBACK
+ROWCOUNT
+ROWGUIDCOL
+RULE
+SAVE
+SCHEMA
+SECURITYAUDIT
+SELECT
+SEMANTICKEYPHRASETABLE
+SEMANTICSIMILARITYDETAILSTABLE
+SEMANTICSIMILARITYTABLE
+SESSION_USER
+SET
+SETUSER
+SHUTDOWN
+SOME
+STATISTICS
+SYSTEM_USER
+TABLE
+TABLESAMPLE
+TEXTSIZE
+THEN
+TO
+TOP
+TRAN
+TRANSACTION
+TRIGGER
+TRUNCATE
+TRY_CONVERT
+TSEQUAL
+UNION
+UNIQUE
+UNPIVOT
+UPDATE
+UPDATETEXT
+USE
+USER
+VALUES
+VARYING
+VIEW
+WAITFOR
+WHEN
+WHERE
+WHILE
+WITH
+WITHIN GROUP
+WRITETEXT
+ABSOLUTE
+ACTION
+ADA
+ALLOCATE
+ARE
+ASSERTION
+AT
+AVG
+BIT
+BIT_LENGTH
+BOTH
+CASCADED
+CAST
+CATALOG
+CHAR
+CHAR_LENGTH
+CHARACTER
+CHARACTER_LENGTH
+COLLATION
+CONNECT
+CONNECTION
+CONSTRAINTS
+CORRESPONDING
+COUNT
+DATE
+DAY
+DEC
+DECIMAL
+DEFERRABLE
+DEFERRED
+DESCRIBE
+DESCRIPTOR
+DIAGNOSTICS
+DISCONNECT
+DOMAIN
+END-EXEC
+EXCEPTION
+EXTRACT
+FALSE
+FIRST
+FLOAT
+FORTRAN
+FOUND
+GET
+GLOBAL
+GO
+HOUR
+IMMEDIATE
+INCLUDE
+INDICATOR
+INITIALLY
+INPUT
+INSENSITIVE
+INT
+INTEGER
+INTERVAL
+ISOLATION
+LANGUAGE
+LAST
+LEADING
+LEVEL
+LOCAL
+LOWER
+MATCH
+MAX
+MIN
+MINUTE
+MODULE
+MONTH
+NAMES
+NATURAL
+NCHAR
+NEXT
+NO
+NONE
+NUMERIC
+OCTET_LENGTH
+ONLY
+OUTPUT
+OVERLAPS
+PAD
+PARTIAL
+PASCAL
+POSITION
+PREPARE
+PRESERVE
+PRIOR
+PRIVILEGES
+REAL
+RELATIVE
+ROWS
+SCROLL
+SECOND
+SECTION
+SESSION
+SIZE
+SMALLINT
+SPACE
+SQL
+SQLCA
+SQLCODE
+SQLERROR
+SQLSTATE
+SQLWARNING
+SUBSTRING
+SUM
+TEMPORARY
+TIME
+TIMESTAMP
+TIMEZONE_HOUR
+TIMEZONE_MINUTE
+TRAILING
+TRANSLATE
+TRANSLATION
+TRIM
+TRUE
+UNKNOWN
+UPPER
+USAGE
+USING
+VALUE
+VARCHAR
+WHENEVER
+WORK
+WRITE
+YEAR
+ZONE
+ADMIN
+AFTER
+AGGREGATE
+ALIAS
+ARRAY
+ASENSITIVE
+ASYMMETRIC
+ATOMIC
+BEFORE
+BINARY
+BLOB
+BOOLEAN
+BREADTH
+CALL
+CALLED
+CARDINALITY
+CLASS
+CLOB
+COLLECT
+COMPLETION
+CONDITION
+CONSTRUCTOR
+CORR
+COVAR_POP
+COVAR_SAMP
+CUBE
+CUME_DIST
+CURRENT_CATALOG
+CURRENT_DEFAULT_TRANSFORM_GROUP
+CURRENT_PATH
+CURRENT_ROLE
+CURRENT_SCHEMA
+CURRENT_TRANSFORM_GROUP_FOR_TYPE
+CYCLE
+DATA
+DEPTH
+DEREF
+DESTROY
+DESTRUCTOR
+DETERMINISTIC
+DICTIONARY
+DYNAMIC
+EACH
+ELEMENT
+EQUALS
+EVERY
+FILTER
+FREE
+FULLTEXTTABLE
+FUSION
+GENERAL
+GROUPING
+HOLD
+HOST
+IGNORE
+INITIALIZE
+INOUT
+INTERSECTION
+ITERATE
+LARGE
+LATERAL
+LESS
+LIKE_REGEX
+LIMIT
+LN
+LOCALTIME
+LOCALTIMESTAMP
+LOCATOR
+MAP
+MEMBER
+METHOD
+MOD
+MODIFIES
+MODIFY
+MULTISET
+NCLOB
+NEW
+NORMALIZE
+OBJECT
+OCCURRENCES_REGEX
+OLD
+OPERATION
+ORDINALITY
+OUT
+OVERLAY
+PARAMETER
+PARAMETERS
+PARTITION
+PATH
+POSTFIX
+PREFIX
+PREORDER
+PERCENT_RANK
+PERCENTILE_CONT
+PERCENTILE_DISC
+POSITION_REGEX
+RANGE
+READS
+RECURSIVE
+REF
+REFERENCING
+REGR_AVGX
+REGR_AVGY
+REGR_COUNT
+REGR_INTERCEPT
+REGR_R2
+REGR_SLOPE
+REGR_SXX
+REGR_SXY
+REGR_SYY
+RELEASE
+RESULT
+RETURNS
+ROLE
+ROLLUP
+ROUTINE
+ROW
+SAVEPOINT
+SCOPE
+SEARCH
+SENSITIVE
+SEQUENCE
+SETS
+SIMILAR
+SPECIFIC
+SPECIFICTYPE
+SQLEXCEPTION
+START
+STATE
+STATEMENT
+STATIC
+STDDEV_POP
+STDDEV_SAMP
+STRUCTURE
+SUBMULTISET
+SUBSTRING_REGEX
+SYMMETRIC
+SYSTEM
+TERMINATE
+THAN
+TRANSLATE_REGEX
+TREAT
+UESCAPE
+UNDER
+UNNEST
+VAR_POP
+VAR_SAMP
+VARIABLE
+WIDTH_BUCKET
+WITHOUT
+WINDOW
+WITHIN
+XMLAGG
+XMLATTRIBUTES
+XMLBINARY
+XMLCAST
+XMLCOMMENT
+XMLCONCAT
+XMLDOCUMENT
+XMLELEMENT
+XMLEXISTS
+XMLFOREST
+XMLITERATE
+XMLNAMESPACES
+XMLPARSE
+XMLPI
+XMLQUERY
+XMLSERIALIZE
+XMLTABLE
+XMLTEXT
+XMLVALIDATE
+
+EOF
+;

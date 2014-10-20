@@ -28,17 +28,23 @@ class Schema extends DatabaseSchema {
   const COMMENT_MAX_BYTES = 7500;
 
   /**
+   * Default recommended collation for SQL Server.
+   */
+  const DEFAULT_COLLATION_CI = 'Latin1_General_CI_AI';
+
+  /**
+   * Default recommended collation for SQL Server.
+   * when case sensitivity is required.
+   */
+  const DEFAULT_COLLATION_CS = 'Latin1_General_CS_AI';
+
+  /**
    * Default schema for SQL Server databases.
    */
   public $defaultSchema = 'dbo';
 
   protected $additionalColumnInformation = NULL;
 
-  public function resetTableQuerySchemaCache($table){
-    $table_info = $this->getPrefixInfo($table);
-    $key = $table_info['schema'] . '.' . $table_info['table'];
-  }
-  
   /**
    * Returns a list of functions that are not
    * available by default on SQL Server, but used
@@ -56,9 +62,24 @@ class Schema extends DatabaseSchema {
         'GROUP_CONCAT',
         'CONCAT',
         'IF',
+        'CONNECTION_ID',
         );
   }
-  
+
+  /**
+   * Return active default Schema.
+   */
+  public function GetDefaultSchema() {
+    $schema = &drupal_static(__FUNCTION__);
+    if (!isset($schema)) {
+      $state = $this->connection->bypassQueryPreprocess;
+      $this->connection->bypassQueryPreprocess = true;
+      $schema = $this->connection->query("SELECT SCHEMA_NAME()")->fetchField();
+      $this->connection->bypassQueryPreprocess = $state;
+    }
+    return $schema;
+  }
+
   /**
    * Database introspection: fetch technical information about a table.
    */
@@ -96,7 +117,6 @@ class Schema extends DatabaseSchema {
   public function createTable($name, $table) {
     // Reset the additional column information because the schema changed.
     $this->additionalColumnInformation = NULL;
-    $this->resetTableQuerySchemaCache($name);
 
     if ($this->tableExists($name)) {
       throw new DatabaseSchemaObjectExistsException(t('Table %name already exists.', array('%name' => $name)));
@@ -167,7 +187,10 @@ class Schema extends DatabaseSchema {
     ->query("SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'")
     ->fetchField() !== FALSE;
   }
-  
+
+  /**
+   * Retrieve Engine Version information.
+   */
   public function EngineVersion() {
     return $this->connection
     ->query(<<< EOF
@@ -177,7 +200,15 @@ class Schema extends DatabaseSchema {
 EOF
     )->fetchAssoc();
   }
-  
+
+  /**
+   * Retrieve Engine Version Number as integer.
+   */
+  public function EngineVersionNumber() {
+    $version = $this->EngineVersion();
+    return intval(str_replace('.', '', $version['VERSION']));
+  }
+
   /**
    * Find if a table function exists.
    *
@@ -269,11 +300,28 @@ EOF
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
     $sql = $this->connection->quoteIdentifier($name) . ' ' . $spec['sqlsrv_type'];
 
-    if (in_array($spec['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext')) && !empty($spec['length'])) {
+    $is_text = in_array($spec['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
+    if ($is_text === TRUE && !empty($spec['length'])) {
       $sql .= '(' . $spec['length'] . ')';
     }
     elseif (in_array($spec['sqlsrv_type'], array('numeric', 'decimal')) && isset($spec['precision']) && isset($spec['scale'])) {
+      // Maximum precision for SQL Server 2008 orn greater is 38.
+      // For previous versions it's 28.
+      if ($spec['precision'] > 38) {
+        watchdog('SQL Server Driver', "Field '@field' in table '@table' has had it's precision dropped from @precision to 38", 
+                array('@field' => $name,
+                      '@table' => $table,
+                      '@precision' => $spec['precision']
+                  )
+                );
+        $spec['precision'] = 38;
+      }
       $sql .= '(' . $spec['precision'] . ', ' . $spec['scale'] . ')';
+    }
+
+    // When binary is true, case sensitivity is requested.
+    if ($is_text === TRUE && isset($spec['binary']) && $spec['binary'] === TRUE) {
+      $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
     }
 
     if (isset($spec['not null']) && $spec['not null']) {
@@ -512,7 +560,6 @@ EOF
    * @status complete
    */
   public function addField($table, $field, $spec, $new_keys = array()) {
-    $this->resetTableQuerySchemaCache($table);
     if (!$this->tableExists($table)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", array('%field' => $field, '%table' => $table)));
     }
@@ -595,7 +642,6 @@ EOF
    * @status complete
    */
   public function changeField($table, $field, $field_new, $spec, $new_keys = array()) {
-    $this->resetTableQuerySchemaCache($table);
     if (!$this->fieldExists($table, $field)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", array('%table' => $table, '%name' => $field)));
     }
@@ -763,7 +809,6 @@ EOF
    * @status complete
    */
   public function dropField($table, $field) {
-    $this->resetTableQuerySchemaCache($table);
     if (!$this->fieldExists($table, $field)) {
       return FALSE;
     }
