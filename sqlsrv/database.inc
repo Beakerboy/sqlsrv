@@ -309,7 +309,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    */
   public function preprocessQuery($query) {
     // Force quotes around some SQL Server reserved keywords.
-    if (preg_match('/^SELECT/', $query)) {
+    if (preg_match('/^SELECT/i', $query)) {
       $query = preg_replace_callback(self::RESERVED_REGEXP, array($this, 'replaceReservedCallback'), $query);
     }
 
