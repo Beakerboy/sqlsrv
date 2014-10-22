@@ -465,13 +465,9 @@ EOF
   }
 
   public function fieldExists($table, $field) {
-    try {
-      $this->connection->query('SELECT TOP(1) [' . $field . '] FROM {' . $table . '}');
-      return TRUE;
-    }
-    catch (PDOException $e) {
-      return FALSE;
-    }
+    return $this->connection
+        ->query("SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "' AND column_name = '"  . $field . "'")
+        ->fetchField() !== FALSE;
   }
 
   /**
