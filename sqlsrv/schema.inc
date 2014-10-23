@@ -1,5 +1,7 @@
 <?php
 
+include_once 'fastcache.inc';
+
 /**
  * @file
  * Database schema code for Microsoft SQL Server database servers.
@@ -37,45 +39,49 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    * such as MySQL.
    */
   public function DrupalSpecificFunctions() {
+    if ($cache = fastcache::cache_get('drupal_specific_functions', 'schema')) {
+      return $cache;
+    }
     $functions = array(
-        'SUBSTRING',
-        'SUBSTRING_INDEX',
-        'GREATEST',
-        'MD5',
-        'LPAD',
-        'GROUP_CONCAT',
-        'CONCAT',
-        'IF',
-        'CONNECTION_ID'
-        );
-    
+      'SUBSTRING',
+      'SUBSTRING_INDEX',
+      'GREATEST',
+      'MD5',
+      'LPAD',
+      'GROUP_CONCAT',
+      'CONCAT',
+      'IF',
+      'CONNECTION_ID'
+    );
     // Since SQL Server 2012 (11), there
     // is a native CONCAT implementation
     if ($this->EngineVersionNumber() >= 11) {
-      unset($functions['CONCAT']);
+      $functions = array_diff($functions, array('CONCAT'));
     }
-
-    return $functions;
+    return fastcache::cache_set('drupal_specific_functions', $functions, 'schema');
   }
   
   /**
    * Return active default Schema.
    */
   public function GetDefaultSchema() {
-    $schema = &drupal_static(__FUNCTION__);
-    if (!isset($schema)) {
-      $state = $this->connection->bypassQueryPreprocess;
-      $this->connection->bypassQueryPreprocess = true;
-      $schema = $this->connection->query("SELECT SCHEMA_NAME()")->fetchField();
-      $this->connection->bypassQueryPreprocess = $state;
+    if ($cache = fastcache::cache_get('default_schema', 'schema')) {
+      return $cache;
     }
-    return $schema;
+    $state = $this->connection->bypassQueryPreprocess;
+    $this->connection->bypassQueryPreprocess = true;
+    $result = $this->connection->query("SELECT SCHEMA_NAME()")->fetchField();
+    $this->connection->bypassQueryPreprocess = $state;
+    return fastcache::cache_set('default_schema', $result, 'schema');
   }
   
   /**
    * Database introspection: fetch technical information about a table.
    */
   public function queryColumnInformation($table) {
+    if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema')) {
+      return $cache;
+    }
     $table_info = $this->getPrefixInfo($table);
     $key = $table_info['schema'] . '.' . $table_info['table'];
 
@@ -94,15 +100,15 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
         $this->additionalColumnInformation[$key]['identities'][$column->column_name] = TRUE;
       }
     }
-
-    return $this->additionalColumnInformation[$key];
+    return fastcache::cache_set('queryColumnInformation:' . $table, $this->additionalColumnInformation[$key], 'schema');
   }
 
   // TODO: implement the same for alter table and add/remove fields.
   public function createTable($name, $table) {
     // Reset the additional column information because the schema changed.
     $this->additionalColumnInformation = NULL;
-
+    fastcache::cache_clear_all('queryColumnInformation:' . $name, 'schema');
+    
     if ($this->tableExists($name)) {
       throw new DatabaseSchemaObjectExistsException(t('Table %name already exists.', array('%name' => $name)));
     }
@@ -158,25 +164,25 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     ->query("SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'")
     ->fetchField() !== FALSE;
   }
-  
+
   /**
    * Retrieve Engine Version information.
    */
   public function EngineVersion() {
-    $version = &drupal_static(__FUNCTION__);
-    if (!isset($version)) {
-      $state = $this->connection->bypassQueryPreprocess;
-      $this->connection->bypassQueryPreprocess = true;
-      $version = $this->connection
-      ->query(<<< EOF
+    if ($cache = fastcache::cache_get('EngineVersion', 'schema')) {
+      return $cache;
+    }
+    $state = $this->connection->bypassQueryPreprocess;
+    $this->connection->bypassQueryPreprocess = true;
+    $version = $this->connection
+    ->query(<<< EOF
     SELECT CONVERT (varchar,SERVERPROPERTY('productversion')) AS VERSION, 
     CONVERT (varchar,SERVERPROPERTY('productlevel')) AS LEVEL, 
     CONVERT (varchar,SERVERPROPERTY('edition')) AS EDITION
 EOF
-      )->fetchAssoc();
-      $this->connection->bypassQueryPreprocess = $state;
-    }
-    return $version;
+    )->fetchAssoc();
+    $this->connection->bypassQueryPreprocess = $state;    
+    return fastcache::cache_set('EngineVersion', $version, 'schema');
   }
 
   /**
@@ -483,6 +489,9 @@ EOF
       throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", array('%field' => $field, '%table' => $table)));
     }
 
+    // Clear column information for table.
+    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema');
+
     // If the field is declared NOT NULL, we have to first create it NULL insert
     // the initial data then switch to NOT NULL.
     if (!empty($spec['not null']) && !isset($spec['default'])) {
@@ -529,6 +538,9 @@ EOF
     if (($field != $field_new) && $this->fieldExists($table, $field_new)) {
       throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", array('%table' => $table, '%name' => $field, '%name_new' => $field_new)));
     }
+
+    // Clear column information for table.
+    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema');
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
@@ -690,7 +702,8 @@ EOF
     if (!$this->fieldExists($table, $field)) {
       return FALSE;
     }
-
+    // Clear column information for table.
+    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema');
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 

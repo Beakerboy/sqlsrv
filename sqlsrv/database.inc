@@ -11,6 +11,7 @@
  */
 
 include_once DRUPAL_ROOT . '/includes/database/prefetch.inc';
+include_once 'fastcache.inc';
 
 class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
@@ -95,15 +96,23 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
         // Transact-SQL code.
     );
 
-    // Launch the connection to the server.
-    parent::__construct($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+    // Initialize and prepare the connection prefix.
+    $this->setPrefix(isset($this->connectionOptions['prefix']) ? $this->connectionOptions['prefix'] : '');
 
-    $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Call PDO::__construct and PDO::setAttribute.
+    PDO::__construct($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+
+    // Set a Statement class, unless the driver opted out.
+    if (!empty($this->statementClass)) {
+      $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array($this->statementClass, array($this)));
+    }
 
     // Fetch the name of the user-bound schema. It is the schema that SQL Server
     // will use for non-qualified tables.
     $this->schema()->defaultSchema = $this->schema()->GetDefaultSchema();
-
+    
+    // Because the other methods don't seem to work right.
+    $driver_options[PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION;
   }
 
   /**
@@ -199,12 +208,16 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   }
 
   public function escapeField($field) {
+    if ($cache = fastcache::cache_get('escapeField:' . $field, 'schema')) {
+      return $cache;
+    }
     if (strlen($field) > 0) {
-      return implode('.', array_map(array($this, 'quoteIdentifier'), explode('.', preg_replace('/[^A-Za-z0-9_.]+/', '', $field))));
+      $result = implode('.', array_map(array($this, 'quoteIdentifier'), explode('.', preg_replace('/[^A-Za-z0-9_.]+/', '', $field))));
     }
     else {
-      return '';
+      $result = '';
     }
+    return fastcache::cache_set('escapeField:' . $field, $result, 'schema');
   }
 
   public function quoteIdentifiers($identifiers) {
@@ -308,6 +321,23 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    * Internal function: massage a query to make it compliant with SQL Server.
    */
   public function preprocessQuery($query) {
+    // Generate a cache signature for this query.
+    $query_signature = md5($query);
+
+    // Try to load query from query cache.
+    if ($cache = fastcache::cache_get($query_signature, 'query')) {
+      return $cache;
+    }
+
+    // Load the hit cache, we only want the query cache
+    // to store the most hited queries.
+    $hits = 0;
+    if ($cache = fastcache::cache_get($query_signature, 'query_hits')) {
+      $hits = $cache;
+    }
+    $hits++;
+    fastcache::cache_set($query_signature, $hits, 'query_hits');
+
     // Force quotes around some SQL Server reserved keywords.
     if (preg_match('/^SELECT/i', $query)) {
       $query = preg_replace_callback(self::RESERVED_REGEXP, array($this, 'replaceReservedCallback'), $query);
@@ -351,7 +381,15 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // Replace the ANSI concatenation operator with SQL Server poor one.
     $query = preg_replace('/\|\|/', '+', $query);
 
-    return $query;
+    // The minimum amount of hits for a query
+    // to get stored in query cache.
+    $minimum_hist = 50;
+    if ($hits >= $minimum_hist) {
+      return fastcache::cache_set($query_signature, $query, 'query');
+    } 
+    else {
+      return $query;
+    }
   }
 
   /**
@@ -389,8 +427,8 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // PDO doesn't know that and interpret \' as an escaping character. We
     // use a function call here to be safe.
     static $specials = array(
-      'LIKE' => array('postfix' => " ESCAPE CHAR(92)"),
-      'NOT LIKE' => array('postfix' => " ESCAPE CHAR(92)"),
+    'LIKE' => array('postfix' => " ESCAPE CHAR(92)"),
+    'NOT LIKE' => array('postfix' => " ESCAPE CHAR(92)"),
     );
     return isset($specials[$operator]) ? $specials[$operator] : NULL;
   }
@@ -421,8 +459,12 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    * @status needswork
    */
   public function escapeTable($table) {
+    if ($cache = fastcache::cache_get('escapeTable:' . $table, 'schema')) {
+      return $cache;
+    }
     // Rescue the # prefix from the escaping.
-    return ($table[0] == '#' ? '#' : '') . preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
+    $result = ($table[0] == '#' ? '#' : '') . preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
+    return fastcache::cache_set('escapeTable:' . $table, $result, 'schema');
   }
 }
 
@@ -442,7 +484,7 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
     // Set insecure options if requested so.
     if ($this->insecure) {
       // We have to log this, prepared statements are a security RISK.
-      watchdog('SQL Server Driver', 'An insecure query has been executed against the database. This is not critical, but worth looking into.');
+      watchdog('SQL Server Driver', 'An insecure query has been executed against the database. This is not critical, but worth looking into: %query', array('%query' => $query));
       $options = $this->dbh->getConnectionOptions();
       // These are defined in class Connection.
       $pdo_options = $options['pdo'];
