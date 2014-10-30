@@ -513,13 +513,13 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
     // Prepare the query.
     $statement = $this->getStatement($this->queryString, $args);
     if (!$statement) {
-      $this->throwPDOException();
+      $this->throwPDOException($statement);
     }
 
     $return = $statement->execute($args);
 
     if (!$return) {
-      $this->throwPDOException();
+      $this->throwPDOException($statement);
     }
 
     // Fetch all the data from the reply, in order to release any lock
@@ -585,6 +585,28 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
     $this->next();
 
     return $return;
+  }
+ 
+  /**
+   * Throw a PDO Exception based on the last PDO error.
+   *
+   * @status: Unfinished.
+   */
+  protected function throwPDOException($statement = NULL) {
+    // This is what a SQL Server PDO "no error" looks like.
+    $null_error = array(0 => '00000', 1 => NULL, 2 => NULL);
+    // The implementation in Drupal's Core StatementPrefetch Class
+    // takes for granted that the error information is in the PDOConnection
+    // but it is regularly held in the PDOStatement.
+    $error_info_connection = $this->dbh->errorInfo();
+    $error_info_statement =  !empty($statement) ? $statement->errorInfo() : $null_error;
+    // TODO: Concatenate error information when both connection
+    // and statement error info are valid.
+    // We rebuild a message formatted in the same way as PDO.
+    $error_info = ($error_info_connection === $null_error) ? $error_info_statement : $error_info_connection;
+    $exception = new PDOException("SQLSTATE[" . $error_info[0] . "]: General error " . $error_info[1] . ": " . $error_info[2]);
+    $exception->errorInfo = $error_info;
+    throw $exception;
   }
 }
 
