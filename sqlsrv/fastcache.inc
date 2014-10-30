@@ -95,7 +95,10 @@ class fastcache {
     if (fastcache::$fastcacheitems[$bin]->changed == FALSE) {
       fastcache::$fastcacheitems[$bin]->changed = TRUE;
       // Lock this binary until persisted.
-      if (lock_acquire('fastcache_' . $bin)) {
+      // Locks are only available after BOOTSTRAP_VARIABLE (3)
+      // phase.
+      $phase = drupal_bootstrap(NULL, FALSE);
+      if ($phase >= 3 && lock_acquire('fastcache_' . $bin)) {
         fastcache::$fastcacheitems[$bin]->persist = TRUE;
       }
     }
