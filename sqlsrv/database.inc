@@ -64,37 +64,17 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
     $dsn = 'sqlsrv:' . implode(';', $options);
 
-    // Allow PDO options to be overridden.
+    // PDO Options are set at a connection level.
+    // and apply to all statements.
     $connection_options['pdo'] = array();
-    
-    // This PDO options are INSECURE, but will overcome the following issues:
-    // (1) Duplicate placeholders
-    // (2) > 2100 parameter limit
-    // (3) Using expressions for group by with parameters are not detected as equal.
-    // This options are not applied by default, they are just stored in the connection
-    // options and applied when needed. See {Statement} class.
-    // The security of parameterized queries is not in effect when you use PDO::ATTR_EMULATE_PREPARES => true.
-    // Your application should ensure that the data that is bound to the parameter(s) does not contain malicious
-    // Transact-SQL code.
-    $connection_options['pdo'] += array(
-        // We run the statements in "direct mode" because the way PDO prepares
-        // statement in non-direct mode cause temporary tables to be destroyed
-        // at the end of the statement.
-        PDO::SQLSRV_ATTR_DIRECT_QUERY => TRUE,
-        // We ask PDO to perform the placeholders replacement itself because
-        // SQL Server is not able to detect duplicated placeholders in
-        // complex statements.
-        // E.g. This query is going to fail because SQL Server cannot
-        // detect that length1 and length2 are equals.
-        // SELECT SUBSTRING(title, 1, :length1)
-        // FROM node
-        // GROUP BY SUBSTRING(title, 1, :length2);
-        // This is only going to work in PDO 3 but doesn't hurt in PDO 2.
-        PDO::ATTR_EMULATE_PREPARES => TRUE,
-        // The security of parameterized queries is not in effect when you use PDO::ATTR_EMULATE_PREPARES => true. 
-        // Your application should ensure that the data that is bound to the parameter(s) does not contain malicious
-        // Transact-SQL code.
-    );
+
+    // Set proper error mode for all statements
+    $connection_options['pdo'][PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION;
+
+    // Set a Statement class, unless the driver opted out.
+    if (!empty($this->statementClass)) {
+      $connection_options['pdo'][PDO::ATTR_STATEMENT_CLASS] = array($this->statementClass, array($this));
+    }
 
     // Initialize and prepare the connection prefix.
     $this->setPrefix(isset($this->connectionOptions['prefix']) ? $this->connectionOptions['prefix'] : '');
@@ -102,17 +82,9 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // Call PDO::__construct and PDO::setAttribute.
     PDO::__construct($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
 
-    // Set a Statement class, unless the driver opted out.
-    if (!empty($this->statementClass)) {
-      $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array($this->statementClass, array($this)));
-    }
-
     // Fetch the name of the user-bound schema. It is the schema that SQL Server
     // will use for non-qualified tables.
     $this->schema()->defaultSchema = $this->schema()->GetDefaultSchema();
-    
-    // Because the other methods don't seem to work right.
-    $driver_options[PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION;
   }
 
   /**
@@ -209,7 +181,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
   public function escapeField($field) {
     if ($cache = fastcache::cache_get('escapeField:' . $field, 'schema')) {
-      return $cache;
+      return $cache->data;
     }
     if (strlen($field) > 0) {
       $result = implode('.', array_map(array($this, 'quoteIdentifier'), explode('.', preg_replace('/[^A-Za-z0-9_.]+/', '', $field))));
@@ -217,7 +189,8 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     else {
       $result = '';
     }
-    return fastcache::cache_set('escapeField:' . $field, $result, 'schema');
+    fastcache::cache_set('escapeField:' . $field, $result, 'schema');
+    return $result;
   }
 
   public function quoteIdentifiers($identifiers) {
@@ -326,14 +299,14 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
     // Try to load query from query cache.
     if ($cache = fastcache::cache_get($query_signature, 'query')) {
-      return $cache;
+      return $cache->data;
     }
 
     // Load the hit cache, we only want the query cache
     // to store the most hited queries.
     $hits = 0;
     if ($cache = fastcache::cache_get($query_signature, 'query_hits')) {
-      $hits = $cache;
+      $hits = $cache->data;
     }
     $hits++;
     fastcache::cache_set($query_signature, $hits, 'query_hits');
@@ -385,11 +358,11 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // to get stored in query cache.
     $minimum_hist = 50;
     if ($hits >= $minimum_hist) {
-      return fastcache::cache_set($query_signature, $query, 'query');
+      fastcache::cache_set($query_signature, $query, 'query');
     } 
-    else {
-      return $query;
-    }
+
+    return $query;
+
   }
 
   /**
@@ -460,11 +433,12 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    */
   public function escapeTable($table) {
     if ($cache = fastcache::cache_get('escapeTable:' . $table, 'schema')) {
-      return $cache;
+      return $cache->data;
     }
     // Rescue the # prefix from the escaping.
     $result = ($table[0] == '#' ? '#' : '') . preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
-    return fastcache::cache_set('escapeTable:' . $table, $result, 'schema');
+    fastcache::cache_set('escapeTable:' . $table, $result, 'schema');
+    return $result;
   }
 }
 
@@ -484,11 +458,38 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
     // Set insecure options if requested so.
     if ($this->insecure) {
       // We have to log this, prepared statements are a security RISK.
-      watchdog('SQL Server Driver', 'An insecure query has been executed against the database. This is not critical, but worth looking into: %query', array('%query' => $query));
-      $options = $this->dbh->getConnectionOptions();
+      // watchdog('SQL Server Driver', 'An insecure query has been executed against the database. This is not critical, but worth looking into: %query', array('%query' => $query));
       // These are defined in class Connection.
-      $pdo_options = $options['pdo'];
-    }  
+      // This PDO options are INSECURE, but will overcome the following issues:
+      // (1) Duplicate placeholders
+      // (2) > 2100 parameter limit
+      // (3) Using expressions for group by with parameters are not detected as equal.
+      // This options are not applied by default, they are just stored in the connection
+      // options and applied when needed. See {Statement} class.
+
+      // We run the statements in "direct mode" because the way PDO prepares
+      // statement in non-direct mode cause temporary tables to be destroyed
+      // at the end of the statement.
+      // If you are using the PDO_SQLSRV driver and you want to execute a query that 
+      // changes a database setting (e.g. SET NOCOUNT ON), use the PDO::query method with 
+      // the PDO::SQLSRV_ATTR_DIRECT_QUERY attribute.
+      // http://blogs.iis.net/bswan/archive/2010/12/09/how-to-change-database-settings-with-the-pdo-sqlsrv-driver.aspx
+      $pdo_options[PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
+
+      // We ask PDO to perform the placeholders replacement itself because
+      // SQL Server is not able to detect duplicated placeholders in
+      // complex statements.
+      // E.g. This query is going to fail because SQL Server cannot
+      // detect that length1 and length2 are equals.
+      // SELECT SUBSTRING(title, 1, :length1)
+      // FROM node
+      // GROUP BY SUBSTRING(title, 1, :length2
+      // This is only going to work in PDO 3 but doesn't hurt in PDO 2.
+      // The security of parameterized queries is not in effect when you use PDO::ATTR_EMULATE_PREPARES => true.
+      // Your application should ensure that the data that is bound to the parameter(s) does not contain malicious
+      // Transact-SQL code.
+      $pdo_options[PDO::ATTR_EMULATE_PREPARES] = TRUE;
+    }
     return $this->dbh->PDOPrepare($query, $pdo_options);
   }
 
@@ -586,13 +587,13 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
 
     return $return;
   }
- 
+
   /**
    * Throw a PDO Exception based on the last PDO error.
    *
    * @status: Unfinished.
    */
-  protected function throwPDOException($statement = NULL) {
+  protected function throwPDOException(&$statement = NULL) {
     // This is what a SQL Server PDO "no error" looks like.
     $null_error = array(0 => '00000', 1 => NULL, 2 => NULL);
     // The implementation in Drupal's Core StatementPrefetch Class
@@ -606,6 +607,7 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
     $error_info = ($error_info_connection === $null_error) ? $error_info_statement : $error_info_connection;
     $exception = new PDOException("SQLSTATE[" . $error_info[0] . "]: General error " . $error_info[1] . ": " . $error_info[2]);
     $exception->errorInfo = $error_info;
+    unset($statement);
     throw $exception;
   }
 }

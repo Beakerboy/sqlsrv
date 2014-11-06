@@ -79,7 +79,7 @@ class fastcache {
    */
   public static function cache_get ($cid, $bin) {
     if (!fastcache::Enabled()) {
-      return null;
+      return FALSE;
     }
     fastcache::cache_load_ensure($bin);
     return fastcache::$fastcacheitems[$bin]->data($cid);
@@ -102,7 +102,7 @@ class fastcache {
         fastcache::$fastcacheitems[$bin]->persist = TRUE;
       }
     }
-    return fastcache::$fastcacheitems[$bin]->data($cid, $data);
+    fastcache::$fastcacheitems[$bin]->data($cid, $data);
   }
 
   /**

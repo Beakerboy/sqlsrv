@@ -40,7 +40,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    */
   public function DrupalSpecificFunctions() {
     if ($cache = fastcache::cache_get('drupal_specific_functions', 'schema')) {
-      return $cache;
+      return $cache->data;
     }
     $functions = array(
       'SUBSTRING',
@@ -58,7 +58,8 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     if ($this->EngineVersionNumber() >= 11) {
       $functions = array_diff($functions, array('CONCAT'));
     }
-    return fastcache::cache_set('drupal_specific_functions', $functions, 'schema');
+    fastcache::cache_set('drupal_specific_functions', $functions, 'schema');
+    return $functions;
   }
   
   /**
@@ -66,22 +67,22 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    */
   public function GetDefaultSchema() {
     if ($cache = fastcache::cache_get('default_schema', 'schema')) {
-      return $cache;
+      return $cache->data;
     }
     $state = $this->connection->bypassQueryPreprocess;
     $this->connection->bypassQueryPreprocess = true;
     $result = $this->connection->query("SELECT SCHEMA_NAME()")->fetchField();
     $this->connection->bypassQueryPreprocess = $state;
-    return fastcache::cache_set('default_schema', $result, 'schema');
+    fastcache::cache_set('default_schema', $result, 'schema');
+    return $result;
   }
   
   /**
    * Database introspection: fetch technical information about a table.
    */
   public function queryColumnInformation($table) {
-    $cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema');
-    if ($cache !== FALSE) {
-      return $cache;
+    if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema')) {
+      return $cache->data;
     }
     $table_info = $this->getPrefixInfo($table);
     $key = $table_info['schema'] . '.' . $table_info['table'];
@@ -101,7 +102,8 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
         $this->additionalColumnInformation[$key]['identities'][$column->column_name] = TRUE;
       }
     }
-    return fastcache::cache_set('queryColumnInformation:' . $table, $this->additionalColumnInformation[$key], 'schema');
+    fastcache::cache_set('queryColumnInformation:' . $table, $this->additionalColumnInformation[$key], 'schema');
+    return $this->additionalColumnInformation[$key];
   }
 
   // TODO: implement the same for alter table and add/remove fields.
@@ -171,7 +173,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    */
   public function EngineVersion() {
     if ($cache = fastcache::cache_get('EngineVersion', 'schema')) {
-      return $cache;
+      return $cache->data;
     }
     $state = $this->connection->bypassQueryPreprocess;
     $this->connection->bypassQueryPreprocess = true;
@@ -183,7 +185,8 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 EOF
     )->fetchAssoc();
     $this->connection->bypassQueryPreprocess = $state;    
-    return fastcache::cache_set('EngineVersion', $version, 'schema');
+    fastcache::cache_set('EngineVersion', $version, 'schema');
+    return $version;
   }
 
   /**

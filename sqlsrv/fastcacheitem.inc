@@ -4,13 +4,13 @@
  * @file
  * fastcacheitem Class.
  */
- 
+
 class fastcacheitem {
   public $persist = FALSE;
   public $changed = FALSE;
   public $bin;
   private $data;
-  
+
   /**
    * Construct with a DrupalCacheInterface object
    * that comes from a real cache storage.
@@ -24,7 +24,7 @@ class fastcacheitem {
     }
     $this->bin = $binary;
   }
-  
+
   /**
    * Aux starsWith string.
    */
@@ -47,15 +47,18 @@ class fastcacheitem {
   public function data($key, $value = NULL) {
     if (isset($value)) {
       $this->data[$key] = $value;
-    } 
-
-    if (isset($this->data[$key])) {
-      return $this->data[$key];
     }
 
-    return NULL;
+    if (isset($this->data[$key])) {
+      // Encapsulate inside object!
+      $result = new stdClass();
+      $result->data = $this->data[$key];
+      return $result;
+    }
+
+    return FALSE;
   }
-  
+
   /**
    * Clear a cache item.
    */
