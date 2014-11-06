@@ -79,7 +79,8 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    * Database introspection: fetch technical information about a table.
    */
   public function queryColumnInformation($table) {
-    if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema')) {
+    $cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema');
+    if ($cache !== FALSE) {
       return $cache;
     }
     $table_info = $this->getPrefixInfo($table);
