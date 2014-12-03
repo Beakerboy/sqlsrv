@@ -11,12 +11,12 @@ class SelectQuery_sqlsrv extends SelectQuery {
   public function preExecute(SelectQueryInterface $query = NULL) {
     // If no query object is passed in, use $this.
     if (!isset($query)) {
-     $query = $this;
+      $query = $this;
     }
 
     // Only execute this once.
     if ($this->isPrepared()) {
-     return TRUE;
+      return TRUE;
     }
 
     // Execute standard pre-execution first.
@@ -70,6 +70,56 @@ class SelectQuery_sqlsrv extends SelectQuery {
     return parent::compile($connection, $queryPlaceholder);
   }
 
+  /* strpos that takes an array of values to match against a string
+   * note the stupid argument order (to match strpos)
+   */
+  private function stripos_arr($haystack, $needle) {
+    if(!is_array($needle)) {
+      $needle = array($needle);
+    }
+    foreach($needle as $what) {
+      if(($pos = stripos($haystack, $what)) !== false) { 
+        return $pos;
+      }
+    }
+    return FALSE;
+  }
+
+  const RESERVED_REGEXP_BASE = '/\G
+    # Everything that follows a boundary that is not : or _.
+    \b(?<![:\[_])(?:
+      # Any reserved words, followed by a boundary that is not an opening parenthesis.
+      ({0})
+      (?!\()
+      |
+      # Or a normal word.
+      ([a-z]+)
+    )\b
+    |
+    \b(
+      [^a-z\'"\\\\]+
+    )\b
+    |
+    (?=[\'"])
+    (
+      "  [^\\\\"] * (?: \\\\. [^\\\\"] *) * "
+      |
+      \' [^\\\\\']* (?: \\\\. [^\\\\\']*) * \'
+    )
+  /Six';
+
+  private $cross_apply_aliases;
+
+  protected function replaceReservedAliases($matches) {
+    if ($matches[1] !== '') {
+      // Replace reserved words.
+      return $this->cross_apply_aliases[$matches[1]];
+    }
+    // Let other value passthru.
+    // by the logic of the regex above, this will always be the last match.
+    return end($matches);
+  }
+
   public function __toString() {
     // For convenience, we compile the query ourselves if the caller forgot
     // to do it. This allows constructs like "(string) $query" to work. When
@@ -78,7 +128,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
     if (!$this->compiled()) {
       $this->compile($this->connection, $this);
     }
-  
+    
     // Create a sanitized comment string to prepend to the query.
     $comments = $this->connection->makeComment($this->comments);
 
@@ -100,8 +150,32 @@ class SelectQuery_sqlsrv extends SelectQuery {
       // databases require it (e.g., PostgreSQL).
       $fields[] = (isset($field['table']) ? $this->connection->escapeTable($field['table']) . '.' : '') . $this->connection->escapeField($field['field']) . ' AS ' . $this->connection->escapeField($field['alias']);
     }
+    // In MySQL you can reuse expressions present in SELECT
+    // from WHERE.
+    // The way to emulate that behaviour in SQL Server is to
+    // fit all that in a CROSS_APPLY with an alias and then consume
+    // it from WHERE or AGGREGATE.
+    $cross_apply = array();
+    $this->cross_apply_aliases = array();
     foreach ($this->expressions as $alias => $expression) {
-      $fields[] = $expression['expression'] . ' AS ' . $expression['alias'];
+      // Only use CROSS_APPLY for non-aggregate expresions. This trick
+      // will not work, and does not make sense, for aggregates.
+      // If the alias is 'expression' this is Drupal's default
+      // meaning that more than probably this expression
+      // is never reused in a WHERE.
+      if ($expression['alias'] != 'expression' && $this->stripos_arr($expression['expression'], array('AVG', 'GROUP_CONCAT', 'COUNT', 'MAX', 'GROUPING', 'GROUPING_ID', 'COUNT_BIG', 'CHECKSUM_AGG', 'MIN', 'SUM', 'VAR', 'VARP', 'STDEV', 'STDEVP')) === FALSE) {
+        // What we are doing here is using a CROSS APPLY to
+        // generate an expression that can be used in the select and where
+        // but we need to give this expression a new name.
+        $cross_apply[] = "\nCROSS APPLY (SELECT " . $expression['expression'] . ' cross_sqlsrv) cross_' . $expression['alias'];
+        $new_alias = 'cross_' . $expression['alias'] . '.cross_sqlsrv';
+        $fields[] = $new_alias . ' AS ' . $expression['alias'];
+        // Store old expression and new representation.
+        $this->cross_apply_aliases[$expression['alias']] = 'cross_' . $expression['alias'] . '.cross_sqlsrv'; 
+      }
+      else {
+        $fields[] = $expression['expression'] . ' AS ' . $expression['alias'];
+      }
     }
     $query .= implode(', ', $fields);
 
@@ -132,16 +206,37 @@ class SelectQuery_sqlsrv extends SelectQuery {
         $query .= ' ON ' . $table['condition'];
       }
     }
+    
+    // CROSS APPLY
+    $query .= implode($cross_apply);
 
     // WHERE
     if (count($this->where)) {
       // There is an implicit string cast on $this->condition.
-      $query .= "\nWHERE ( " . $this->where . " )";
+      $where = $this->where->__toString();
+      // References to expressions in cross-apply need to be updated.
+      // Now we need to update all references to the expression aliases
+      // and point them to the CROSS APPLY alias.
+      if (!empty($this->cross_apply_aliases)) {
+        $regex = str_replace('{0}', implode('|', array_keys($this->cross_apply_aliases)), self::RESERVED_REGEXP_BASE);
+        // Add and then remove the SELECT
+        // keyword. Do this to use the exact same
+        // regex that we have in DatabaseConnection_sqlrv.
+        $where = 'SELECT ' . $where;
+        $where = preg_replace_callback($regex, array($this, 'replaceReservedAliases'), $where);
+        $where = substr($where, 7, strlen($where) - 7);
+      }
+      $query .= "\nWHERE ( " . $where . " )";
     }
 
     // GROUP BY
     if ($this->group) {
-      $query .= "\nGROUP BY " . implode(', ', $this->group);
+      $group = $this->group;
+      // You named it, if the newly expanded expression
+      // is added to the select list, then it must
+      // also be present in the aggregate expression.
+      $group = $group + $this->cross_apply_aliases;
+      $query .= "\nGROUP BY " . implode(', ', $group);
     }
 
     // HAVING

@@ -54,6 +54,46 @@ class SqlServerSelectTest extends DatabaseTestCase {
 
     $this->assertEqual($num_records, 6, t('Returned the correct number of total rows.'));
   }
+  
+  /**
+   * Test cross join.
+   */
+  public function testCrossJoin() {
+    // SelectQuery in SQL Server driver
+    // is expanding expressions into a cross
+    // join statement. This allows the use
+    // of these expressions in the Aggregate
+    // or Where part of the query.
+    $query = db_select('test_task', 't');
+    // Cast the task to an accent insensitive collation in an expression.
+    $query->addExpression('(t.task collate Latin1_General_CS_AI)', 'ci_task');
+    // Add condition over that expression.
+    $query->where('ci_task = :param', array(':param' => utf8_encode('slëep')));
+
+    $result = $query->execute();
+    $num_records = 0;
+    foreach ($result as $record) {
+      $num_records++;
+    }
+    $this->assertEqual($num_records, 2, t('Returned the correct number of total rows.'));
+    
+    // There is a special case, if the query is an aggregate
+    // and an expression is used, this expression must be part of the aggregate.
+    $query = db_select('test_task', 't');
+    // Cast the task to an accent insensitive collation in an expression.
+    $query->addExpression('(t.task collate Latin1_General_CS_AI)', 'ci_task');
+    // Add condition over that expression.
+    $query->where('ci_task = :param', array(':param' => utf8_encode('slëep')));
+    // Add condition over that expression.
+    $query->groupBy('t.task');
+    
+    $result = $query->execute();
+    $num_records = 0;
+    foreach ($result as $record) {
+      $num_records++;
+    }
+    $this->assertEqual($num_records, 1, t('Returned the correct number of total rows.'));
+  }
 
   /**
    * Test the 2100 parameter limit per query.
