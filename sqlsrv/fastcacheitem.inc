@@ -46,14 +46,13 @@ class fastcacheitem {
    */
   public function data($key, $value = NULL) {
     if (isset($value)) {
-      $this->data[$key] = $value;
+      $container = new stdClass();
+      $container->data = $value;
+      $this->data[$key] = $container;
     }
 
     if (isset($this->data[$key])) {
-      // Encapsulate inside object!
-      $result = new stdClass();
-      $result->data = $this->data[$key];
-      return $result;
+      return $this->data[$key];
     }
 
     return FALSE;

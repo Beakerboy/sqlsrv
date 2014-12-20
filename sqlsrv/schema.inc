@@ -81,7 +81,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    * Database introspection: fetch technical information about a table.
    */
   public function queryColumnInformation($table) {
-    if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema')) {
+    if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema_queryColumnInformation')) {
       return $cache->data;
     }
     $table_info = $this->getPrefixInfo($table);
@@ -102,7 +102,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
         $this->additionalColumnInformation[$key]['identities'][$column->column_name] = TRUE;
       }
     }
-    fastcache::cache_set('queryColumnInformation:' . $table, $this->additionalColumnInformation[$key], 'schema');
+    fastcache::cache_set('queryColumnInformation:' . $table, $this->additionalColumnInformation[$key], 'schema_queryColumnInformation');
     return $this->additionalColumnInformation[$key];
   }
 
@@ -110,8 +110,9 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
   public function createTable($name, $table) {
     // Reset the additional column information because the schema changed.
     $this->additionalColumnInformation = NULL;
-    fastcache::cache_clear_all('queryColumnInformation:' . $name, 'schema');
-    
+    fastcache::cache_clear_all('queryColumnInformation:' . $name, 'schema_queryColumnInformation');
+    fastcache::cache_clear_all('*', 'tableExists', TRUE);
+
     if ($this->tableExists($name)) {
       throw new DatabaseSchemaObjectExistsException(t('Table %name already exists.', array('%name' => $name)));
     }
@@ -163,9 +164,14 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    *   True if the table exists, false otherwise.
    */
   public function tableExists($table) {
-    return $this->connection
-    ->query("SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'")
-    ->fetchField() !== FALSE;
+    if ($cache = fastcache::cache_get($table, 'tableExists')) {
+      return $cache->data;
+    }
+    $exists = $this->connection
+      ->query("SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'")
+      ->fetchField() !== FALSE;
+    fastcache::cache_set($table, $exists, 'tableExists');
+    return $exists;
   }
 
   /**
@@ -471,6 +477,7 @@ EOF
     }
 
     $this->connection->query('DROP TABLE {' . $table . '}');
+    fastcache::cache_clear_all('*', 'tableExists', TRUE);
     return TRUE;
   }
 
@@ -494,7 +501,7 @@ EOF
     }
 
     // Clear column information for table.
-    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema');
+    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema_queryColumnInformation');
 
     // If the field is declared NOT NULL, we have to first create it NULL insert
     // the initial data then switch to NOT NULL.
@@ -544,7 +551,7 @@ EOF
     }
 
     // Clear column information for table.
-    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema');
+    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema_queryColumnInformation');
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
@@ -707,7 +714,7 @@ EOF
       return FALSE;
     }
     // Clear column information for table.
-    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema');
+    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema_queryColumnInformation');
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 

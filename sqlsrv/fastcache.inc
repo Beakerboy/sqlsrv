@@ -25,7 +25,7 @@ class fastcache {
   // Storage for the virtual binaries.
   private static $fastcacheitems = array();
   // If this cache layer should be enabled.
-  private static $enabled;
+  private static $enabled = NULL;
   // If shutdown has been registered.
   private static $shutdown_registered = FALSE;
   
@@ -36,11 +36,11 @@ class fastcache {
    * not DrupalDatabaseCache!
    */
   private static function Enabled() {
-    if (!isset(fastcache::$enabled)) {
+    if (static::$enabled == NULL) {
       // Disable caching if using default database cache system.
-      fastcache::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache');
+      static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache');
     }
-    return fastcache::$enabled;
+    return static::$enabled;
   }
 
   /**
@@ -77,7 +77,10 @@ class fastcache {
   /**
    * cache_get wrapper.
    */
-  public static function cache_get ($cid, $bin) {
+  public static function cache_get ($cid, $bin = NULL) {
+    if ($bin == NULL) {
+      $bin = $cid;
+    }
     if (!fastcache::Enabled()) {
       return FALSE;
     }
@@ -88,7 +91,10 @@ class fastcache {
   /**
    * cache_set wrapper.
    */
-  public static function cache_set ($cid, $data, $bin) {
+  public static function cache_set ($cid, $data, $bin = NULL) {
+    if ($bin == NULL) {
+      $bin = $cid;
+    }
     if (!fastcache::Enabled() || !isset(fastcache::$fastcacheitems[$bin])) {
       return $data;
     }

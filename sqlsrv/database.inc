@@ -180,7 +180,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   }
 
   public function escapeField($field) {
-    if ($cache = fastcache::cache_get('escapeField:' . $field, 'schema')) {
+    if ($cache = fastcache::cache_get($field, 'schema_escapeField')) {
       return $cache->data;
     }
     if (strlen($field) > 0) {
@@ -189,7 +189,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     else {
       $result = '';
     }
-    fastcache::cache_set('escapeField:' . $field, $result, 'schema');
+    fastcache::cache_set($field, $result, 'schema_escapeField');
     return $result;
   }
 
@@ -432,12 +432,12 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    * @status needswork
    */
   public function escapeTable($table) {
-    if ($cache = fastcache::cache_get('escapeTable:' . $table, 'schema')) {
+    if ($cache = fastcache::cache_get($table, 'schema_escapeTable')) {
       return $cache->data;
     }
     // Rescue the # prefix from the escaping.
     $result = ($table[0] == '#' ? '#' : '') . preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
-    fastcache::cache_set('escapeTable:' . $table, $result, 'schema');
+    fastcache::cache_set($table, $result, 'schema_escapeTable');
     return $result;
   }
 }
