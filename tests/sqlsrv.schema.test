@@ -231,8 +231,7 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
 
     $this->assertTrue(db_index_exists('test_table', 'id_test'), t('The index has been recreated by db_change_field().'));
   }
-  
-  
+
   /**
    * Test db_add_field() and db_change_field() with binary spec.
    */
@@ -268,7 +267,7 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
       
     // By default, datase collation
     // should be case insensitive, returning both rows.
-    $result = db_query('SELECT COUNT(*) FROM test_table_binary WHERE name = :name', array(':name' => 'SANDRA'))->fetchField();
+    $result = db_query('SELECT COUNT(*) FROM {test_table_binary} WHERE name = :name', array(':name' => 'SANDRA'))->fetchField();
     $this->assertEqual($result, 2, 'Returned the correct number of total rows.');
     
     // Now let's change the field
@@ -280,11 +279,42 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
         ));
         
     // With case sensitivity, no results.
-    $result = db_query('SELECT COUNT(*) FROM test_table_binary WHERE name = :name', array(':name' => 'SANDRA'))->fetchField();
+    $result = db_query('SELECT COUNT(*) FROM {test_table_binary} WHERE name = :name', array(':name' => 'SANDRA'))->fetchField();
     $this->assertEqual($result, 0, 'Returned the correct number of total rows.');
     
     // Now one result.
-    $result = db_query('SELECT COUNT(*) FROM test_table_binary WHERE name = :name', array(':name' => 'sandra'))->fetchField();
+    $result = db_query('SELECT COUNT(*) FROM {test_table_binary} WHERE name = :name', array(':name' => 'sandra'))->fetchField();
     $this->assertEqual($result, 1, 'Returned the correct number of total rows.');
+  }
+
+  /**
+   * Test numeric field precision.
+   */
+  public function testNumericFieldPrecision() {
+    $table_spec = array(
+      'fields' => array(
+        'id'  => array(
+          'type' => 'serial',
+          'not null' => TRUE,
+        ),
+        'name' => array(
+          'type' => 'numeric',
+          'precision' => 400,
+          'scale' => 2
+        ),
+      ),
+      'primary key' => array('id'),
+    );
+
+    $success = FALSE;
+    try {
+      db_create_table('test_table_binary', $table_spec);
+      $success = TRUE;
+    }
+    catch (Exception $error) {
+      $success = FALSE;
+    }
+
+    $this->assertTrue($success, t('Able to create a numeric field with an out of bounds precision.'));
   }
 }
