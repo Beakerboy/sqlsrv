@@ -86,8 +86,8 @@ class SelectQuery_sqlsrv extends SelectQuery {
   }
 
   const RESERVED_REGEXP_BASE = '/\G
-    # Everything that follows a boundary that is not : or _.
-    \b(?<![:\[_])(?:
+    # Everything that follows a boundary that is not ":" or "_" or ".".
+    \b(?<![:\[_\[.])(?:
       # Any reserved words, followed by a boundary that is not an opening parenthesis.
       ({0})
       (?!\()
