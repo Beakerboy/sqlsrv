@@ -38,7 +38,12 @@ class fastcache {
   private static function Enabled() {
     if (static::$enabled == NULL) {
       // Disable caching if using default database cache system.
-      static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache');
+      if (function_exists('_cache_get_object')) {
+        static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache');
+      }
+      else {
+        static::$enabled = FALSE;
+      }
     }
     return static::$enabled;
   }
