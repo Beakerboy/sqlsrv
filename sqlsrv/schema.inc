@@ -110,12 +110,15 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
   public function createTable($name, $table) {
     // Reset the additional column information because the schema changed.
     $this->additionalColumnInformation = NULL;
-    fastcache::cache_clear_all('queryColumnInformation:' . $name, 'schema_queryColumnInformation');
-    fastcache::cache_clear_all('*', 'tableExists', TRUE);
 
     if ($this->tableExists($name)) {
       throw new DatabaseSchemaObjectExistsException(t('Table %name already exists.', array('%name' => $name)));
     }
+    
+    // Reset caches after calling tableExists() otherwise it's results get cached again before
+    // the table is created.
+    fastcache::cache_clear_all('queryColumnInformation:' . $name, 'schema_queryColumnInformation');
+    fastcache::cache_clear_all('*', 'tableExists', TRUE);
 
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.

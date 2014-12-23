@@ -60,18 +60,34 @@ class fastcacheitem {
 
   /**
    * Clear a cache item.
+   *
+   * @param string $key
+   *   If set, the cache ID or an array of cache IDs. Otherwise, all cache entries that 
+   **  can expire are deleted. The $wildcard argument will be ignored if set to NULL.
+   * @param bool $wildcard 
+   *  If TRUE, the $cid argument must contain a string value and cache 
+   *  IDs starting with $cid are deleted in addition to the exact cache 
+   *  ID specified by $cid. If $wildcard is TRUE and $cid is '*', the entire cache is emptied.
    */
-  public function clear($key, $wildcard = NULL) {
+  public function clear($key, $wildcard = FALSE) {
     if (!isset($key)) {
       $this->data = array();
     }
-    else if (isset($key) && !isset($wildcard)) {
+    elseif (isset($key) && $wildcard === FALSE) {
       unset($this->data[$key]);
     }
     else {
-      foreach ($this->data as $k => $v) {
-      	if ($this->startsWith($k, $wildcard)) {
-          unset($this->data[$k]);
+      if ($key == '*') {
+        // Completely reset this binary.
+        unset($this->data);
+        $this->data = array();
+      } 
+      else {
+        // Only reset items that start with $key.
+        foreach ($this->data as $k => $v) {
+          if ($this->startsWith($k, $wildcard)) {
+            unset($this->data[$k]);
+          }
         }
       }
     }

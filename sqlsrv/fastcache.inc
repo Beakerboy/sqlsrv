@@ -22,23 +22,27 @@ include_once 'fastcacheitem.inc';
  */
 class fastcache {
   
-  // Storage for the virtual binaries.
+  // @var fastcacheitem[]  $fastcacheitems
   private static $fastcacheitems = array();
-  // If this cache layer should be enabled.
+  // @var bool $enabled
   private static $enabled = NULL;
-  // If shutdown has been registered.
+  // @var bool $shutdown_registered
   private static $shutdown_registered = FALSE;
   
   /**
-   * Tell if cache should be enabled.
+   * Tell if cache persistence is enabled. If not, this cache
+   * will behave as DRUPAL_STATIC until the end of request.
    * 
    * Only enable this cache if the backend is
    * not DrupalDatabaseCache!
    */
-  private static function Enabled() {
-    if (static::$enabled == NULL) {
-      // Disable caching if using default database cache system.
+  private static function Enabled($refresh = FALSE) {
+    if (static::$enabled == NULL || $refresh) {
+      // Make sure _cache_get_object exists, if fastache
+      // used out of database driver there is a chance that
+      // cache storage might not yet be initialized.
       if (function_exists('_cache_get_object')) {
+        // Only enabled storage if Cache Backend is DrupalWinCache.
         static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache');
       }
       else {
@@ -52,29 +56,30 @@ class fastcache {
    * cache_clear_all wrapper.
    */
   public static function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
-    if (!fastcache::Enabled()) {
-      return;
+    if (!isset(static::$fastcacheitems[$bin])) {
+      static::cache_load_ensure($bin);
     }
-    if (!isset(fastcache::$fastcacheitems[$bin])) {
-      cache_load_ensure($bin);
-    }
-    fastcache::$fastcacheitems[$bin]->clear($cid, $wildcard);
+    static::$fastcacheitems[$bin]->clear($cid, $wildcard);
   }
 
   /**
    * Ensure cache binary is statically loaded.
    */
   private static function cache_load_ensure($bin) {
-    if (!isset(fastcache::$fastcacheitems[$bin])) {
-      if ($cache = cache_get($bin, 'fastcache')) {
-        fastcache::$fastcacheitems[$bin] = new fastcacheitem($bin, $cache);
+    if (!isset(static::$fastcacheitems[$bin])) {
+      // If storage is enabled, try to load from cache.
+      if (static::Enabled()) {
+        if ($cache = cache_get($bin, 'fastcache')) {
+          static::$fastcacheitems[$bin] = new fastcacheitem($bin, $cache);
+        }
       }
-      else {
-        fastcache::$fastcacheitems[$bin] = new fastcacheitem($bin);
+      // If still not set, initialize.
+      if (!isset(static::$fastcacheitems[$bin])) {
+        static::$fastcacheitems[$bin] = new fastcacheitem($bin);
       }
-      if (fastcache::$shutdown_registered == FALSE) {
+      if (static::$shutdown_registered == FALSE) {
         register_shutdown_function(array('fastcache','fastcache_persist'));
-        fastcache::$shutdown_registered = TRUE;
+        static::$shutdown_registered = TRUE;
       }
     }
   }
@@ -86,11 +91,8 @@ class fastcache {
     if ($bin == NULL) {
       $bin = $cid;
     }
-    if (!fastcache::Enabled()) {
-      return FALSE;
-    }
-    fastcache::cache_load_ensure($bin);
-    return fastcache::$fastcacheitems[$bin]->data($cid);
+    static::cache_load_ensure($bin);
+    return static::$fastcacheitems[$bin]->data($cid);
   }
 
   /**
@@ -100,20 +102,17 @@ class fastcache {
     if ($bin == NULL) {
       $bin = $cid;
     }
-    if (!fastcache::Enabled() || !isset(fastcache::$fastcacheitems[$bin])) {
-      return $data;
-    }
-    if (fastcache::$fastcacheitems[$bin]->changed == FALSE) {
-      fastcache::$fastcacheitems[$bin]->changed = TRUE;
+    if (static::$fastcacheitems[$bin]->changed == FALSE) {
+      static::$fastcacheitems[$bin]->changed = TRUE;
       // Lock this binary until persisted.
       // Locks are only available after BOOTSTRAP_VARIABLE (3)
       // phase.
       $phase = drupal_bootstrap(NULL, FALSE);
       if ($phase >= 3 && lock_acquire('fastcache_' . $bin)) {
-        fastcache::$fastcacheitems[$bin]->persist = TRUE;
+        static::$fastcacheitems[$bin]->persist = TRUE;
       }
     }
-    fastcache::$fastcacheitems[$bin]->data($cid, $data);
+    static::$fastcacheitems[$bin]->data($cid, $data);
   }
 
   /**
@@ -121,8 +120,13 @@ class fastcache {
    * if necessary.
    */
   public static function fastcache_persist () {
-    foreach (fastcache::$fastcacheitems as $cache) {
-      /* @var $cache fastcacheitem */
+    // Check if storage available, event if availability
+    // has changed since initial check, to be consistent
+    // only persist if cache was available from start.
+    if (!static::Enabled()) {
+      return;
+    }
+    foreach (static::$fastcacheitems as $cache) {
       if ($cache->persist == TRUE) {
         cache_set($cache->bin, $cache->rawdata(), 'fastcache', CACHE_TEMPORARY);
         lock_release('fastcache_' . $cache->bin);
