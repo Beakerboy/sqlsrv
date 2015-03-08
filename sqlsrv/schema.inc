@@ -566,6 +566,31 @@ EOF
   }
 
   /**
+   * Return size information for current database.
+   */
+  public function getSizeInfo() {
+    $sql = <<< EOF
+      SELECT
+    DB_NAME(db.database_id) DatabaseName,
+    (CAST(mfrows.RowSize AS FLOAT)*8)/1024 RowSizeMB,
+    (CAST(mflog.LogSize AS FLOAT)*8)/1024 LogSizeMB,
+    (CAST(mfstream.StreamSize AS FLOAT)*8)/1024 StreamSizeMB,
+    (CAST(mftext.TextIndexSize AS FLOAT)*8)/1024 TextIndexSizeMB
+FROM sys.databases db
+    LEFT JOIN (SELECT database_id, SUM(size) RowSize FROM sys.master_files WHERE type = 0 GROUP BY database_id, type) mfrows ON mfrows.database_id = db.database_id
+    LEFT JOIN (SELECT database_id, SUM(size) LogSize FROM sys.master_files WHERE type = 1 GROUP BY database_id, type) mflog ON mflog.database_id = db.database_id
+    LEFT JOIN (SELECT database_id, SUM(size) StreamSize FROM sys.master_files WHERE type = 2 GROUP BY database_id, type) mfstream ON mfstream.database_id = db.database_id
+    LEFT JOIN (SELECT database_id, SUM(size) TextIndexSize FROM sys.master_files WHERE type = 4 GROUP BY database_id, type) mftext ON mftext.database_id = db.database_id
+    WHERE DB_NAME(db.database_id) = :database
+EOF
+;
+    // Database is defaulted from active connection.
+    $options = $this->connection->getConnectionOptions();
+    $database = $options['database'];
+    return $this->connection->query($sql, array(':database' => $database))->fetchObject();
+  }
+
+  /**
    * Gets collation for current connection,
    * whether it has or not a database defined in
    * it.
@@ -576,23 +601,13 @@ EOF
     // Database is defaulted from active connection.
     $options = $this->connection->getConnectionOptions();
     $database = $options['database'];
-    if (!empty($database)) {
-      // Default collation for specific table.
-      $sql = "SELECT CONVERT (varchar, DATABASEPROPERTYEX('$database', 'collation'))";
-      return $this->connection->query($sql)->fetchField();
-    }
-    else {
-      // Server default collation.
-      $sql = "SELECT SERVERPROPERTY ('collation') as collation";
-      return $this->connection->query($sql)->fetchField();
-    }
-    if (!empty($table) && $empty($column)) {
+    if (!empty($table) && !empty($column)) {
       $sql = <<< EOF
       SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, COLLATION_NAME, DATA_TYPE
         FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_SCHEMA = ':schema'
-        AND TABLE_NAME = ':table'
-        AND COLUMN_NAME = ':column'
+        WHERE TABLE_SCHEMA = :schema
+        AND TABLE_NAME = :table
+        AND COLUMN_NAME = :column
 EOF
 ;
       $params = array();
@@ -601,6 +616,16 @@ EOF
       $params[':column'] = $column;
       $result = $this->connection->query($sql, $params)->fetchObject();
       return $result->COLLATION_NAME;
+    }
+    elseif (!empty($database)) {
+      // Default collation for specific table.
+      $sql = "SELECT CONVERT (varchar, DATABASEPROPERTYEX('$database', 'collation'))";
+      return $this->connection->query($sql)->fetchField();
+    }
+    else {
+      // Server default collation.
+      $sql = "SELECT SERVERPROPERTY ('collation') as collation";
+      return $this->connection->query($sql)->fetchField();
     }
   }
 
