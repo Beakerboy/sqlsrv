@@ -123,4 +123,31 @@ class SqlServerSelectTest extends DatabaseTestCase {
     // User ID's are negative, so this should return 0 matches.
     $this->assertEqual($result, 0, 'Returned the correct number of total rows.');
   }
+  
+  /**
+   * Test LIKE statement wildcards are properly escaped.
+   */
+  public function testEscapeLike() {
+    // Test expected escaped characters
+    // using backslashes.
+    $string = 't[e%s]t_\\';
+    $expected = 't\\[e\\%s\\]t\\_\\\\';
+    $actual = db_like($string);
+    $this->assertEqual($actual, $expected, 'Properly escaped LIKE statement wildcards.');
+    
+    // Test unescaped wildcard.
+    $query = db_select('test_task', 't');
+    $query->condition('t.task', '[s]leep', 'LIKE');
+    $query->addExpression('(t.task)', 'taskname');
+    $result = $query->execute()->fetchAll();
+    $this->assertEqual(count($result), 2, t('Returned the correct number of total rows.'));
+    
+    // Test escaped wildcard.
+    $query = db_select('test_task', 't');
+    $query->condition('t.task', db_like('[s]leep'), 'LIKE');
+    $query->addExpression('(t.task)', 'taskname');    
+    $result = $query->execute()->fetchAll();
+    $this->assertEqual(count($result), 0, t('Returned the correct number of total rows.'));
+    
+  } 
 }

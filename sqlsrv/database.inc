@@ -202,6 +202,13 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   }
 
   /**
+   * Override of DatabaseConnection::escapeLike().
+   */
+  public function escapeLike($string) {
+    return addcslashes($string, '\%_[]');
+  }
+
+  /**
    * Override of DatabaseConnection::queryRange().
    */
   public function queryRange($query, $from, $count, array $args = array(), array $options = array()) {
