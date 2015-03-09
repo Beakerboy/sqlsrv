@@ -33,17 +33,19 @@ class fastcache {
    * Tell if cache persistence is enabled. If not, this cache
    * will behave as DRUPAL_STATIC until the end of request.
    * 
-   * Only enable this cache if the backend is
-   * not DrupalDatabaseCache!
+   * Only enable this cache if the backend is DrupalWinCache
+   * and the lock implementation is DrupalWinCache
    */
-  private static function Enabled($refresh = FALSE) {
-    if (static::$enabled == NULL || $refresh) {
+  public static function Enabled($refresh = FALSE) {
+    if (static::$enabled === NULL || $refresh) {
       // Make sure _cache_get_object exists, if fastache
       // used out of database driver there is a chance that
       // cache storage might not yet be initialized.
       if (function_exists('_cache_get_object')) {
+        global $conf;
+        $lock_is_wincache = basename($conf['lock_inc'], '.inc') == 'wincache-lock';
         // Only enabled storage if Cache Backend is DrupalWinCache.
-        static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache');
+        static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache') && $lock_is_wincache;
       }
       else {
         static::$enabled = FALSE;
@@ -77,7 +79,8 @@ class fastcache {
       if (!isset(static::$fastcacheitems[$bin])) {
         static::$fastcacheitems[$bin] = new fastcacheitem($bin);
       }
-      if (static::$shutdown_registered == FALSE) {
+      // Register shutdown persistence once, only if enabled!
+      if (static::$shutdown_registered == FALSE && static::Enabled()) {
         register_shutdown_function(array('fastcache','fastcache_persist'));
         static::$shutdown_registered = TRUE;
       }
@@ -102,14 +105,27 @@ class fastcache {
     if ($bin == NULL) {
       $bin = $cid;
     }
+    static::cache_load_ensure($bin);
     if (static::$fastcacheitems[$bin]->changed == FALSE) {
       static::$fastcacheitems[$bin]->changed = TRUE;
-      // Lock this binary until persisted.
-      // Locks are only available after BOOTSTRAP_VARIABLE (3)
-      // phase.
-      $phase = drupal_bootstrap(NULL, FALSE);
-      if ($phase >= 3 && lock_acquire('fastcache_' . $bin)) {
+      // Do not lock if this is an atomic binary ($cid = $bin).
+      if ($cid === $bin) {
         static::$fastcacheitems[$bin]->persist = TRUE;
+        static::$fastcacheitems[$bin]->locked = FALSE;
+      }
+      else {
+        // Do persist or lock if it is not enabled!
+        if (static::Enabled()) {
+          // Only persist if we are able to acquire a lock
+          // for the entire binary.
+          $phase = drupal_bootstrap(NULL, FALSE);
+          // Hold this locks longer than usual because
+          // they run after the request has finished.
+          if ($phase >= 3 && lock_acquire('fastcache_' . $bin, 120)) {
+            static::$fastcacheitems[$bin]->persist = TRUE;
+            static::$fastcacheitems[$bin]->locked = TRUE;
+          }
+        }
       }
     }
     static::$fastcacheitems[$bin]->data($cid, $data);
@@ -120,16 +136,12 @@ class fastcache {
    * if necessary.
    */
   public static function fastcache_persist () {
-    // Check if storage available, event if availability
-    // has changed since initial check, to be consistent
-    // only persist if cache was available from start.
-    if (!static::Enabled()) {
-      return;
-    }
     foreach (static::$fastcacheitems as $cache) {
       if ($cache->persist == TRUE) {
         cache_set($cache->bin, $cache->rawdata(), 'fastcache', CACHE_TEMPORARY);
-        lock_release('fastcache_' . $cache->bin);
+        if ($cache->locked) {
+          lock_release('fastcache_' . $cache->bin);
+        }
       }
     }
   }

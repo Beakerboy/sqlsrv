@@ -8,6 +8,7 @@
 class fastcacheitem {
   public $persist = FALSE;
   public $changed = FALSE;
+  public $locked = FALSE;
   public $bin;
   private $data;
 
