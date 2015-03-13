@@ -43,7 +43,7 @@ class fastcache {
       // cache storage might not yet be initialized.
       if (function_exists('_cache_get_object')) {
         global $conf;
-        $lock_is_wincache = basename($conf['lock_inc'], '.inc') == 'wincache-lock';
+        $lock_is_wincache = isset($conf['lock_inc']) && basename($conf['lock_inc'], '.inc') == 'wincache-lock';
         // Only enabled storage if Cache Backend is DrupalWinCache.
         static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache') && $lock_is_wincache;
       }
