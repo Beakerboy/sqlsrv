@@ -235,7 +235,9 @@ class SelectQuery_sqlsrv extends SelectQuery {
       // You named it, if the newly expanded expression
       // is added to the select list, then it must
       // also be present in the aggregate expression.
-      $group = $group + $this->cross_apply_aliases;
+      // And if it was already there and got expanded,
+      // it should be replaced.
+      $group = array_merge($group, $this->cross_apply_aliases);
       $query .= "\nGROUP BY " . implode(', ', $group);
     }
 
