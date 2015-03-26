@@ -42,10 +42,9 @@ class fastcache {
       // used out of database driver there is a chance that
       // cache storage might not yet be initialized.
       if (function_exists('_cache_get_object')) {
-        global $conf;
-        $lock_is_wincache = isset($conf['lock_inc']) && basename($conf['lock_inc'], '.inc') == 'wincache-lock';
-        // Only enabled storage if Cache Backend is DrupalWinCache.
-        static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache') && $lock_is_wincache;
+        global $WINCACHE_LOCK_ACTIVE;
+        // Only enabled storage if Cache Backend is DrupalWinCache and Locking backend is also Wincache based.
+        static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache') && $WINCACHE_LOCK_ACTIVE;
       }
       else {
         static::$enabled = FALSE;
@@ -59,20 +58,27 @@ class fastcache {
    */
   public static function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
     if (!isset(static::$fastcacheitems[$bin])) {
-      static::cache_load_ensure($bin);
+      static::cache_load_ensure($bin, TRUE);
     }
-    static::$fastcacheitems[$bin]->clear($cid, $wildcard);
+    // If the cache did not exist, it will still not be loaded.
+    if (isset(static::$fastcacheitems[$bin])) {
+      static::$fastcacheitems[$bin]->clear($cid, $wildcard);
+    }
   }
 
   /**
    * Ensure cache binary is statically loaded.
    */
-  private static function cache_load_ensure($bin) {
+  private static function cache_load_ensure($bin, $skiploadifempty = FALSE) {
     if (!isset(static::$fastcacheitems[$bin])) {
       // If storage is enabled, try to load from cache.
       if (static::Enabled()) {
         if ($cache = cache_get($bin, 'fastcache')) {
           static::$fastcacheitems[$bin] = new fastcacheitem($bin, $cache);
+        }
+        // Don't bother initializing this.
+        elseif ($skiploadifempty) {
+          return;
         }
       }
       // If still not set, initialize.
@@ -95,7 +101,7 @@ class fastcache {
       $bin = $cid;
     }
     static::cache_load_ensure($bin);
-    return static::$fastcacheitems[$bin]->data($cid);
+    return static::$fastcacheitems[$bin]->data_get($cid);
   }
 
   /**
@@ -128,7 +134,7 @@ class fastcache {
         }
       }
     }
-    static::$fastcacheitems[$bin]->data($cid, $data);
+    static::$fastcacheitems[$bin]->data_set($cid, $data);
   }
 
   /**

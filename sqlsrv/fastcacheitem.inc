@@ -43,19 +43,27 @@ class fastcacheitem {
   }
 
   /**
-   * Get/Set a cache item.
+   * Set a value in cache.
+   *
+   * @param mixed $key 
+   * @param mixed $value 
    */
-  public function data($key, $value = NULL) {
-    if (isset($value)) {
-      $container = new stdClass();
-      $container->data = $value;
-      $this->data[$key] = $container;
-    }
-
+  public function data_set($key, $value) {
+    $container = new stdClass();
+    $container->data = $value;
+    $this->data[$key] = $container;
+  }
+  
+  /**
+   * Retrieve a value from cache.
+   *
+   * @param mixed $key 
+   * @return bool|stdClass
+   */
+  public function data_get($key) {
     if (isset($this->data[$key])) {
       return $this->data[$key];
     }
-
     return FALSE;
   }
 
@@ -72,7 +80,12 @@ class fastcacheitem {
    */
   public function clear($key, $wildcard = FALSE) {
     if (!isset($key)) {
-      $this->data = array();
+      if (empty($this->data)) {
+        return;
+      }
+      else {
+        $this->data = array();
+      }
     }
     elseif (isset($key) && $wildcard === FALSE) {
       unset($this->data[$key]);
@@ -86,7 +99,7 @@ class fastcacheitem {
       else {
         // Only reset items that start with $key.
         foreach ($this->data as $k => $v) {
-          if ($this->startsWith($k, $wildcard)) {
+          if ($this->startsWith($k, $key)) {
             unset($this->data[$k]);
           }
         }
