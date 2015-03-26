@@ -167,16 +167,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   }
 
   public function quoteIdentifier($identifier) {
-    // Only quote reserved keywords. Strpos faster than regex.
-    // We could quote all without looking for reserved
-    // but that won't allow us to pass some core tests.
-    $is_reserved = stripos(sqlsrv_RESERVED_KEYWORDS, "\r\n" . $identifier . "\r\n");
-    if ($is_reserved !== FALSE) {
-      return '[' . $identifier .']';
-    }
-    else {
-      return $identifier;
-    }
+    return '[' . $identifier .']';
   }
 
   public function escapeField($field) {
