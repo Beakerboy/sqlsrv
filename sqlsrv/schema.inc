@@ -79,8 +79,26 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
   
   /**
    * Database introspection: fetch technical information about a table.
+   * 
+   * @return
+   *   An array with the following structure:
+   *   - blobs[]: Array of column names that should be treated as blobs in this table.
+   *   - identities[]: Array of column names that are identities in this table.
+   *   - columns[]: An array of specification details for the columns
+   *      - name: Column name.
+   *      - max_length: Maximum length.
+   *      - precision: Precision.
+   *      - collation_name: Collation.
+   *      - is_nullable: Is nullable.
+   *      - is_ansi_padded: Is ANSI padded.
+   *      - is_identity: Is identity.
    */
   public function queryColumnInformation($table) {
+    // No worry for the tableExists() check, results
+    // are cached.
+    if (empty($table) || !$this->tableExists($table)) {
+      return array();
+    }
     if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema_queryColumnInformation')) {
       return $cache->data;
     }
@@ -91,15 +109,18 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       $this->additionalColumnInformation[$key] = array();
 
       // Don't use {} around information_schema.columns table.
-      $result = $this->connection->query("SELECT name AS column_name FROM sys.columns WHERE object_id = OBJECT_ID(:table) AND user_type_id = TYPE_ID(:type)", array(':table' => $table_info['schema'] . '.' . $table_info['table'], ':type' => 'varbinary'));
+      $result = $this->connection->query("SELECT name, max_length, precision, collation_name, is_nullable, is_ansi_padded, is_identity, TYPE_NAME(user_type_id) as type FROM sys.columns WHERE object_id = OBJECT_ID(:table)", array(':table' => $table_info['schema'] . '.' . $table_info['table']));
       foreach ($result as $column) {
-        $this->additionalColumnInformation[$key]['blobs'][$column->column_name] = TRUE;
+        if ($column->type == 'varbinary') {
+          $this->additionalColumnInformation[$key]['blobs'][$column->name] = TRUE;
+        }
+        $this->additionalColumnInformation[$key]['columns'][$column->name] = (array) $column;
       }
 
       // Don't use {} around system tables.
-      $result = $this->connection->query('SELECT name column_name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', array(':table' => $table_info['schema'] . '.' . $table_info['table']));
+      $result = $this->connection->query('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', array(':table' => $table_info['schema'] . '.' . $table_info['table']));
       foreach ($result as $column) {
-        $this->additionalColumnInformation[$key]['identities'][$column->column_name] = TRUE;
+        $this->additionalColumnInformation[$key]['identities'][$column->name] = TRUE;
       }
     }
     fastcache::cache_set('queryColumnInformation:' . $table, $this->additionalColumnInformation[$key], 'schema_queryColumnInformation');
