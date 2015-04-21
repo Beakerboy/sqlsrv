@@ -30,6 +30,49 @@ class fastcache {
   private static $shutdown_registered = FALSE;
   
   /**
+   * Test info is loaded at database bootstrap phase
+   * but this cache can be used earlier. Make sure
+   * we have a valid test prefix before any operation on
+   * the cache is performed.
+   *
+   * @var string
+   */
+  private static $test_run_id;
+  
+  /**
+   * Add test prefix to current binary key, and account for atomic
+   * items where $bin = NULL;
+   *
+   * @param string $prefix 
+   */
+  private static function FixKeyAndBin(&$cid, &$bin) {
+    // We always need a binary, if non is specified, this item
+    // should be treated as having it's own binary.
+    if (empty($bin)) {
+      $bin = $cid;
+    }
+    // Try with the "official" test_run_id first.
+    if (isset($GLOBALS['drupal_test_info']['test_run_id'])) {
+      $bin = $GLOBALS['drupal_test_info']['test_run_id'] . $bin;
+      return;
+    }
+    // Only do this once per request, if the this is the testing system
+    // then $GLOBALS['drupal_test_info']['test_run_id'] will be set upon
+    // test context switching.
+    if (!isset(static::$test_run_id)) {
+      if ($test_prefix = drupal_valid_test_ua()) {
+        // Keep a local copy of the current test_prefix.
+        static::$test_run_id = $test_prefix;
+      }
+      else {
+        static::$test_run_id = '';
+      }
+    }
+
+    $bin = static::$test_run_id . $bin;
+  }
+  
+  /**
    * Tell if cache persistence is enabled. If not, this cache
    * will behave as DRUPAL_STATIC until the end of request.
    * 
@@ -57,6 +100,7 @@ class fastcache {
    * cache_clear_all wrapper.
    */
   public static function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
+    static::FixKeyAndBin($cid, $bin);
     if (!isset(static::$fastcacheitems[$bin])) {
       static::cache_load_ensure($bin, TRUE);
     }
@@ -96,10 +140,8 @@ class fastcache {
   /**
    * cache_get wrapper.
    */
-  public static function cache_get ($cid, $bin = NULL) {
-    if ($bin == NULL) {
-      $bin = $cid;
-    }
+  public static function cache_get($cid, $bin = NULL) {
+    static::FixKeyAndBin($cid, $bin);
     static::cache_load_ensure($bin);
     return static::$fastcacheitems[$bin]->data_get($cid);
   }
@@ -107,10 +149,8 @@ class fastcache {
   /**
    * cache_set wrapper.
    */
-  public static function cache_set ($cid, $data, $bin = NULL) {
-    if ($bin == NULL) {
-      $bin = $cid;
-    }
+  public static function cache_set($cid, $data, $bin = NULL) {
+    static::FixKeyAndBin($cid, $bin);
     static::cache_load_ensure($bin);
     if (static::$fastcacheitems[$bin]->changed == FALSE) {
       static::$fastcacheitems[$bin]->changed = TRUE;
