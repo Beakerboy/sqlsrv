@@ -24,12 +24,22 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    * Default recommended collation for SQL Server.
    */
   const DEFAULT_COLLATION_CI = 'Latin1_General_CI_AI';
-  
+
   /**
    * Default recommended collation for SQL Server.
    * when case sensitivity is required.
    */
   const DEFAULT_COLLATION_CS = 'Latin1_General_CS_AI';
+
+  // Name for the technical column used for computed keys
+  // or technical primary key.
+  // IMPORTANTE: They both start with "__" because the
+  // statement class will remove those columns from the final
+  // result set.
+  // This should be constants, but we are using variable to ease
+  // their use in inline strings.
+  var $COMPUTED_PK_COLUMN_NAME = '__pkc';
+  var $TECHNICAL_PK_COLUMN_NAME = '__pk';
 
   /**
    * Returns a list of functions that are not
@@ -109,12 +119,18 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       $this->additionalColumnInformation[$key] = array();
 
       // Don't use {} around information_schema.columns table.
-      $result = $this->connection->query("SELECT name, max_length, precision, collation_name, is_nullable, is_ansi_padded, is_identity, TYPE_NAME(user_type_id) as type FROM sys.columns WHERE object_id = OBJECT_ID(:table)", array(':table' => $table_info['schema'] . '.' . $table_info['table']));
+      $result = $this->connection->query("SELECT name, max_length, precision, collation_name, is_nullable, is_ansi_padded, is_identity, is_computed, TYPE_NAME(user_type_id) as type FROM sys.columns WHERE object_id = OBJECT_ID(:table)", array(':table' => $table_info['schema'] . '.' . $table_info['table']));
       foreach ($result as $column) {
         if ($column->type == 'varbinary') {
           $this->additionalColumnInformation[$key]['blobs'][$column->name] = TRUE;
         }
         $this->additionalColumnInformation[$key]['columns'][$column->name] = (array) $column;
+        // Provide a clean list of columns that excludes the ones internally created by the
+        // database driver.
+        if (!(isset($column->name[1]) && substr($column->name, 0, 2) == "__")) {
+          $this->additionalColumnInformation[$key]['columns_clean'][$column->name] = (array) $column;
+
+        }
       }
 
       // Don't use {} around system tables.
@@ -145,8 +161,16 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     // creation in case of an error.
     $transaction = $this->connection->startTransaction();
     try {
+      // Create the table with a default technical primary key.
       $this->connection->query($this->createTableSql($name, $table));
 
+      // If the spec had a primary key, set it now after all fields have been created.
+      if (isset($table['primary key']) && is_array($table['primary key'])) {
+        $this->recreatePrimaryKey($name, $this->createPrimaryKeyIndexSql($name, $table['primary key']));
+        $this->cleanUpTechnicalPrimaryColumn($name);
+      }
+      
+      // Now all the unique keys.
       if (isset($table['unique keys']) && is_array($table['unique keys'])) {
         foreach ($table['unique keys'] as $key_name => $key) {
           $this->addUniqueKey($name, $key_name, $key);
@@ -256,14 +280,100 @@ EOF
         ->query("SELECT value FROM sys.configurations WHERE name = 'clr enabled'")
         ->fetchField() !== 1;
   }
-
+  
+  /**
+   * Check if a column is of variable length.
+   */
+  private function isVariableLengthType($type) {
+    $types = array('nvarchar' => TRUE, 'ntext' => TRUE, 'varchar' => TRUE, 'varbinary' => TRUE, 'image' => TRUE);
+    return isset($types[$type]);
+  }
+  
+  /**
+   * Estimates the row size of a clustered index.
+   * @see https://msdn.microsoft.com/en-us/library/ms178085.aspx
+   */
+  public function calculateClusteredIndexRowSizeBytes($table, $fields, $unique = TRUE) {
+    // If we have received a field spec, there is a chance the table has not been created yet.
+    $info = $this->queryColumnInformation($table);
+    
+    // Specify the number of fixed-length and variable-length columns 
+    // and calculate the space that is required for their storage.
+    $num_cols = count($fields);
+    $num_variable_cols = 0;
+    $max_var_size = 0;
+    $max_fixed_size = 0;
+    foreach ($fields as $field) {
+      if ($this->isVariableLengthType($info['columns'][$field]['type'])) {
+        $num_variable_cols++;
+        $max_var_size += $info['columns'][$field]['max_length'];
+      }
+      else {
+        $max_fixed_size += $info['columns'][$field]['max_length'];
+      }
+    }
+    
+    // If the clustered index is nonunique, account for the uniqueifier column.
+    if (!$unique) {
+      $num_cols++;
+      $num_variable_cols++;
+      $max_var_size += 4;
+    }
+    
+    // Part of the row, known as the null bitmap, is reserved to manage column nullability. Calculate its size.
+    $null_bitmap = 2 + (($num_cols + 7) / 8);
+    
+    // Calculate the variable-length data size.
+    $variable_data_size = empty($num_variable_cols) ? 0 : 2 + ($num_variable_cols * 2) + $max_var_size;
+    
+    // Calculate total row size.
+    $row_size = $max_fixed_size + $variable_data_size + $null_bitmap + 4;
+    
+    return $row_size;
+  }
+  
   /**
    * Change Database recovery model.
    */
   public function setRecoveryModel($model) {
     $this->connection->query("ALTER " . $this->connection->options['name'] . " model SET RECOVERY " . $model);
   }
-
+  
+  /**
+   * Create the SQL needed to add a new primary key.
+   * @param string $table 
+   * @param array $fields 
+   * @param array $field_spec 
+   */
+  private function createPrimaryKeyIndexSql($table, $fields) {
+    // To be on the safe side, on the most restrictive use case the limite
+    // for a primary key clustered index is of 128 bytes (usually 900).
+    // @see http://blogs.msdn.com/b/jgalla/archive/2005/08/18/453189.aspx
+    // If that is going to be exceeded, use a computed column.
+    $csv_fields = $this->createKeySql($fields);
+    $size = $this->calculateClusteredIndexRowSizeBytes($table, $this->createKeySql($fields, TRUE));
+    $result = array();
+    if ($size >= 128) {
+      $result[] = "{$this->COMPUTED_PK_COLUMN_NAME} AS (CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT('',{$csv_fields})), 2)) PERSISTED NOT NULL";
+      $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$this->COMPUTED_PK_COLUMN_NAME})";
+    }
+    else {
+      $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$csv_fields})";
+    }
+    return implode(' ', $result);
+  }
+  
+  /**
+   * Create the SQL needed to add a new technical primary key based on a
+   * computed column.
+   */
+  private function createTechnicalPrimaryKeyIndexSql($table) {
+    $result = array();
+    $result[] = "{$this->TECHNICAL_PK_COLUMN_NAME} UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL";
+    $result[] = "CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$this->TECHNICAL_PK_COLUMN_NAME})";
+    return implode(' ', $result);
+  }
+  
   /**
    * Generate SQL to create a new table from a Drupal schema definition.
    *
@@ -280,15 +390,10 @@ EOF
       $sql_fields[] = $this->createFieldSql($name, $field_name, $this->processField($field));
     }
 
-    // If the table has no primary key, create one for us.
+    // Wether or not the table spec has a defined primary key,
+    // create with a technical one.
     // TODO: only necessary on Azure.
-    if (isset($table['primary key']) && is_array($table['primary key'])) {
-      $sql_fields[] = 'CONSTRAINT {' . $name . '}_pkey PRIMARY KEY CLUSTERED (' . implode(', ', $this->connection->quoteIdentifiers($table['primary key'])) . ')';
-    }
-    else {
-      $sql_fields[] = '__pk UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL';
-      $sql_fields[] = 'CONSTRAINT {' . $name . '}_pkey_technical PRIMARY KEY CLUSTERED (__pk)';
-    }
+    $sql_fields[] = $this->createTechnicalPrimaryKeyIndexSql($name);
 
     $sql = "CREATE TABLE [{" . $name . "}] (\n\t";
     $sql .= implode(",\n\t", $sql_fields);
@@ -356,9 +461,14 @@ EOF
   }
 
   /**
-   * Return a list of columns for an index definition.
+   * Returns a list of field names coma separated ready
+   * to be used in a SQL Statement.
+   *
+   * @param array $fields 
+   * @param boolean $as_array 
+   * @return array|string
    */
-  protected function createKeySql($fields) {
+  protected function createKeySql($fields, $as_array = FALSE) {
     $ret = array();
     foreach ($fields as $field) {
       if (is_array($field)) {
@@ -368,16 +478,53 @@ EOF
         $ret[] = $field;
       }
     }
+    if ($as_array) {
+      return $ret;
+    }
     return implode(', ', $ret);
   }
 
   /**
-   * Return the SQL Statement to create an index.
+   * Returns the SQL needed (incomplete) to create and index. Supports XML indexes.
+   *
+   * @param string $table 
+   *   Table to create the index on.
+   *
+   * @param string $name 
+   *   Name of the index.
+   *
+   * @param array $fields
+   *   Fields to be included in the Index. 
+   *
+   * @return string
    */
   protected function createIndexSql($table, $name, $fields) {
-    // Here we need to create a computed PERSISTENT column, and index that, when
-    // the type is not allowed in an index.
-    return 'CREATE INDEX ' . $name . '_idx ON [{' . $table . '}] (' . $this->createKeySql($fields) . ')';
+    // Get information about current columns.
+    $info = $this->queryColumnInformation($table);
+    // Flatten $fields array if neccesary.
+    $fields = $this->createKeySql($fields, TRUE);
+    // Look if an XML column is present in the fields list.
+    $xml_field = NULL;
+    foreach ($fields as $field) {
+      if (isset($info['columns'][$field]['type']) && $info['columns'][$field]['type'] == 'xml') {
+        $xml_field = $field;
+        break;
+      }
+    }
+    // XML indexes can only have 1 column.
+    if (!empty($xml_field) && isset($fields[1])) {
+      throw new Exception("Cannot include an XML field on a multiple column index.");
+    }
+    if (empty($xml_field)) {
+      // TODO: As we are already doing with primary keys, when a user requests
+      // an index that is too big for SQL Server (> 900 bytes) this could be dependant
+      // on a computed hash column.
+      $fields_csv = implode(', ', $fields);
+      return "CREATE INDEX {$name}_idx ON [{{$table}}] ({$fields_csv})";
+    }
+    else {
+      return "CREATE PRIMARY XML INDEX {$name}_idx ON [{{$table}}] ({$xml_field})";
+    }
   }
 
   /**
@@ -470,6 +617,9 @@ EOF
       throw new PDOException(t('Cannot rename a table across schema.'));
     }
 
+    // Borrar la caché de table_exists
+    fastcache::cache_clear_all('*', 'tableExists', TRUE);
+    
     $this->connection->query('EXEC sp_rename :old, :new', array(
       ':old' => $old_table_info['schema'] . '.' . $old_table_info['table'],
       ':new' => $new_table_info['table'],
@@ -535,7 +685,7 @@ EOF
     }
 
     // Create the field.
-    $query = 'ALTER TABLE {' . $table . '} ADD ';
+    $query = "ALTER TABLE {{$table}} ADD ";
     $query .= $this->createFieldSql($table, $field, $this->processField($spec));
     $this->connection->query($query);
 
@@ -552,7 +702,7 @@ EOF
     // Switch to NOT NULL now.
     if (!empty($fixnull)) {
       $spec['not null'] = TRUE;
-      $this->connection->query('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field, $this->processField($spec), TRUE));
+      $this->connection->query("ALTER TABLE {{$table}} ALTER COLUMN " . $this->createFieldSql($table, $field, $this->processField($spec), TRUE));
     }
 
     // Add the new keys.
@@ -612,7 +762,7 @@ EOF
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion errors.
     $field_spec = $this->processField($spec);
-    $this->connection->query('UPDATE [{' . $table . '}] SET [' . $field_new . '] = CAST([' . $field . '_old] AS ' . $field_spec['sqlsrv_type'] . ')');
+    $this->connection->query("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] AS {$field_spec['sqlsrv_type']})");
 
     // Switch to NOT NULL now.
     if (!empty($fixnull)) {
@@ -721,17 +871,22 @@ EOF
       $columns[] = '[' . $column->column_name . ']' . ($column->is_descending_key ? ' DESC' : '');
     }
     if ($valid) {
-      return 'ADD CONSTRAINT [' . $column->name . '] PRIMARY KEY CLUSTERED (' . implode(', ', $columns) . ')';
+      return 'CONSTRAINT [' . $column->name . '] PRIMARY KEY CLUSTERED (' . implode(', ', $columns) . ')';
     }
+    
+    return '';
   }
-
+  
+  /**
+   * Summary of recreatePrimaryKey
+   * @param mixed $table 
+   * @param mixed $primary_key_sql 
+   */
   protected function recreatePrimaryKey($table, $primary_key_sql) {
     // Drop the existing primary key if exists.
-    if ($existing_primary_key = $this->primaryKeyName($table)) {
-      $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $existing_primary_key . ']');
-    }
+    $this->cleanUpPrimaryKey($table);
 
-    $this->connection->query('ALTER TABLE [{' . $table . '}] ' . $primary_key_sql);
+    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD ' . $primary_key_sql);
   }
 
   /**
@@ -869,10 +1024,10 @@ EOF
       }
     }
 
-    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD CONSTRAINT {' . $table . '_pkey} PRIMARY KEY (' . $this->createKeySql($fields) . ')');
+    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD ' . $this->createPrimaryKeyIndexSql($table, $fields));
     return TRUE;
   }
-
+  
   /**
    * Override DatabaseSchema::dropPrimaryKey().
    *
@@ -882,12 +1037,9 @@ EOF
     if (!$this->primaryKeyName($table)) {
       return FALSE;
     }
-
-    $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT {' . $table . '_pkey}');
-
+    $this->cleanUpPrimaryKey($table);
     $this->createTechnicalPrimaryColumn($table);
-    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD CONSTRAINT {' . $table . '}_pkey_technical PRIMARY KEY CLUSTERED (__pk)');
-
+    $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$this->TECHNICAL_PK_COLUMN_NAME})");
     return TRUE;
   }
 
@@ -913,8 +1065,23 @@ EOF
    * Add a primary column to the table.
    */
   protected function createTechnicalPrimaryColumn($table) {
-    if (!$this->fieldExists($table, '__pk')) {
-      $this->connection->query('ALTER TABLE {' . $table . '} ADD __pk UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL');
+    if (!$this->fieldExists($table, $this->TECHNICAL_PK_COLUMN_NAME)) {
+      $this->connection->query("ALTER TABLE {{$table}} ADD {$this->TECHNICAL_PK_COLUMN_NAME} UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL");
+    }
+  }
+  
+  /**
+   * Drop the primary key constraint, and any column it may depend on.
+   * @param mixed $table 
+   */
+  protected function cleanUpPrimaryKey($table) {
+    if ($existing_primary_key = $this->primaryKeyName($table)) {
+      $this->connection->query("ALTER TABLE [{{$table}}] DROP CONSTRAINT {$existing_primary_key}");
+    }
+    // We are using computed columns to store primary keys,
+    // try to remove it if it exists.
+    if ($this->fieldExists($table, $this->COMPUTED_PK_COLUMN_NAME)) {
+      $this->dropField($table, $this->COMPUTED_PK_COLUMN_NAME);
     }
   }
 
@@ -922,11 +1089,12 @@ EOF
    * Try to clean up the technical primary column if possible.
    */
   protected function cleanUpTechnicalPrimaryColumn($table) {
-    // Get the number of remaining unique indexes on the table, and prune
-    // the technical primary column if possible.
-    $unique_indexes = $this->connection->query('SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1', array(':table' => $this->connection->prefixTables('{' . $table . '}')))->fetchField();
-    if (!$unique_indexes && !$this->isTechnicalPrimaryKey($this->primaryKeyName($table))) {
-      $this->dropField($table, '__pk');
+    // Get the number of remaining unique indexes on the table, that
+    // are not primary keys and prune the technical primary column if possible.
+    $unique_indexes = $this->connection->query('SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1 AND is_primary_key = 0', array(':table' => $this->connection->prefixTables('{' . $table . '}')))->fetchField();
+    $primary_key_is_technical = $this->isTechnicalPrimaryKey($this->primaryKeyName($table));
+    if (!$unique_indexes && !$primary_key_is_technical) {
+      $this->dropField($table, $this->TECHNICAL_PK_COLUMN_NAME);
     }
   }
 
@@ -961,8 +1129,8 @@ EOF
     // values with the globally unique identifier generated previously.
     // This is (very) unlikely to result in a collision with any actual value
     // in the columns of the unique key.
-    $this->connection->query('ALTER TABLE {' . $table . '} ADD __unique_' . $name . " AS CAST(HashBytes('MD4', COALESCE(" . $column_expression . ", CAST(__pk AS varbinary(max)))) AS varbinary(16))");
-    $this->connection->query('CREATE UNIQUE INDEX ' . $name . '_unique ON [{' . $table . '}] (__unique_' . $name . ')');
+    $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$this->TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
+    $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON [{{$table}}] (__unique_{$name})");
   }
 
   /**
