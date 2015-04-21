@@ -2,6 +2,17 @@
 
 class SelectQuery_sqlsrv extends SelectQuery {
 
+
+  /**
+   * Overriden with an aditional exclude parameter that tells not to include this expression (by default)
+   * in the select list.
+   */
+  public function addExpression($expression, $alias = NULL, $arguments = array(), $exclude = FALSE) {
+    $alias = parent::addExpression($expression, $alias, $arguments);
+    $this->expressions[$alias]['exclude'] = $exclude;
+    return $alias;
+  }
+
   /**
    * Override for SelectQuery::preExecute().
    *
@@ -141,8 +152,16 @@ class SelectQuery_sqlsrv extends SelectQuery {
     // FIELDS and EXPRESSIONS
     $fields = array();
     foreach ($this->tables as $alias => $table) {
-      if (!empty($table['all_fields'])) {
-        $fields[] = $this->connection->escapeTable($alias) . '.*';
+      // Table might be a subquery, so nothing to do really.
+      if (is_string($table['table'])) {
+        $info = $this->connection->schema()->queryColumnInformation($table['table']);
+        if (!empty($table['all_fields'])) {
+          // Some fields need to be "transparent" to Drupal, including technical primary keys
+          // or custom computed columns.
+          foreach ($info['columns_clean'] as $column) {
+            $fields[] = $this->connection->escapeTable($alias) . '.' . $column['name'];
+          }
+        }
       }
     }
     foreach ($this->fields as $alias => $field) {
@@ -163,18 +182,24 @@ class SelectQuery_sqlsrv extends SelectQuery {
       // If the alias is 'expression' this is Drupal's default
       // meaning that more than probably this expression
       // is never reused in a WHERE.
-      if ($expression['alias'] != 'expression' && $this->stripos_arr($expression['expression'], array('AVG', 'GROUP_CONCAT', 'COUNT', 'MAX', 'GROUPING', 'GROUPING_ID', 'COUNT_BIG', 'CHECKSUM_AGG', 'MIN', 'SUM', 'VAR', 'VARP', 'STDEV', 'STDEVP')) === FALSE) {
+      if ($expression['alias'] != 'expression' && $this->stripos_arr($expression['expression'], array('AVG(', 'GROUP_CONCAT(', 'COUNT(', 'MAX(', 'GROUPING(', 'GROUPING_ID(', 'COUNT_BIG(', 'CHECKSUM_AGG(', 'MIN(', 'SUM(', 'VAR(', 'VARP(', 'STDEV(', 'STDEVP(')) === FALSE) {
         // What we are doing here is using a CROSS APPLY to
         // generate an expression that can be used in the select and where
         // but we need to give this expression a new name.
         $cross_apply[] = "\nCROSS APPLY (SELECT " . $expression['expression'] . ' cross_sqlsrv) cross_' . $expression['alias'];
         $new_alias = 'cross_' . $expression['alias'] . '.cross_sqlsrv';
-        $fields[] = $new_alias . ' AS ' . $expression['alias'];
+        // We might not want an expression to appear in the select list.
+        if ($expression['exclude'] !== TRUE) {
+          $fields[] = $new_alias . ' AS ' . $expression['alias'];
+        }
         // Store old expression and new representation.
         $this->cross_apply_aliases[$expression['alias']] = 'cross_' . $expression['alias'] . '.cross_sqlsrv'; 
       }
       else {
-        $fields[] = $expression['expression'] . ' AS ' . $expression['alias'];
+        // We might not want an expression to appear in the select list.
+        if ($expression['exclude'] !== TRUE) {
+          $fields[] = $expression['expression'] . ' AS ' . $expression['alias'];
+        }
       }
     }
     $query .= implode(', ', $fields);
@@ -235,8 +260,6 @@ class SelectQuery_sqlsrv extends SelectQuery {
       // You named it, if the newly expanded expression
       // is added to the select list, then it must
       // also be present in the aggregate expression.
-      // And if it was already there and got expanded,
-      // it should be replaced.
       $group = array_merge($group, $this->cross_apply_aliases);
       $query .= "\nGROUP BY " . implode(', ', $group);
     }
@@ -288,5 +311,81 @@ class SelectQuery_sqlsrv extends SelectQuery {
     $alias = $this->addExpression('NEWID()', 'random_field');
     $this->orderBy($alias);
     return $this;
+  }
+  
+  private function GetUsedAliases(\DatabaseCondition $condition, array &$aliases = array()) {
+    foreach($condition->conditions() as $key => $c) {
+      if (is_string($key) && substr($key, 0, 1) == '#') {
+        continue;
+      }
+      if (is_a($c['field'], \DatabaseCondition::class)) {
+        $this->GetUsedAliases($c['field'], $aliases);
+      }
+      else {
+        $aliases[$c['field']] = TRUE;
+      }
+    }
+  }
+  
+  /**
+   * This is like the default countQuery, but does not optimize field (or expressions)
+   * that are being used in conditions.
+   */
+  public function countQuery() {
+    // Create our new query object that we will mutate into a count query.
+    $count = clone($this);
+
+    $group_by = $count->getGroupBy();
+    $having = $count->havingConditions();
+
+    if (!$count->distinct && !isset($having[0])) {
+
+      $used_aliases = array();
+      $this->GetUsedAliases($count->where, $used_aliases);
+      
+      // When not executing a distinct query, we can zero-out existing fields
+      // and expressions that are not used by a GROUP BY or HAVING. Fields
+      // listed in a GROUP BY or HAVING clause need to be present in the
+      // query.
+      $fields =& $count->getFields();
+      foreach ($fields as $field => $value) {
+        if (empty($group_by[$field]) && !isset($used_aliases[$value['alias']])) {
+          unset($fields[$field]);
+        }
+      }
+
+      $expressions =& $count->getExpressions();
+      foreach ($expressions as $field => $value) {
+        if (empty($group_by[$field]) && !isset($used_aliases[$value['alias']])) {
+          unset($expressions[$field]);
+        }
+      }
+
+      // Also remove 'all_fields' statements, which are expanded into tablename.*
+      // when the query is executed.
+      foreach ($count->tables as $alias => &$table) {
+        unset($table['all_fields']);
+      }
+    }
+
+    // If we've just removed all fields from the query, make sure there is at
+    // least one so that the query still runs.
+    $count->addExpression('1');
+
+    // Ordering a count query is a waste of cycles, and breaks on some
+    // databases anyway.
+    $orders = &$count->getOrderBy();
+    $orders = array();
+
+    if ($count->distinct && !empty($group_by)) {
+      // If the query is distinct and contains a GROUP BY, we need to remove the
+      // distinct because SQL99 does not support counting on distinct multiple fields.
+      $count->distinct = FALSE;
+    }
+
+    $query = $this->connection->select($count);
+    $query->addExpression('COUNT(*)');
+
+    return $query;
   }
 }
