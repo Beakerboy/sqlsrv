@@ -19,7 +19,6 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    */
   public $defaultSchema = 'dbo';
 
-  protected $additionalColumnInformation = NULL;
   /**
    * Default recommended collation for SQL Server.
    */
@@ -33,12 +32,13 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
   // Name for the technical column used for computed keys
   // or technical primary key.
-  // IMPORTANTE: They both start with "__" because the
+  // IMPORTANT: They both start with "__" because the
   // statement class will remove those columns from the final
   // result set.
   // This should be constants, but we are using variable to ease
   // their use in inline strings.
   var $COMPUTED_PK_COLUMN_NAME = '__pkc';
+  var $COMPUTED_PK_COLUMN_INDEX = '__ix_pkc';
   var $TECHNICAL_PK_COLUMN_NAME = '__pk';
 
   /**
@@ -88,6 +88,15 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
   }
   
   /**
+   * Clear introspection cache for a specific table.
+   *
+   * @param mixed $table 
+   */
+  protected function queryColumnInformationInvalidate($table) {
+    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema_queryColumnInformation');
+  }
+  
+  /**
    * Database introspection: fetch technical information about a table.
    * 
    * @return
@@ -102,59 +111,142 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    *      - is_nullable: Is nullable.
    *      - is_ansi_padded: Is ANSI padded.
    *      - is_identity: Is identity.
+   *      - definition: If a computed column, the computation formulae.
+   *      - default_value: Default value for the column (if any).
    */
-  public function queryColumnInformation($table) {
+  public function queryColumnInformation($table, $refresh = FALSE) {
     // No worry for the tableExists() check, results
     // are cached.
-    if (empty($table) || !$this->tableExists($table)) {
+    if (empty($table) || !$this->tableExists($table, TRUE)) {
       return array();
     }
+    
+    $table_info = $this->getPrefixInfo($table);
+    
     if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema_queryColumnInformation')) {
       return $cache->data;
     }
-    $table_info = $this->getPrefixInfo($table);
-    $key = $table_info['schema'] . '.' . $table_info['table'];
 
-    if (!isset($this->additionalColumnInformation[$key])) {
-      $this->additionalColumnInformation[$key] = array();
+    $info = array();
+    
+    // Don't use {} around information_schema.columns table.
+    $result = $this->connection->query("SELECT sysc.name, sysc.max_length, sysc.precision, sysc.collation_name, 
+                    sysc.is_nullable, sysc.is_ansi_padded, sysc.is_identity, sysc.is_computed, TYPE_NAME(sysc.user_type_id) as type,
+                    syscc.definition,
+                    sm.[text] as default_value
+                    FROM sys.columns AS sysc 
+                    INNER JOIN sys.syscolumns AS sysc2 ON sysc.object_id = sysc2.id and sysc.name = sysc2.name
+                    LEFT JOIN sys.computed_columns AS syscc ON sysc.object_id = syscc.object_id AND sysc.name = syscc.name
+                    LEFT JOIN sys.syscomments sm ON sm.id = sysc2.cdefault
+                    WHERE sysc.object_id = OBJECT_ID(:table)
+                    ", 
+                  array(':table' => $table_info['schema'] . '.' . $table_info['table']));
 
-      // Don't use {} around information_schema.columns table.
-      $result = $this->connection->query("SELECT name, max_length, precision, collation_name, is_nullable, is_ansi_padded, is_identity, is_computed, TYPE_NAME(user_type_id) as type FROM sys.columns WHERE object_id = OBJECT_ID(:table)", array(':table' => $table_info['schema'] . '.' . $table_info['table']));
-      foreach ($result as $column) {
-        if ($column->type == 'varbinary') {
-          $this->additionalColumnInformation[$key]['blobs'][$column->name] = TRUE;
-        }
-        $this->additionalColumnInformation[$key]['columns'][$column->name] = (array) $column;
-        // Provide a clean list of columns that excludes the ones internally created by the
-        // database driver.
-        if (!(isset($column->name[1]) && substr($column->name, 0, 2) == "__")) {
-          $this->additionalColumnInformation[$key]['columns_clean'][$column->name] = (array) $column;
-
-        }
+    foreach ($result as $column) {
+      if ($column->type == 'varbinary') {
+        $info['blobs'][$column->name] = TRUE;
       }
-
-      // Don't use {} around system tables.
-      $result = $this->connection->query('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', array(':table' => $table_info['schema'] . '.' . $table_info['table']));
-      foreach ($result as $column) {
-        $this->additionalColumnInformation[$key]['identities'][$column->name] = TRUE;
+      $info['columns'][$column->name] = (array) $column;
+      // Provide a clean list of columns that excludes the ones internally created by the
+      // database driver.
+      if (!(isset($column->name[1]) && substr($column->name, 0, 2) == "__")) {
+        $info['columns_clean'][$column->name] = (array) $column;
       }
     }
-    fastcache::cache_set('queryColumnInformation:' . $table, $this->additionalColumnInformation[$key], 'schema_queryColumnInformation');
-    return $this->additionalColumnInformation[$key];
+
+    // If we have computed columns, it is important to know what other columns they depend on!
+    $column_names = array_keys($info['columns']);
+    $column_regex = implode('|', $column_names);
+    foreach($info['columns'] as &$column) {
+      $dependencies = array();
+      if (!empty($column['definition'])) {
+        $matches = array();
+        if (preg_match_all("/\[[{$column_regex}\]]*\]/", $column['definition'], $matches) > 0) {
+          $dependencies = array_map(function($m) { return trim($m, "[]"); }, array_shift($matches));
+        }
+      }
+      $column['dependencies'] = array_flip($dependencies);
+    }
+
+    // Don't use {} around system tables.
+    $result = $this->connection->query('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', array(':table' => $table_info['schema'] . '.' . $table_info['table']));
+    unset($column);
+    foreach ($result as $column) {
+      $info['identities'][$column->name] = TRUE;
+    }
+    
+    // Now introspect information about indexes
+    $result = $this->connection->query("select tab.[name]  as [table_name],
+         idx.[name]  as [index_name],
+         allc.[name] as [column_name],
+         idx.[type_desc],
+         idx.[is_unique],
+         idx.[data_space_id],
+         idx.[ignore_dup_key],
+         idx.[is_primary_key],
+         idx.[is_unique_constraint],
+         idx.[fill_factor],
+         idx.[is_padded],
+         idx.[is_disabled],
+         idx.[is_hypothetical],
+         idx.[allow_row_locks],
+         idx.[allow_page_locks],
+         idxc.[is_descending_key],
+         idxc.[is_included_column],
+         idxc.[index_column_id],
+         idxc.[key_ordinal]
+    FROM sys.[tables] as tab
+    INNER join sys.[indexes]       idx  ON tab.[object_id] =  idx.[object_id]
+    INNER join sys.[index_columns] idxc ON idx.[object_id] = idxc.[object_id] and  idx.[index_id]  = idxc.[index_id]
+    INNER join sys.[all_columns]   allc ON tab.[object_id] = allc.[object_id] and idxc.[column_id] = allc.[column_id]
+    WHERE tab.object_id = OBJECT_ID(:table)
+    ORDER BY tab.[name], idx.[index_id], idxc.[index_column_id]
+                    ", 
+                  array(':table' => $table_info['schema'] . '.' . $table_info['table']));
+    
+    foreach ($result as $index_column) {
+      if (!isset($info['indexes'][$index_column->index_name])) {
+        $ic = clone $index_column;
+        // Only retain index specific details.
+        unset($ic->column_name);
+        unset($ic->index_column_id);
+        unset($ic->is_descending_key);
+        unset($ic->table_name);
+        unset($ic->key_ordinal);
+        $info['indexes'][$index_column->index_name] = (array) $ic;
+        if ($index_column->is_primary_key) {
+          $info['primary_key_index'] = $ic->index_name;
+        }
+      }
+      $index = &$info['indexes'][$index_column->index_name];
+      $index['columns'][$index_column->key_ordinal] = array(
+           'name' => $index_column->column_name,
+           'is_descending_key' => $index_column->is_descending_key,
+           'key_ordinal' => $index_column->key_ordinal,
+         );
+      // Every columns keeps track of what indexes it is part of.
+      $info['columns'][$index_column->column_name]['indexes'][] = $index_column->index_name;
+      if (isset($info['columns_clean'][$index_column->column_name])) {
+        $info['columns_clean'][$index_column->column_name]['indexes'][] = $index_column->index_name;
+      }
+    }
+    
+    fastcache::cache_set('queryColumnInformation:' . $table, $info, 'schema_queryColumnInformation');
+    
+    return $info;
   }
 
-  // TODO: implement the same for alter table and add/remove fields.
+  /**
+   * {@Inheritdoc}
+   */
   public function createTable($name, $table) {
-    // Reset the additional column information because the schema changed.
-    $this->additionalColumnInformation = NULL;
-
-    if ($this->tableExists($name)) {
+    if ($this->tableExists($name, TRUE)) {
       throw new DatabaseSchemaObjectExistsException(t('Table %name already exists.', array('%name' => $name)));
     }
     
     // Reset caches after calling tableExists() otherwise it's results get cached again before
     // the table is created.
-    fastcache::cache_clear_all('queryColumnInformation:' . $name, 'schema_queryColumnInformation');
+    $this->queryColumnInformationInvalidate($name);
     fastcache::cache_clear_all('*', 'tableExists', TRUE);
 
     // Build the table and its unique keys in a transaction, and fail the whole
@@ -166,8 +258,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
       // If the spec had a primary key, set it now after all fields have been created.
       if (isset($table['primary key']) && is_array($table['primary key'])) {
-        $this->recreatePrimaryKey($name, $this->createPrimaryKeyIndexSql($name, $table['primary key']));
-        $this->cleanUpTechnicalPrimaryColumn($name);
+        $this->recreatePrimaryKey($name, $table['primary key']);
       }
       
       // Now all the unique keys.
@@ -192,7 +283,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     if (isset($table['indexes']) && is_array($table['indexes'])) {
       foreach ($table['indexes'] as $key_name => $key) {
         try {
-          $this->connection->query($this->createIndexSql($name, $key_name, $key));
+          $this->addIndex($name, $key_name, $key);
         }
         catch (Exception $e) {
           // Log the exception but do not rollback the transaction.
@@ -200,19 +291,22 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
         }
       }
     }
-
+    
+    // Invalidate introspection cache.
+    $this->queryColumnInformationInvalidate($name);
   }
 
   /**
-   * Find if a table already exists.
+   * Find if a table already exists. Results are cached, use
+   * $reset = TRUE to get a fresh copy.
    *
    * @param $table
    *   Name of the table.
    * @return
    *   True if the table exists, false otherwise.
    */
-  public function tableExists($table) {
-    if ($cache = fastcache::cache_get($table, 'tableExists')) {
+  public function tableExists($table, $reset = FALSE) {
+    if (!$reset && $cache = fastcache::cache_get($table, 'tableExists')) {
       return $cache->data;
     }
     $exists = $this->connection
@@ -294,7 +388,7 @@ EOF
    * @see https://msdn.microsoft.com/en-us/library/ms178085.aspx
    */
   public function calculateClusteredIndexRowSizeBytes($table, $fields, $unique = TRUE) {
-    // If we have received a field spec, there is a chance the table has not been created yet.
+    // The fields must already be in the database to retrieve their real size.
     $info = $this->queryColumnInformation($table);
     
     // Specify the number of fixed-length and variable-length columns 
@@ -340,27 +434,59 @@ EOF
   }
   
   /**
-   * Create the SQL needed to add a new primary key.
-   * @param string $table 
-   * @param array $fields 
-   * @param array $field_spec 
+   * Drops the current primary key and creates
+   * a new one. If the previous primary key
+   * was an internal primary key, it tries to cleant it up.
+   *
+   * @param mixed $table 
+   * @param mixed $primary_key_sql 
    */
-  private function createPrimaryKeyIndexSql($table, $fields) {
-    // To be on the safe side, on the most restrictive use case the limite
+  protected function recreatePrimaryKey($table, $fields) {
+    // Drop the existing primary key if exists, if it was a TPK
+    // it will get completely dropped.
+    $this->cleanUpPrimaryKey($table);
+    $this->createPrimaryKey($table, $fields);
+  }
+  
+  /**
+   * Create a Primary Key for the table, does not drop
+   * any prior primary keys neither it takes care of cleaning
+   * technical primary column. Only call this if you are sure
+   * the table does not currently hold a primary key.
+   *
+   * @param string $table 
+   * @param mixed $fields 
+   * @param int $limit 
+   */
+  private function createPrimaryKey($table, $fields, $limit = 900) {
+    // To be on the safe side, on the most restrictive use case the limit
     // for a primary key clustered index is of 128 bytes (usually 900).
     // @see http://blogs.msdn.com/b/jgalla/archive/2005/08/18/453189.aspx
     // If that is going to be exceeded, use a computed column.
     $csv_fields = $this->createKeySql($fields);
     $size = $this->calculateClusteredIndexRowSizeBytes($table, $this->createKeySql($fields, TRUE));
     $result = array();
-    if ($size >= 128) {
+    $index = FALSE;
+    if ($size >= $limit) {
+      // Use a computed column instead, and create a custom index.
       $result[] = "{$this->COMPUTED_PK_COLUMN_NAME} AS (CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT('',{$csv_fields})), 2)) PERSISTED NOT NULL";
       $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$this->COMPUTED_PK_COLUMN_NAME})";
+      $index = TRUE;
     }
     else {
       $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$csv_fields})";
     }
-    return implode(' ', $result);
+    
+    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
+    
+    // If we relied on a computed column for the Primary Key,
+    // at least index the fields with a regular index.
+    if ($index) {
+      $this->addIndex($table, $this->COMPUTED_PK_COLUMN_INDEX, $fields);
+    }
+    
+    // Invalidate current introspection.
+    $this->queryColumnInformationInvalidate($table);
   }
   
   /**
@@ -498,7 +624,7 @@ EOF
    *
    * @return string
    */
-  protected function createIndexSql($table, $name, $fields) {
+  protected function createIndexSql($table, $name, $fields, &$xml_field) {
     // Get information about current columns.
     $info = $this->queryColumnInformation($table);
     // Flatten $fields array if neccesary.
@@ -514,6 +640,10 @@ EOF
     // XML indexes can only have 1 column.
     if (!empty($xml_field) && isset($fields[1])) {
       throw new Exception("Cannot include an XML field on a multiple column index.");
+    }
+    // No more than one XML index per table.
+    if ($xml_field && $this->tableHasXmlIndex($table)) {
+      throw new Exception("Only one primary clustered XML index is allowed per table.");
     }
     if (empty($xml_field)) {
       // TODO: As we are already doing with primary keys, when a user requests
@@ -602,10 +732,10 @@ EOF
    * @status complete
    */
   public function renameTable($table, $new_name) {
-    if (!$this->tableExists($table)) {
+    if (!$this->tableExists($table, TRUE)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot rename %table to %table_new: table %table doesn't exist.", array('%table' => $table, '%table_new' => $new_name)));
     }
-    if ($this->tableExists($new_name)) {
+    if ($this->tableExists($new_name, TRUE)) {
       throw new DatabaseSchemaObjectExistsException(t("Cannot rename %table to %table_new: table %table_new already exists.", array('%table' => $table, '%table_new' => $new_name)));
     }
 
@@ -646,7 +776,7 @@ EOF
    * @status tested
    */
   public function dropTable($table) {
-    if (!$this->tableExists($table)) {
+    if (!$this->tableExists($table, TRUE)) {
       return FALSE;
     }
 
@@ -667,7 +797,7 @@ EOF
    * @status complete
    */
   public function addField($table, $field, $spec, $new_keys = array()) {
-    if (!$this->tableExists($table)) {
+    if (!$this->tableExists($table, TRUE)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", array('%field' => $field, '%table' => $table)));
     }
     if ($this->fieldExists($table, $field)) {
@@ -675,7 +805,7 @@ EOF
     }
 
     // Clear column information for table.
-    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema_queryColumnInformation');
+    $this->queryColumnInformationInvalidate($table);
 
     // If the field is declared NOT NULL, we have to first create it NULL insert
     // the initial data then switch to NOT NULL.
@@ -689,8 +819,8 @@ EOF
     $query .= $this->createFieldSql($table, $field, $this->processField($spec));
     $this->connection->query($query);
 
-    // Reset the blob cache.
-    $this->additionalColumnInformation = NULL;
+    // Clear column information for table.
+    $this->queryColumnInformationInvalidate($table);
 
     // Load the initial data.
     if (isset($spec['initial'])) {
@@ -709,8 +839,40 @@ EOF
     if (isset($new_keys)) {
       $this->recreateTableKeys($table, $new_keys);
     }
+    
+    // Clear column information for table.
+    $this->queryColumnInformationInvalidate($table);
   }
 
+  /**
+   * Sometimes the size of a table's primary key index needs
+   * to be reduced to allow for Primary XML Indexes.
+   *
+   * @param string $table 
+   * @param int $limit 
+   */
+  public function compressPrimaryKeyIndex($table, $limit = 900) {
+    // SQL Server supports transactional DDL, so we can just start a transaction
+    // here and pray for the best.
+    $transaction = $this->connection->startTransaction();
+
+    // Introspect the schema and save the current primary key if the column
+    // we are modifying is part of it.
+    $primary_key_fields = $this->introspectPrimaryKeyFields($table);
+
+    // Clear current Primary Key.
+    $this->cleanUpPrimaryKey($table);
+
+    // Recreate the Primary Key with the given limit size.
+    $this->createPrimaryKey($table, $primary_key_fields, $limit);
+    
+    // Refresh introspection for this table.
+    $this->queryColumnInformation($table, TRUE);
+    
+    // Commit.
+    unset($transaction);
+  }
+  
   /**
    * Override DatabaseSchema::changeField().
    *
@@ -724,16 +886,24 @@ EOF
       throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", array('%table' => $table, '%name' => $field, '%name_new' => $field_new)));
     }
 
-    // Clear column information for table.
-    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema_queryColumnInformation');
-
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
-    $transaction = $this->connection->startTransaction();
+    //$transaction = $this->connection->startTransaction();
 
+    // IMPORTANT NOTE: To maintain database portability, you have to explicitly recreate all indices and primary keys that are using the changed field.
+    // That means that you have to drop all affected keys and indexes with db_drop_{primary_key,unique_key,index}() before calling db_change_field().
+    // @see https://api.drupal.org/api/drupal/includes!database!database.inc/function/db_change_field/7
+    //
+    // What we are going to do in the SQL Server Driver is a best-effort try to preserve original keys if they do not conflict
+    // with the new_keys parameter, and if the callee has done it's job (droping constraints/keys) then they will of course not be recreated.
+    
     // Introspect the schema and save the current primary key if the column
     // we are modifying is part of it.
-    $primary_key_sql = $this->introspectPrimaryKey($table, $field);
+    $primary_key_fields = $this->introspectPrimaryKeyFields($table);
+    if (in_array($field, $primary_key_fields)) {
+      // Let's drop the PK
+      $this->cleanUpPrimaryKey($table);
+    }
 
     // If there is a generated unique key for this field, we will need to
     // add it back in when we are done
@@ -770,23 +940,40 @@ EOF
       $this->connection->query('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $this->processField($spec), TRUE));
     }
 
-    // Recreate the primary key.
-    if ($primary_key_sql) {
-      $this->recreatePrimaryKey($table, $primary_key_sql);
+    // Initialize new keys.
+    if (!isset($new_keys)) {
+      $new_keys = array(
+        'unique keys' => array(),
+        'primary keys' => array()
+      );
     }
-    if ($unique_key) {
-      $fields = array();
-      $fields[] = $field;
-      $this->addUniqueKey($table, $field, $fields);
+    
+    // Recreate the primary key if no new primary key
+    // has been sent along with the change field.
+    if (in_array($field, $primary_key_fields) && (!isset($new_keys['primary keys']) || empty($new_keys['primary keys']))) {
+      // The new primary key needs to have
+      // the new column name.
+      unset($primary_key_fields[$field]);
+      $primary_key_fields[$field_new] = $field_new;
+      $new_keys['primary key'] = $primary_key_fields;
+    }
+    
+    // Recreate the unique constraint if it existed.
+    if ($unique_key && !isset($new_keys['unique keys']) && !in_array($field_new, $new_keys['unique keys'])) {
+      $new_keys['unique keys'][] = $field_new;
     }
 
     // Drop the old field.
     $this->dropField($table, $field . '_old');
 
     // Add the new keys.
-    if (isset($new_keys)) {
-      $this->recreateTableKeys($table, $new_keys);
-    }
+    $this->recreateTableKeys($table, $new_keys);
+    
+    // Refresh introspection for this table.
+    $this->queryColumnInformation($table, TRUE);
+    
+    // Commit.
+    unset($transaction);
   }
 
   /**
@@ -815,28 +1002,34 @@ EOF
   }
 
   /**
-   * Gets collation for current connection,
-   * whether it has or not a database defined in
-   * it.
+   * Get the collation of current connection wether
+   * it has or not a database defined in it.
    *
-   * @status needs review
+   * @param string $table 
+   * @param string $column
+   *
+   * @return string
    */
   public function getCollation($table = NULL, $column = NULL) {
-    // Database is defaulted from active connection.
-    $options = $this->connection->getConnectionOptions();
-    $database = $options['database'];
-    if (!empty($database)) {
-      // Default collation for specific table.
-      $sql = "SELECT CONVERT (varchar, DATABASEPROPERTYEX('$database', 'collation'))";
-      return $this->connection->query($sql)->fetchField();
+    // No table or column provided, then get info about
+    // database (if exists) or server defaul collation.
+    if (empty($table) && empty($column)) {
+      // Database is defaulted from active connection.
+      $options = $this->connection->getConnectionOptions();
+      $database = $options['database'];
+      if (!empty($database)) {
+        // Default collation for specific table.
+        $sql = "SELECT CONVERT (varchar, DATABASEPROPERTYEX('$database', 'collation'))";
+        return $this->connection->query($sql)->fetchField();
+      }
+      else {
+        // Server default collation.
+        $sql = "SELECT SERVERPROPERTY ('collation') as collation";
+        return $this->connection->query($sql)->fetchField();
+      }
     }
-    else {
-      // Server default collation.
-      $sql = "SELECT SERVERPROPERTY ('collation') as collation";
-      return $this->connection->query($sql)->fetchField();
-    }
-    if (!empty($table) && $empty($column)) {
-      $sql = <<< EOF
+    
+    $sql = <<< EOF
       SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, COLLATION_NAME, DATA_TYPE
         FROM INFORMATION_SCHEMA.COLUMNS
         WHERE TABLE_SCHEMA = ':schema'
@@ -844,50 +1037,46 @@ EOF
         AND COLUMN_NAME = ':column'
 EOF
 ;
-      $params = array();
-      $params[':schema'] = $this->defaultSchema;
-      $params[':table'] = $table;
-      $params[':column'] = $column;
-      $result = $this->connection->query($sql, $params)->fetchObject();
-      return $result->COLLATION_NAME;
-    }
+    $params = array();
+    $params[':schema'] = $this->defaultSchema;
+    $params[':table'] = $table;
+    $params[':column'] = $column;
+    $result = $this->connection->query($sql, $params)->fetchObject();
+    return $result->COLLATION_NAME;    
   }
 
-  protected function introspectPrimaryKey($table, $field) {
-    // Fetch the list of columns participating to the primary key.
-    $result = $this->connection->query('SELECT i.name, ic.is_descending_key, c.name column_name
-      FROM sys.columns c
-       INNER JOIN sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-       INNER JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id
-      WHERE i.object_id = OBJECT_ID(:table) AND i.is_primary_key = 1 ORDER BY ic.key_ordinal', array(
-      ':table' => $this->connection->prefixTables('{' . $table . '}'),
-    ));
-    $columns = array();
-    $valid = FALSE;
-    foreach ($result as $column) {
-      if ($column->column_name == $field) {
-        $valid = TRUE;
+  /**
+   * Get the list of fields participating in the Primary Key
+   *
+   * @param string $table 
+   * @param string $field
+   *
+   * @return string[]
+   */
+  public function introspectPrimaryKeyFields($table) {
+    $data = $this->queryColumnInformation($table, TRUE);
+    if (!isset($data['indexes'][$data['primary_key_index']])) {
+      return array();
+    }
+    $result = array();
+    $index = $data['indexes'][$data['primary_key_index']];
+    foreach ($index['columns'] as $column) {
+      if ($column['name'] != $this->COMPUTED_PK_COLUMN_NAME) {
+        $result[$column['name']] = $column['name'];
       }
-      $columns[] = '[' . $column->column_name . ']' . ($column->is_descending_key ? ' DESC' : '');
+      // Get full column definition
+      $c = $data['columns'][$column['name']];
+      // If this column depends on other columns
+      // the other columns are also part of the index!
+      // We don't support nested computed columns here.
+      foreach ($c['dependencies'] as $name => $order) {
+        $result[$name] = $name;
+      }
     }
-    if ($valid) {
-      return 'CONSTRAINT [' . $column->name . '] PRIMARY KEY CLUSTERED (' . implode(', ', $columns) . ')';
-    }
-    
-    return '';
+    return $result;
   }
   
-  /**
-   * Summary of recreatePrimaryKey
-   * @param mixed $table 
-   * @param mixed $primary_key_sql 
-   */
-  protected function recreatePrimaryKey($table, $primary_key_sql) {
-    // Drop the existing primary key if exists.
-    $this->cleanUpPrimaryKey($table);
 
-    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD ' . $primary_key_sql);
-  }
 
   /**
    * Re-create keys associated to a table.
@@ -917,12 +1106,12 @@ EOF
     if (!$this->fieldExists($table, $field)) {
       return FALSE;
     }
-    // Clear column information for table.
-    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema_queryColumnInformation');
+
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
-
     $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
+    // Clear introspection cache.
+    $this->queryColumnInformationInvalidate($table);
     return TRUE;
   }
 
@@ -964,6 +1153,11 @@ EOF
       $this->dropUniqueKey($table, $field);
     }
 
+    // If this column is part of a computed primary key, drop the key.
+    $data = $this->queryColumnInformation($table, TRUE);
+    if (isset($data['columns'][$this->COMPUTED_PK_COLUMN_NAME]['dependencies'][$field])) {
+      $this->cleanUpPrimaryKey($table);
+    }
   }
 
   /**
@@ -1009,7 +1203,7 @@ EOF
    * @status tested
    */
   public function addPrimaryKey($table, $fields) {
-    if (!$this->tableExists($table)) {
+    if (!$this->tableExists($table, TRUE)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add primary key to table %table: table doesn't exist.", array('%table' => $table)));
     }
 
@@ -1023,8 +1217,16 @@ EOF
         throw new DatabaseSchemaObjectExistsException(t("Cannot add primary key to table %table: primary key already exists.", array('%table' => $table)));
       }
     }
-
-    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD ' . $this->createPrimaryKeyIndexSql($table, $fields));
+    
+    // The size limit of the primary key depends on the 
+    // cohexistance with an XML field.
+    if ($this->tableHasXmlIndex($table)) {
+      $this->createPrimaryKey($table, $fields, 128);
+    }
+    else {
+      $this->createPrimaryKey($table, $fields);
+    }
+    
     return TRUE;
   }
   
@@ -1071,22 +1273,32 @@ EOF
   }
   
   /**
-   * Drop the primary key constraint, and any column it may depend on.
+   * Drop the primary key constraint.
    * @param mixed $table 
    */
   protected function cleanUpPrimaryKey($table) {
+    // We are droping the constraint, but not the column.
     if ($existing_primary_key = $this->primaryKeyName($table)) {
       $this->connection->query("ALTER TABLE [{{$table}}] DROP CONSTRAINT {$existing_primary_key}");
     }
     // We are using computed columns to store primary keys,
     // try to remove it if it exists.
     if ($this->fieldExists($table, $this->COMPUTED_PK_COLUMN_NAME)) {
+      // The TCPK has compensation indexes that need to be cleared.
+      $this->dropIndex($table, $this->COMPUTED_PK_COLUMN_INDEX);
       $this->dropField($table, $this->COMPUTED_PK_COLUMN_NAME);
     }
+    // Try to get rid of the TPC
+    $this->cleanUpTechnicalPrimaryColumn($table);
   }
 
   /**
-   * Try to clean up the technical primary column if possible.
+   * Tries to clean up the technical primary column. It will
+   * be deleted if
+   * (a) It is not being used as the current primary key and...
+   * (b) There is no unique constraint because they depend on this column (see addUniqueKey())
+   *
+   * @param string $table 
    */
   protected function cleanUpTechnicalPrimaryColumn($table) {
     // Get the number of remaining unique indexes on the table, that
@@ -1104,7 +1316,7 @@ EOF
    * @status tested
    */
   public function addUniqueKey($table, $name, $fields) {
-    if (!$this->tableExists($table)) {
+    if (!$this->tableExists($table, TRUE)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add unique key %name to table %table: table doesn't exist.", array('%table' => $table, '%name' => $name)));
     }
     if ($this->uniqueKeyExists($table, $name)) {
@@ -1135,8 +1347,6 @@ EOF
 
   /**
    * Override DatabaseSchema::dropUniqueKey().
-   *
-   * @status tested
    */
   public function dropUniqueKey($table, $name) {
     if (!$this->uniqueKeyExists($table, $name)) {
@@ -1148,6 +1358,8 @@ EOF
 
     // Try to clean-up the technical primary key if possible.
     $this->cleanUpTechnicalPrimaryColumn($table);
+    
+    return TRUE;
   }
 
   /**
@@ -1169,14 +1381,27 @@ EOF
    * @status tested
    */
   public function addIndex($table, $name, $fields) {
-    if (!$this->tableExists($table)) {
+    if (!$this->tableExists($table, TRUE)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", array('%table' => $table, '%name' => $name)));
     }
     if ($this->indexExists($table, $name)) {
       throw new DatabaseSchemaObjectExistsException(t("Cannot add index %name to table %table: index already exists.", array('%table' => $table, '%name' => $name)));
     }
 
-    $this->connection->query($this->createIndexSql($table, $name, $fields));
+    $xml_field = NULL;
+    $sql = $this->createIndexSql($table, $name, $fields, $xml_field);
+    if (!empty($xml_field)) {
+      // We can create an XML field, but the current primary key index
+      // size needs to be under 128bytes.
+      $pk_fields = $this->introspectPrimaryKeyFields($table);
+      $size = $this->calculateClusteredIndexRowSizeBytes($table, $pk_fields, TRUE);
+      if ($size > 128) {
+        // Alright the compress the index.
+        $this->compressPrimaryKeyIndex($table, 128);
+      }
+    }
+    $this->connection->query($sql);
+    $this->queryColumnInformationInvalidate($table);
   }
 
   /**
@@ -1188,8 +1413,21 @@ EOF
     if (!$this->indexExists($table, $name)) {
       return FALSE;
     }
-
+    
+    $expand = FALSE;
+    if (($index = $this->tableHasXmlIndex($table)) && $index == ($name . '_idx')) {
+      $expand = TRUE;
+    }
+    
     $this->connection->query('DROP INDEX ' . $name . '_idx ON [{' . $table . '}]');
+    
+    // If we just dropped an XML index, we can re-expand the original primary key index.
+    if ($expand) {
+      $this->compressPrimaryKeyIndex($table);
+    }
+    
+    $this->queryColumnInformationInvalidate($table);
+    
     return TRUE;
   }
 
@@ -1204,6 +1442,22 @@ EOF
       ':table' => $table,
       ':name' => $name . '_idx'
     ))->fetchField();
+  }
+  
+  /**
+   * Check if a table already has an XML index.
+   *
+   * @param string $table 
+   * @param string $name 
+   */
+  public function tableHasXmlIndex($table) {
+    $info = $this->queryColumnInformation($table);
+    foreach ($info['indexes'] as $name => $index) {
+      if (strcasecmp($index['type_desc'], 'XML') == 0) {
+        return $name;
+      }
+    }
+    return FALSE;
   }
 }
 

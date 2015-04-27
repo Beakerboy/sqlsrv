@@ -85,6 +85,15 @@ class fastcache {
       // used out of database driver there is a chance that
       // cache storage might not yet be initialized.
       if (function_exists('_cache_get_object')) {
+        // If you only bootstrap to database the lock system is not yet started
+        // but if locking is not database dependant (memcache or wincache) you can run
+        // lock_initialize is ASAP.
+        $lock_file = variable_get('lock_inc', 'includes/lock.inc');
+        if ($lock_file != 'includes/lock.inc') {
+          require_once DRUPAL_ROOT . '/' . $lock_file;
+          lock_initialize();
+        }
+
         global $WINCACHE_LOCK_ACTIVE;
         // Only enabled storage if Cache Backend is DrupalWinCache and Locking backend is also Wincache based.
         static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache') && $WINCACHE_LOCK_ACTIVE;
@@ -162,12 +171,9 @@ class fastcache {
       else {
         // Do persist or lock if it is not enabled!
         if (static::Enabled()) {
-          // Only persist if we are able to acquire a lock
-          // for the entire binary.
-          $phase = drupal_bootstrap(NULL, FALSE);
           // Hold this locks longer than usual because
           // they run after the request has finished.
-          if ($phase >= 3 && lock_acquire('fastcache_' . $bin, 120)) {
+          if (function_exists('lock_acquire') && lock_acquire('fastcache_' . $bin, 120)) {
             static::$fastcacheitems[$bin]->persist = TRUE;
             static::$fastcacheitems[$bin]->locked = TRUE;
           }

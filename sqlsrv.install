@@ -78,7 +78,7 @@ function sqlsrv_requirements($phase) {
     }
 
     // Report encoding for database.
-    $collation = $schema->getCollation($options['database']);
+    $collation = $schema->getCollation();
     $case_insensitive = stripos($collation, '_CI') !== FALSE;
     $requirements['sqlsrv_encoding_database'] = array(
       'title' => t('MS SQL Server Database encoding'),

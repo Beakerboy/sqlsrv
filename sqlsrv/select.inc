@@ -6,10 +6,26 @@ class SelectQuery_sqlsrv extends SelectQuery {
   /**
    * Overriden with an aditional exclude parameter that tells not to include this expression (by default)
    * in the select list.
+   *
+   * @param string $expression 
+   *
+   * @param string $alias 
+   *
+   * @param string $arguments 
+   *
+   * @param string $exclude
+   *   If set to TRUE, this expression will not be added to the select list. Useful
+   *   when you want to reuse expressions in the WHERE part.
+   * @param string $expand
+   *   If this expression will be expanded as a CROSS_JOIN so it can be consumed
+   *   from other parts of the query. TRUE by default. It attempts to detect expressions
+   *   that cannot be cross joined (aggregates).
+   * @return string
    */
-  public function addExpression($expression, $alias = NULL, $arguments = array(), $exclude = FALSE) {
+  public function addExpression($expression, $alias = NULL, $arguments = array(), $exclude = FALSE, $expand = TRUE) {
     $alias = parent::addExpression($expression, $alias, $arguments);
     $this->expressions[$alias]['exclude'] = $exclude;
+    $this->expressions[$alias]['expand'] = $exclude;
     return $alias;
   }
 
@@ -42,7 +58,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
       foreach ($columns as $field => $dummy) {
         if (!isset($this->fields[$field]) && !isset($this->expressions[$field])) {
           $alias = '_field_' . ($counter++);
-          $this->addExpression($field, $alias);
+          $this->addExpression($field, $alias, array(), FALSE, FALSE);
           $this->queryOptions['sqlsrv_drop_columns'][] = $alias;
         }
       }
@@ -182,7 +198,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
       // If the alias is 'expression' this is Drupal's default
       // meaning that more than probably this expression
       // is never reused in a WHERE.
-      if ($expression['alias'] != 'expression' && $this->stripos_arr($expression['expression'], array('AVG(', 'GROUP_CONCAT(', 'COUNT(', 'MAX(', 'GROUPING(', 'GROUPING_ID(', 'COUNT_BIG(', 'CHECKSUM_AGG(', 'MIN(', 'SUM(', 'VAR(', 'VARP(', 'STDEV(', 'STDEVP(')) === FALSE) {
+      if ($expression['expand'] !== FALSE && $expression['alias'] != 'expression' && $this->stripos_arr($expression['expression'], array('AVG(', 'GROUP_CONCAT(', 'COUNT(', 'MAX(', 'GROUPING(', 'GROUPING_ID(', 'COUNT_BIG(', 'CHECKSUM_AGG(', 'MIN(', 'SUM(', 'VAR(', 'VARP(', 'STDEV(', 'STDEVP(')) === FALSE) {
         // What we are doing here is using a CROSS APPLY to
         // generate an expression that can be used in the select and where
         // but we need to give this expression a new name.

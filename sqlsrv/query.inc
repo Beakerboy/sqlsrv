@@ -15,7 +15,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
 
     // Fetch the list of blobs and sequences used on that table.
     $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
-
+    
     // Find out if there is an identity field set in this insert.
     foreach ($this->insertFields as $field) {
       if (isset($columnInformation['identities'][$field])) {
@@ -133,7 +133,13 @@ class InsertQuery_sqlsrv extends InsertQuery {
     // If we're selecting from a SelectQuery, finish building the query and
     // pass it back, as any remaining options are irrelevant.
     if (!empty($this->fromQuery)) {
-      return $prefix . "INSERT INTO {" . $this->table . '} (' . implode(', ', $this->connection->quoteIdentifiers($this->insertFields)) . ') ' . $this->fromQuery;
+      if (empty($this->insertFields)) {
+        return $prefix . "INSERT INTO {{$this->table}} " . $this->fromQuery;
+      }
+      else {
+        $fields_csv = implode(', ', $this->connection->quoteIdentifiers($this->insertFields));
+        return $prefix . "INSERT INTO {{$this->table}} ({$fields_csv}) " . $this->fromQuery;
+      }
     }
 
     // Build the list of placeholders.
@@ -209,7 +215,7 @@ class UpdateQuery_sqlsrv extends UpdateQuery {
 
   public function execute() {
     // Rewrite the query to exclude the non-affected rows.
-    $this->excludeNonAffectedRows();
+    // $this->excludeNonAffectedRows();
 
     // Now perform the special handling for BLOB fields.
     $max_placeholder = 0;
@@ -244,7 +250,6 @@ class UpdateQuery_sqlsrv extends UpdateQuery {
 
     foreach ($fields as $field => $value) {
       $placeholder = ':db_update_placeholder_' . ($max_placeholder++);
-
       if (isset($columnInformation['blobs'][$field])) {
         $blobs[$blob_count] = fopen('php://memory', 'a');
         fwrite($blobs[$blob_count], $value);
