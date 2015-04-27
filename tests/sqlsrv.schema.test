@@ -258,13 +258,13 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
       ->fields(array(
         'name' => 'Sandra',
       ))->execute();
-      
+    
     // Insert a value in name
     db_insert('test_table_binary')
       ->fields(array(
         'name' => 'sandra',
       ))->execute();
-      
+    
     // By default, datase collation
     // should be case insensitive, returning both rows.
     $result = db_query('SELECT COUNT(*) FROM {test_table_binary} WHERE name = :name', array(':name' => 'SANDRA'))->fetchField();
@@ -277,7 +277,7 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
           'length' => 255,
           'binary' => true
         ));
-        
+    
     // With case sensitivity, no results.
     $result = db_query('SELECT COUNT(*) FROM {test_table_binary} WHERE name = :name', array(':name' => 'SANDRA'))->fetchField();
     $this->assertEqual($result, 0, 'Returned the correct number of total rows.');
@@ -316,5 +316,99 @@ class SqlServerSchemaTest extends DrupalWebTestCase {
     }
 
     $this->assertTrue($success, t('Able to create a numeric field with an out of bounds precision.'));
+  }
+  
+  /**
+   * Test native XML storage.
+   */
+  public function textXMLStorage() {
+
+    $table_spec = array(
+      'fields' => array(
+        'id'  => array(
+          'type' => 'serial',
+          'not null' => TRUE,
+        ),
+        'extend' => array(
+          'type' => 'text',
+          'sqlsrv_type' => 'xml',
+        ),
+      ),
+      'primary key' => array('id'),
+    );
+
+    $success = FALSE;
+    try {
+      db_create_table('test_table_xml', $table_spec);
+      $success = TRUE;
+    }
+    catch (Exception $error) {
+      $success = FALSE;
+    }
+
+    $this->assertTrue($success, t('Able to create a table with an XML field.'));
+
+    // Insert something and retrieve.
+    $data = '<xml><a>data</a></xml>';
+    try {
+      db_insert('test_table_xml')->fields(array('extend' => $data))->execute();
+      $success = TRUE;
+    }
+    catch (\Exception $e) {
+      $success = FALSE;
+    }
+
+    $this->assertTrue($success, t('Able to insert XML data in an XML field.'));
+
+    $query = db_select('test_table_xml', 't');
+    $query->addField('t', 'extend');
+    $retrieved =  $query->execute()->fetchAssoc();
+
+    $this->assertEqual($data, $retrieved['extend'], t('XML was retrieved as the original string.'));
+
+    // From now on there are little to no asserts, at least not having
+    // Exceptions thrown is a good indication.
+    
+    // Add new field and convert it into the primary key, but make sure it is bigger than 900 bytes.
+    db_add_field('test_table_xml', 'newid', 
+            array(
+              'type' => 'text',
+              'sqlsrv_type' => 'nvarchar(4000)'
+            ));
+
+    db_drop_primary_key('test_table_xml');
+
+    // The driver should detect this is > 900 bytes and create
+    // a computed Primary Key + Indexes to compensate.
+    // Usually you would not be able to PK on a nullable column
+    // but because it's hashed this will work.
+    db_add_primary_key('test_table_xml', array('newid'));
+
+    // Now change the primary key column to a size that fits in 900 bytes
+    // this should re-expand the PK to it's natural version. But drop PK
+    // because newid has no values.
+    db_drop_primary_key('test_table_xml');
+    db_drop_field('test_table_xml', 'newid');
+    db_add_field('test_table_xml', 'newid', 
+            array(
+              'type' => 'text',
+              'sqlsrv_type' => 'nvarchar(300)',
+              'not null' => TRUE,
+              'default' => 'default',
+            ));
+    db_add_primary_key('test_table_xml', array('id', 'newid'));
+
+    // Now add an XML key, because the current key is > 128 bytes
+    // the driver should automatically recompress the PK into a computed
+    // column to make space for this key.
+    db_add_index('test_table_xml', 'xml_main', array('extend'));
+
+    // Make sure the SCHEMA helper function confirms this.
+    $xml_index_name = Database::getConnection()->schema()->tableHasXmlIndex('test_table_xml');
+    $this->assertEqual($xml_index_name, 'xml_main_idx', t('XML index creation confirmed.'));
+
+    // Now drop the index, the PK should be re-expanded.
+    db_drop_index('test_table_xml', 'xml_main');
+    
   }
 }
