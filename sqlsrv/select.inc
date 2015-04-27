@@ -25,7 +25,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
   public function addExpression($expression, $alias = NULL, $arguments = array(), $exclude = FALSE, $expand = TRUE) {
     $alias = parent::addExpression($expression, $alias, $arguments);
     $this->expressions[$alias]['exclude'] = $exclude;
-    $this->expressions[$alias]['expand'] = $exclude;
+    $this->expressions[$alias]['expand'] = $expand;
     return $alias;
   }
 
@@ -60,6 +60,18 @@ class SelectQuery_sqlsrv extends SelectQuery {
           $alias = '_field_' . ($counter++);
           $this->addExpression($field, $alias, array(), FALSE, FALSE);
           $this->queryOptions['sqlsrv_drop_columns'][] = $alias;
+        }
+      }
+      
+      // The other way round is also true, if using aggregates, all the fields in the SELECT
+      // must be present in the GROUP BY.
+      if (!empty($this->group)) {
+        foreach ($this->fields as $field) {
+          $spec = $field['table'] . '.' . $field['field'];
+          $alias = $field['alias'];
+          if (!isset($this->group[$spec]) && !isset($this->group[$alias])) {
+            $this->group[$spec] = $spec;
+          }
         }
       }
 

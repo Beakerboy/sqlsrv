@@ -53,6 +53,32 @@ class SqlServerSelectTest extends DatabaseTestCase {
     }
 
     $this->assertEqual($num_records, 6, t('Returned the correct number of total rows.'));
+    
+    // The driver is also verifying that any expressions/columns used in GROUP BY/ORDER BY
+    // are added to the select list if they are not because SQL Server will complain
+    // about those fields missing in aggregates.
+    $query = db_select('test_task', 't')->distinct();
+    $query->addField('t', 'task');
+    $query->orderBy('t.pid');
+    
+    try {
+      $result = $query->execute();
+    } 
+    catch (\Exception $e) {
+      $this->assert('fail', "Driver failed to deal with missing fields in aggregate: {$e->getMessage()}");
+    }
+    
+    $query = db_select('test_task', 't');
+    $query->addField('t', 'task');
+    $query->orderBy('t.pid');
+    $query->groupBy('t.pid');
+    
+    try {
+      $result = $query->execute();
+    } 
+    catch (\Exception $e) {
+      $this->assert('fail', "Driver failed to deal with missing fields in aggregate: {$e->getMessage()}");
+    }
   }
   
   /**
@@ -68,7 +94,7 @@ class SqlServerSelectTest extends DatabaseTestCase {
     // Cast the task to an accent insensitive collation in an expression.
     $query->addExpression('(t.task collate Latin1_General_CS_AI)', 'ci_task');
     // Add condition over that expression.
-    $query->where('ci_task = :param', array(':param' => utf8_encode('slëep')));
+    $query->where('ci_task = :param', array(':param' => 'slÃ«ep'));
 
     $result = $query->execute();
     $num_records = 0;
@@ -83,7 +109,7 @@ class SqlServerSelectTest extends DatabaseTestCase {
     // Cast the task to an accent insensitive collation in an expression.
     $query->addExpression('(t.task collate Latin1_General_CS_AI)', 'ci_task');
     // Add condition over that expression.
-    $query->where('ci_task = :param', array(':param' => utf8_encode('slëep')));
+    $query->where('ci_task = :param', array(':param' => 'slÃ«ep'));
     // Add condition over that expression.
     $query->groupBy('t.task');
     

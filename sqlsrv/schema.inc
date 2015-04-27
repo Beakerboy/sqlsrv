@@ -1452,9 +1452,11 @@ EOF
    */
   public function tableHasXmlIndex($table) {
     $info = $this->queryColumnInformation($table);
-    foreach ($info['indexes'] as $name => $index) {
-      if (strcasecmp($index['type_desc'], 'XML') == 0) {
-        return $name;
+    if (isset($info['indexes']) && is_array($info['indexes'])) {
+      foreach ($info['indexes'] as $name => $index) {
+        if (strcasecmp($index['type_desc'], 'XML') == 0) {
+          return $name;
+        }
       }
     }
     return FALSE;
