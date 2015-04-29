@@ -29,6 +29,8 @@ class InsertQuery_sqlsrv extends InsertQuery {
       $transaction = $this->connection->startTransaction();
     }
 
+    #region Select Based Insert
+    
     if (!empty($this->fromQuery)) {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = array();
@@ -52,9 +54,19 @@ class InsertQuery_sqlsrv extends InsertQuery {
         throw $e;
       }
 
-      return $this->connection->lastInsertId();
+      // We can only have 1 identity column per table (or none, where fetchColumn will fail)
+      try {
+        return $stmt->fetchColumn(0);
+      }
+      catch(\PDOException $e) {
+        return NULL;
+      }
     }
+    
+    #endregion
 
+    #region Inserts with no values (full defaults)
+    
     // Handle the case of full-default queries.
     if (empty($this->fromQuery) && (empty($this->insertFields) || empty($this->insertValues))) {
       // Re-initialize the values array so that we can re-use this query.
@@ -72,10 +84,21 @@ class InsertQuery_sqlsrv extends InsertQuery {
         // Rethrow the exception.
         throw $e;
       }
-
-      return $this->connection->lastInsertId();
+      
+      // We can only have 1 identity column per table (or none, where fetchColumn will fail)
+      try {
+        return $stmt->fetchColumn(0);
+      }
+      catch(\PDOException $e) {
+        return NULL;
+      }
     }
+    
+    #endregion
 
+    #region Regular Inserts
+    
+    $last_insert_id = NULL;
     $query = (string) $this;
     $stmt = $this->connection->PDOPrepare($this->connection->prefixTables($query));
 
@@ -112,33 +135,56 @@ class InsertQuery_sqlsrv extends InsertQuery {
         throw $e;
       }
 
-      $last_insert_id = $this->connection->lastInsertId();
+      // We can only have 1 identity column per table (or none, where fetchColumn will fail)
+      try {
+        $last_insert_id = $stmt->fetchColumn(0);
+      }
+      catch(\PDOException $e) {
+        $last_insert_id = NULL;
+      }
     }
 
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = array();
 
     return $last_insert_id;
+    
+    #endregion
   }
 
   public function __toString() {
+    
+    // Fetch the list of blobs and sequences used on that table.
+    $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
+    
+    
     // Create a sanitized comment string to prepend to the query.
     $prefix = $this->connection->makeComment($this->comments);
 
+    $output = NULL;
+    
     // Enable direct insertion to identity columns if necessary.
     if (!empty($this->setIdentity)) {
       $prefix .= 'SET IDENTITY_INSERT {' . $this->table . '} ON;';
+    }
+    
+    // Using PDO->lastInsertId() is not reliable on highly concurrent scenarios.
+    // It is much better to use the OUTPUT option of SQL Server.
+    if (isset($columnInformation['identities']) && !empty($columnInformation['identities'])) {
+      $identities = array_keys($columnInformation['identities']);
+      $identity = reset($identities);
+      $output = "OUTPUT (Inserted.{$identity})";
     }
 
     // If we're selecting from a SelectQuery, finish building the query and
     // pass it back, as any remaining options are irrelevant.
     if (!empty($this->fromQuery)) {
       if (empty($this->insertFields)) {
-        return $prefix . "INSERT INTO {{$this->table}} " . $this->fromQuery;
+        return $prefix . "INSERT INTO {{$this->table}} {$output}" . $this->fromQuery;
       }
       else {
         $fields_csv = implode(', ', $this->connection->quoteIdentifiers($this->insertFields));
-        return $prefix . "INSERT INTO {{$this->table}} ({$fields_csv}) " . $this->fromQuery;
+        return $prefix . "INSERT INTO {{$this->table}} ({$fields_csv}) {$output} " . $this->fromQuery;
       }
     }
 
@@ -148,7 +194,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
       $placeholders[] = ':db_insert' . $i;
     }
 
-    return $prefix . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $this->connection->quoteIdentifiers($this->insertFields)) . ') VALUES (' . implode(', ', $placeholders) . ')';
+    return $prefix . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $this->connection->quoteIdentifiers($this->insertFields)) . ') ' . $output . ' VALUES (' . implode(', ', $placeholders) . ')';
   }
 }
 
