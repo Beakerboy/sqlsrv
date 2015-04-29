@@ -117,7 +117,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
   public function queryColumnInformation($table, $refresh = FALSE) {
     // No worry for the tableExists() check, results
     // are cached.
-    if (empty($table) || !$this->tableExists($table, TRUE)) {
+    if (empty($table) || !$this->tableExists($table)) {
       return array();
     }
     
