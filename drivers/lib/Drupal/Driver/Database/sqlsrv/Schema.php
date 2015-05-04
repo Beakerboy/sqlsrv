@@ -7,7 +7,6 @@
 
 namespace Drupal\Driver\Database\sqlsrv;
 
-use Drupal\Component\Utility\String;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
 use Drupal\Core\Database\Query\Condition;
@@ -615,7 +614,7 @@ EOF
     // Truncate comment to maximum comment length.
     if (isset($length)) {
       // Add table prefixes before truncating.
-      $comment = drupal_truncate_bytes($this->connection->prefixTables($comment), $length, TRUE, TRUE);
+      $comment = \Drupal\Component\Utility\Unicode::truncateBytes($this->connection->prefixTables($comment), $length, TRUE, TRUE);
     }
     return $this->connection->quote($comment);
   }
