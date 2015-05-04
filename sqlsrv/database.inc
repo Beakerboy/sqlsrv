@@ -156,10 +156,18 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     )
   /Six';
 
+  /**
+   * This method gets called between 3,000 and 10,000 times
+   * on cold caches. Make sure it is simple and fast.
+   *
+   * @param mixed $matches 
+   * @return mixed
+   */
   protected function replaceReservedCallback($matches) {
     if ($matches[1] !== '') {
-      // Replace reserved words.
-      return $this->quoteIdentifier($matches[1]);
+      // Replace reserved words. We are not calling
+      // quoteIdentifier() on purpose.
+      return '[' . $matches[1] . ']';
     }
     // Let other value passthru.
     // by the logic of the regex above, this will always be the last match.
@@ -185,7 +193,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   }
 
   public function quoteIdentifiers($identifiers) {
-    return array_map(array($this, 'quoteIdentifier'), $identifiers);;
+    return array_map(array($this, 'quoteIdentifier'), $identifiers);
   }
 
   /**
@@ -333,24 +341,27 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       // List all table and view names.
       '/^SHOW FULL TABLES$/' => 'SELECT TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES',
     );
-    $query = preg_replace(array_keys($replacements), $replacements, $query);
-
+    
     // Add prefixes to Drupal-specific functions.
-    $functions = $this->schema()->DrupalSpecificFunctions();
-    foreach ($functions as $function) {
-      $query = preg_replace('/\b(?<![:.])(' . preg_quote($function) . ')\(/i', $this->schema()->defaultSchema . '.$1(', $query);
+    foreach ($this->schema()->DrupalSpecificFunctions() as $function) {
+      $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] =  $this->schema()->defaultSchema . '.$1(';
     }
-
-    $replacements = array(
+    
+    // Rename some functions.
+    $funcs = array(
       'LENGTH' => 'LEN',
       'POW' => 'POWER',
     );
-    foreach ($replacements as $function => $replacement) {
-      $query = preg_replace('/\b(?<![:.])(' . preg_quote($function) . ')\(/i', $replacement . '(', $query);
+    
+    foreach ($funcs as $function => $replacement) {
+      $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] = $replacement . '(';
     }
-
+    
     // Replace the ANSI concatenation operator with SQL Server poor one.
-    $query = preg_replace('/\|\|/', '+', $query);
+    $replacements['/\|\|/'] =  '+';
+    
+    // Now do all the replacements at once.
+    $query = preg_replace(array_keys($replacements), $replacements, $query);
 
     // The minimum amount of hits for a query
     // to get stored in query cache.
