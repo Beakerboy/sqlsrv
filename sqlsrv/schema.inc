@@ -120,12 +120,12 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     if (empty($table) || !$this->tableExists($table)) {
       return array();
     }
-    
-    $table_info = $this->getPrefixInfo($table);
-    
+
     if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema_queryColumnInformation')) {
       return $cache->data;
     }
+    
+    $table_info = $this->getPrefixInfo($table);
 
     $info = array();
     
@@ -257,8 +257,15 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       $this->connection->query($this->createTableSql($name, $table));
 
       // If the spec had a primary key, set it now after all fields have been created.
+      // We are creating the keys after creating the table so that createPrimaryKey
+      // is able to introspect column definition from the database to calculate index sizes
+      // This adds quite quite some overhead, but is only noticeable during table creation.
       if (isset($table['primary key']) && is_array($table['primary key'])) {
-        $this->recreatePrimaryKey($name, $table['primary key']);
+        $this->createPrimaryKey($name,  $table['primary key']);
+      }
+      // Otherwise use a technical primary key.
+      else {
+        $this->createTechnicalPrimaryColumn($name);
       }
       
       // Now all the unique keys.
@@ -515,11 +522,6 @@ EOF
     foreach ($table['fields'] as $field_name => $field) {
       $sql_fields[] = $this->createFieldSql($name, $field_name, $this->processField($field));
     }
-
-    // Wether or not the table spec has a defined primary key,
-    // create with a technical one.
-    // TODO: only necessary on Azure.
-    $sql_fields[] = $this->createTechnicalPrimaryKeyIndexSql($name);
 
     $sql = "CREATE TABLE [{" . $name . "}] (\n\t";
     $sql .= implode(",\n\t", $sql_fields);

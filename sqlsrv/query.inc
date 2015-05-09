@@ -23,12 +23,6 @@ class InsertQuery_sqlsrv extends InsertQuery {
       }
     }
 
-    // Each insert happens in its own query. However, we wrap it in a transaction
-    // so that it is atomic where possible.
-    if (empty($this->queryOptions['sqlsrv_skip_transactions'])) {
-      $transaction = $this->connection->startTransaction();
-    }
-
     #region Select Based Insert
     
     if (!empty($this->fromQuery)) {
@@ -42,17 +36,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
         $stmt->bindParam($key, $values[$key]);
       }
 
-      try {
-        $stmt->execute();
-      }
-      catch (Exception $e) {
-        // This INSERT query failed, rollback everything if we started a transaction earlier.
-        if (!empty($transaction)) {
-          $transaction->rollback();
-        }
-        // Rethrow the exception.
-        throw $e;
-      }
+      $stmt->execute();
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       try {
@@ -73,17 +57,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
       $this->insertValues = array();
 
       $stmt = $this->connection->PDOPrepare($this->connection->prefixTables('INSERT INTO {' . $this->table . '} DEFAULT VALUES'));
-      try {
-        $stmt->execute();
-      }
-      catch (Exception $e) {
-        // This INSERT query failed, rollback everything if we started a transaction earlier.
-        if (!empty($transaction)) {
-          $transaction->rollback();
-        }
-        // Rethrow the exception.
-        throw $e;
-      }
+      $stmt->execute();
       
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       try {
@@ -105,6 +79,11 @@ class InsertQuery_sqlsrv extends InsertQuery {
     // We use this array to store references to the blob handles.
     // This is necessary because the PDO will otherwise messes up with references.
     $data_values = array();
+    
+    // Only start transactions for multiple statement inserts.
+    if (empty($this->queryOptions['sqlsrv_skip_transactions']) && count($this->insertValues) > 1) {
+      $transaction = $this->connection->startTransaction();
+    }
 
     foreach ($this->insertValues as $insert_index => $insert_values) {
       $max_placeholder = 0;
@@ -114,7 +93,6 @@ class InsertQuery_sqlsrv extends InsertQuery {
           $data_values[$placeholder . $insert_index] = fopen('php://memory', 'a');
           fwrite($data_values[$placeholder . $insert_index], $insert_values[$field_index]);
           rewind($data_values[$placeholder . $insert_index]);
-
           $stmt->bindParam($placeholder, $data_values[$placeholder . $insert_index], PDO::PARAM_LOB, 0, PDO::SQLSRV_ENCODING_BINARY);
         }
         else {
