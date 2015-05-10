@@ -181,14 +181,18 @@ class SelectQuery_sqlsrv extends SelectQuery {
     $fields = array();
     foreach ($this->tables as $alias => $table) {
       // Table might be a subquery, so nothing to do really.
-      if (is_string($table['table'])) {
-        $info = $this->connection->schema()->queryColumnInformation($table['table']);
-        if (!empty($table['all_fields'])) {
+      if (is_string($table['table']) && !empty($table['all_fields'])) {
+        // Temporary tables are not supported here.
+        if ($table['table'][0] == '#') {
+          $fields[] = $this->connection->escapeTable($alias) . '.*';
+        }
+        else {
+          $info = $this->connection->schema()->queryColumnInformation($table['table']);
           // Some fields need to be "transparent" to Drupal, including technical primary keys
           // or custom computed columns.
           foreach ($info['columns_clean'] as $column) {
             $fields[] = $this->connection->escapeTable($alias) . '.' . $column['name'];
-          }
+          }          
         }
       }
     }

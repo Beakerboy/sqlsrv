@@ -103,6 +103,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    *   An array with the following structure:
    *   - blobs[]: Array of column names that should be treated as blobs in this table.
    *   - identities[]: Array of column names that are identities in this table.
+   *   - identity: The name of the identity column
    *   - columns[]: An array of specification details for the columns
    *      - name: Column name.
    *      - max_length: Maximum length.
@@ -120,12 +121,18 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     if (empty($table) || !$this->tableExists($table)) {
       return array();
     }
-
+    
+    $table_info = $this->getPrefixInfo($table);
+    
+    // We could adapt the current code to support temporary table introspection, but
+    // for now this is not supported.
+    if ($table_info['table'][0] == '#') {
+      throw new Exception('Temporary table introspection is not supported.');
+    }
+    
     if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema_queryColumnInformation')) {
       return $cache->data;
     }
-    
-    $table_info = $this->getPrefixInfo($table);
 
     $info = array();
     
@@ -171,8 +178,11 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     // Don't use {} around system tables.
     $result = $this->connection->query('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', array(':table' => $table_info['schema'] . '.' . $table_info['table']));
     unset($column);
+    $info['identities'] = array();
+    $info['identity'] = NULL;
     foreach ($result as $column) {
-      $info['identities'][$column->name] = TRUE;
+      $info['identities'][$column->name] = $column->name;
+      $info['identity'] = $column->name;
     }
     
     // Now introspect information about indexes
@@ -240,7 +250,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    * {@Inheritdoc}
    */
   public function createTable($name, $table) {
-    if ($this->tableExists($name, TRUE)) {
+    if ($this->tableExists($name, FALSE)) {
       throw new DatabaseSchemaObjectExistsException(t('Table %name already exists.', array('%name' => $name)));
     }
     
@@ -280,9 +290,6 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       throw $e;
     }
 
-    // Everything went well, commit the transaction.
-    unset($transaction);
-
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
     // with invalid data types (long columns), before we come up with a better
@@ -313,13 +320,28 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    *   True if the table exists, false otherwise.
    */
   public function tableExists($table, $reset = FALSE) {
-    if (!$reset && $cache = fastcache::cache_get($table, 'tableExists')) {
+    // Do not cache temporary tables (#)
+    if (!$reset && $table[0] != '#' && $cache = fastcache::cache_get($table, 'tableExists')) {
       return $cache->data;
     }
+    
+    // Temporary tables and regular tables cannot be verified in the same way.
+    $query = NULL;
+    if ($table[0] == '#') {
+      $query = "SELECT 1 FROM tempdb.sys.tables WHERE name like '" . $this->connection->prefixTables('{' . $table . '}') . "%'";
+    }
+    else {
+      $query = "SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'";
+    }
+    
     $exists = $this->connection
-      ->query("SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'")
+      ->query($query)
       ->fetchField() !== FALSE;
-    fastcache::cache_set($table, $exists, 'tableExists');
+    
+    if ($table[0] != '#') {
+      fastcache::cache_set($table, $exists, 'tableExists');
+    }
+    
     return $exists;
   }
 
@@ -1057,7 +1079,10 @@ EOF
    */
   public function introspectPrimaryKeyFields($table) {
     $data = $this->queryColumnInformation($table, TRUE);
-    if (!isset($data['indexes'][$data['primary_key_index']])) {
+    // All primary keys have a default index,
+    // use that to see if we have a primary key
+    // before iterating.
+    if (!isset($data['primary_key_index']) || !isset($data['indexes'][$data['primary_key_index']])) {
       return array();
     }
     $result = array();

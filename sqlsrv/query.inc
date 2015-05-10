@@ -17,11 +17,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
     $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
     
     // Find out if there is an identity field set in this insert.
-    foreach ($this->insertFields as $field) {
-      if (isset($columnInformation['identities'][$field])) {
-        $this->setIdentity = TRUE;
-      }
-    }
+    $this->setIdentity = !empty($columnInformation['identity']) && in_array($columnInformation['identity'], $this->insertFields);
 
     #region Select Based Insert
     
@@ -35,7 +31,6 @@ class InsertQuery_sqlsrv extends InsertQuery {
       foreach ($values as $key => $value) {
         $stmt->bindParam($key, $values[$key]);
       }
-
       $stmt->execute();
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
@@ -55,8 +50,8 @@ class InsertQuery_sqlsrv extends InsertQuery {
     if (empty($this->fromQuery) && (empty($this->insertFields) || empty($this->insertValues))) {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = array();
-
-      $stmt = $this->connection->PDOPrepare($this->connection->prefixTables('INSERT INTO {' . $this->table . '} DEFAULT VALUES'));
+      $query = (string) $this;
+      $stmt = $this->connection->PDOPrepare($this->connection->prefixTables($query));
       $stmt->execute();
       
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
@@ -80,7 +75,8 @@ class InsertQuery_sqlsrv extends InsertQuery {
     // This is necessary because the PDO will otherwise messes up with references.
     $data_values = array();
     
-    // Only start transactions for multiple statement inserts.
+    // Each insert happens in its own query. However, we wrap it in a transaction
+    // so that it is atomic where possible.
     if (empty($this->queryOptions['sqlsrv_skip_transactions']) && count($this->insertValues) > 1) {
       $transaction = $this->connection->startTransaction();
     }
@@ -93,6 +89,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
           $data_values[$placeholder . $insert_index] = fopen('php://memory', 'a');
           fwrite($data_values[$placeholder . $insert_index], $insert_values[$field_index]);
           rewind($data_values[$placeholder . $insert_index]);
+
           $stmt->bindParam($placeholder, $data_values[$placeholder . $insert_index], PDO::PARAM_LOB, 0, PDO::SQLSRV_ENCODING_BINARY);
         }
         else {
@@ -104,7 +101,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
       try {
         $stmt->execute();
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         // This INSERT query failed, rollback everything if we started a transaction earlier.
         if (!empty($transaction)) {
           $transaction->rollback();
@@ -164,6 +161,11 @@ class InsertQuery_sqlsrv extends InsertQuery {
         $fields_csv = implode(', ', $this->connection->quoteIdentifiers($this->insertFields));
         return $prefix . "INSERT INTO {{$this->table}} ({$fields_csv}) {$output} " . $this->fromQuery;
       }
+    }
+    
+    // Full default insert
+    if (empty($this->insertFields)) {
+      return $prefix . "INSERT INTO {{$this->table}} {$output} DEFAULT VALUES";
     }
 
     // Build the list of placeholders.

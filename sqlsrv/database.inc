@@ -13,9 +13,22 @@
 include_once DRUPAL_ROOT . '/includes/database/prefetch.inc';
 include_once 'fastcache.inc';
 
+/**
+ * Summary of DatabaseConnection_sqlsrv
+ *
+ * Temporary tables: temporary table support is done by means of global temporary tables (#)
+ * to avoid the use of DIRECT QUERIES. You can enable and disable the use of direct queries
+ * with $conn->directQuery = TRUE|FALSE.
+ * http://blogs.msdn.com/b/brian_swan/archive/2010/06/15/ctp2-of-microsoft-driver-for-php-for-sql-server-released.aspx
+ *
+ */
 class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
   public $bypassQueryPreprocess = FALSE;
+  
+  // Wether to prepare statements with
+  // SQLSRV_ATTR_DIRECT_QUERY = TRUE.
+  private $directQuery = FALSE;
 
   /**
    * Override of DatabaseConnection::driver().
@@ -44,9 +57,8 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // Store connection options for future reference.
     $this->connectionOptions = &$connection_options;
 
-    // We don't need a specific PDOStatement class here, we simulate it using
-    // DatabaseStatement_sqlsrv below.
-    $this->statementClass = NULL;
+    // Set our custom statement class.
+    $this->statementClass = 'DatabaseStatement_sqlsrv';
 
     // This driver defaults to transaction support, except if explicitly passed FALSE.
     $this->transactionSupport = !isset($connection_options['transactions']) || $connection_options['transactions'] !== FALSE;
@@ -88,26 +100,80 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   }
 
   /**
-   * Override of PDO::prepare(): prepare a prefetching database statement.
-   *
-   * @status tested
-   */
-  public function prepare($query, $options = array()) {
-    return new DatabaseStatement_sqlsrv($this, $query, $options);
-  }
-
-  /**
    * Temporary override of DatabaseConnection::prepareQuery().
    *
    * @todo: remove that when DatabaseConnection::prepareQuery() is fixed to call
    *   $this->prepare() and not parent::prepare().
    * @status: tested, temporary
+   *
+   * @param mixed $query 
+   * @param mixed $insecure 
+   * @return PDOStatement
    */
-  public function prepareQuery($query) {
+  public function prepareQuery($query, $insecure = FALSE) {
     $query = $this->prefixTables($query);
 
+    #region PDO Options
+    
+    $pdo_options = array();
+    
+    // Set insecure options if requested so.
+    if ($insecure) {
+      // We have to log this, prepared statements are a security RISK.
+      // watchdog('SQL Server Driver', 'An insecure query has been executed against the database. This is not critical, but worth looking into: %query', array('%query' => $query));
+      // These are defined in class Connection.
+      // This PDO options are INSECURE, but will overcome the following issues:
+      // (1) Duplicate placeholders
+      // (2) > 2100 parameter limit
+      // (3) Using expressions for group by with parameters are not detected as equal.
+      // This options are not applied by default, they are just stored in the connection
+      // options and applied when needed. See {Statement} class.
+
+      // We ask PDO to perform the placeholders replacement itself because
+      // SQL Server is not able to detect duplicated placeholders in
+      // complex statements.
+      // E.g. This query is going to fail because SQL Server cannot
+      // detect that length1 and length2 are equals.
+      // SELECT SUBSTRING(title, 1, :length1)
+      // FROM node
+      // GROUP BY SUBSTRING(title, 1, :length2
+      // This is only going to work in PDO 3 but doesn't hurt in PDO 2.
+      // The security of parameterized queries is not in effect when you use PDO::ATTR_EMULATE_PREPARES => true.
+      // Your application should ensure that the data that is bound to the parameter(s) does not contain malicious
+      // Transact-SQL code.
+      // Never use this when you need special column binding.
+      // THIS ONLY WORKS IF SET AT THE STATEMENT LEVEL.
+      $pdo_options[PDO::ATTR_EMULATE_PREPARES] = TRUE;
+    }
+
+    // We run the statements in "direct mode" because the way PDO prepares
+    // statement in non-direct mode cause temporary tables to be destroyed
+    // at the end of the statement.
+    // If you are using the PDO_SQLSRV driver and you want to execute a query that 
+    // changes a database setting (e.g. SET NOCOUNT ON), use the PDO::query method with 
+    // the PDO::SQLSRV_ATTR_DIRECT_QUERY attribute.
+    // http://blogs.iis.net/bswan/archive/2010/12/09/how-to-change-database-settings-with-the-pdo-sqlsrv-driver.aspx
+    // If a query requires the context that was set in a previous query, 
+    // you should execute your queries with PDO::SQLSRV_ATTR_DIRECT_QUERY set to True. 
+    // For example, if you use temporary tables in your queries, PDO::SQLSRV_ATTR_DIRECT_QUERY must be set 
+    // to True.
+    if ($this->directQuery) {
+      $pdo_options[PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
+    }
+    
+    // It creates a cursor for the query, which allows you to iterate over the result set 
+    // without fetching the whole result at once. A scrollable cursor, specifically, is one that allows 
+    // iterating backwards.
+    // https://msdn.microsoft.com/en-us/library/hh487158%28v=sql.105%29.aspx
+    $pdo_options[PDO::ATTR_CURSOR] = PDO::CURSOR_SCROLL;
+    
+    // Lets you access rows in any order. Creates a client-side cursor query.
+    $pdo_options[PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = PDO::SQLSRV_CURSOR_BUFFERED;
+    
+    #endregion
+    
     // Call our overriden prepare.
-    return $this->prepare($query);
+    return $this->PDOPrepare($query, $pdo_options);
   }
 
   /**
@@ -118,9 +184,12 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    * PHP process.
    */
   public function PDOPrepare($query, array $options = array()) {
+
+    // Preprocess the query.
     if (!$this->bypassQueryPreprocess) {
       $query = $this->preprocessQuery($query);
     }
+    
     return parent::prepare($query, $options);
   }
 
@@ -211,23 +280,42 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     return $this->query($query, $args, $options);
   }
 
+  private static $temporary_tables = array();
+  
+  /**
+   * Generates a temporary table name. Because we are using
+   * global temporary tables, these are visible between
+   * connections so we need to make sure that their
+   * names are as unique as possible to prevent collisions.
+   *
+   * @return
+   *   A table name.
+   */
+  protected function generateTemporaryTableName() {
+    static $temp_key;
+    if (!isset($temp_key)) {
+      $temp_key = strtoupper(md5(uniqid(rand(), true)));
+    }
+    return "db_temp_" . $this->temporaryNameIndex++ . '_' . $temp_key;
+  }
+  
   /**
    * Override of DatabaseConnection::queryTemporary().
    *
    * @status tested
    */
   public function queryTemporary($query, array $args = array(), array $options = array()) {
-    // Generate a new temporary table name and protect it from prefixing.
+    // Generate a new GLOBAL temporary table name and protect it from prefixing.
     // SQL Server requires that temporary tables to be non-qualified.
-    $tablename = '#' . $this->generateTemporaryTableName();
+    $tablename = '##' . $this->generateTemporaryTableName();
     $prefixes = $this->prefixes;
     $prefixes[$tablename] = '';
     $this->setPrefix($prefixes);
 
     // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
-    $query = preg_replace('/^SELECT(.*?)FROM/i', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
-
+    $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
     $this->query($query, $args, $options);
+    
     return $tablename;
   }
 
@@ -252,15 +340,15 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       }
       else {
         $this->expandArguments($query, $args);
-        $stmt = $this->prepareQuery($query);
         $insecure = isset($options['insecure']) ? $options['insecure'] : FALSE;
         // Try to detect duplicate place holders, this check's performance
         // is not a good addition to the driver, but does a good job preventing
         // duplicate placeholder errors.
         $argcount = count($args);
         if ($insecure === TRUE || $argcount >= 2100 || ($argcount != substr_count($query, ':'))) {
-          $stmt->RequireInsecure();
+          $insecure = TRUE;
         }
+        $stmt = $this->prepareQuery($query, $insecure);
         $stmt->execute($args, $options);
       }
 
@@ -283,7 +371,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     catch (PDOException $e) {
       if ($options['throw_exception']) {
         // Add additional debug information.
-        if ($query instanceof DatabaseStatementInterface) {
+        if ($stmt instanceof DatabaseStatementInterface) {
           $e->query_string = $stmt->getQueryString();
         }
         else {
@@ -354,14 +442,14 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     );
     
     foreach ($funcs as $function => $replacement) {
-      $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] = $replacement . '(';
+      $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] = $replacement . '('; 
     }
     
     // Replace the ANSI concatenation operator with SQL Server poor one.
     $replacements['/\|\|/'] =  '+';
     
     // Now do all the replacements at once.
-    $query = preg_replace(array_keys($replacements), $replacements, $query);
+    $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
 
     // The minimum amount of hits for a query
     // to get stored in query cache.
@@ -444,14 +532,33 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     if ($cache = fastcache::cache_get($table, 'schema_escapeTable')) {
       return $cache->data;
     }
+    
     // Rescue the # prefix from the escaping.
-    $result = ($table[0] == '#' ? '#' : '') . preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
-    fastcache::cache_set($table, $result, 'schema_escapeTable');
+    $is_temporary = $table[0] == '#';
+    $is_temporary_global = $is_temporary && isset($table[1]) && $table[0] == '#';
+    
+    // Any temporary table prefix will be removed.
+    $result = preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
+    
+    // Restore the temporary prefix.
+    if ($is_temporary) {
+      if ($is_temporary_global) {
+        $result = '##' . $result;
+      }
+      else {
+        $result = '#' . $result;
+      }
+    }
+    else {
+      // Only cache this for non temporary tables.
+      fastcache::cache_set($table, $result, 'schema_escapeTable');
+    }
+
     return $result;
   }
 }
 
-class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iterator, DatabaseStatementInterface {
+class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements DatabaseStatementInterface {
   
   // Flag to tell if statement should be run insecure.
   private $insecure = FALSE;
@@ -460,46 +567,6 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
   // such as SQLSRV_ATTR_DIRECT_QUERY and ATTR_EMULATE_PREPARES.
   public function RequireInsecure() {
     $this->insecure = TRUE;
-  }
-
-  protected function getStatement($query, &$args = array()) {
-    $pdo_options = array();
-    // Set insecure options if requested so.
-    if ($this->insecure) {
-      // We have to log this, prepared statements are a security RISK.
-      // watchdog('SQL Server Driver', 'An insecure query has been executed against the database. This is not critical, but worth looking into: %query', array('%query' => $query));
-      // These are defined in class Connection.
-      // This PDO options are INSECURE, but will overcome the following issues:
-      // (1) Duplicate placeholders
-      // (2) > 2100 parameter limit
-      // (3) Using expressions for group by with parameters are not detected as equal.
-      // This options are not applied by default, they are just stored in the connection
-      // options and applied when needed. See {Statement} class.
-
-      // We run the statements in "direct mode" because the way PDO prepares
-      // statement in non-direct mode cause temporary tables to be destroyed
-      // at the end of the statement.
-      // If you are using the PDO_SQLSRV driver and you want to execute a query that 
-      // changes a database setting (e.g. SET NOCOUNT ON), use the PDO::query method with 
-      // the PDO::SQLSRV_ATTR_DIRECT_QUERY attribute.
-      // http://blogs.iis.net/bswan/archive/2010/12/09/how-to-change-database-settings-with-the-pdo-sqlsrv-driver.aspx
-      $pdo_options[PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
-
-      // We ask PDO to perform the placeholders replacement itself because
-      // SQL Server is not able to detect duplicated placeholders in
-      // complex statements.
-      // E.g. This query is going to fail because SQL Server cannot
-      // detect that length1 and length2 are equals.
-      // SELECT SUBSTRING(title, 1, :length1)
-      // FROM node
-      // GROUP BY SUBSTRING(title, 1, :length2
-      // This is only going to work in PDO 3 but doesn't hurt in PDO 2.
-      // The security of parameterized queries is not in effect when you use PDO::ATTR_EMULATE_PREPARES => true.
-      // Your application should ensure that the data that is bound to the parameter(s) does not contain malicious
-      // Transact-SQL code.
-      $pdo_options[PDO::ATTR_EMULATE_PREPARES] = TRUE;
-    }
-    return $this->dbh->PDOPrepare($query, $pdo_options);
   }
 
   public function execute($args = array(), $options = array()) {
@@ -520,13 +587,16 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
       $query_start = microtime(TRUE);
     }
 
-    // Prepare the query.
-    $statement = $this->getStatement($this->queryString, $args);
-    if (!$statement) {
-      $this->throwPDOException($statement);
+    // If parameteres have already been binded
+    // to the statement and we pass an empty array here
+    // we will get a PDO Exception.
+    if (empty($args)) {
+      $args = NULL;
     }
 
-    $return = $statement->execute($args);
+    // Execute the query. Bypass parent override
+    // and directly call PDOStatement implementation.
+    $return = PDOStatement::execute($args);
 
     if (!$return) {
       $this->throwPDOException($statement);
@@ -534,32 +604,28 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
 
     // Fetch all the data from the reply, in order to release any lock
     // as soon as possible.
-    $this->rowCount = $statement->rowCount();
+    $this->rowCount = $this->rowCount();
 
-    // Bind the binary columns properly.
+    // Bind column types properly.
     $null = array();
-    for ($i = 0; $i < $statement->columnCount(); $i++) {
-      $meta = $statement->getColumnMeta($i);
-      if ($meta['sqlsrv:decl_type'] == 'varbinary') {
-        $null[$i] = NULL;
-        $statement->bindColumn($i + 1, $null[$i], PDO::PARAM_LOB, 0, PDO::SQLSRV_ENCODING_BINARY);
+    $this->columnNames = array();
+    for ($i = 0; $i < $this->columnCount(); $i++) {
+      $meta = $this->getColumnMeta($i);
+      $this->columnNames[]= $meta['name'];
+      switch($meta['sqlsrv:decl_type']) {
+        case 'varbinary':
+          $null[$i] = NULL;
+          $this->bindColumn($i + 1, $null[$i], PDO::PARAM_LOB, 0, 2);
+          break;
+        case 'int':
+        case 'bit':
+        case 'smallint':
+        case 'tinyint':
+        case 'int identity':
+          $null[$i] = NULL;
+          $this->bindColumn($i + 1, $null[$i], PDO::PARAM_INT);
+          break;
       }
-    }
-
-    try {
-      $this->data = $statement->fetchAll(PDO::FETCH_ASSOC);
-    }
-    catch (Exception $e) {
-      $this->data = array();
-    }
-
-    $this->resultRowCount = count($this->data);
-
-    if ($this->resultRowCount) {
-      $this->columnNames = array_keys($this->data[0]);
-    }
-    else {
-      $this->columnNames = array();
     }
 
     if (!empty($logger)) {
@@ -576,24 +642,7 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
         unset($this->columnNames[$k]);
       }
     }
-
-    if ($dropped_columns) {
-      // Renumber columns.
-      $this->columnNames = array_values($this->columnNames);
-
-      foreach ($this->data as $k => $row) {
-        foreach ($dropped_columns as $column) {
-          unset($this->data[$k][$column]);
-        }
-      }
-    }
-
-    // Destroy the statement as soon as possible.
-    unset($statement);
-
-    // Initialize the first row in $this->currentRow.
-    $this->next();
-
+    
     return $return;
   }
 
@@ -619,6 +668,29 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
     unset($statement);
     throw $exception;
   }
+  
+  /**
+   * Experimental, do not iterate if not needed.
+   *
+   * @param mixed $key_index 
+   * @param mixed $value_index 
+   * @return array|DatabaseStatement_sqlsrv
+   */
+  public function fetchAllKeyed($key_index = 0, $value_index = 1) {
+    // If we are asked for the default behaviour, rely
+    // on the PDO as being faster.
+    if ($key_index == 0 && $value_index == 1) {
+      $this->setFetchMode(PDO::FETCH_KEY_PAIR);
+      return $this->fetchAll();
+    }
+    // We need to do this manually.
+    $return = array();
+    $this->setFetchMode(PDO::FETCH_NUM);
+    foreach ($this as $record) {
+      $return[$record[$key_index]] = $record[$value_index];
+    }
+    return $return;
+  }
 }
 
 /**
@@ -631,496 +703,3 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementPrefetch implements Iter
  * @see http://drupal.org/node/851136
  */
 class DatabaseTransaction_sqlsrv extends DatabaseTransaction { }
-
-/**
- * List of reserved keywords for query escaping.
- */
-const sqlsrv_RESERVED_KEYWORDS = <<< EOF
-
-ADD
-ALL
-ALTER
-AND
-ANY
-AS
-ASC
-AUTHORIZATION
-BACKUP
-BEGIN
-BETWEEN
-BREAK
-BROWSE
-BULK
-BY
-CASCADE
-CASE
-CHECK
-CHECKPOINT
-CLOSE
-CLUSTERED
-COALESCE
-COLLATE
-COLUMN
-COMMIT
-COMPUTE
-CONSTRAINT
-CONTAINS
-CONTAINSTABLE
-CONTINUE
-CONVERT
-CREATE
-CROSS
-CURRENT
-CURRENT_DATE
-CURRENT_TIME
-CURRENT_TIMESTAMP
-CURRENT_USER
-CURSOR
-DATABASE
-DBCC
-DEALLOCATE
-DECLARE
-DEFAULT
-DELETE
-DENY
-DESC
-DISK
-DISTINCT
-DISTRIBUTED
-DOUBLE
-DROP
-DUMMY
-DUMP
-ELSE
-END
-ERRLVL
-ESCAPE
-EXCEPT
-EXEC
-EXECUTE
-EXISTS
-EXIT
-EXTERNAL
-FETCH
-FILE
-FILLFACTOR
-FOR
-FOREIGN
-FREETEXT
-FREETEXTTABLE
-FROM
-FULL
-FUNCTION
-GOTO
-GRANT
-GROUP
-HAVING
-HOLDLOCK
-IDENTITY
-IDENTITY_INSERT
-IDENTITYCOL
-IF
-IN
-INDEX
-INNER
-INSERT
-INTERSECT
-INTO
-IS
-JOIN
-KEY
-KILL
-LEFT
-LIKE
-LINENO
-LOAD
-MERGE
-NATIONAL
-NOCHECK
-NONCLUSTERED
-NOT
-NULL
-NULLIF
-OF
-OFF
-OFFSETS
-ON
-OPEN
-OPENDATASOURCE
-OPENQUERY
-OPENROWSET
-OPENXML
-OPTION
-OR
-ORDER
-OUTER
-OVER
-PERCENT
-PIVOT
-PLAN
-PRECISION
-PRIMARY
-PRINT
-PROC
-PROCEDURE
-PUBLIC
-RAISERROR
-READ
-READTEXT
-RECONFIGURE
-REFERENCES
-REPLICATION
-RESTORE
-RESTRICT
-RETURN
-REVERT
-REVOKE
-RIGHT
-ROLLBACK
-ROWCOUNT
-ROWGUIDCOL
-RULE
-SAVE
-SCHEMA
-SECURITYAUDIT
-SELECT
-SEMANTICKEYPHRASETABLE
-SEMANTICSIMILARITYDETAILSTABLE
-SEMANTICSIMILARITYTABLE
-SESSION_USER
-SET
-SETUSER
-SHUTDOWN
-SOME
-STATISTICS
-SYSTEM_USER
-TABLE
-TABLESAMPLE
-TEXTSIZE
-THEN
-TO
-TOP
-TRAN
-TRANSACTION
-TRIGGER
-TRUNCATE
-TRY_CONVERT
-TSEQUAL
-UNION
-UNIQUE
-UNPIVOT
-UPDATE
-UPDATETEXT
-USE
-USER
-VALUES
-VARYING
-VIEW
-WAITFOR
-WHEN
-WHERE
-WHILE
-WITH
-WITHIN GROUP
-WRITETEXT
-ABSOLUTE
-ACTION
-ADA
-ALLOCATE
-ARE
-ASSERTION
-AT
-AVG
-BIT
-BIT_LENGTH
-BOTH
-CASCADED
-CAST
-CATALOG
-CHAR
-CHAR_LENGTH
-CHARACTER
-CHARACTER_LENGTH
-COLLATION
-CONNECT
-CONNECTION
-CONSTRAINTS
-CORRESPONDING
-COUNT
-DATE
-DAY
-DEC
-DECIMAL
-DEFERRABLE
-DEFERRED
-DESCRIBE
-DESCRIPTOR
-DIAGNOSTICS
-DISCONNECT
-DOMAIN
-END-EXEC
-EXCEPTION
-EXTRACT
-FALSE
-FIRST
-FLOAT
-FORTRAN
-FOUND
-GET
-GLOBAL
-GO
-HOUR
-IMMEDIATE
-INCLUDE
-INDICATOR
-INITIALLY
-INPUT
-INSENSITIVE
-INT
-INTEGER
-INTERVAL
-ISOLATION
-LANGUAGE
-LAST
-LEADING
-LEVEL
-LOCAL
-LOWER
-MATCH
-MAX
-MIN
-MINUTE
-MODULE
-MONTH
-NAMES
-NATURAL
-NCHAR
-NEXT
-NO
-NONE
-NUMERIC
-OCTET_LENGTH
-ONLY
-OUTPUT
-OVERLAPS
-PAD
-PARTIAL
-PASCAL
-POSITION
-PREPARE
-PRESERVE
-PRIOR
-PRIVILEGES
-REAL
-RELATIVE
-ROWS
-SCROLL
-SECOND
-SECTION
-SESSION
-SIZE
-SMALLINT
-SPACE
-SQL
-SQLCA
-SQLCODE
-SQLERROR
-SQLSTATE
-SQLWARNING
-SUBSTRING
-SUM
-TEMPORARY
-TIME
-TIMESTAMP
-TIMEZONE_HOUR
-TIMEZONE_MINUTE
-TRAILING
-TRANSLATE
-TRANSLATION
-TRIM
-TRUE
-UNKNOWN
-UPPER
-USAGE
-USING
-VALUE
-VARCHAR
-WHENEVER
-WORK
-WRITE
-YEAR
-ZONE
-ADMIN
-AFTER
-AGGREGATE
-ALIAS
-ARRAY
-ASENSITIVE
-ASYMMETRIC
-ATOMIC
-BEFORE
-BINARY
-BLOB
-BOOLEAN
-BREADTH
-CALL
-CALLED
-CARDINALITY
-CLASS
-CLOB
-COLLECT
-COMPLETION
-CONDITION
-CONSTRUCTOR
-CORR
-COVAR_POP
-COVAR_SAMP
-CUBE
-CUME_DIST
-CURRENT_CATALOG
-CURRENT_DEFAULT_TRANSFORM_GROUP
-CURRENT_PATH
-CURRENT_ROLE
-CURRENT_SCHEMA
-CURRENT_TRANSFORM_GROUP_FOR_TYPE
-CYCLE
-DATA
-DEPTH
-DEREF
-DESTROY
-DESTRUCTOR
-DETERMINISTIC
-DICTIONARY
-DYNAMIC
-EACH
-ELEMENT
-EQUALS
-EVERY
-FILTER
-FREE
-FULLTEXTTABLE
-FUSION
-GENERAL
-GROUPING
-HOLD
-HOST
-IGNORE
-INITIALIZE
-INOUT
-INTERSECTION
-ITERATE
-LARGE
-LATERAL
-LESS
-LIKE_REGEX
-LIMIT
-LN
-LOCALTIME
-LOCALTIMESTAMP
-LOCATOR
-MAP
-MEMBER
-METHOD
-MOD
-MODIFIES
-MODIFY
-MULTISET
-NCLOB
-NEW
-NORMALIZE
-OBJECT
-OCCURRENCES_REGEX
-OLD
-OPERATION
-ORDINALITY
-OUT
-OVERLAY
-PARAMETER
-PARAMETERS
-PARTITION
-PATH
-POSTFIX
-PREFIX
-PREORDER
-PERCENT_RANK
-PERCENTILE_CONT
-PERCENTILE_DISC
-POSITION_REGEX
-RANGE
-READS
-RECURSIVE
-REF
-REFERENCING
-REGR_AVGX
-REGR_AVGY
-REGR_COUNT
-REGR_INTERCEPT
-REGR_R2
-REGR_SLOPE
-REGR_SXX
-REGR_SXY
-REGR_SYY
-RELEASE
-RESULT
-RETURNS
-ROLE
-ROLLUP
-ROUTINE
-ROW
-SAVEPOINT
-SCOPE
-SEARCH
-SENSITIVE
-SEQUENCE
-SETS
-SIMILAR
-SPECIFIC
-SPECIFICTYPE
-SQLEXCEPTION
-START
-STATE
-STATEMENT
-STATIC
-STDDEV_POP
-STDDEV_SAMP
-STRUCTURE
-SUBMULTISET
-SUBSTRING_REGEX
-SYMMETRIC
-SYSTEM
-TERMINATE
-THAN
-TRANSLATE_REGEX
-TREAT
-UESCAPE
-UNDER
-UNNEST
-VAR_POP
-VAR_SAMP
-VARIABLE
-WIDTH_BUCKET
-WITHOUT
-WINDOW
-WITHIN
-XMLAGG
-XMLATTRIBUTES
-XMLBINARY
-XMLCAST
-XMLCOMMENT
-XMLCONCAT
-XMLDOCUMENT
-XMLELEMENT
-XMLEXISTS
-XMLFOREST
-XMLITERATE
-XMLNAMESPACES
-XMLPARSE
-XMLPI
-XMLQUERY
-XMLSERIALIZE
-XMLTABLE
-XMLTEXT
-XMLVALIDATE
-
-EOF
-;
