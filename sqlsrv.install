@@ -36,6 +36,9 @@ function sqlsrv_requirements($phase) {
     $schema = $connection->schema();
     $version = $schema->EngineVersion();
     
+    // Report PDO version
+    $extensiondata = sqlsrv_REData(new ReflectionExtension('pdo_sqlsrv'));
+    
     // Report database engine version
     $requirements['sqlsrv_edition'] = array(
       'title' => t('MS SQL Server'),
@@ -53,6 +56,17 @@ function sqlsrv_requirements($phase) {
       'title' => t('MS SQL Server Database'),
       'severity' => REQUIREMENT_OK,
       'value' => "{$options['database']} ({$size_db})",
+    );
+    
+    // Make sure enough size is set for buffered queries
+    $buffer_size = $extensiondata['getINIEntries']['pdo_sqlsrv.client_buffer_max_kb_size'];
+    $buffer_size_min = (12240 * 2);
+    $buffer_size_ok = $buffer_size >= $buffer_size_min;
+    $requirements['sqlsrv_database'] = array(
+      'title' => t('MS SQL Server client buffer size'),
+      'severity' => $buffer_size_ok ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+      'value' => "{$buffer_size} Kb",
+      'description' => "pdo_sqlsrv.client_buffer_max_kb_size setting must be of at least {$buffer_size_min}Kb. Currently {$buffer_size}Kb.",
     );
     
     // Is this a windows server?
@@ -87,12 +101,13 @@ function sqlsrv_requirements($phase) {
       'value' => t('@collation', array('@collation' => $collation)),
     );
 
-    // Report PDO version
-    $extensiondata = sqlsrv_REData(new ReflectionExtension('pdo_sqlsrv'));
+    // Report PDO version, and require at lest 3.2 version.
+    $version_ok = version_compare($extensiondata['getVersion'] , '3.2') >= 0;
     $requirements['sqlsrv_pdo'] = array(
       'title' => t('MS SQL Server PDO extension'),
-      'severity' => REQUIREMENT_OK,
+      'severity' => $version_ok ? REQUIREMENT_OK : REQUIREMENT_ERROR,
       'value' => t('@level', array('@level' => $extensiondata['getVersion'])),
+      'description' => t('Use at least the 3.2.0.0 version of the MSSQL PDO driver.')
     );
     
     // TODO: Report GROUP_CONCAT availability
