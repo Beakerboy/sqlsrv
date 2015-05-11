@@ -612,7 +612,10 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements Database
     for ($i = 0; $i < $this->columnCount(); $i++) {
       $meta = $this->getColumnMeta($i);
       $this->columnNames[]= $meta['name'];
-      switch($meta['sqlsrv:decl_type']) {
+      $sqlsrv_type = $meta['sqlsrv:decl_type'];
+      $parts = explode(' ', $sqlsrv_type);
+      $type = reset($parts);
+      switch($type) {
         case 'varbinary':
           $null[$i] = NULL;
           $this->bindColumn($i + 1, $null[$i], PDO::PARAM_LOB, 0, 2);
@@ -621,7 +624,6 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements Database
         case 'bit':
         case 'smallint':
         case 'tinyint':
-        case 'int identity':
           $null[$i] = NULL;
           $this->bindColumn($i + 1, $null[$i], PDO::PARAM_INT);
           break;
