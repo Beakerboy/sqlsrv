@@ -413,6 +413,22 @@ EOF
   }
   
   /**
+   * Retrieve an array of field specs from
+   * an array of field names.
+   *
+   * @param array $fields 
+   * @param mixed $table 
+   */
+  private function loadFieldsSpec(array $fields, $table) {
+    $result = array();
+    $info = $this->queryColumnInformation($table);
+    foreach ($fields as $field) {
+      $result[$field] = $info['columns'][$field];
+    }
+    return $result;
+  }
+  
+  /**
    * Estimates the row size of a clustered index.
    * @see https://msdn.microsoft.com/en-us/library/ms178085.aspx
    */
@@ -496,7 +512,17 @@ EOF
     $size = $this->calculateClusteredIndexRowSizeBytes($table, $this->createKeySql($fields, TRUE));
     $result = array();
     $index = FALSE;
-    if ($size >= $limit) {
+    // Add support for nullable columns in a primary key.
+    $nullable = FALSE;
+    $field_specs = $this->loadFieldsSpec($fields, $table);
+    foreach ($field_specs as $field) {
+      if ($field['is_nullable'] == TRUE) {
+        $nullable = TRUE;
+        break;
+      }
+    }
+    
+    if ($nullable || $size >= $limit) {
       // Use a computed column instead, and create a custom index.
       $result[] = "{$this->COMPUTED_PK_COLUMN_NAME} AS (CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT('',{$csv_fields})), 2)) PERSISTED NOT NULL";
       $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$this->COMPUTED_PK_COLUMN_NAME})";
