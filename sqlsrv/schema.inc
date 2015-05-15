@@ -290,6 +290,12 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       throw $e;
     }
 
+    // Commit the transaction inmediately
+    // because a PDO exception in the driver
+    // will silently rollback everything
+    // when buffered queries are on.
+    unset($transaction);
+
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
     // with invalid data types (long columns), before we come up with a better
@@ -902,25 +908,28 @@ EOF
    * @param int $limit 
    */
   public function compressPrimaryKeyIndex($table, $limit = 900) {
-    // SQL Server supports transactional DDL, so we can just start a transaction
-    // here and pray for the best.
-    $transaction = $this->connection->startTransaction();
-
     // Introspect the schema and save the current primary key if the column
     // we are modifying is part of it.
     $primary_key_fields = $this->introspectPrimaryKeyFields($table);
-
-    // Clear current Primary Key.
-    $this->cleanUpPrimaryKey($table);
-
-    // Recreate the Primary Key with the given limit size.
-    $this->createPrimaryKey($table, $primary_key_fields, $limit);
     
+    // SQL Server supports transactional DDL, so we can just start a transaction
+    // here and pray for the best.
+    $transaction = $this->connection->startTransaction();
+    try {
+      // Clear current Primary Key.
+      $this->cleanUpPrimaryKey($table);
+
+      // Recreate the Primary Key with the given limit size.
+      $this->createPrimaryKey($table, $primary_key_fields, $limit);
+    }
+    catch (\Exception $e) {
+      $transaction->rollback();
+      throw $e;
+    }
+
     // Refresh introspection for this table.
     $this->queryColumnInformation($table, TRUE);
     
-    // Commit.
-    unset($transaction);
   }
   
   /**

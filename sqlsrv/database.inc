@@ -618,7 +618,7 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements Database
       switch($type) {
         case 'varbinary':
           $null[$i] = NULL;
-          $this->bindColumn($i + 1, $null[$i], PDO::PARAM_LOB, 0, 2);
+          $this->bindColumn($i + 1, $null[$i], PDO::PARAM_LOB, 0, PDO::SQLSRV_ENCODING_BINARY);
           break;
         case 'int':
         case 'bit':
