@@ -11,64 +11,11 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\Update as QueryUpdate;
 use Drupal\Core\Database\Query\Condition;
 
+use PDO as PDO;
+
 class Update extends QueryUpdate {
 
-  /**
-   * Rewrite the query not to select non-affected rows.
-   *
-   * A query like this one:
-   *   UPDATE test SET col1 = 'newcol1', col2 = 'newcol2' WHERE tid = 1f
-   * will become:
-   *   UPDATE test SET col1 = 'newcol1', col2 = 'newcol2' WHERE tid = 1 AND (col1 <> 'newcol1' OR col2 <> 'newcol2')
-   */
-  protected function excludeNonAffectedRows() {
-    if (!empty($this->queryOptions['sqlsrv_return_matched_rows'])) {
-      return;
-    }
-
-    // Get the fields used in the update query.
-    $fields = $this->expressionFields + $this->fields;
-
-    // Add the inverse of the fields to the condition.
-    $condition = new Condition('OR');
-    foreach ($fields as $field => $data) {
-      if (is_array($data)) {
-        // The field is an expression.
-        // Re-bind the placeholders.
-        $expression = $data['expression'];
-        $arguments = array();
-        if (!empty($data['arguments'])) {
-          foreach ($data['arguments'] as $placeholder => $value) {
-            $new_placeholder = ':db_exclude_placeholder_' . $this->nextPlaceholder();
-            $expression = str_replace($placeholder, $new_placeholder, $expression);
-            $arguments[$new_placeholder] = $value;
-          }
-        }
-        $condition->where($field . ' <> ' . $expression, $arguments);
-        $condition->isNull($field);
-      }
-      elseif (!isset($data)) {
-        // The field will be set to NULL.
-        $condition->isNotNull($field);
-      }
-      else {
-        $condition->condition($field, $data, '<>');
-        $condition->isNull($field);
-      }
-    }
-    if (count($condition)) {
-      // Workaround for a bug in the base MergeQuery implementation:
-      // a DatabaseCondition object is reused without being re-compiled,
-      // leading to duplicate placeholders.
-      $this->nextPlaceholder = 1000000;
-      $this->condition($condition);
-    }
-  }
-
   public function execute() {
-    // Rewrite the query to exclude the non-affected rows.
-    $this->excludeNonAffectedRows();
-
     // Now perform the special handling for BLOB fields.
     $max_placeholder = 0;
 
@@ -102,12 +49,11 @@ class Update extends QueryUpdate {
 
     foreach ($fields as $field => $value) {
       $placeholder = ':db_update_placeholder_' . ($max_placeholder++);
-
       if (isset($columnInformation['blobs'][$field])) {
         $blobs[$blob_count] = fopen('php://memory', 'a');
         fwrite($blobs[$blob_count], $value);
         rewind($blobs[$blob_count]);
-        $stmt->bindParam($placeholder, $blobs[$blob_count], \PDO::PARAM_LOB, 0, \PDO::SQLSRV_ENCODING_BINARY);
+        $stmt->bindParam($placeholder, $blobs[$blob_count], PDO::PARAM_LOB, 0, PDO::SQLSRV_ENCODING_BINARY);
         $blob_count++;
       }
       else {
@@ -126,10 +72,7 @@ class Update extends QueryUpdate {
 
     $options = $this->queryOptions;
     $options['already_prepared'] = TRUE;
-    // TODO: Revise this shit.
-    $stmt->allowRowCount = TRUE;
-    $this->connection->query($stmt, array());
-    //$stmt->execute();
+    $stmt->execute();
 
     return $stmt->rowCount();
   }
