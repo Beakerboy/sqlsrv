@@ -144,8 +144,8 @@ class Statement extends DatabaseStatement implements StatementInterface {
    */
   public function fetchAllKeyed($key_index = 0, $value_index = 1) {
     // If we are asked for the default behaviour, rely
-    // on the PDO as being faster.
-    if ($key_index == 0 && $value_index == 1) {
+    // on the PDO as being faster. The result set needs to exactly bee 2 columns.
+    if ($key_index == 0 && $value_index == 1 && $this->columnCount() == 2) {
       $this->setFetchMode(PDO::FETCH_KEY_PAIR);
       return $this->fetchAll();
     }
