@@ -56,7 +56,18 @@ class SelectQuery_sqlsrv extends SelectQuery {
       $columns = $this->order + array_flip($this->group);
       $counter = 0;
       foreach ($columns as $field => $dummy) {
-        if (!isset($this->fields[$field]) && !isset($this->expressions[$field])) {
+        $found = FALSE;
+        foreach($this->fields as $f) {
+          if (!isset($f['table']) || !isset($f['field'])) {
+            continue;
+          }
+          $alias = "{$f['table']}.{$f['field']}";
+          if ($alias == $field) {
+            $found = TRUE;
+            break;
+          }
+        }
+        if (!isset($this->fields[$field]) && !isset($this->expressions[$field]) && !$found) {
           $alias = '_field_' . ($counter++);
           $this->addExpression($field, $alias, array(), FALSE, FALSE);
           $this->queryOptions['sqlsrv_drop_columns'][] = $alias;
