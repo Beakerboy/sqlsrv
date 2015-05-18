@@ -681,7 +681,7 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements Database
   public function fetchAllKeyed($key_index = 0, $value_index = 1) {
     // If we are asked for the default behaviour, rely
     // on the PDO as being faster.
-    if ($key_index == 0 && $value_index == 1) {
+    if ($key_index == 0 && $value_index == 1 && $this->columnCount() == 2) {
       $this->setFetchMode(PDO::FETCH_KEY_PAIR);
       return $this->fetchAll();
     }
