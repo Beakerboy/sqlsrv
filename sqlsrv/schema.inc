@@ -1499,11 +1499,9 @@ EOF
    * @status tested
    */
   public function indexExists($table, $name) {
-    $table = $this->connection->prefixTables('{' . $table . '}');
-    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', array(
-      ':table' => $table,
-      ':name' => $name . '_idx'
-    ))->fetchField();
+    // Indexes created through the database schema
+    // have the '_idx' prefix.
+    return $this->_ExistsIndex($table, $name . '_idx');
   }
   
   /**
@@ -1523,6 +1521,54 @@ EOF
     }
     return FALSE;
   }
+  
+  #region Helper Functions
+  
+  // These are a set of non Drupal specific SQL Server Helperf functions
+  // to deal with tables, indexes, etc... creation/verification/deletion.
+  
+  #region Index
+  
+  /**
+   * Verify if a in index exists in the database.
+   *
+   * @param mixed $table 
+   * @param mixed $name 
+   * @return bool
+   */
+  public function _ExistsIndex($table, $index) {
+    $table = $this->connection->prefixTables('{' . $table . '}');
+    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', array(
+      ':table' => $table,
+      ':name' => $index
+    ))->fetchField();
+  }
+  
+  /**
+   * Drop an index, nothing to to if the index does not exists.
+   *
+   * @param mixed $table 
+   * @param mixed $index 
+   * @return void
+   */
+  public function _DropIndex($table, $index) {
+    if (!$this->_ExistsIndex($table, $index)) {
+      // Nothing to do....
+      return;
+    }
+    $table = $this->connection->prefixTables('{' . $table . '}');
+    $this->connection->query('DROP INDEX :index ON :table',
+      array(
+        ':index' => $index,
+        ':table' => $table,
+      )
+    );
+  }
+  
+  #endregion
+  
+  #endregion
+  
 }
 
 /**
