@@ -361,7 +361,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
       if (is_string($key) && substr($key, 0, 1) == '#') {
         continue;
       }
-      if (is_a($c['field'], \DatabaseCondition::class)) {
+      if (is_a($c['field'], 'DatabaseCondition')) {
         $this->GetUsedAliases($c['field'], $aliases);
       }
       else {

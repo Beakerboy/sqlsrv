@@ -14,10 +14,21 @@ include_once 'fastcache.inc';
 
 class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
+  // Override to take into account the
+  // default schema for MS SQL.
+  public function __construct($connection) {
+    $this->LoadDefaultSchema($connection);
+    parent::__construct($connection);
+  }
+  
   /**
-   * Default schema for SQL Server databases.
+   * Get the current database schema.
+   *
+   * @return string
    */
-  public $defaultSchema = 'dbo';
+  public function GetDefaultSchema() {
+    return $this->defaultSchema;
+  }
 
   /**
    * Default recommended collation for SQL Server.
@@ -73,18 +84,19 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
   }
   
   /**
-   * Return active default Schema.
+   * Load the real default schema name for this connection.
    */
-  public function GetDefaultSchema() {
+  protected function LoadDefaultSchema($connection) {
     if ($cache = fastcache::cache_get('default_schema', 'schema')) {
-      return $cache->data;
+       $this->defaultSchema = $cache->data;
+       return;
     }
-    $state = $this->connection->bypassQueryPreprocess;
-    $this->connection->bypassQueryPreprocess = true;
-    $result = $this->connection->query("SELECT SCHEMA_NAME()")->fetchField();
-    $this->connection->bypassQueryPreprocess = $state;
+    $state = $connection->bypassQueryPreprocess;
+    $connection->bypassQueryPreprocess = true;
+    $result = $connection->query("SELECT SCHEMA_NAME()")->fetchField();
+    $connection->bypassQueryPreprocess = $state;
     fastcache::cache_set('default_schema', $result, 'schema');
-    return $result;
+    $this->defaultSchema =  $result;
   }
   
   /**

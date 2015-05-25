@@ -47,6 +47,16 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   public function databaseType() {
     return 'sqlsrv';
   }
+  
+  
+  /**
+   * Get the schema() object.
+   *
+   * @return DatabaseSchema_sqlsrv
+   */
+  public function schema() {
+    return parent::schema();
+  }
 
   /**
    * Override of DatabaseConnection::databaseType().
@@ -93,10 +103,6 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
     // Call PDO::__construct and PDO::setAttribute.
     PDO::__construct($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
-
-    // Fetch the name of the user-bound schema. It is the schema that SQL Server
-    // will use for non-qualified tables.
-    $this->schema()->defaultSchema = $this->schema()->GetDefaultSchema();
   }
 
   /**
@@ -431,8 +437,9 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     );
     
     // Add prefixes to Drupal-specific functions.
+    $defaultSchema = $this->schema()->GetDefaultSchema();
     foreach ($this->schema()->DrupalSpecificFunctions() as $function) {
-      $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] =  $this->schema()->defaultSchema . '.$1(';
+      $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] =  "{$defaultSchema}.$1(";
     }
     
     // Rename some functions.
