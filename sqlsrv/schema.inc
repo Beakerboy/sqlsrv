@@ -1403,10 +1403,10 @@ EOF
     $column_expression = array();
     foreach ($fields as $field) {
       if (is_array($field)) {
-        $column_expression[] = 'SUBSTRING(CAST(' . $field[0] . ' AS varbinary(max)),1,' . $field[1] . ')';
+        $column_expression[] = 'SUBSTRING(CAST(' . $this->connection->escapeField($field[0]) . ' AS varbinary(max)), 1,' . $field[1] . ')';
       }
       else {
-        $column_expression[] = 'CAST(' . $field . ' AS varbinary(max))';
+        $column_expression[] = 'CAST(' . $this->connection->escapeField($field) . ' AS varbinary(max))';
       }
     }
     $column_expression = implode(' + ', $column_expression);
