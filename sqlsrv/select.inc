@@ -158,7 +158,14 @@ class SelectQuery_sqlsrv extends SelectQuery {
     )
   /Six';
 
+  // Aliases for expressions that should
+  // be replaced.
   private $cross_apply_aliases;
+  
+  // A subset of $cross_apply_aliases that
+  // only contains the the cross-join expanded
+  // expressions.
+  private $cross_apply_aliases_non_aggregates;
 
   protected function replaceReservedAliases($matches) {
     if ($matches[1] !== '') {
@@ -168,6 +175,40 @@ class SelectQuery_sqlsrv extends SelectQuery {
     // Let other value passthru.
     // by the logic of the regex above, this will always be the last match.
     return end($matches);
+  }
+  
+  /**
+   * This function needs some work....
+   *
+   * @param mixed $statement 
+   * @return mixed
+   */
+  protected function replaceExpressionAliases($statement) {
+    // References to expressions in cross-apply need to be updated.
+    // Now we need to update all references to the expression aliases
+    // and point them to the CROSS APPLY alias.
+    if (!empty($this->cross_apply_aliases)) {
+      $regex = str_replace('{0}', implode('|', array_keys($this->cross_apply_aliases)), self::RESERVED_REGEXP_BASE);
+      // Add and then remove the SELECT
+      // keyword. Do this to use the exact same
+      // regex that we have in DatabaseConnection_sqlrv.
+      $statement = 'SELECT ' . $statement;
+      $statement = preg_replace_callback($regex, array($this, 'replaceReservedAliases'), $statement);
+      $statement = substr($statement, 7, strlen($statement) - 7);
+    }
+    return $statement;
+  }
+  
+  /**
+   * Verify in an expression has an aggregate.
+   *
+   * Needs some more work.
+   *
+   * @param mixed $expression 
+   * @return bool|int
+   */
+  protected function expressionContainsAggregate($expression) {
+    return $this->stripos_arr($expression, array('AVG(', 'GROUP_CONCAT(', 'COUNT(', 'MAX(', 'GROUPING(', 'GROUPING_ID(', 'COUNT_BIG(', 'CHECKSUM_AGG(', 'MIN(', 'SUM(', 'VAR(', 'VARP(', 'STDEV(', 'STDEVP(')) !== FALSE;
   }
 
   public function __toString() {
@@ -219,13 +260,15 @@ class SelectQuery_sqlsrv extends SelectQuery {
     // it from WHERE or AGGREGATE.
     $cross_apply = array();
     $this->cross_apply_aliases = array();
+    $this->cross_apply_aliases_non_aggregates = array();
     foreach ($this->expressions as $alias => $expression) {
       // Only use CROSS_APPLY for non-aggregate expresions. This trick
       // will not work, and does not make sense, for aggregates.
       // If the alias is 'expression' this is Drupal's default
       // meaning that more than probably this expression
       // is never reused in a WHERE.
-      if ($expression['expand'] !== FALSE && $expression['alias'] != 'expression' && $this->stripos_arr($expression['expression'], array('AVG(', 'GROUP_CONCAT(', 'COUNT(', 'MAX(', 'GROUPING(', 'GROUPING_ID(', 'COUNT_BIG(', 'CHECKSUM_AGG(', 'MIN(', 'SUM(', 'VAR(', 'VARP(', 'STDEV(', 'STDEVP(')) === FALSE) {
+      $aggregate_expression = $this->expressionContainsAggregate($expression['expression']);
+      if ($expression['expand'] !== FALSE && $expression['alias'] != 'expression' && !$aggregate_expression) {
         // What we are doing here is using a CROSS APPLY to
         // generate an expression that can be used in the select and where
         // but we need to give this expression a new name.
@@ -236,9 +279,14 @@ class SelectQuery_sqlsrv extends SelectQuery {
           $fields[] = $new_alias . ' AS ' . $expression['alias'];
         }
         // Store old expression and new representation.
-        $this->cross_apply_aliases[$expression['alias']] = 'cross_' . $expression['alias'] . '.cross_sqlsrv'; 
+        $this->cross_apply_aliases[$expression['alias']] = $new_alias;
+        $this->cross_apply_aliases_non_aggregates[$expression['alias']] = $new_alias;
       }
       else {
+        if ($aggregate_expression) {
+          // Use the expression itself...
+          $this->cross_apply_aliases[$expression['alias']] = $expression['expression'];
+        }
         // We might not want an expression to appear in the select list.
         if ($expression['exclude'] !== TRUE) {
           $fields[] = $expression['expression'] . ' AS ' . $expression['alias'];
@@ -282,18 +330,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
     if (count($this->where)) {
       // There is an implicit string cast on $this->condition.
       $where = $this->where->__toString();
-      // References to expressions in cross-apply need to be updated.
-      // Now we need to update all references to the expression aliases
-      // and point them to the CROSS APPLY alias.
-      if (!empty($this->cross_apply_aliases)) {
-        $regex = str_replace('{0}', implode('|', array_keys($this->cross_apply_aliases)), self::RESERVED_REGEXP_BASE);
-        // Add and then remove the SELECT
-        // keyword. Do this to use the exact same
-        // regex that we have in DatabaseConnection_sqlrv.
-        $where = 'SELECT ' . $where;
-        $where = preg_replace_callback($regex, array($this, 'replaceReservedAliases'), $where);
-        $where = substr($where, 7, strlen($where) - 7);
-      }
+      $where = $this->replaceExpressionAliases($where);
       $query .= "\nWHERE ( " . $where . " )";
     }
 
@@ -303,14 +340,15 @@ class SelectQuery_sqlsrv extends SelectQuery {
       // You named it, if the newly expanded expression
       // is added to the select list, then it must
       // also be present in the aggregate expression.
-      $group = array_merge($group, $this->cross_apply_aliases);
+      $group = array_merge($group, $this->cross_apply_aliases_non_aggregates);
       $query .= "\nGROUP BY " . implode(', ', $group);
     }
 
     // HAVING
     if (count($this->having)) {
       // There is an implicit string cast on $this->having.
-      $query .= "\nHAVING " . $this->having;
+      $having = $this->replaceExpressionAliases($this->having);
+      $query .= "\nHAVING " . $having;
     }
 
     // ORDER BY
