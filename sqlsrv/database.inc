@@ -395,21 +395,14 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    */
   public function preprocessQuery($query) {
     // Generate a cache signature for this query.
-    $query_signature = md5($query);
+    $query_signature = 'query_cache_' . md5($query);
 
-    // Try to load query from query cache.
-    if ($cache = fastcache::cache_get($query_signature, 'query')) {
-      return $cache->data;
+    // Drill through everything...
+    $success = FALSE;
+    $cache = wincache_ucache_get($query_signature, $success);
+    if ($success) {
+      return $cache;
     }
-
-    // Load the hit cache, we only want the query cache
-    // to store the most hited queries.
-    $hits = 0;
-    if ($cache = fastcache::cache_get($query_signature, 'query_hits')) {
-      $hits = $cache->data;
-    }
-    $hits++;
-    fastcache::cache_set($query_signature, $hits, 'query_hits');
 
     // Force quotes around some SQL Server reserved keywords.
     if (preg_match('/^SELECT/i', $query)) {
@@ -458,15 +451,11 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // Now do all the replacements at once.
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
 
-    // The minimum amount of hits for a query
-    // to get stored in query cache.
-    $minimum_hist = 50;
-    if ($hits >= $minimum_hist) {
-      fastcache::cache_set($query_signature, $query, 'query');
-    } 
+    // Store the processed query, and make sure we expire it some time
+    // so that scarcely used queries don't stay in the cache forever.
+    wincache_ucache_set($query_signature, $query, rand(600, 3600));
 
     return $query;
-
   }
 
   /**
@@ -536,13 +525,15 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    * @status needswork
    */
   public function escapeTable($table) {
-    if ($cache = fastcache::cache_get($table, 'schema_escapeTable')) {
-      return $cache->data;
+    // A static cache is better suited for this.
+    static $tables = array();
+    if (isset($tables[$table])) {
+      return $tables[$table];
     }
     
     // Rescue the # prefix from the escaping.
     $is_temporary = $table[0] == '#';
-    $is_temporary_global = $is_temporary && isset($table[1]) && $table[0] == '#';
+    $is_temporary_global = $is_temporary && isset($table[1]) && $table[1] == '#';
     
     // Any temporary table prefix will be removed.
     $result = preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
@@ -556,10 +547,8 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
         $result = '#' . $result;
       }
     }
-    else {
-      // Only cache this for non temporary tables.
-      fastcache::cache_set($table, $result, 'schema_escapeTable');
-    }
+    
+    $tables[$table] = $result;
 
     return $result;
   }
@@ -604,7 +593,7 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements Database
     // Execute the query. Bypass parent override
     // and directly call PDOStatement implementation.
     $return = PDOStatement::execute($args);
-
+    
     if (!$return) {
       $this->throwPDOException($statement);
     }
