@@ -223,8 +223,7 @@ EOF
 	
 	if (!$wincache_ok) {
       drupal_set_message(t('This version of the MS SQL Server needs the Wincache PHP extension with a minimum ucachesize of 20Mb.',
-          array()
-		  , 'error');
+          array()), 'error');
     }
     
     // If there is something wrong do not allow the user to install.
