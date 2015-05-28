@@ -218,7 +218,7 @@ EOF
 	$wincache_ok = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info(TRUE)) && ($meminfo = @wincache_ucache_meminfo()));
 	if ($wincache_ok) {
 	  // Minimum 15 Mb of usercache.
-	  $wincache_ok = $meminfo['memory_total'] > 20 * 1024 * 1024;
+	  $wincache_ok = $meminfo['memory_total'] >= 20 * 1024 * 1024;
 	}
 	
 	if (!$wincache_ok) {
