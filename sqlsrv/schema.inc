@@ -663,10 +663,10 @@ EOF
     $ret = array();
     foreach ($fields as $field) {
       if (is_array($field)) {
-        $ret[] = '[' . $field[0] . ']';
+        $ret[] = $field[0];
       }
       else {
-        $ret[] = '[' . $field . ']';
+        $ret[] = $field;
       }
     }
     if ($as_array) {
