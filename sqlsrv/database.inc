@@ -14,6 +14,49 @@ include_once DRUPAL_ROOT . '/includes/database/prefetch.inc';
 include_once 'fastcache.inc';
 
 /**
+ * Defines a behaviour scope for the database
+ * driver that lasts until the object is destroyed.
+ */
+class DatabaseContext {
+
+  // @var \DatabaseConnection_sqlsrv $connection;
+  var $connection;
+  
+  // @var string $state_bypass
+  var $state_bypass;
+  
+  // @var string $state_direct
+  var $state_direct;
+  
+  /**
+   * Define the behaviour of the database driver during the scope of the
+   * life of this instance.
+   *
+   * @param DatabaseConnection_sqlsrv $connection
+   *  Instance of the connection to be configured.
+   *
+   * @param mixed $bypass_queries 
+   *  Do not preprocess the query before execution.
+   *
+   * @param mixed $direct_query
+   *  Prepare statements with SQLSRV_ATTR_DIRECT_QUERY = TRUE.
+   */
+  public function __construct(\DatabaseConnection_sqlsrv $connection, $bypass_queries = FALSE, $direct_query = FALSE) {
+    $this->connection = $connection;
+    $this->state_bypass = $this->connection->bypassQueryPreprocess;
+    $this->state_direct = $this->connection->directQuery;
+    $this->connection->bypassQueryPreprocess = $bypass_queries;
+    $this->connection->directQuery = $bypass_queries;
+  }
+  
+  public function __destruct() {
+    // Restore previous driver configuration.
+    $this->connection->bypassQueryPreprocess = $this->state_bypass;
+    $this->connection->directQuery = $this->state_direct;
+  }
+}
+
+/**
  * Summary of DatabaseConnection_sqlsrv
  *
  * Temporary tables: temporary table support is done by means of global temporary tables (#)
@@ -24,11 +67,11 @@ include_once 'fastcache.inc';
  */
 class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
+  // Do not preprocess the query before execution.
   public $bypassQueryPreprocess = FALSE;
   
-  // Wether to prepare statements with
-  // SQLSRV_ATTR_DIRECT_QUERY = TRUE.
-  private $directQuery = FALSE;
+  // Prepare statements with SQLSRV_ATTR_DIRECT_QUERY = TRUE.
+  public $directQuery = FALSE;
 
   /**
    * Override of DatabaseConnection::driver().
@@ -172,7 +215,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // iterating backwards.
     // https://msdn.microsoft.com/en-us/library/hh487158%28v=sql.105%29.aspx
     $pdo_options[PDO::ATTR_CURSOR] = PDO::CURSOR_SCROLL;
-    
+
     // Lets you access rows in any order. Creates a client-side cursor query.
     $pdo_options[PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = PDO::SQLSRV_CURSOR_BUFFERED;
     
@@ -335,6 +378,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
     // Use default values if not already set.
     $options += $this->defaultOptions();
+    $stmt = NULL;
 
     try {
       // We allow either a pre-bound statement object or a literal string.
@@ -369,7 +413,68 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
         case Database::RETURN_INSERT_ID:
           return $this->lastInsertId();
         case Database::RETURN_NULL:
-          return;
+          return NULL;
+        default:
+          throw new PDOException('Invalid return directive: ' . $options['return']);
+      }
+    }
+    catch (PDOException $e) {
+      if ($options['throw_exception']) {
+        // Add additional debug information.
+        if ($stmt instanceof DatabaseStatementInterface) {
+          $e->query_string = $stmt->getQueryString();
+        }
+        else {
+          $e->query_string = $query;
+        }
+        $e->args = $args;
+        throw $e;
+      }
+      return NULL;
+    }
+  }
+  
+  /**
+   * Like query but with no insecure detection or query preprocessing.
+   * The caller is sure that his query is MS SQL compatible! Used internally
+   * from the schema class, but could be called from anywhere.
+   *
+   * @param mixed $query 
+   * @param array $args 
+   * @param mixed $options 
+   * @throws PDOException 
+   * @return mixed
+   */
+  public function query_direct($query, array $args = array(), $options = array()) {
+
+    // Use default values if not already set.
+    $options += $this->defaultOptions();
+    $stmt = NULL;
+
+    try {
+    
+      // Bypass query preprocessing and use direct queries.
+      $ctx = new \DatabaseContext($this, TRUE, TRUE);
+      
+      // Prepare the statement and execute it.
+      $stmt = $this->prepareQuery($query, FALSE);
+      $stmt->execute($args, $options);
+      
+      // Reset the context settings.
+      unset($ctx);
+
+      // Depending on the type of query we may need to return a different value.
+      // See DatabaseConnection::defaultOptions() for a description of each
+      // value.
+      switch ($options['return']) {
+        case Database::RETURN_STATEMENT:
+          return $stmt;
+        case Database::RETURN_AFFECTED:
+          return $stmt->rowCount();
+        case Database::RETURN_INSERT_ID:
+          return $this->lastInsertId();
+        case Database::RETURN_NULL:
+          return NULL;
         default:
           throw new PDOException('Invalid return directive: ' . $options['return']);
       }
@@ -508,7 +613,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // If an exiting value is passed, for its insertion into the sequence table.
     if ($existing > 0) {
       try {
-        $this->query('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', array(':existing' => $existing));
+        $this->query_direct('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', array(':existing' => $existing));
       }
       catch (Exception $e) {
         // Doesn't matter if this fails, it just means that this value is already
@@ -516,7 +621,8 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       }
     }
 
-    return $this->query('INSERT INTO {sequences} DEFAULT VALUES', array(), array('return' => Database::RETURN_INSERT_ID));
+    // TODO: Refactor this to use OUTPUT because under high concurrency this does not work.
+    return $this->query_direct('INSERT INTO {sequences} DEFAULT VALUES', array(), array('return' => Database::RETURN_INSERT_ID));
   }
 
   /**

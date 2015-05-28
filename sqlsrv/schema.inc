@@ -64,16 +64,16 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       return $cache->data;
     }
     $functions = array(
-      'SUBSTRING',
-      'SUBSTRING_INDEX',
-      'GREATEST',
-      'MD5',
-      'LPAD',
-      'GROUP_CONCAT',
-      'CONCAT',
-      'IF',
-      'CONNECTION_ID'
-    );
+        'SUBSTRING',
+        'SUBSTRING_INDEX',
+        'GREATEST',
+        'MD5',
+        'LPAD',
+        'GROUP_CONCAT',
+        'CONCAT',
+        'IF',
+        'CONNECTION_ID'
+      );
     // Since SQL Server 2012 (11), there
     // is a native CONCAT implementation
     if ($this->EngineVersionNumber() >= 11) {
@@ -91,10 +91,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
        $this->defaultSchema = $cache->data;
        return;
     }
-    $state = $connection->bypassQueryPreprocess;
-    $connection->bypassQueryPreprocess = true;
-    $result = $connection->query("SELECT SCHEMA_NAME()")->fetchField();
-    $connection->bypassQueryPreprocess = $state;
+    $result = $connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
     fastcache::cache_set('default_schema', $result, 'schema');
     $this->defaultSchema =  $result;
   }
@@ -128,6 +125,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    *      - default_value: Default value for the column (if any).
    */
   public function queryColumnInformation($table, $refresh = FALSE) {
+  
     // No worry for the tableExists() check, results
     // are cached.
     if (empty($table) || !$this->tableExists($table)) {
@@ -149,7 +147,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     $info = array();
     
     // Don't use {} around information_schema.columns table.
-    $result = $this->connection->query("SELECT sysc.name, sysc.max_length, sysc.precision, sysc.collation_name, 
+    $result = $this->connection->query_direct("SELECT sysc.name, sysc.max_length, sysc.precision, sysc.collation_name, 
                     sysc.is_nullable, sysc.is_ansi_padded, sysc.is_identity, sysc.is_computed, TYPE_NAME(sysc.user_type_id) as type,
                     syscc.definition,
                     sm.[text] as default_value
@@ -188,7 +186,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     }
 
     // Don't use {} around system tables.
-    $result = $this->connection->query('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', array(':table' => $table_info['schema'] . '.' . $table_info['table']));
+    $result = $this->connection->query_direct('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', array(':table' => $table_info['schema'] . '.' . $table_info['table']));
     unset($column);
     $info['identities'] = array();
     $info['identity'] = NULL;
@@ -198,7 +196,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     }
     
     // Now introspect information about indexes
-    $result = $this->connection->query("select tab.[name]  as [table_name],
+    $result = $this->connection->query_direct("select tab.[name]  as [table_name],
          idx.[name]  as [index_name],
          allc.[name] as [column_name],
          idx.[type_desc],
@@ -254,7 +252,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     }
     
     fastcache::cache_set('queryColumnInformation:' . $table, $info, 'schema_queryColumnInformation');
-    
+
     return $info;
   }
 
@@ -276,7 +274,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     $transaction = $this->connection->startTransaction();
     try {
       // Create the table with a default technical primary key.
-      $this->connection->query($this->createTableSql($name, $table));
+      $this->connection->query_direct($this->createTableSql($name, $table));
 
       // If the spec had a primary key, set it now after all fields have been created.
       // We are creating the keys after creating the table so that createPrimaryKey
@@ -353,7 +351,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     }
     
     $exists = $this->connection
-      ->query($query)
+      ->query_direct($query)
       ->fetchField() !== FALSE;
     
     if ($table[0] != '#') {
@@ -370,16 +368,15 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     if ($cache = fastcache::cache_get('EngineVersion', 'schema')) {
       return $cache->data;
     }
-    $state = $this->connection->bypassQueryPreprocess;
-    $this->connection->bypassQueryPreprocess = true;
+
     $version = $this->connection
-    ->query(<<< EOF
+    ->query_direct(<<< EOF
     SELECT CONVERT (varchar,SERVERPROPERTY('productversion')) AS VERSION, 
     CONVERT (varchar,SERVERPROPERTY('productlevel')) AS LEVEL, 
     CONVERT (varchar,SERVERPROPERTY('edition')) AS EDITION
 EOF
     )->fetchAssoc();
-    $this->connection->bypassQueryPreprocess = $state;    
+    
     fastcache::cache_set('EngineVersion', $version, 'schema');
     return $version;
   }
@@ -408,7 +405,7 @@ EOF
     // FS | AF = Assembly (CLR) Scalar Function
     // FT | AT = Assembly (CLR) Table Valued Function
     return $this->connection
-      ->query("SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('" . $function . "') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT', N'AF')")
+      ->query_direct("SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('" . $function . "') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT', N'AF')")
       ->fetchField() !== FALSE;
   }
 
@@ -418,7 +415,7 @@ EOF
    */
   public function CLREnabled() {
     return $this->connection
-        ->query("SELECT value FROM sys.configurations WHERE name = 'clr enabled'")
+        ->query_direct("SELECT value FROM sys.configurations WHERE name = 'clr enabled'")
         ->fetchField() !== 1;
   }
   
@@ -493,7 +490,7 @@ EOF
    * Change Database recovery model.
    */
   public function setRecoveryModel($model) {
-    $this->connection->query("ALTER " . $this->connection->options['name'] . " model SET RECOVERY " . $model);
+    $this->connection->query_direct("ALTER " . $this->connection->options['name'] . " model SET RECOVERY " . $model);
   }
   
   /**
@@ -550,7 +547,7 @@ EOF
       $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$csv_fields})";
     }
     
-    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
+    $this->connection->query_direct('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
     
     // If we relied on a computed column for the Primary Key,
     // at least index the fields with a regular index.
@@ -666,10 +663,10 @@ EOF
     $ret = array();
     foreach ($fields as $field) {
       if (is_array($field)) {
-        $ret[] = $field[0];
+        $ret[] = '[' . $field[0] . ']';
       }
       else {
-        $ret[] = $field;
+        $ret[] = '[' . $field . ']';
       }
     }
     if ($as_array) {
@@ -818,7 +815,7 @@ EOF
     // Borrar la caché de table_exists
     fastcache::cache_clear_all('*', 'tableExists', TRUE);
     
-    $this->connection->query('EXEC sp_rename :old, :new', array(
+    $this->connection->query_direct('EXEC sp_rename :old, :new', array(
       ':old' => $old_table_info['schema'] . '.' . $old_table_info['table'],
       ':new' => $new_table_info['table'],
     ));
@@ -826,10 +823,10 @@ EOF
     // Constraint names are global in SQL Server, so we need to rename them
     // when renaming the table. For some strange reason, indexes are local to
     // a table.
-    $objects = $this->connection->query('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', array(':table' => $new_table_info['schema'] . '.' . $new_table_info['table']));
+    $objects = $this->connection->query_direct('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', array(':table' => $new_table_info['schema'] . '.' . $new_table_info['table']));
     foreach ($objects as $object) {
       if (preg_match('/^' . preg_quote($old_table_info['table']) . '_(.*)$/', $object->name, $matches)) {
-        $this->connection->query('EXEC sp_rename :old, :new, :type', array(
+        $this->connection->query_direct('EXEC sp_rename :old, :new, :type', array(
           ':old' => $old_table_info['schema'] . '.' . $object->name,
           ':new' => $new_table_info['table'] . '_' . $matches[1],
           ':type' => 'OBJECT',
@@ -847,15 +844,14 @@ EOF
     if (!$this->tableExists($table, TRUE)) {
       return FALSE;
     }
-
-    $this->connection->query('DROP TABLE {' . $table . '}');
+    $this->connection->query_direct('DROP TABLE {' . $table . '}');
     fastcache::cache_clear_all('*', 'tableExists', TRUE);
     return TRUE;
   }
 
   public function fieldExists($table, $field) {
     return $this->connection
-        ->query("SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "' AND column_name = '"  . $field . "'")
+        ->query_direct("SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "' AND column_name = '"  . $field . "'")
         ->fetchField() !== FALSE;
   }
 
@@ -885,7 +881,7 @@ EOF
     // Create the field.
     $query = "ALTER TABLE {{$table}} ADD ";
     $query .= $this->createFieldSql($table, $field, $this->processField($spec));
-    $this->connection->query($query);
+    $this->connection->query_direct($query);
 
     // Clear column information for table.
     $this->queryColumnInformationInvalidate($table);
@@ -900,7 +896,7 @@ EOF
     // Switch to NOT NULL now.
     if (!empty($fixnull)) {
       $spec['not null'] = TRUE;
-      $this->connection->query("ALTER TABLE {{$table}} ALTER COLUMN " . $this->createFieldSql($table, $field, $this->processField($spec), TRUE));
+      $this->connection->query_direct("ALTER TABLE {{$table}} ALTER COLUMN " . $this->createFieldSql($table, $field, $this->processField($spec), TRUE));
     }
 
     // Add the new keys.
@@ -984,7 +980,7 @@ EOF
     $this->dropFieldRelatedObjects($table, $field);
 
     // Start by renaming the current column.
-    $this->connection->query('EXEC sp_rename :old, :new, :type', array(
+    $this->connection->query_direct('EXEC sp_rename :old, :new, :type', array(
       ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
       ':new' => $field . '_old',
       ':type' => 'COLUMN',
@@ -1003,12 +999,12 @@ EOF
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion errors.
     $field_spec = $this->processField($spec);
-    $this->connection->query("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] AS {$field_spec['sqlsrv_type']})");
+    $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] AS {$field_spec['sqlsrv_type']})");
 
     // Switch to NOT NULL now.
     if (!empty($fixnull)) {
       $spec['not null'] = TRUE;
-      $this->connection->query('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $this->processField($spec), TRUE));
+      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $this->processField($spec), TRUE));
     }
 
     // Initialize new keys.
@@ -1069,7 +1065,7 @@ EOF
     // Database is defaulted from active connection.
     $options = $this->connection->getConnectionOptions();
     $database = $options['database'];
-    return $this->connection->query($sql, array(':database' => $database))->fetchObject();
+    return $this->connection->query_direct($sql, array(':database' => $database))->fetchObject();
   }
 
   /**
@@ -1091,12 +1087,12 @@ EOF
       if (!empty($database)) {
         // Default collation for specific table.
         $sql = "SELECT CONVERT (varchar, DATABASEPROPERTYEX('$database', 'collation'))";
-        return $this->connection->query($sql)->fetchField();
+        return $this->connection->query_direct($sql)->fetchField();
       }
       else {
         // Server default collation.
         $sql = "SELECT SERVERPROPERTY ('collation') as collation";
-        return $this->connection->query($sql)->fetchField();
+        return $this->connection->query_direct($sql)->fetchField();
       }
     }
     
@@ -1112,7 +1108,7 @@ EOF
     $params[':schema'] = $this->defaultSchema;
     $params[':table'] = $table;
     $params[':column'] = $column;
-    $result = $this->connection->query($sql, $params)->fetchObject();
+    $result = $this->connection->query_direct($sql, $params)->fetchObject();
     return $result->COLLATION_NAME;    
   }
 
@@ -1183,7 +1179,7 @@ EOF
 
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
-    $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
+    $this->connection->query_direct('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
     // Clear introspection cache.
     $this->queryColumnInformationInvalidate($table);
     return TRUE;
@@ -1196,30 +1192,30 @@ EOF
    */
   protected function dropFieldRelatedObjects($table, $field) {
     // Fetch the list of indexes referencing this column.
-    $indexes = $this->connection->query('SELECT DISTINCT i.name FROM sys.columns c INNER JOIN sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id INNER JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id WHERE i.is_primary_key = 0 AND i.is_unique_constraint = 0 AND c.object_id = OBJECT_ID(:table) AND c.name = :name', array(
+    $indexes = $this->connection->query_direct('SELECT DISTINCT i.name FROM sys.columns c INNER JOIN sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id INNER JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id WHERE i.is_primary_key = 0 AND i.is_unique_constraint = 0 AND c.object_id = OBJECT_ID(:table) AND c.name = :name', array(
       ':table' => $this->connection->prefixTables('{' . $table . '}'),
       ':name' => $field,
     ));
     foreach ($indexes as $index) {
-      $this->connection->query('DROP INDEX [' . $index->name . '] ON [{' . $table . '}]');
+      $this->connection->query_direct('DROP INDEX [' . $index->name . '] ON [{' . $table . '}]');
     }
 
     // Fetch the list of check constraints referencing this column.
-    $constraints = $this->connection->query('SELECT DISTINCT cc.name FROM sys.columns c INNER JOIN sys.check_constraints cc ON cc.parent_object_id = c.object_id AND cc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', array(
+    $constraints = $this->connection->query_direct('SELECT DISTINCT cc.name FROM sys.columns c INNER JOIN sys.check_constraints cc ON cc.parent_object_id = c.object_id AND cc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', array(
       ':table' => $this->connection->prefixTables('{' . $table . '}'),
       ':name' => $field,
     ));
     foreach ($constraints as $constraint) {
-      $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $constraint->name . ']');
+      $this->connection->query_direct('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $constraint->name . ']');
     }
 
     // Fetch the list of default constraints referencing this column.
-    $constraints = $this->connection->query('SELECT DISTINCT dc.name FROM sys.columns c INNER JOIN sys.default_constraints dc ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', array(
+    $constraints = $this->connection->query_direct('SELECT DISTINCT dc.name FROM sys.columns c INNER JOIN sys.default_constraints dc ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', array(
       ':table' => $this->connection->prefixTables('{' . $table . '}'),
       ':name' => $field,
     ));
     foreach ($constraints as $constraint) {
-      $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $constraint->name . ']');
+      $this->connection->query_direct('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $constraint->name . ']');
     }
 
     // Drop any indexes on related computed columns when we have some.
@@ -1255,7 +1251,7 @@ EOF
     try { $this->fieldSetNoDefault($table, $field); } catch (Exception $e) {}
 
     // Create the new default.
-    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD CONSTRAINT {' . $table . '}_' . $field . '_df DEFAULT ' . $default . ' FOR [' . $field . ']');
+    $this->connection->query_direct('ALTER TABLE [{' . $table . '}] ADD CONSTRAINT {' . $table . '}_' . $field . '_df DEFAULT ' . $default . ' FOR [' . $field . ']');
   }
 
   /**
@@ -1268,7 +1264,7 @@ EOF
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot remove default value of field %table.%field: field doesn't exist.", array('%table' => $table, '%field' => $field)));
     }
 
-    $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT {' . $table . '}_' . $field . '_df');
+    $this->connection->query_direct('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT {' . $table . '}_' . $field . '_df');
   }
 
   /**
@@ -1284,7 +1280,7 @@ EOF
     if ($primary_key_name = $this->primaryKeyName($table)) {
       if ($this->isTechnicalPrimaryKey($primary_key_name)) {
         // Destroy the existing technical primary key.
-        $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
+        $this->connection->query_direct('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
         $this->cleanUpTechnicalPrimaryColumn($table);
       }
       else {
@@ -1315,7 +1311,7 @@ EOF
     }
     $this->cleanUpPrimaryKey($table);
     $this->createTechnicalPrimaryColumn($table);
-    $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$this->TECHNICAL_PK_COLUMN_NAME})");
+    $this->connection->query_direct("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$this->TECHNICAL_PK_COLUMN_NAME})");
     return TRUE;
   }
 
@@ -1324,7 +1320,7 @@ EOF
    */
   protected function primaryKeyName($table) {
     $table = $this->connection->prefixTables('{' . $table . '}');
-    return $this->connection->query('SELECT name FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID(:table) AND type = :type', array(
+    return $this->connection->query_direct('SELECT name FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID(:table) AND type = :type', array(
       ':table' => $table,
       ':type' => 'PK',
     ))->fetchField();
@@ -1342,7 +1338,7 @@ EOF
    */
   protected function createTechnicalPrimaryColumn($table) {
     if (!$this->fieldExists($table, $this->TECHNICAL_PK_COLUMN_NAME)) {
-      $this->connection->query("ALTER TABLE {{$table}} ADD {$this->TECHNICAL_PK_COLUMN_NAME} UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL");
+      $this->connection->query_direct("ALTER TABLE {{$table}} ADD {$this->TECHNICAL_PK_COLUMN_NAME} UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL");
     }
   }
   
@@ -1353,7 +1349,7 @@ EOF
   protected function cleanUpPrimaryKey($table) {
     // We are droping the constraint, but not the column.
     if ($existing_primary_key = $this->primaryKeyName($table)) {
-      $this->connection->query("ALTER TABLE [{{$table}}] DROP CONSTRAINT {$existing_primary_key}");
+      $this->connection->query_direct("ALTER TABLE [{{$table}}] DROP CONSTRAINT {$existing_primary_key}");
     }
     // We are using computed columns to store primary keys,
     // try to remove it if it exists.
@@ -1377,7 +1373,7 @@ EOF
   protected function cleanUpTechnicalPrimaryColumn($table) {
     // Get the number of remaining unique indexes on the table, that
     // are not primary keys and prune the technical primary column if possible.
-    $unique_indexes = $this->connection->query('SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1 AND is_primary_key = 0', array(':table' => $this->connection->prefixTables('{' . $table . '}')))->fetchField();
+    $unique_indexes = $this->connection->query_direct('SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1 AND is_primary_key = 0', array(':table' => $this->connection->prefixTables('{' . $table . '}')))->fetchField();
     $primary_key_is_technical = $this->isTechnicalPrimaryKey($this->primaryKeyName($table));
     if (!$unique_indexes && !$primary_key_is_technical) {
       $this->dropField($table, $this->TECHNICAL_PK_COLUMN_NAME);
@@ -1415,8 +1411,8 @@ EOF
     // values with the globally unique identifier generated previously.
     // This is (very) unlikely to result in a collision with any actual value
     // in the columns of the unique key.
-    $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$this->TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
-    $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON [{{$table}}] (__unique_{$name})");
+    $this->connection->query_direct("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$this->TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
+    $this->connection->query_direct("CREATE UNIQUE INDEX {$name}_unique ON [{{$table}}] (__unique_{$name})");
   }
 
   /**
@@ -1427,8 +1423,8 @@ EOF
       return FALSE;
     }
 
-    $this->connection->query('DROP INDEX ' . $name . '_unique ON [{' . $table . '}]');
-    $this->connection->query('ALTER TABLE [{' . $table . '}] DROP COLUMN __unique_' . $name);
+    $this->connection->query_direct('DROP INDEX ' . $name . '_unique ON [{' . $table . '}]');
+    $this->connection->query_direct('ALTER TABLE [{' . $table . '}] DROP COLUMN __unique_' . $name);
 
     // Try to clean-up the technical primary key if possible.
     $this->cleanUpTechnicalPrimaryColumn($table);
@@ -1443,7 +1439,7 @@ EOF
    */
   protected function uniqueKeyExists($table, $name) {
     $table = $this->connection->prefixTables('{' . $table . '}');
-    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', array(
+    return (bool) $this->connection->query_direct('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', array(
       ':table' => $table,
       ':name' => $name . '_unique',
     ))->fetchField();
@@ -1474,7 +1470,7 @@ EOF
         $this->compressPrimaryKeyIndex($table, 128);
       }
     }
-    $this->connection->query($sql);
+    $this->connection->query_direct($sql);
     $this->queryColumnInformationInvalidate($table);
   }
 
@@ -1493,7 +1489,7 @@ EOF
       $expand = TRUE;
     }
     
-    $this->connection->query('DROP INDEX ' . $name . '_idx ON [{' . $table . '}]');
+    $this->connection->query_direct('DROP INDEX ' . $name . '_idx ON [{' . $table . '}]');
     
     // If we just dropped an XML index, we can re-expand the original primary key index.
     if ($expand) {
@@ -1550,7 +1546,7 @@ EOF
    */
   public function _ExistsIndex($table, $index) {
     $table = $this->connection->prefixTables('{' . $table . '}');
-    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', array(
+    return (bool) $this->connection->query_direct('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', array(
       ':table' => $table,
       ':name' => $index
     ))->fetchField();
@@ -1569,7 +1565,7 @@ EOF
       return;
     }
     $table = $this->connection->prefixTables('{' . $table . '}');
-    $this->connection->query('DROP INDEX :index ON :table',
+    $this->connection->query_direct('DROP INDEX :index ON :table',
       array(
         ':index' => $index,
         ':table' => $table,
