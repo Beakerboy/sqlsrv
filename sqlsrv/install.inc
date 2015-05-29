@@ -185,8 +185,8 @@ EOF
     
     $form = array();
     
-      drupal_set_message(t('To install this version of the MS SQL Server driver make sure you have this patch in core: <a target="_blank" href="!url">!url</a>', 
-        array('!url' => 'https://www.drupal.org/node/2376239')), 'warning');
+    drupal_set_message(t('To install this version of the MS SQL Server driver make sure you have this patch in core: <a target="_blank" href="!url">!url</a>', 
+      array('!url' => 'https://www.drupal.org/node/2376239')), 'warning');
     
     include_once('reflexiondata.inc');
     $extensiondata = sqlsrv_REData(new ReflectionExtension('pdo_sqlsrv'));
@@ -198,7 +198,7 @@ EOF
 	
     if (!$buffer_size_ok) {
       drupal_set_message(t('pdo_sqlsrv.client_buffer_max_kb_size needs to be of at least @min, currently @current.',
-          array('@min' => '24480Kb', '@current' => "{$buffer_size}Kb")), 'error');
+        array('@min' => '24480Kb', '@current' => "{$buffer_size}Kb")), 'error');
     }
     
     // PDO version, and require at least 3.2.
@@ -214,29 +214,29 @@ EOF
 		  , 'error');
     }
 	
-	// Check that Wincache user cache is enabled and big enough.
-	$wincache_ok = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info(TRUE)) && ($meminfo = @wincache_ucache_meminfo()));
-	if ($wincache_ok) {
-	  // Minimum 15 Mb of usercache.
-	  $wincache_ok = $meminfo['memory_total'] >= 20 * 1024 * 1024;
-	}
+  	// Check that Wincache user cache is enabled and big enough.
+  	$wincache_ok = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info(TRUE)) && ($meminfo = @wincache_ucache_meminfo()));
+  	if ($wincache_ok) {
+  	  // Minimum 15 Mb of usercache.
+  	  $wincache_ok = $meminfo['memory_total'] > 20 * 1024 * 1024;
+  	}
 	
-	if (!$wincache_ok) {
-      drupal_set_message(t('This version of the MS SQL Server needs the Wincache PHP extension with a minimum ucachesize of 20Mb.',
-          array()), 'error');
+  	if (!$wincache_ok) {
+      drupal_set_message(t('This version of the MS SQL Server needs the Wincache PHP extension with a minimum ucachesize of 20Mb.'),
+      array(), 'error');
     }
     
     // If there is something wrong do not allow the user to install.
     if (!$buffer_size_ok || !$version_ok || !$wincache_ok) {
-	  drupal_set_message(t('Please review the errors and refresh this page when fixed.'), 'status');
+  	  drupal_set_message(t('Please review the errors and refresh this page when fixed.'), 'status');
     }
 
-	$form['messages']['errors'] = array(
+  	$form['messages']['errors'] = array(
       '#type' => 'markup',
       '#markup' => theme_status_messages(array('display' => NULL)),
     );
     
-	if ($buffer_size_ok && $version_ok && $wincache_ok) { 
+  	if ($buffer_size_ok && $version_ok && $wincache_ok) { 
       $form = array_merge($form, parent::getFormOptions($database));
       // Make username not required.
       $form['username']['#required'] = FALSE;
