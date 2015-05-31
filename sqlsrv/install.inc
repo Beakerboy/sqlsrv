@@ -218,12 +218,11 @@ EOF
   	$wincache_ok = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info(TRUE)) && ($meminfo = @wincache_ucache_meminfo()));
   	if ($wincache_ok) {
   	  // Minimum 15 Mb of usercache.
-  	  $wincache_ok = $meminfo['memory_total'] > 20 * 1024 * 1024;
+  	  $wincache_ok = $meminfo['memory_total'] >= 20 * 1024 * 1024;
   	}
 	
   	if (!$wincache_ok) {
-      drupal_set_message(t('This version of the MS SQL Server needs the Wincache PHP extension with a minimum ucachesize of 20Mb.'),
-      array(), 'error');
+      drupal_set_message(t('This version of the MS SQL Server needs the Wincache PHP extension with a minimum ucachesize of 20Mb.'), 'error');
     }
     
     // If there is something wrong do not allow the user to install.
