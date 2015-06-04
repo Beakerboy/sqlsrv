@@ -955,7 +955,7 @@ EOF
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
-    //$transaction = $this->connection->startTransaction();
+    $transaction = $this->connection->startTransaction();
 
     // IMPORTANT NOTE: To maintain database portability, you have to explicitly recreate all indices and primary keys that are using the changed field.
     // That means that you have to drop all affected keys and indexes with db_drop_{primary_key,unique_key,index}() before calling db_change_field().
