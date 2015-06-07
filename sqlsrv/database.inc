@@ -255,7 +255,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     # Everything that follows a boundary that is not : or _.
     \b(?<![:\[_])(?:
       # Any reserved words, followed by a boundary that is not an opening parenthesis.
-      (action|admin|alias|any|are|array|at|begin|boolean|class|commit|contains|current|data|date|day|depth|domain|external|file|full|function|get|go|host|input|language|last|less|local|map|min|module|new|no|object|old|open|operation|parameter|parameters|path|plan|prefix|proc|public|ref|result|returns|role|row|rows|rule|save|search|second|section|session|size|state|statistics|temporary|than|time|timestamp|tran|translate|translation|trim|user|value|variable|view|without)
+      (action|admin|alias|any|are|array|at|begin|boolean|class|commit|contains|current|data|date|day|depth|domain|external|file|full|function|get|go|host|input|language|last|less|local|map|min|module|new|no|object|old|open|operation|parameter|parameters|path|plan|prefix|proc|public|ref|result|returns|role|rule|save|search|second|section|session|size|state|statistics|temporary|than|time|timestamp|tran|translate|translation|trim|user|value|variable|view|without)
       (?!\()
       |
       # Or a normal word.
@@ -360,7 +360,10 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     $prefixes = $this->prefixes;
     $prefixes[$tablename] = '';
     $this->setPrefix($prefixes);
-
+    
+    // Having comments in the query can be tricky and break the SELECT FROM  -> SELECT INTO conversion
+    $query = $this->schema()->removeSQLComments($query);
+    
     // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
     $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
     $this->query($query, $args, $options);
@@ -452,7 +455,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     $stmt = NULL;
 
     try {
-    
+      
       // Bypass query preprocessing and use direct queries.
       $ctx = new \DatabaseContext($this, TRUE, TRUE);
       
@@ -577,16 +580,22 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       $query = preg_replace('/^\s*SELECT(\s*DISTINCT)?/Dsi', 'SELECT$1 TOP(' . $count . ')', $query);
     }
     else {
-      // More complex case: use a TOP query to retrieve $from + $count rows, and
-      // filter out the first $from rows using a window function.
-      $query = preg_replace('/^\s*SELECT(\s*DISTINCT)?/Dsi', 'SELECT$1 TOP(' . ($from + $count) . ') ', $query);
-      $query = '
-        SELECT * FROM (
-          SELECT sub2.*, ROW_NUMBER() OVER(ORDER BY sub2.__line2) AS __line3 FROM (
-            SELECT 1 AS __line2, sub1.* FROM (' . $query . ') AS sub1
-          ) as sub2
-        ) AS sub3
-        WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
+      if ($this->schema()->EngineVersionNumber() >= 11) {
+        // As of SQL Server 2012 there is an easy (and faster!) way to page results.
+        $query = $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
+      }
+      else {
+        // More complex case: use a TOP query to retrieve $from + $count rows, and
+        // filter out the first $from rows using a window function.
+        $query = preg_replace('/^\s*SELECT(\s*DISTINCT)?/Dsi', 'SELECT$1 TOP(' . ($from + $count) . ') ', $query);
+        $query = '
+          SELECT * FROM (
+            SELECT sub2.*, ROW_NUMBER() OVER(ORDER BY sub2.__line2) AS __line3 FROM (
+              SELECT 1 AS __line2, sub1.* FROM (' . $query . ') AS sub1
+            ) as sub2
+          ) AS sub3
+          WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
+      }
     }
 
     return $query;
@@ -657,6 +666,13 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     $tables[$table] = $result;
 
     return $result;
+  }
+
+  /**
+   * Override to add the sanity parameter.
+   */
+  public function startTransaction($name = '', $sane = FALSE) {
+    return new DatabaseTransaction_sqlsrv($this, $name, $sane);
   }
 }
 
@@ -802,8 +818,88 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements Database
  */
 
 /**
- * Workaround a bug in the database autoloader by defining all the child classes.
- *
- * @see http://drupal.org/node/851136
+ * Overriden to bring some commonsense to transaction management.
+ * 
+ * The "sane" approach is to require explicit transaction commits!
+ * 
+ * Drupal uses the other way round, commits are implicit unless you explicitly
+ * rollback.
  */
-class DatabaseTransaction_sqlsrv extends DatabaseTransaction { }
+class DatabaseTransaction_sqlsrv extends DatabaseTransaction {
+
+  /**
+   * A boolean value to indicate whether this transaction has been commited.
+   *
+   * @var Boolean
+   */
+  protected $commited = FALSE;
+
+  /**
+   * A boolean to indicate if the transaction scope should behave sanely.
+   * 
+   * @var Boolean
+   */
+  protected $sane = FALSE;
+
+  /**
+   * Overriden to add the sane option
+   *
+   * @param DatabaseConnection $connection 
+   * @param mixed $name 
+   * @param mixed $sane 
+   */
+  public function __construct(DatabaseConnection $connection, $name = NULL, $sane = FALSE) {
+    $this->sane = $sane;
+    parent::__construct($connection, $name);
+  }
+
+  /**
+   * Overriden __desctur to provide some mental health.
+   */
+  public function __destruct() {
+    if (!$this->sane) {
+      parent::__destruct();
+    }
+    else {
+      // If we did not commit, rollback!
+      if (!$this->commited) {
+        $this->rollback();
+      }
+    }
+  }
+
+  /**
+   * The "sane" behaviour requires explicit commits.
+   * 
+   * @throws DatabaseTransactionExplicitCommitNotAllowedException 
+   */
+  public function commit() {
+    if (!$this->sane) {
+      throw new DatabaseTransactionExplicitCommitNotAllowedException();
+    }
+    // Cannot commit a rolledback transaction...
+    if ($this->rolledBack) {
+      throw new DatabaseTransactionCannotCommitAfterRollbackException();
+    }
+    // Mark as commited, and commit!
+    $this->commited = TRUE;
+    $this->connection->popTransaction($this->name);
+  }
+}
+
+/**
+ * Like db_transaction() but transaction behaviour is more
+ * sane requiring explicit commits.
+ * 
+ * @param mixed $name 
+ * @param array $options 
+ * @return DatabaseTransaction
+ */
+function db_transaction_sane($name = NULL, array $options = array()) {
+  if (empty($options['target'])) {
+    $options['target'] = 'default';
+  }
+  return Database::getConnection($options['target'])->startTransaction($name, TRUE);
+}
+
+class DatabaseTransactionCannotCommitAfterRollbackException extends Exception { }

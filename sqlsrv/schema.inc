@@ -88,8 +88,8 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    */
   protected function LoadDefaultSchema($connection) {
     if ($cache = fastcache::cache_get('default_schema', 'schema')) {
-       $this->defaultSchema = $cache->data;
-       return;
+      $this->defaultSchema = $cache->data;
+      return;
     }
     $result = $connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
     fastcache::cache_set('default_schema', $result, 'schema');
@@ -125,7 +125,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    *      - default_value: Default value for the column (if any).
    */
   public function queryColumnInformation($table, $refresh = FALSE) {
-  
+    
     // No worry for the tableExists() check, results
     // are cached.
     if (empty($table) || !$this->tableExists($table)) {
@@ -271,40 +271,32 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
-    $transaction = $this->connection->startTransaction();
-    try {
-      // Create the table with a default technical primary key.
-      $this->connection->query_direct($this->createTableSql($name, $table));
+    $transaction = $this->connection->startTransaction('', TRUE);
 
-      // If the spec had a primary key, set it now after all fields have been created.
-      // We are creating the keys after creating the table so that createPrimaryKey
-      // is able to introspect column definition from the database to calculate index sizes
-      // This adds quite quite some overhead, but is only noticeable during table creation.
-      if (isset($table['primary key']) && is_array($table['primary key'])) {
-        $this->createPrimaryKey($name,  $table['primary key']);
-      }
-      // Otherwise use a technical primary key.
-      else {
-        $this->createTechnicalPrimaryColumn($name);
-      }
-      
-      // Now all the unique keys.
-      if (isset($table['unique keys']) && is_array($table['unique keys'])) {
-        foreach ($table['unique keys'] as $key_name => $key) {
-          $this->addUniqueKey($name, $key_name, $key);
-        }
+    // Create the table with a default technical primary key.
+    $this->connection->query_direct($this->createTableSql($name, $table));
+
+    // If the spec had a primary key, set it now after all fields have been created.
+    // We are creating the keys after creating the table so that createPrimaryKey
+    // is able to introspect column definition from the database to calculate index sizes
+    // This adds quite quite some overhead, but is only noticeable during table creation.
+    if (isset($table['primary key']) && is_array($table['primary key'])) {
+      $this->createPrimaryKey($name,  $table['primary key']);
+    }
+    // Otherwise use a technical primary key.
+    else {
+      $this->createTechnicalPrimaryColumn($name);
+    }
+    
+    // Now all the unique keys.
+    if (isset($table['unique keys']) && is_array($table['unique keys'])) {
+      foreach ($table['unique keys'] as $key_name => $key) {
+        $this->addUniqueKey($name, $key_name, $key);
       }
     }
-    catch (Exception $e) {
-      $transaction->rollback();
-      throw $e;
-    }
 
-    // Commit the transaction inmediately
-    // because a PDO exception in the driver
-    // will silently rollback everything
-    // when buffered queries are on.
-    unset($transaction);
+    // Commit changes until now.
+    $transaction->commit();
 
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
@@ -326,6 +318,45 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     $this->queryColumnInformationInvalidate($name);
   }
 
+  /**
+   * Remove comments from an SQL statement.
+   * @see http://stackoverflow.com/questions/9690448/regular-expression-to-remove-comments-from-sql-statement
+   *
+   * @param mixed $sql
+   *  SQL statement to remove the comments from.
+   *
+   * @param mixed $comments 
+   *  Comments removed from the statement
+   *
+   * @return string
+   */
+  public function removeSQLComments($sql, &$comments = NULL) {
+    $sqlComments = '@(([\'"]).*?[^\\\]\2)|((?:\#|--).*?$|/\*(?:[^/*]|/(?!\*)|\*(?!/)|(?R))*\*\/)\s*|(?<=;)\s+@ms';
+    /* Commented version
+    $sqlComments = '@
+    (([\'"]).*?[^\\\]\2) # $1 : Skip single & double quoted expressions
+    |(                   # $3 : Match comments
+    (?:\#|--).*?$    # - Single line comments
+    |                # - Multi line (nested) comments
+    /\*             #   . comment open marker
+    (?: [^/*]    #   . non comment-marker characters
+    |/(?!\*) #   . ! not a comment open
+    |\*(?!/) #   . ! not a comment close
+    |(?R)    #   . recursive case
+    )*           #   . repeat eventually
+    \*\/             #   . comment close marker
+    )\s*                 # Trim after comments
+    |(?<=;)\s+           # Trim after semi-colon
+    @msx';
+     */
+    $uncommentedSQL = trim(preg_replace($sqlComments, '$1', $sql));
+    if (is_array($comments)) {
+      preg_match_all($sqlComments, $sql, $comments);
+      $comments = array_filter($comments[ 3 ]);
+    }
+    return $uncommentedSQL;
+  }
+  
   /**
    * Find if a table already exists. Results are cached, use
    * $reset = TRUE to get a fresh copy.
@@ -919,25 +950,22 @@ EOF
     // Introspect the schema and save the current primary key if the column
     // we are modifying is part of it.
     $primary_key_fields = $this->introspectPrimaryKeyFields($table);
-    
+
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
-    $transaction = $this->connection->startTransaction();
-    try {
-      // Clear current Primary Key.
-      $this->cleanUpPrimaryKey($table);
+    $transaction = $this->connection->startTransaction('', TRUE);
 
-      // Recreate the Primary Key with the given limit size.
-      $this->createPrimaryKey($table, $primary_key_fields, $limit);
-    }
-    catch (\Exception $e) {
-      $transaction->rollback();
-      throw $e;
-    }
+    // Clear current Primary Key.
+    $this->cleanUpPrimaryKey($table);
+
+    // Recreate the Primary Key with the given limit size.
+    $this->createPrimaryKey($table, $primary_key_fields, $limit);
+
+    $transaction->commit();
 
     // Refresh introspection for this table.
     $this->queryColumnInformation($table, TRUE);
-    
+
   }
   
   /**
@@ -955,7 +983,9 @@ EOF
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
-    $transaction = $this->connection->startTransaction();
+
+    // @var DatabaseTransaction_sqlsrv
+    $transaction = $this->connection->startTransaction('', TRUE);
 
     // IMPORTANT NOTE: To maintain database portability, you have to explicitly recreate all indices and primary keys that are using the changed field.
     // That means that you have to drop all affected keys and indexes with db_drop_{primary_key,unique_key,index}() before calling db_change_field().
@@ -1040,7 +1070,7 @@ EOF
     $this->queryColumnInformation($table, TRUE);
     
     // Commit.
-    unset($transaction);
+    $transaction->commit();
   }
 
   /**
