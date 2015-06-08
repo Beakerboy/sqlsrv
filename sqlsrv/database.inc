@@ -630,8 +630,8 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       }
     }
 
-    // TODO: Refactor this to use OUTPUT because under high concurrency this does not work.
-    return $this->query_direct('INSERT INTO {sequences} DEFAULT VALUES', array(), array('return' => Database::RETURN_INSERT_ID));
+    // Refactored to use OUTPUT because under high concurrency LAST_INSERTED_ID does not work properly.
+    return $this->query_direct('INSERT INTO {sequences} OUTPUT (Inserted.[value]) DEFAULT VALUES')->fetchField();
   }
 
   /**
