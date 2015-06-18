@@ -240,8 +240,14 @@ class UpdateQuery_sqlsrv extends UpdateQuery {
   }
 
   public function execute() {
-    // Rewrite the query to exclude the non-affected rows.
-    // $this->excludeNonAffectedRows();
+    // Fetch the list of blobs and sequences used on that table.
+    $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
+
+    // MySQL is a pretty slut that swallows everything thrown at it,
+    // like trying to update an identity field...
+    if (isset($columnInformation['identity']) && isset($this->fields[$columnInformation['identity']])) {
+      unset($this->fields[$columnInformation['identity']]);
+    }
 
     // Now perform the special handling for BLOB fields.
     $max_placeholder = 0;
@@ -250,13 +256,9 @@ class UpdateQuery_sqlsrv extends UpdateQuery {
     // placeholders will all match up properly.
     $stmt = $this->connection->PDOPrepare($this->connection->prefixTables((string)$this));
 
-    // Fetch the list of blobs and sequences used on that table.
-    $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
-
     // Expressions take priority over literal fields, so we process those first
     // and remove any literal fields that conflict.
     $fields = $this->fields;
-    $expression_fields = array();
     foreach ($this->expressionFields as $field => $data) {
       if (!empty($data['arguments'])) {
         foreach ($data['arguments'] as $placeholder => $argument) {
