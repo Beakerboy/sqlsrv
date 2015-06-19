@@ -355,6 +355,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
     // The ORDER BY clause is invalid in views, inline functions, derived
     // tables, subqueries, and common table expressions, unless TOP or FOR XML
     // is also specified.
+    $sorted = FALSE;
     if ($this->order && (empty($this->inSubQuery) || !empty($this->range))) {
       $query .= "\nORDER BY ";
       $fields = array();
@@ -362,10 +363,16 @@ class SelectQuery_sqlsrv extends SelectQuery {
         $fields[] = $field . ' ' . $direction;
       }
       $query .= implode(', ', $fields);
+      $sorted = TRUE;
     }
 
     // RANGE
     if (!empty($this->range)) {
+      // To get OFFSET FETCH to work the query needs
+      // to have an order by. Use the recommended sort.
+      if (!$sorted) {
+        $query .= "\nORDER BY 1";
+      }
       $query = $this->connection->addRangeToQuery($query, $this->range['start'], $this->range['length']);
     }
 
