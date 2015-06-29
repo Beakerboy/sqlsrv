@@ -41,7 +41,7 @@ class DatabaseTransaction_sqlsrv extends DatabaseTransaction {
     }
     // Within transactions, savepoints are used. Each savepoint requires a
     // name. So if no name is present we need to create one.
-    elseif (!$name) {
+    elseif (empty($name)) {
       $this->name = 'savepoint_' . $depth;
     }
     else {
@@ -113,8 +113,8 @@ class DatabaseTransactionCannotCommitAfterRollbackException extends Exception { 
  * Available transaction isolation levels.
  */
 class DatabaseTransactionIsolationLevel extends Enum {
-  const ReadUncommited = 'READ UNCOMMITED';
-  const ReadCommited = 'READ COMMITED';
+  const ReadUncommitted = 'READ UNCOMMITTED';
+  const ReadCommitted = 'READ COMMITTED';
   const RepeatableRead = 'REPEATABLE READ';
   const Snapshot = 'SNAPSHOT';
   const Serializable = 'SERIALIZABLE';
@@ -225,5 +225,16 @@ class DatabaseTransactionSettings {
     return new DatabaseTransactionSettings(TRUE, 
                 DatabaseTransactionScopeOption::Required(), 
                 $isolation);
+  }
+
+  /**
+   * Snapshot isolation is not compatible with DDL operations.
+   * 
+   * @return DatabaseTransactionSettings
+   */
+  public static function GetDDLCompatibleDefaults() {
+    return new DatabaseTransactionSettings(TRUE, 
+                DatabaseTransactionScopeOption::Required(), 
+                DatabaseTransactionIsolationLevel::ReadCommitted());
   }
 }

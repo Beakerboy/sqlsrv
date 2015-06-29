@@ -271,7 +271,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
-    $transaction = $this->connection->startTransaction('', DatabaseTransactionSettings::GetBetterDefaults());
+    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
 
     // Create the table with a default technical primary key.
     $this->connection->query_direct($this->createTableSql($name, $table));
@@ -976,7 +976,7 @@ EOF
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
-    $transaction = $this->connection->startTransaction('', DatabaseTransactionSettings::GetBetterDefaults());
+    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
 
     // Clear current Primary Key.
     $this->cleanUpPrimaryKey($table);
@@ -1008,7 +1008,7 @@ EOF
     // here and pray for the best.
 
     // @var DatabaseTransaction_sqlsrv
-    $transaction = $this->connection->startTransaction('', DatabaseTransactionSettings::GetBetterDefaults());
+    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
 
     // IMPORTANT NOTE: To maintain database portability, you have to explicitly recreate all indices and primary keys that are using the changed field.
     // That means that you have to drop all affected keys and indexes with db_drop_{primary_key,unique_key,index}() before calling db_change_field().
