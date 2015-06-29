@@ -10,8 +10,10 @@
  * @{
  */
 
-include_once DRUPAL_ROOT . '/includes/database/prefetch.inc';
 include_once 'fastcache.inc';
+include_once 'enum.inc';
+include_once 'transaction.inc';
+include_once 'utils.inc';
 
 /**
  * Defines a behaviour scope for the database
@@ -102,11 +104,38 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   }
 
   /**
+   * Get the Default global isolation level.
+   * 
+   * @return mixed
+   */
+  private static function DefaultTransactionIsolationLevel() {
+    global $conf;
+    // Isolation level.
+    if (isset($conf['MSSQL_DEFAULT_ISOLATION_LEVEL'])) {
+      $level =  $conf['MSSQL_DEFAULT_ISOLATION_LEVEL'];
+      if($l = @constant($level)) {
+        return $l;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * The PDO constants do not matcc the actual isolation names
+   * used in SQL.
+   */
+  private static function DefaultTransactionIsolationLevelInStatement() {
+    return str_replace('_', ' ', static::DefaultTransactionIsolationLevel());
+  }
+
+  /**
    * Override of DatabaseConnection::databaseType().
    *
    * @status complete
    */
   public function __construct(array $connection_options = array()) {
+    global $conf;
+
     // Store connection options for future reference.
     $this->connectionOptions = &$connection_options;
 
@@ -119,15 +148,24 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     
     // Build the DSN.
     $options = array();
-    $options[] = 'Server=' . $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : '');
+    $options['Server'] = $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : '');
     // We might not have a database in the
     // connection options, for example, during
     // database creation in Install.
     if (!empty($connection_options['database'])) {
-      $options[] = 'Database=' . $connection_options['database'];
+      $options['Database'] = $connection_options['database'];
     }
 
-    $dsn = 'sqlsrv:' . implode(';', $options);
+    // Set isolation level if specified.
+    if ($level = static::DefaultTransactionIsolationLevel()) {
+      $options['TransactionIsolation'] = $level;
+    }
+
+    // Build the DSN
+    $dsn = 'sqlsrv:';
+    foreach ($options as $key => $value) {
+      $dsn .= (empty($key) ? '' : "{$key}=") . $value . ';';
+    }
 
     // PDO Options are set at a connection level.
     // and apply to all statements.
@@ -238,7 +276,42 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     if (!$this->bypassQueryPreprocess) {
       $query = $this->preprocessQuery($query);
     }
-    
+
+    // You can set the MSSQL_APPEND_CALLSTACK_COMMENT to TRUE
+    // to append to each query, in the form of comments, the current
+    // backtrace plus other details that aid in debugging deadlocks
+    // or long standing locks. Use in combination with MSSQL profiler.
+    global $conf;
+    if (isset($conf['MSSQL_APPEND_CALLSTACK_COMMENT']) && $conf['MSSQL_APPEND_CALLSTACK_COMMENT'] == TRUE) {
+      global $user;
+      $trim = strlen(DRUPAL_ROOT);
+      $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+      static $request_id;
+      if (empty($request_id)) {
+        $request_id = uniqid('', TRUE);
+      }
+      // Remove las item (it's alwasy PDOPrepare)
+      $trace = array_splice($trace, 1);
+      $comment = PHP_EOL . PHP_EOL;
+      $comment .= '-- uid:' . (empty($user) ? 'null' : $user->uid) . PHP_EOL;
+      $uri = (isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'none') ;
+      $uri = preg_replace("/[^a-zA-Z0-9]/i", "_", $uri);
+      $comment .= '-- url:' . $uri . PHP_EOL;
+      //$comment .= '-- request_id:' . $request_id . PHP_EOL;
+      foreach ($trace as $t) {
+        $function = isset($t['function']) ? $t['function'] : '';
+        $file = '';
+        if(isset($t['file'])) {
+          $len = strlen($t['file']);
+          if ($len > $trim) {
+            $file = substr($t['file'], $trim, $len - $trim) . " [{$t['line']}]";
+          }
+        }
+        $comment .= '-- ' . str_pad($function, 35) . '  ' . $file . PHP_EOL;
+      }
+      $query = $comment . PHP_EOL . $query;
+    }
+
     return parent::prepare($query, $options);
   }
 
@@ -520,23 +593,23 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // Last chance to modify some SQL Server-specific syntax.
     $replacements = array(
       // Normalize SAVEPOINT syntax to the SQL Server one.
-      '/^SAVEPOINT (.*)$/' => 'SAVE TRANSACTION $1',
-      '/^ROLLBACK TO SAVEPOINT (.*)$/' => 'ROLLBACK TRANSACTION $1',
+      // '/^SAVEPOINT (.*)$/' => 'SAVE TRANSACTION $1',
+      // '/^ROLLBACK TO SAVEPOINT (.*)$/' => 'ROLLBACK TRANSACTION $1',
       // SQL Server doesn't need an explicit RELEASE SAVEPOINT.
       // Run a non-operaiton query to avoid a fatal error
       // when no query is runned.
-      '/^RELEASE SAVEPOINT (.*)$/' => 'SELECT 1 /* $0 */',
+      // '/^RELEASE SAVEPOINT (.*)$/' => 'SELECT 1 /* $0 */',
       // TODO: For improved compatiblity with MySQL
       // we should create a StoredProcedure that
       // maps sp_who to a MySQL compatible approach.
       // http://stackoverflow.com/questions/2234691/sql-server-filter-output-of-sp-who2
-      '/^SHOW PROCESSLIST$/' => 'EXEC sp_who',
+      // '/^SHOW PROCESSLIST$/' => 'EXEC sp_who',
       // List all table names
-      '/^SHOW TABLES$/' => 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = \'BASE TABLE\'',
+      // '/^SHOW TABLES$/' => 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = \'BASE TABLE\'',
       // List all table and view names.
-      '/^SHOW FULL TABLES$/' => 'SELECT TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES',
+      // '/^SHOW FULL TABLES$/' => 'SELECT TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES',
     );
-    
+
     // Add prefixes to Drupal-specific functions.
     $defaultSchema = $this->schema()->GetDefaultSchema();
     foreach ($this->schema()->DrupalSpecificFunctions() as $function) {
@@ -668,12 +741,184 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     return $result;
   }
 
+  #region Transactions
+
   /**
-   * Override to add the sanity parameter.
+   * Overriden to allow transaction settings.
    */
-  public function startTransaction($name = '', $sane = FALSE) {
-    return new DatabaseTransaction_sqlsrv($this, $name, $sane);
+  public function startTransaction($name = '', DatabaseTransactionSettings $settings = NULL) {
+    if ($settings == NULL) {
+      $settings = DatabaseTransactionSettings::GetDefaults();
+    }
+    return new DatabaseTransaction_sqlsrv($this, $name, $settings);
   }
+
+  /**
+   * Overriden.
+   */
+  public function rollback($savepoint_name = 'drupal_transaction') {
+    if (!$this->supportsTransactions()) {
+      return;
+    }
+    if (!$this->inTransaction()) {
+      throw new DatabaseTransactionNoActiveException();
+    }
+    // A previous rollback to an earlier savepoint may mean that the savepoint
+    // in question has already been accidentally committed.
+    if (!isset($this->transactionLayers[$savepoint_name])) {
+      throw new DatabaseTransactionNoActiveException();
+    }
+
+    // We need to find the point we're rolling back to, all other savepoints
+    // before are no longer needed. If we rolled back other active savepoints,
+    // we need to throw an exception.
+    $rolled_back_other_active_savepoints = FALSE;
+    while ($savepoint = array_pop($this->transactionLayers)) {
+      if ($savepoint['name'] == $savepoint_name) {
+        // If it is the last the transaction in the stack, then it is not a
+        // savepoint, it is the transaction itself so we will need to roll back
+        // the transaction rather than a savepoint.
+        if (empty($this->transactionLayers)) {
+          break;
+        }
+        $this->query_direct('ROLLBACK TRANSACTION ' . $savepoint);
+        $this->popCommittableTransactions();
+        if ($rolled_back_other_active_savepoints) {
+          throw new DatabaseTransactionOutOfOrderException();
+        }
+        return;
+      }
+      else {
+        $rolled_back_other_active_savepoints = TRUE;
+      }
+    }
+    \PDO::rollBack();
+    // Restore original transaction isolation level
+    if ($level = static::DefaultTransactionIsolationLevelInStatement()) {
+      if($savepoint['settings']->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) { 
+        if ($level != $savepoint['settings']->Get_IsolationLevel()) {
+          $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
+        }
+      }
+    }
+    if ($rolled_back_other_active_savepoints) {
+      throw new DatabaseTransactionOutOfOrderException();
+    }
+  }
+
+  /**
+   * Summary of pushTransaction
+   * @param string $name 
+   * @param DatabaseTransactionSettings $settings 
+   * @throws DatabaseTransactionNameNonUniqueException 
+   * @return void
+   */
+  public function pushTransaction($name, $settings = NULL) {
+    if (!$this->supportsTransactions()) {
+      return;
+    }
+    if (isset($this->transactionLayers[$name])) {
+      throw new DatabaseTransactionNameNonUniqueException($name . " is already in use.");
+    }
+    // If we're already in a transaction.
+    if ($this->inTransaction()) {
+      switch ($settings->Get_ScopeOption()) {
+        case DatabaseTransactionScopeOption::RequiresNew():
+          $this->query_direct('SAVE TRANSACTION ' . $name);
+          break;
+        case DatabaseTransactionScopeOption::Required():
+          // We are already in a transaction, do nothing.
+          break;
+        case DatabaseTransactionScopeOption::Supress():
+          // The only way to supress the ambient transaction is to use a new connection
+          // during the scope of this transaction, a bit messy to implement.
+          throw new Exception('DatabaseTransactionScopeOption::Supress not implemented.');
+      }
+    }
+    else {
+      if ($settings->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) {
+        $current_isolation_level = strtoupper($this->schema()->UserOptions()['isolation level']);
+        // Se what isolation level was requested.
+        $level = $settings->Get_IsolationLevel()->__toString();
+        if (strcasecmp($current_isolation_level, $level) !== 0) {
+          $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
+        }
+      }
+      \PDO::beginTransaction();
+    }
+    // Store the name and settings in the stack.
+    $this->transactionLayers[$name] = array('settings' => $settings, 'active' => TRUE, 'name' => $name);
+  }
+
+  /**
+   * Decreases the depth of transaction nesting.
+   *
+   * If we pop off the last transaction layer, then we either commit or roll
+   * back the transaction as necessary. If no transaction is active, we return
+   * because the transaction may have manually been rolled back.
+   *
+   * @param $name
+   *   The name of the savepoint
+   *
+   * @throws DatabaseTransactionNoActiveException
+   * @throws DatabaseTransactionCommitFailedException
+   *
+   * @see DatabaseTransaction
+   */
+  public function popTransaction($name) {
+    if (!$this->supportsTransactions()) {
+      return;
+    }
+    // The transaction has already been committed earlier. There is nothing we
+    // need to do. If this transaction was part of an earlier out-of-order
+    // rollback, an exception would already have been thrown by
+    // Database::rollback().
+    if (!isset($this->transactionLayers[$name])) {
+      return;
+    }
+
+    // Mark this layer as committable.
+    $this->transactionLayers[$name]['active'] = FALSE;
+    $this->popCommittableTransactions();
+  }
+
+  /**
+   * Internal function: commit all the transaction layers that can commit.
+   */
+  protected function popCommittableTransactions() {
+    // Commit all the committable layers.
+    foreach (array_reverse($this->transactionLayers) as $name => $state) {
+      // Stop once we found an active transaction.
+      if ($state['active']) {
+        break;
+      }
+      // If there are no more layers left then we should commit.
+      unset($this->transactionLayers[$name]);
+      if (empty($this->transactionLayers)) {
+        try {
+          // PDO::commit() can either return FALSE or throw an exception itself
+          if (!PDO::commit()) {
+            throw new DatabaseTransactionCommitFailedException();
+          }
+        }
+        finally {
+          // Restore original transaction isolation level
+          if ($level = static::DefaultTransactionIsolationLevelInStatement()) { 
+            if($state['settings']->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) { 
+              if ($level != $state['settings']->Get_IsolationLevel()->__toString()) {
+                $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
+              }
+            }
+          }
+        }
+      }
+      else {
+        // Savepoints cannot be commited, only rolled back.
+      }
+    }
+  }
+
+  #endregion
 }
 
 class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements DatabaseStatementInterface {
@@ -816,90 +1061,3 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements Database
 /**
  * @} End of "ingroup database".
  */
-
-/**
- * Overriden to bring some commonsense to transaction management.
- * 
- * The "sane" approach is to require explicit transaction commits!
- * 
- * Drupal uses the other way round, commits are implicit unless you explicitly
- * rollback.
- */
-class DatabaseTransaction_sqlsrv extends DatabaseTransaction {
-
-  /**
-   * A boolean value to indicate whether this transaction has been commited.
-   *
-   * @var Boolean
-   */
-  protected $commited = FALSE;
-
-  /**
-   * A boolean to indicate if the transaction scope should behave sanely.
-   * 
-   * @var Boolean
-   */
-  protected $sane = FALSE;
-
-  /**
-   * Overriden to add the sane option
-   *
-   * @param DatabaseConnection $connection 
-   * @param mixed $name 
-   * @param mixed $sane 
-   */
-  public function __construct(DatabaseConnection $connection, $name = NULL, $sane = FALSE) {
-    $this->sane = $sane;
-    parent::__construct($connection, $name);
-  }
-
-  /**
-   * Overriden __desctur to provide some mental health.
-   */
-  public function __destruct() {
-    if (!$this->sane) {
-      parent::__destruct();
-    }
-    else {
-      // If we did not commit, rollback!
-      if (!$this->commited) {
-        $this->rollback();
-      }
-    }
-  }
-
-  /**
-   * The "sane" behaviour requires explicit commits.
-   * 
-   * @throws DatabaseTransactionExplicitCommitNotAllowedException 
-   */
-  public function commit() {
-    if (!$this->sane) {
-      throw new DatabaseTransactionExplicitCommitNotAllowedException();
-    }
-    // Cannot commit a rolledback transaction...
-    if ($this->rolledBack) {
-      throw new DatabaseTransactionCannotCommitAfterRollbackException();
-    }
-    // Mark as commited, and commit!
-    $this->commited = TRUE;
-    $this->connection->popTransaction($this->name);
-  }
-}
-
-/**
- * Like db_transaction() but transaction behaviour is more
- * sane requiring explicit commits.
- * 
- * @param mixed $name 
- * @param array $options 
- * @return DatabaseTransaction
- */
-function db_transaction_sane($name = NULL, array $options = array()) {
-  if (empty($options['target'])) {
-    $options['target'] = 'default';
-  }
-  return Database::getConnection($options['target'])->startTransaction($name, TRUE);
-}
-
-class DatabaseTransactionCannotCommitAfterRollbackException extends Exception { }

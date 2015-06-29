@@ -318,6 +318,10 @@ class SelectQuery_sqlsrv extends SelectQuery {
       // databases don't support it (e.g., Oracle).
       $query .=  $table_string . ' ' . $this->connection->escapeTable($table['alias']);
 
+      if ($this->nolock) {
+        $query .= ' WITH(NOLOCK)';
+      }
+
       if (!empty($table['condition'])) {
         $query .= ' ON ' . $table['condition'];
       }
@@ -400,7 +404,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
     $this->orderBy($alias);
     return $this;
   }
-  
+
   private function GetUsedAliases(\DatabaseCondition $condition, array &$aliases = array()) {
     foreach($condition->conditions() as $key => $c) {
       if (is_string($key) && substr($key, 0, 1) == '#') {
@@ -414,7 +418,19 @@ class SelectQuery_sqlsrv extends SelectQuery {
       }
     }
   }
-  
+
+  private $nolock = FALSE;
+
+  /**
+   * Add a hint that is appended to all tables
+   * in the query.
+   * @param mixed $hint 
+   * @throws Exception 
+   */
+  public function WithNoLock() {
+    $this->nolock = TRUE;
+  }
+
   /**
    * This is like the default countQuery, but does not optimize field (or expressions)
    * that are being used in conditions.

@@ -271,7 +271,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
-    $transaction = $this->connection->startTransaction('', TRUE);
+    $transaction = $this->connection->startTransaction('', DatabaseTransactionSettings::GetBetterDefaults());
 
     // Create the table with a default technical primary key.
     $this->connection->query_direct($this->createTableSql($name, $table));
@@ -393,6 +393,29 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
   }
 
   /**
+   * Returns an array of current connection user options
+   *
+   * textsize	2147483647
+   * language	us_english
+   * dateformat	mdy
+   * datefirst	7
+   * lock_timeout	-1
+   * quoted_identifier	SET
+   * arithabort	SET
+   * ansi_null_dflt_on	SET
+   * ansi_warnings	SET
+   * ansi_padding	SET
+   * ansi_nulls	SET
+   * concat_null_yields_null	SET
+   * isolation level	read committed
+   *
+   * @return mixed
+   */
+  public function UserOptions() {
+    return $this->connection->query_direct('DBCC UserOptions')->fetchAllKeyed();
+  }
+
+  /**
    * Retrieve Engine Version information.
    */
   public function EngineVersion() {
@@ -407,7 +430,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     CONVERT (varchar,SERVERPROPERTY('edition')) AS EDITION
 EOF
     )->fetchAssoc();
-    
+
     fastcache::cache_set('EngineVersion', $version, 'schema');
     return $version;
   }
@@ -953,7 +976,7 @@ EOF
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
-    $transaction = $this->connection->startTransaction('', TRUE);
+    $transaction = $this->connection->startTransaction('', DatabaseTransactionSettings::GetBetterDefaults());
 
     // Clear current Primary Key.
     $this->cleanUpPrimaryKey($table);
@@ -985,7 +1008,7 @@ EOF
     // here and pray for the best.
 
     // @var DatabaseTransaction_sqlsrv
-    $transaction = $this->connection->startTransaction('', TRUE);
+    $transaction = $this->connection->startTransaction('', DatabaseTransactionSettings::GetBetterDefaults());
 
     // IMPORTANT NOTE: To maintain database portability, you have to explicitly recreate all indices and primary keys that are using the changed field.
     // That means that you have to drop all affected keys and indexes with db_drop_{primary_key,unique_key,index}() before calling db_change_field().
@@ -1096,6 +1119,35 @@ EOF
     $options = $this->connection->getConnectionOptions();
     $database = $options['database'];
     return $this->connection->query_direct($sql, array(':database' => $database))->fetchObject();
+  }
+
+  /**
+   * Get database information from sys.databases
+   * 
+   * @return mixed
+   */
+  public function getDatabaseInfo() {
+    static $result;
+    if (isset($result)) {
+      return $result;
+    }
+    $sql = <<< EOF
+      select name
+        , db.snapshot_isolation_state
+        , db.snapshot_isolation_state_desc
+        , db.is_read_committed_snapshot_on
+        , db.recovery_model
+        , db.recovery_model_desc
+        , db.collation_name
+    from sys.databases db
+    WHERE DB_NAME(db.database_id) = :database
+EOF
+;
+    // Database is defaulted from active connection.
+    $options = $this->connection->getConnectionOptions();
+    $database = $options['database'];
+    $result = $this->connection->query_direct($sql, array(':database' => $database))->fetchObject();
+    return $result;
   }
 
   /**
