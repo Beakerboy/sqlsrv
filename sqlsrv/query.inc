@@ -270,6 +270,9 @@ class MergeQuery_sqlsrv extends MergeQuery {
     // Fetch the list of blobs and sequences used on that table.
     $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
 
+    // Find out if there is an identity field set in this insert.
+    $this->setIdentity = !empty($columnInformation['identity']) && in_array($columnInformation['identity'], array_keys($this->insertFields));
+
     // Initialize placeholder count.
     $max_placeholder = 0;
     
@@ -308,6 +311,12 @@ class MergeQuery_sqlsrv extends MergeQuery {
     $max_placeholder_conditions =  0;
 
     $query = array();
+
+    // Enable direct insertion to identity columns if necessary.
+    if (!empty($this->setIdentity)) {
+      $query[] = 'SET IDENTITY_INSERT {' . $this->table . '} ON;';
+    }
+
     $query[] = 'MERGE INTO {' . $this->table . '} _target';
 
     // 1. Condition part.
