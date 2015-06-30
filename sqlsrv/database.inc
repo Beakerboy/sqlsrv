@@ -781,7 +781,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
         if (empty($this->transactionLayers)) {
           break;
         }
-        $this->query_direct('ROLLBACK TRANSACTION ' . $savepoint);
+        $this->query_direct('ROLLBACK TRANSACTION ' . $savepoint['name']);
         $this->popCommittableTransactions();
         if ($rolled_back_other_active_savepoints) {
           throw new DatabaseTransactionOutOfOrderException();
