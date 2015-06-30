@@ -103,7 +103,7 @@ function db_transaction_sane(DatabaseTransactionSettings $settings = NULL) {
   }
   return Database::getConnection()->startTransaction(NULL, $settings);
 }
-
+ 
 /**
  * Thrown when the user is trying to commit a rollbacked transaction.
  */

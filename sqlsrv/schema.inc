@@ -295,9 +295,9 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
       }
     }
 
-    // Commit changes until now.
+    // Commit changes until now. 
     $transaction->commit();
-
+ 
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
     // with invalid data types (long columns), before we come up with a better

@@ -18,6 +18,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
     
     // Find out if there is an identity field set in this insert.
     $this->setIdentity = !empty($columnInformation['identity']) && in_array($columnInformation['identity'], $this->insertFields);
+    $identity = !empty($columnInformation['identity']) ? $columnInformation['identity'] : NULL;
 
     #region Select Based Insert
     
@@ -66,36 +67,53 @@ class InsertQuery_sqlsrv extends InsertQuery {
     #endregion
 
     #region Regular Inserts
-    
-    $last_insert_id = NULL;
-    $query = (string) $this;
-    $stmt = $this->connection->PDOPrepare($this->connection->prefixTables($query));
 
-    // We use this array to store references to the blob handles.
-    // This is necessary because the PDO will otherwise messes up with references.
-    $blobs = array();
-    
     // Each insert happens in its own query. However, we wrap it in a transaction
     // so that it is atomic where possible.
     $transaction = NULL;
-    if (empty($this->queryOptions['sqlsrv_skip_transactions']) && count($this->insertValues) > 1) {
+
+    $batch_size = 200;
+
+    // At most we can process in batches of 250 elements.
+    $batch = array_splice($this->insertValues, 0, $batch_size);
+
+    // If we are going to need more than one batch for this... start a transaction.
+    if (empty($this->queryOptions['sqlsrv_skip_transactions']) && !empty($this->insertValues)) {
       $transaction = $this->connection->startTransaction('', DatabaseTransactionSettings::GetBetterDefaults());
     }
 
-    foreach ($this->insertValues as $insert_index => $insert_values) {
-      $values = array_combine($this->insertFields, $insert_values);
-      $max_placeholder = 0;
-      DatabaseUtils::BindValues($stmt, $values, $blobs, ':db_insert', $columnInformation, $max_placeholder, $insert_index);
+    while (!empty($batch)) {
+      // Give me a query with the amount of batch inserts.
+      $query = (string) $this->__toString2(count($batch));
+      
+      // Prepare the query.
+      $stmt = $this->connection->PDOPrepare($this->connection->prefixTables($query));
 
-      $stmt->execute();
+      // We use this array to store references to the blob handles.
+      // This is necessary because the PDO will otherwise messes up with references.
+      $blobs = array();
+      
+      $max_placeholder = 0;
+      foreach ($batch as $insert_index => $insert_values) {
+        $values = array_combine($this->insertFields, $insert_values);
+        DatabaseUtils::BindValues($stmt, $values, $blobs, ':db_insert', $columnInformation, $max_placeholder, $insert_index);
+      }
+
+      $stmt->execute(array(), array('fetch' => PDO::FETCH_ASSOC));
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
-      try {
-        $last_insert_id = $stmt->fetchColumn(0);
+      // When the column does not have an identity column, no results are thrown back.
+      foreach($stmt as $insert) {
+        try {
+          $this->inserted_keys[] = $insert[$identity];
+        }
+        catch(\Exception $e) {
+          $this->inserted_keys[] = NULL;
+        }
       }
-      catch(\PDOException $e) {
-        $last_insert_id = NULL;
-      }
+
+      // Fetch the next batch.
+      $batch = array_splice($this->insertValues, 0, $batch_size);
     }
 
     // If we started a transaction, commit it.
@@ -106,33 +124,55 @@ class InsertQuery_sqlsrv extends InsertQuery {
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = array();
 
-    return $last_insert_id;
+    // Return the last inserted key.
+    return empty($this->inserted_keys) ? NULL : end($this->inserted_keys);
     
     #endregion
   }
 
+  // Because we can handle multiple inserts, give
+  // an option to retrieve all keys.
+  public $inserted_keys = array();
+
   public function __toString() {
-    
+    return $this->__toString2(1);
+  }
+
+  /**
+   * The aspect of the query depends on the batch size...
+   * 
+   * @param mixed $batch_size 
+   * @throws Exception 
+   * @return string
+   */
+  private function __toString2($batch_size) {
+    // Make sure we don't go crazy with this numbers.
+    if ($batch_size > 250) {
+      throw new Exception("MSSQL Native Batch Insert limited to 250.");
+    }
+
     // Fetch the list of blobs and sequences used on that table.
     $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
-    
-    
+
     // Create a sanitized comment string to prepend to the query.
     $prefix = $this->connection->makeComment($this->comments);
 
     $output = NULL;
-    
+
     // Enable direct insertion to identity columns if necessary.
     if (!empty($this->setIdentity)) {
       $prefix .= 'SET IDENTITY_INSERT {' . $this->table . '} ON;';
     }
-    
+
     // Using PDO->lastInsertId() is not reliable on highly concurrent scenarios.
     // It is much better to use the OUTPUT option of SQL Server.
     if (isset($columnInformation['identities']) && !empty($columnInformation['identities'])) {
       $identities = array_keys($columnInformation['identities']);
       $identity = reset($identities);
       $output = "OUTPUT (Inserted.{$identity})";
+    }
+    else {
+      $output = "OUTPUT (1)";
     }
 
     // If we're selecting from a SelectQuery, finish building the query and
@@ -146,19 +186,27 @@ class InsertQuery_sqlsrv extends InsertQuery {
         return $prefix . "INSERT INTO {{$this->table}} ({$fields_csv}) {$output} " . $this->fromQuery;
       }
     }
-    
+
     // Full default insert
     if (empty($this->insertFields)) {
       return $prefix . "INSERT INTO {{$this->table}} {$output} DEFAULT VALUES";
     }
 
-    // Build the list of placeholders.
+    // Build the list of placeholders, a set of placeholders
+    // for each element in the batch.
     $placeholders = array();
-    for ($i = 0; $i < count($this->insertFields); ++$i) {
-      $placeholders[] = ':db_insert' . $i;
+    $field_count = count($this->insertFields);
+    for($j = 0; $j < $batch_size; $j++) {
+      $batch_placeholders = array();
+      for ($i = 0; $i < $field_count; ++$i) {
+        $batch_placeholders[] = ':db_insert' . (($field_count * $j) + $i);
+      }
+      $placeholders[] = '(' . implode(', ', $batch_placeholders) . ')';
     }
 
-    return $prefix . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $this->connection->quoteIdentifiers($this->insertFields)) . ') ' . $output . ' VALUES (' . implode(', ', $placeholders) . ')';
+    $sql = $prefix . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $this->connection->quoteIdentifiers($this->insertFields)) . ') ' . $output . ' VALUES ' . PHP_EOL;
+    $sql .= implode(', ', $placeholders) . PHP_EOL;
+    return $sql;
   }
 }
 

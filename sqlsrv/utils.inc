@@ -79,7 +79,9 @@ class DatabaseUtils {
         $stmt->bindParam($placeholder, $blobs[$blob_key], PDO::PARAM_LOB, 0, PDO::SQLSRV_ENCODING_BINARY);
       }
       else {
-        $stmt->bindParam($placeholder, $field_value);
+        // Even though not a blob, make sure we retain a copy of these values.
+        $blobs[$blob_key] = $field_value;
+        $stmt->bindParam($placeholder, $blobs[$blob_key]);
       }
     }
   }
