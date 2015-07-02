@@ -138,11 +138,6 @@ class fastcache {
       if (!isset(static::$fastcacheitems[$bin])) {
         static::$fastcacheitems[$bin] = new fastcacheitem($bin);
       }
-      // Register shutdown persistence once, only if enabled!
-      if (static::$shutdown_registered == FALSE && static::Enabled()) {
-        register_shutdown_function(array('fastcache','fastcache_persist'));
-        static::$shutdown_registered = TRUE;
-      }
     }
   }
 
@@ -179,6 +174,11 @@ class fastcache {
           }
         }
       }
+      // Register shutdown persistence once, only if enabled!
+      if (static::$shutdown_registered == FALSE && static::Enabled()) {
+        register_shutdown_function(array('fastcache','fastcache_persist'));
+        static::$shutdown_registered = TRUE;
+      }
     }
     static::$fastcacheitems[$bin]->data_set($cid, $data);
   }
@@ -188,13 +188,29 @@ class fastcache {
    * if necessary.
    */
   public static function fastcache_persist () {
-    foreach (static::$fastcacheitems as $cache) {
+    // Try to be the last of the last...
+    register_shutdown_function(array('fastcache','_fastcache_persist'));
+  }  
+
+  /**
+   * Persist the binaries.
+   */
+  public static function _fastcache_persist () {
+    foreach (static::$fastcacheitems as &$cache) {
       if ($cache->persist == TRUE) {
         cache_set($cache->bin, $cache->rawdata(), 'fastcache', CACHE_TEMPORARY);
         if ($cache->locked) {
           lock_release('fastcache_' . $cache->bin);
         }
       }
+      // The binaries might be utilized on other shutdown functions...
+      $cache->changed = FALSE;
+      $cache->persist = FALSE;
+      $cache->locked = FALSE;
     }
+
+    // Fastcache may be reutilized during shutdown, make sure
+    // persistence triggers run again.
+    static::$shutdown_registered = FALSE;
   }
 }
