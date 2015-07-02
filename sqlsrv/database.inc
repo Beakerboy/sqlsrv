@@ -781,7 +781,9 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
         if (empty($this->transactionLayers)) {
           break;
         }
-        $this->query_direct('ROLLBACK TRANSACTION ' . $savepoint['name']);
+        if ($savepoint['started'] == TRUE) {
+          $this->query_direct('ROLLBACK TRANSACTION ' . $savepoint['name']);
+        }
         $this->popCommittableTransactions();
         if ($rolled_back_other_active_savepoints) {
           throw new DatabaseTransactionOutOfOrderException();
@@ -820,11 +822,16 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     if (isset($this->transactionLayers[$name])) {
       throw new DatabaseTransactionNameNonUniqueException($name . " is already in use.");
     }
+    $started = FALSE;
     // If we're already in a transaction.
+    // TODO: Transaction scope Options is not working properly 
+    // for first level transactions. It assumes that - always - a first level
+    // transaction must be started.
     if ($this->inTransaction()) {
       switch ($settings->Get_ScopeOption()) {
         case DatabaseTransactionScopeOption::RequiresNew():
           $this->query_direct('SAVE TRANSACTION ' . $name);
+          $started = TRUE;
           break;
         case DatabaseTransactionScopeOption::Required():
           // We are already in a transaction, do nothing.
@@ -844,10 +851,11 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
           $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
         }
       }
+      $started = TRUE;
       \PDO::beginTransaction();
     }
     // Store the name and settings in the stack.
-    $this->transactionLayers[$name] = array('settings' => $settings, 'active' => TRUE, 'name' => $name);
+    $this->transactionLayers[$name] = array('settings' => $settings, 'active' => TRUE, 'name' => $name, 'started' => $started);
   }
 
   /**
