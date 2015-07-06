@@ -116,4 +116,17 @@ class DatabaseUtils {
     }
     return $default;
   }
+
+  /**
+   * Returns the spec for a MSSQL data type definition.
+   * 
+   * @param mixed $type 
+   */
+  public static function GetMSSQLType($type) {
+    $matches = array();
+    if(preg_match('/^[a-zA-Z]*/' , $type, $matches)) {
+      return reset($matches);
+    }
+    return $type;
+  }
 }

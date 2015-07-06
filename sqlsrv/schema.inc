@@ -3,7 +3,7 @@
 include_once 'fastcache.inc';
 
 /**
- * @file
+ * @filefe
  * Database schema code for Microsoft SQL Server database servers.
  */
 
@@ -693,6 +693,9 @@ EOF
     if (!$skip_checks) {
       if (isset($spec['default'])) {
         $default = is_string($spec['default']) ? "'" . addslashes($spec['default']) . "'" : $spec['default'];
+        if (\DatabaseUtils::GetMSSQLType($spec['sqlsrv_type']) == 'varbinary') {
+          $default = "CONVERT({$spec['sqlsrv_type']}, {$default})";
+        }
         $sql .= ' CONSTRAINT {' . $table . '}_' . $name . '_df DEFAULT ' . $default;
       }
       if (!empty($spec['identity'])) {
