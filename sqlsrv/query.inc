@@ -26,7 +26,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = array();
 
-      $stmt = $this->connection->PDOPrepare($this->connection->prefixTables((string) $this));
+      $stmt = $this->connection->prepareQuery((string) $this);
 
       // Handle the case of SELECT-based INSERT queries first.
       $arguments = $this->fromQuery->getArguments();
@@ -51,8 +51,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
     if (empty($this->fromQuery) && (empty($this->insertFields) || empty($this->insertValues))) {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = array();
-      $query = (string) $this;
-      $stmt = $this->connection->PDOPrepare($this->connection->prefixTables($query));
+      $stmt = $this->connection->prepareQuery((string) $this);
       $stmt->execute();
       
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
@@ -87,7 +86,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
       $query = (string) $this->__toString2(count($batch));
       
       // Prepare the query.
-      $stmt = $this->connection->PDOPrepare($this->connection->prefixTables($query));
+      $stmt = $this->connection->prepareQuery($query);
 
       // We use this array to store references to the blob handles.
       // This is necessary because the PDO will otherwise messes up with references.
@@ -232,7 +231,7 @@ class UpdateQuery_sqlsrv extends UpdateQuery {
 
     // Because we filter $fields the same way here and in __toString(), the
     // placeholders will all match up properly.
-    $stmt = $this->connection->PDOPrepare($this->connection->prefixTables((string)$this));
+    $stmt = $this->connection->prepareQuery((string)$this);
 
     // Expressions take priority over literal fields, so we process those first
     // and remove any literal fields that conflict.
@@ -325,7 +324,7 @@ class MergeQuery_sqlsrv extends MergeQuery {
     $max_placeholder = 0;
     
     // Build the query.
-    $stmt = $this->connection->PDOPrepare($this->connection->prefixTables((string)$this));
+    $stmt = $this->connection->prepareQuery((string)$this);
 
     // Build the arguments: 1. condition.
     $arguments = $this->condition->arguments();

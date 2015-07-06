@@ -9,7 +9,7 @@ class DatabaseUtils {
    */
   public static function BindArguments(\PDOStatement $stmt, array &$values) {
     foreach ($values as $key => &$value) {
-      $stmt->bindParam($key, $value);
+      $stmt->bindParam($key, $value, PDO::PARAM_STR);
     }
   }
 
@@ -34,7 +34,7 @@ class DatabaseUtils {
         }
       }
       else {
-        $stmt->bindParam($key, $value['arguments']);
+        $stmt->bindParam($key, $value['arguments'], PDO::PARAM_STR);
       }
     }
   }
@@ -81,8 +81,39 @@ class DatabaseUtils {
       else {
         // Even though not a blob, make sure we retain a copy of these values.
         $blobs[$blob_key] = $field_value;
-        $stmt->bindParam($placeholder, $blobs[$blob_key]);
+        $stmt->bindParam($placeholder, $blobs[$blob_key], PDO::PARAM_STR);
       }
     }
+  }
+
+  public static function GetConfigBoolean($name, $default = FALSE) {
+    global $conf;
+    // Isolation level.
+    if (isset($conf[$name])) {
+      $value = $conf[$name];
+      if (is_bool($value)) {
+        return $value;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Get the value of a constant string from configuration.
+   * 
+   * @param mixed $name 
+   * @param mixed $default 
+   * @return mixed
+   */
+  public static function GetConfigConstant($name, $default) {
+    global $conf;
+    // Isolation level.
+    if (isset($conf[$name])) {
+      $level =  $conf[$name];
+      if($l = @constant($level)) {
+        return $l;
+      }
+    }
+    return $default;
   }
 }

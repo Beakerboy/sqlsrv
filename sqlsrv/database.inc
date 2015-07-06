@@ -14,49 +14,7 @@ include_once 'fastcache.inc';
 include_once 'enum.inc';
 include_once 'transaction.inc';
 include_once 'utils.inc';
-
-/**
- * Defines a behaviour scope for the database
- * driver that lasts until the object is destroyed.
- */
-class DatabaseContext {
-
-  // @var \DatabaseConnection_sqlsrv $connection;
-  var $connection;
-  
-  // @var string $state_bypass
-  var $state_bypass;
-  
-  // @var string $state_direct
-  var $state_direct;
-  
-  /**
-   * Define the behaviour of the database driver during the scope of the
-   * life of this instance.
-   *
-   * @param DatabaseConnection_sqlsrv $connection
-   *  Instance of the connection to be configured.
-   *
-   * @param mixed $bypass_queries 
-   *  Do not preprocess the query before execution.
-   *
-   * @param mixed $direct_query
-   *  Prepare statements with SQLSRV_ATTR_DIRECT_QUERY = TRUE.
-   */
-  public function __construct(\DatabaseConnection_sqlsrv $connection, $bypass_queries = FALSE, $direct_query = FALSE) {
-    $this->connection = $connection;
-    $this->state_bypass = $this->connection->bypassQueryPreprocess;
-    $this->state_direct = $this->connection->directQuery;
-    $this->connection->bypassQueryPreprocess = $bypass_queries;
-    $this->connection->directQuery = $bypass_queries;
-  }
-  
-  public function __destruct() {
-    // Restore previous driver configuration.
-    $this->connection->bypassQueryPreprocess = $this->state_bypass;
-    $this->connection->directQuery = $this->state_direct;
-  }
-}
+include_once 'context.inc';
 
 /**
  * Summary of DatabaseConnection_sqlsrv
@@ -75,6 +33,9 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   // Prepare statements with SQLSRV_ATTR_DIRECT_QUERY = TRUE.
   public $directQuery = FALSE;
 
+  // Wether to have or not statement caching.
+  public $statementCaching = FALSE;
+
   /**
    * Override of DatabaseConnection::driver().
    *
@@ -92,40 +53,13 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   public function databaseType() {
     return 'sqlsrv';
   }
-  
-  
-  /**
-   * Get the schema() object.
-   *
-   * @return DatabaseSchema_sqlsrv
-   */
-  public function schema() {
-    return parent::schema();
-  }
-
-  /**
-   * Get the Default global isolation level.
-   * 
-   * @return mixed
-   */
-  private static function DefaultTransactionIsolationLevel() {
-    global $conf;
-    // Isolation level.
-    if (isset($conf['MSSQL_DEFAULT_ISOLATION_LEVEL'])) {
-      $level =  $conf['MSSQL_DEFAULT_ISOLATION_LEVEL'];
-      if($l = @constant($level)) {
-        return $l;
-      }
-    }
-    return FALSE;
-  }
 
   /**
    * The PDO constants do not matcc the actual isolation names
    * used in SQL.
    */
   private static function DefaultTransactionIsolationLevelInStatement() {
-    return str_replace('_', ' ', static::DefaultTransactionIsolationLevel());
+    return str_replace('_', ' ', DatabaseUtils::GetConfigConstant('MSSQL_DEFAULT_ISOLATION_LEVEL', FALSE));
   }
 
   /**
@@ -157,9 +91,13 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     }
 
     // Set isolation level if specified.
-    if ($level = static::DefaultTransactionIsolationLevel()) {
+    if ($level = DatabaseUtils::GetConfigConstant('MSSQL_DEFAULT_ISOLATION_LEVEL', FALSE)) {
       $options['TransactionIsolation'] = $level;
     }
+
+    // Set default direct query behaviour
+    $this->directQuery = DatabaseUtils::GetConfigBoolean('MSSQL_DEFAULT_DIRECTQUERY');
+    $this->statementCaching = DatabaseUtils::GetConfigBoolean('MSSQL_STATEMENT_CACHING');
 
     // Build the DSN
     $dsn = 'sqlsrv:';
@@ -187,6 +125,13 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   }
 
   /**
+   * Prepared PDO statements only makes sense if we cache them... 
+   *  
+   * @var mixed
+   */
+  private $statement_cache = array();
+
+  /**
    * Temporary override of DatabaseConnection::prepareQuery().
    *
    * @todo: remove that when DatabaseConnection::prepareQuery() is fixed to call
@@ -197,15 +142,37 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    * @param mixed $insecure 
    * @return PDOStatement
    */
-  public function prepareQuery($query, $insecure = FALSE) {
-    $query = $this->prefixTables($query);
+  public function prepareQuery($query, array $options = array()) {
 
+    // Merge default statement options. These options are
+    // only specific for this preparation and will only override
+    // the global configuration if set to different than NULL.
+    $options = array_merge(array(
+        'insecure' => NULL,
+        'statement_caching' => $this->statementCaching,
+        'direct_query' => $this->directQuery,
+        'prefix_tables' => NULL,
+      ), $options);
+
+    // Prefix tables. There is no global setting for this.
+    if ($options['prefix_tables'] !== FALSE) {
+      $query = $this->prefixTables($query);
+    }
+
+    // The statement caching settings only affect the storage
+    // in the cache, but if a statement is already available
+    // why not reuse it!
+    if (isset($this->statement_cache[$query])) {
+      return $this->statement_cache[$query];
+    }
+    
     #region PDO Options
     
     $pdo_options = array();
     
-    // Set insecure options if requested so.
-    if ($insecure) {
+    // Set insecure options if requested so. There is no global
+    // setting for this, only at the statement level.
+    if ($options['insecure'] === TRUE) {
       // We have to log this, prepared statements are a security RISK.
       // watchdog('SQL Server Driver', 'An insecure query has been executed against the database. This is not critical, but worth looking into: %query', array('%query' => $query));
       // These are defined in class Connection.
@@ -244,7 +211,10 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // you should execute your queries with PDO::SQLSRV_ATTR_DIRECT_QUERY set to True. 
     // For example, if you use temporary tables in your queries, PDO::SQLSRV_ATTR_DIRECT_QUERY must be set 
     // to True.
-    if ($this->directQuery) {
+
+    // If we are not going to cache prepared statements, always use direct queries!
+    // There is no point in preparing the statement if you are not going to cache it.
+    if (!$this->statementCaching || $options['direct_query'] == TRUE) {
       $pdo_options[PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
     
@@ -260,7 +230,14 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     #endregion
     
     // Call our overriden prepare.
-    return $this->PDOPrepare($query, $pdo_options);
+    $stmt = $this->PDOPrepare($query, $pdo_options);
+
+    // If statement caching is enabled, store current statement for reuse
+    if ($options['statement_caching'] === TRUE) {
+      $this->statement_cache[$query] = $stmt;
+    }
+
+    return $stmt;
   }
 
   /**
@@ -282,7 +259,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // backtrace plus other details that aid in debugging deadlocks
     // or long standing locks. Use in combination with MSSQL profiler.
     global $conf;
-    if (isset($conf['MSSQL_APPEND_CALLSTACK_COMMENT']) && $conf['MSSQL_APPEND_CALLSTACK_COMMENT'] == TRUE) {
+    if (DatabaseUtils::GetConfigBoolean('MSSQL_APPEND_CALLSTACK_COMMENT') == TRUE) {
       global $user;
       $trim = strlen(DRUPAL_ROOT);
       $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
@@ -401,8 +378,6 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     $query = $this->addRangeToQuery($query, $from, $count);
     return $this->query($query, $args, $options);
   }
-
-  private static $temporary_tables = array();
   
   /**
    * Generates a temporary table name. Because we are using
@@ -474,7 +449,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
         if ($insecure === TRUE || $argcount >= 2100 || ($argcount != substr_count($query, ':'))) {
           $insecure = TRUE;
         }
-        $stmt = $this->prepareQuery($query, $insecure);
+        $stmt = $this->prepareQuery($query, array('insecure' => TRUE));
         $stmt->execute($args, $options);
       }
 
@@ -533,7 +508,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       $ctx = new \DatabaseContext($this, TRUE, TRUE);
       
       // Prepare the statement and execute it.
-      $stmt = $this->prepareQuery($query, FALSE);
+      $stmt = $this->prepareQuery($query);
       $stmt->execute($args, $options);
       
       // Reset the context settings.
@@ -591,44 +566,27 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     }
 
     // Last chance to modify some SQL Server-specific syntax.
-    $replacements = array(
-      // Normalize SAVEPOINT syntax to the SQL Server one.
-      // '/^SAVEPOINT (.*)$/' => 'SAVE TRANSACTION $1',
-      // '/^ROLLBACK TO SAVEPOINT (.*)$/' => 'ROLLBACK TRANSACTION $1',
-      // SQL Server doesn't need an explicit RELEASE SAVEPOINT.
-      // Run a non-operaiton query to avoid a fatal error
-      // when no query is runned.
-      // '/^RELEASE SAVEPOINT (.*)$/' => 'SELECT 1 /* $0 */',
-      // TODO: For improved compatiblity with MySQL
-      // we should create a StoredProcedure that
-      // maps sp_who to a MySQL compatible approach.
-      // http://stackoverflow.com/questions/2234691/sql-server-filter-output-of-sp-who2
-      // '/^SHOW PROCESSLIST$/' => 'EXEC sp_who',
-      // List all table names
-      // '/^SHOW TABLES$/' => 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = \'BASE TABLE\'',
-      // List all table and view names.
-      // '/^SHOW FULL TABLES$/' => 'SELECT TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES',
-    );
+    $replacements = array();
 
     // Add prefixes to Drupal-specific functions.
     $defaultSchema = $this->schema()->GetDefaultSchema();
     foreach ($this->schema()->DrupalSpecificFunctions() as $function) {
       $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] =  "{$defaultSchema}.$1(";
     }
-    
+
     // Rename some functions.
     $funcs = array(
       'LENGTH' => 'LEN',
       'POW' => 'POWER',
     );
-    
+
     foreach ($funcs as $function => $replacement) {
       $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] = $replacement . '('; 
     }
-    
+
     // Replace the ANSI concatenation operator with SQL Server poor one.
     $replacements['/\|\|/'] =  '+';
-    
+
     // Now do all the replacements at once.
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
 
@@ -851,7 +809,11 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
           $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
         }
       }
-      $started = TRUE;
+      // In order to start a transaction current statement cursors
+      // must be closed.
+      foreach($this->statement_cache as $statement) {
+        $statement->closeCursor();
+      }
       \PDO::beginTransaction();
     }
     // Store the name and settings in the stack.
