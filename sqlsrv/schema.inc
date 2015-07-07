@@ -297,7 +297,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
     // Commit changes until now. 
     $transaction->commit();
- 
+    
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
     // with invalid data types (long columns), before we come up with a better
@@ -692,10 +692,7 @@ EOF
 
     if (!$skip_checks) {
       if (isset($spec['default'])) {
-        $default = is_string($spec['default']) ? "'" . addslashes($spec['default']) . "'" : $spec['default'];
-        if (\DatabaseUtils::GetMSSQLType($spec['sqlsrv_type']) == 'varbinary') {
-          $default = "CONVERT({$spec['sqlsrv_type']}, {$default})";
-        }
+        $default = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
         $sql .= ' CONSTRAINT {' . $table . '}_' . $name . '_df DEFAULT ' . $default;
       }
       if (!empty($spec['identity'])) {
@@ -706,6 +703,23 @@ EOF
       }
     }
     return $sql;
+  }
+
+  /**
+   * Get the SQL expression for a default value.
+   * 
+   * @param mixed $table 
+   * @param mixed $field 
+   * @param mixed $default 
+   */
+  private function defaultValueExpression($sqlsr_type, $default) {
+    // The actual expression depends on the target data type as it might require conversions.
+    $result = is_string($default) ? "'" . addslashes($default) . "'" : $default;
+    if (\DatabaseUtils::GetMSSQLType($sqlsr_type) == 'varbinary') {
+      $default = addslashes($default);
+      $result = "CONVERT({$sqlsr_type}, '{$default}')";
+    }
+    return $result;
   }
 
   /**
@@ -1035,6 +1049,10 @@ EOF
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
+    // Verify if the old field specification was nullable.
+    $info = $this->queryColumnInformation($table);
+    $old_field_nullable = $info['columns'][$field]['is_nullable'] == TRUE;
+
     // Start by renaming the current column.
     $this->connection->query_direct('EXEC sp_rename :old, :new, :type', array(
       ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
@@ -1042,9 +1060,10 @@ EOF
       ':type' => 'COLUMN',
     ));
 
-    // If the field is declared NOT NULL, we have to first create it NULL insert
-    // the initial data then switch to NOT NULL.
-    if (!empty($spec['not null']) && !isset($spec['default'])) {
+    // If the new SPEC does not allow NULLS but the old SPEC did so, we
+    // need to bridge the data and manually populate default values.
+    $fixnull = FALSE;
+    if (!empty($spec['not null']) && $old_field_nullable) {
       $fixnull = TRUE;
       $spec['not null'] = FALSE;
     }
@@ -1058,7 +1077,12 @@ EOF
     $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] AS {$field_spec['sqlsrv_type']})");
 
     // Switch to NOT NULL now.
-    if (!empty($fixnull)) {
+    if ($fixnull === TRUE) {
+      // There is no warranty that the old data did not have NULL values, we need to populate
+      // nulls with the default value because this won't be done by MSSQL by default.
+      $default_expression = $this->defaultValueExpression($field_spec['sqlsrv_type'], $field_spec['default']);
+      $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = {$default_expression} WHERE [{$field_new}] IS NULL");
+      // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
       $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $this->processField($spec), TRUE));
     }
