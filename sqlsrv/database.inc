@@ -148,10 +148,10 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     // only specific for this preparation and will only override
     // the global configuration if set to different than NULL.
     $options = array_merge(array(
-        'insecure' => NULL,
+        'insecure' => FALSE,
         'statement_caching' => $this->statementCaching,
         'direct_query' => $this->directQuery,
-        'prefix_tables' => NULL,
+        'prefix_tables' => TRUE,
       ), $options);
 
     // Prefix tables. There is no global setting for this.
@@ -508,7 +508,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       $ctx = new \DatabaseContext($this, TRUE, TRUE);
       
       // Prepare the statement and execute it.
-      $stmt = $this->prepareQuery($query);
+      $stmt = $this->prepareQuery($query, $options);
       $stmt->execute($args, $options);
       
       // Reset the context settings.

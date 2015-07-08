@@ -274,7 +274,9 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
 
     // Create the table with a default technical primary key.
-    $this->connection->query_direct($this->createTableSql($name, $table));
+    // $this->createTableSql already prefixes the table name, and we must inhibit prefixing at the query level
+    // because field default _context_menu_block_active_values definitions can contain string literals with braces.
+    $this->connection->query_direct($this->createTableSql($name, $table), array(), array('prefix_tables' => FALSE));
 
     // If the spec had a primary key, set it now after all fields have been created.
     // We are creating the keys after creating the table so that createPrimaryKey
@@ -640,9 +642,12 @@ EOF
       $sql_fields[] = $this->createFieldSql($name, $field_name, $this->processField($field));
     }
 
-    $sql = "CREATE TABLE [{" . $name . "}] (\n\t";
-    $sql .= implode(",\n\t", $sql_fields);
-    $sql .= "\n)";
+    // Use already prefixed table name.
+    $table_prefixed = $this->connection->prefixTables('{' . $name . '}');
+
+    $sql = "CREATE TABLE [{$table_prefixed}] (" . PHP_EOL;
+    $sql .= implode("," . PHP_EOL, $sql_fields);
+    $sql .= PHP_EOL . ")";
     return $sql;
   }
 
@@ -652,6 +657,8 @@ EOF
    *
    * Before passing a field out of a schema definition into this
    * function it has to be processed by _db_process_field().
+   * 
+   * 
    *
    * @param $table
    *    The name of the table.
@@ -661,6 +668,9 @@ EOF
    *    The field specification, as per the schema data structure format.
    */
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
+    // Use a prefixed table.
+    $table_prefixed = $this->connection->prefixTables($table);
+
     $sql = $this->connection->quoteIdentifier($name) . ' ' . $spec['sqlsrv_type'];
     $is_text = in_array($spec['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
     if ($is_text === TRUE && !empty($spec['length'])) {
@@ -693,7 +703,7 @@ EOF
     if (!$skip_checks) {
       if (isset($spec['default'])) {
         $default = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $sql .= ' CONSTRAINT {' . $table . '}_' . $name . '_df DEFAULT ' . $default;
+        $sql .= " CONSTRAINT {$table_prefixed}_{$name}_df DEFAULT  $default";
       }
       if (!empty($spec['identity'])) {
         $sql .= ' IDENTITY';
@@ -942,6 +952,9 @@ EOF
     // Clear column information for table.
     $this->queryColumnInformationInvalidate($table);
 
+    // Use already prefixed table name.
+    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
+
     // If the field is declared NOT NULL, we have to first create it NULL insert
     // the initial data then switch to NOT NULL.
     if (!empty($spec['not null']) && !isset($spec['default'])) {
@@ -949,10 +962,13 @@ EOF
       $spec['not null'] = FALSE;
     }
 
-    // Create the field.
-    $query = "ALTER TABLE {{$table}} ADD ";
+    // Create the field. 
+    // Because the default values of fields can contain string literals
+    // with braces, we CANNOT allow the driver to prefix tables because the algorithm
+    // to do so is a crappy str_replace.
+    $query = "ALTER TABLE {$table_prefixed} ADD ";
     $query .= $this->createFieldSql($table, $field, $this->processField($spec));
-    $this->connection->query_direct($query);
+    $this->connection->query_direct($query, array(), array('prefix_tables' => FALSE));
 
     // Clear column information for table.
     $this->queryColumnInformationInvalidate($table);
