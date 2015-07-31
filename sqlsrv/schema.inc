@@ -669,7 +669,7 @@ EOF
    */
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
     // Use a prefixed table.
-    $table_prefixed = $this->connection->prefixTables($table);
+    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
     $sql = $this->connection->quoteIdentifier($name) . ' ' . $spec['sqlsrv_type'];
     $is_text = in_array($spec['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
@@ -1040,7 +1040,7 @@ EOF
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
 
-    // @var DatabaseTransaction_sqlsrv
+    // @var DatabaseTransaction_sqlsrv $transaction
     $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
 
     // IMPORTANT NOTE: To maintain database portability, you have to explicitly recreate all indices and primary keys that are using the changed field.
@@ -1051,7 +1051,8 @@ EOF
     // with the new_keys parameter, and if the callee has done it's job (droping constraints/keys) then they will of course not be recreated.
     
     // Introspect the schema and save the current primary key if the column
-    // we are modifying is part of it.
+    // we are modifying is part of it. Make sure the schema is FRESH.
+    $this->queryColumnInformationInvalidate($table);
     $primary_key_fields = $this->introspectPrimaryKeyFields($table);
     if (in_array($field, $primary_key_fields)) {
       // Let's drop the PK
@@ -1133,7 +1134,7 @@ EOF
     $this->recreateTableKeys($table, $new_keys);
     
     // Refresh introspection for this table.
-    $this->queryColumnInformation($table, TRUE);
+    $this->queryColumnInformationInvalidate($table);
     
     // Commit.
     $transaction->commit();

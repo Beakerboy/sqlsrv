@@ -103,7 +103,7 @@ function db_transaction_sane(DatabaseTransactionSettings $settings = NULL) {
   }
   return Database::getConnection()->startTransaction(NULL, $settings);
 }
- 
+
 /**
  * Thrown when the user is trying to commit a rollbacked transaction.
  */
@@ -199,7 +199,8 @@ class DatabaseTransactionSettings {
     $isolation = DatabaseTransactionIsolationLevel::Ignore();
     if ($info = \Database::getConnection()->schema()->getDatabaseInfo()) {
       if ($info->snapshot_isolation_state == TRUE) {
-        $isolation = DatabaseTransactionIsolationLevel::Snapshot();
+        // Some DDL operations on core will fail with snapshot.
+        $isolation = DatabaseTransactionIsolationLevel::ReadCommitted();
       }
     }
     // Otherwise use Drupal's default behaviour (except for nesting!)
