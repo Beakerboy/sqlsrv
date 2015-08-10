@@ -471,7 +471,7 @@ EOF
    */
   public function CLREnabled() {
     return $this->connection
-        ->query_direct("SELECT value FROM sys.configurations WHERE name = 'clr enabled'")
+        ->query_direct("SELECT CONVERT(int, [value]) as [enabled] FROM sys.configurations WHERE name = 'clr enabled'")
         ->fetchField() !== 1;
   }
   
