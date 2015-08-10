@@ -140,10 +140,8 @@ class SelectQueryTest extends WebTestBase {
     // If > 2100 we can get SQL Exception! The driver must handle that.
     try {
       $result = $query->execute()->fetchField();
-      
-    
-    } catch (\Exception $err)
-    {
+    } 
+    catch (\Exception $err) {
     }
     
     $this->assertEqual($result, 2, 'Returned the correct number of total rows.');

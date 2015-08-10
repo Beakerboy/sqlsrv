@@ -16,6 +16,21 @@ use Drupal\Core\Database\Schema as DatabaseSchema;
 
 use Drupal\Component\Utility\Unicode;
 
+use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
+
+use Drupal\Core\Database\SchemaException as DatabaseSchemaException;
+use Drupal\Core\Database\SchemaObjectDoesNotExistException as DatabaseSchemaObjectDoesNotExistException;
+use Drupal\Core\Database\SchemaObjectExistsException as DatabaseSchemaObjectExistsException;
+
+use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
+use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
+use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
+
+use PDO as PDO;
+use Exception as Exception;
+use PDOException as PDOException;
+use PDOStatement as PDOStatement;
+
 use fastcache as fastcache;
 
 /**
@@ -93,14 +108,13 @@ class Schema extends DatabaseSchema {
    */
   public function GetDefaultSchema() {
     if ($cache = fastcache::cache_get('default_schema', 'schema')) {
-      return $cache->data;
+      $this->defaultSchema = $cache->data;
+      return $this->defaultSchema;
     }
-    $state = $this->connection->bypassQueryPreprocess;
-    $this->connection->bypassQueryPreprocess = true;
-    $result = $this->connection->query("SELECT SCHEMA_NAME()")->fetchField();
-    $this->connection->bypassQueryPreprocess = $state;
+    $result = $this->connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
     fastcache::cache_set('default_schema', $result, 'schema');
-    return $result;
+    $this->defaultSchema =  $result;
+    return $this->defaultSchema;
   }
 
   /**
@@ -132,6 +146,7 @@ class Schema extends DatabaseSchema {
    *      - default_value: Default value for the column (if any).
    */
   public function queryColumnInformation($table, $refresh = FALSE) {
+    
     // No worry for the tableExists() check, results
     // are cached.
     if (empty($table) || !$this->tableExists($table)) {
@@ -143,7 +158,7 @@ class Schema extends DatabaseSchema {
     // We could adapt the current code to support temporary table introspection, but
     // for now this is not supported.
     if ($table_info['table'][0] == '#') {
-      throw new \Exception('Temporary table introspection is not supported.');
+      throw new Exception('Temporary table introspection is not supported.');
     }
     
     if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema_queryColumnInformation')) {
@@ -153,7 +168,7 @@ class Schema extends DatabaseSchema {
     $info = array();
     
     // Don't use {} around information_schema.columns table.
-    $result = $this->connection->query("SELECT sysc.name, sysc.max_length, sysc.precision, sysc.collation_name, 
+    $result = $this->connection->query_direct("SELECT sysc.name, sysc.max_length, sysc.precision, sysc.collation_name, 
                     sysc.is_nullable, sysc.is_ansi_padded, sysc.is_identity, sysc.is_computed, TYPE_NAME(sysc.user_type_id) as type,
                     syscc.definition,
                     sm.[text] as default_value
@@ -192,7 +207,7 @@ class Schema extends DatabaseSchema {
     }
 
     // Don't use {} around system tables.
-    $result = $this->connection->query('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', array(':table' => $table_info['schema'] . '.' . $table_info['table']));
+    $result = $this->connection->query_direct('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', array(':table' => $table_info['schema'] . '.' . $table_info['table']));
     unset($column);
     $info['identities'] = array();
     $info['identity'] = NULL;
@@ -202,7 +217,7 @@ class Schema extends DatabaseSchema {
     }
     
     // Now introspect information about indexes
-    $result = $this->connection->query("select tab.[name]  as [table_name],
+    $result = $this->connection->query_direct("select tab.[name]  as [table_name],
          idx.[name]  as [index_name],
          allc.[name] as [column_name],
          idx.[type_desc],
@@ -258,7 +273,7 @@ class Schema extends DatabaseSchema {
     }
     
     fastcache::cache_set('queryColumnInformation:' . $table, $info, 'schema_queryColumnInformation');
-    
+
     return $info;
   }
   
@@ -277,41 +292,34 @@ class Schema extends DatabaseSchema {
 
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
-    $transaction = $this->connection->startTransaction();
+    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
 
-    try {
-      // Create the table with a default technical primary key.
-      $this->connection->query($this->createTableSql($name, $table));
+    // Create the table with a default technical primary key.
+    // $this->createTableSql already prefixes the table name, and we must inhibit prefixing at the query level
+    // because field default _context_menu_block_active_values definitions can contain string literals with braces.
+    $this->connection->query_direct($this->createTableSql($name, $table), array(), array('prefix_tables' => FALSE));
 
-      // If the spec had a primary key, set it now after all fields have been created.
-      // We are creating the keys after creating the table so that createPrimaryKey
-      // is able to introspect column definition from the database to calculate index sizes
-      // This adds quite quite some overhead, but is only noticeable during table creation.
-      if (isset($table['primary key']) && is_array($table['primary key'])) {
-        $this->createPrimaryKey($name,  $table['primary key']);
-      }
-      // Otherwise use a technical primary key.
-      else {
-        $this->createTechnicalPrimaryColumn($name);
-      }
-      
-      // Now all the unique keys.
-      if (isset($table['unique keys']) && is_array($table['unique keys'])) {
-        foreach ($table['unique keys'] as $key_name => $key) {
-          $this->addUniqueKey($name, $key_name, $key);
-        }
-      }
+    // If the spec had a primary key, set it now after all fields have been created.
+    // We are creating the keys after creating the table so that createPrimaryKey
+    // is able to introspect column definition from the database to calculate index sizes
+    // This adds quite quite some overhead, but is only noticeable during table creation.
+    if (isset($table['primary key']) && is_array($table['primary key'])) {
+      $this->createPrimaryKey($name,  $table['primary key']);
     }
-    catch (Exception $e) {
-      $transaction->rollback();
-      throw $e;
+    // Otherwise use a technical primary key.
+    else {
+      $this->createTechnicalPrimaryColumn($name);
     }
     
-    // Commit the transaction inmediately
-    // because a PDO exception in the driver
-    // will silently rollback everything
-    // when buffered queries are on.
-    unset($transaction);
+    // Now all the unique keys.
+    if (isset($table['unique keys']) && is_array($table['unique keys'])) {
+      foreach ($table['unique keys'] as $key_name => $key) {
+        $this->addUniqueKey($name, $key_name, $key);
+      }
+    }
+
+    // Commit changes until now. 
+    $transaction->commit();
 
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
@@ -322,7 +330,7 @@ class Schema extends DatabaseSchema {
         try {
           $this->addIndex($name, $key_name, $key);
         }
-        catch (\Exception $e) {
+        catch (Exception $e) {
           // Log the exception but do not rollback the transaction.
           watchdog_exception('database', $e);
         }
@@ -331,6 +339,45 @@ class Schema extends DatabaseSchema {
     
     // Invalidate introspection cache.
     $this->queryColumnInformationInvalidate($name);
+  }
+
+  /**
+   * Remove comments from an SQL statement.
+   * @see http://stackoverflow.com/questions/9690448/regular-expression-to-remove-comments-from-sql-statement
+   *
+   * @param mixed $sql
+   *  SQL statement to remove the comments from.
+   *
+   * @param mixed $comments 
+   *  Comments removed from the statement
+   *
+   * @return string
+   */
+  public function removeSQLComments($sql, &$comments = NULL) {
+    $sqlComments = '@(([\'"]).*?[^\\\]\2)|((?:\#|--).*?$|/\*(?:[^/*]|/(?!\*)|\*(?!/)|(?R))*\*\/)\s*|(?<=;)\s+@ms';
+    /* Commented version
+    $sqlComments = '@
+    (([\'"]).*?[^\\\]\2) # $1 : Skip single & double quoted expressions
+    |(                   # $3 : Match comments
+    (?:\#|--).*?$    # - Single line comments
+    |                # - Multi line (nested) comments
+    /\*             #   . comment open marker
+    (?: [^/*]    #   . non comment-marker characters
+    |/(?!\*) #   . ! not a comment open
+    |\*(?!/) #   . ! not a comment close
+    |(?R)    #   . recursive case
+    )*           #   . repeat eventually
+    \*\/             #   . comment close marker
+    )\s*                 # Trim after comments
+    |(?<=;)\s+           # Trim after semi-colon
+    @msx';
+     */
+    $uncommentedSQL = trim(preg_replace($sqlComments, '$1', $sql));
+    if (is_array($comments)) {
+      preg_match_all($sqlComments, $sql, $comments);
+      $comments = array_filter($comments[ 3 ]);
+    }
+    return $uncommentedSQL;
   }
 
   /**
@@ -358,7 +405,7 @@ class Schema extends DatabaseSchema {
     }
     
     $exists = $this->connection
-      ->query($query)
+      ->query_direct($query)
       ->fetchField() !== FALSE;
     
     if ($table[0] != '#') {
@@ -369,22 +416,44 @@ class Schema extends DatabaseSchema {
   }
 
   /**
+   * Returns an array of current connection user options
+   *
+   * textsize	2147483647
+   * language	us_english
+   * dateformat	mdy
+   * datefirst	7
+   * lock_timeout	-1
+   * quoted_identifier	SET
+   * arithabort	SET
+   * ansi_null_dflt_on	SET
+   * ansi_warnings	SET
+   * ansi_padding	SET
+   * ansi_nulls	SET
+   * concat_null_yields_null	SET
+   * isolation level	read committed
+   *
+   * @return mixed
+   */
+  public function UserOptions() {
+    return $this->connection->query_direct('DBCC UserOptions')->fetchAllKeyed();
+  }
+
+  /**
    * Retrieve Engine Version information.
    */
   public function EngineVersion() {
     if ($cache = fastcache::cache_get('EngineVersion', 'schema')) {
       return $cache->data;
     }
-    $state = $this->connection->bypassQueryPreprocess;
-    $this->connection->bypassQueryPreprocess = true;
+
     $version = $this->connection
-    ->query(<<< EOF
+    ->query_direct(<<< EOF
     SELECT CONVERT (varchar,SERVERPROPERTY('productversion')) AS VERSION, 
     CONVERT (varchar,SERVERPROPERTY('productlevel')) AS LEVEL, 
     CONVERT (varchar,SERVERPROPERTY('edition')) AS EDITION
 EOF
     )->fetchAssoc();
-    $this->connection->bypassQueryPreprocess = $state;    
+
     fastcache::cache_set('EngineVersion', $version, 'schema');
     return $version;
   }
@@ -413,7 +482,7 @@ EOF
     // FS | AF = Assembly (CLR) Scalar Function
     // FT | AT = Assembly (CLR) Table Valued Function
     return $this->connection
-      ->query("SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('" . $function . "') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT', N'AF')")
+      ->query_direct("SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('" . $function . "') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT', N'AF')")
       ->fetchField() !== FALSE;
   }
   
@@ -423,7 +492,7 @@ EOF
    */
   public function CLREnabled() {
     return $this->connection
-        ->query("SELECT value FROM sys.configurations WHERE name = 'clr enabled'")
+        ->query_direct("SELECT CONVERT(int, [value]) as [enabled] FROM sys.configurations WHERE name = 'clr enabled'")
         ->fetchField() !== 1;
   }
   
@@ -435,6 +504,22 @@ EOF
     return isset($types[$type]);
   }
   
+  /**
+   * Retrieve an array of field specs from
+   * an array of field names.
+   *
+   * @param array $fields 
+   * @param mixed $table 
+   */
+  private function loadFieldsSpec(array $fields, $table) {
+    $result = array();
+    $info = $this->queryColumnInformation($table);
+    foreach ($fields as $field) {
+      $result[$field] = $info['columns'][$field];
+    }
+    return $result;
+  }
+
   /**
    * Estimates the row size of a clustered index.
    * @see https://msdn.microsoft.com/en-us/library/ms178085.aspx
@@ -501,23 +586,6 @@ EOF
   }
   
   /**
-   * Retrieve an array of field specs from
-   * an array of field names.
-   *
-   * @param array $fields 
-   * @param mixed $table 
-   */
-  private function loadFieldsSpec(array $fields, $table) {
-    $result = array();
-    $info = $this->queryColumnInformation($table);
-    foreach ($fields as $field) {
-      $result[$field] = $info['columns'][$field];
-    }
-    return $result;
-  }
-  
-  
-  /**
    * Create a Primary Key for the table, does not drop
    * any prior primary keys neither it takes care of cleaning
    * technical primary column. Only call this if you are sure
@@ -556,7 +624,7 @@ EOF
       $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$csv_fields})";
     }
     
-    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
+    $this->connection->query_direct('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
     
     // If we relied on a computed column for the Primary Key,
     // at least index the fields with a regular index.
@@ -595,9 +663,12 @@ EOF
       $sql_fields[] = $this->createFieldSql($name, $field_name, $this->processField($field));
     }
 
-    $sql = "CREATE TABLE [{" . $name . "}] (\n\t";
-    $sql .= implode(",\n\t", $sql_fields);
-    $sql .= "\n)";
+    // Use already prefixed table name.
+    $table_prefixed = $this->connection->prefixTables('{' . $name . '}');
+
+    $sql = "CREATE TABLE [{$table_prefixed}] (" . PHP_EOL;
+    $sql .= implode("," . PHP_EOL, $sql_fields);
+    $sql .= PHP_EOL . ")";
     return $sql;
   }
 
@@ -607,6 +678,8 @@ EOF
    *
    * Before passing a field out of a schema definition into this
    * function it has to be processed by _db_process_field().
+   * 
+   * 
    *
    * @param $table
    *    The name of the table.
@@ -616,6 +689,9 @@ EOF
    *    The field specification, as per the schema data structure format.
    */
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
+    // Use a prefixed table.
+    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
+
     $sql = $this->connection->quoteIdentifier($name) . ' ' . $spec['sqlsrv_type'];
     $is_text = in_array($spec['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
     if ($is_text === TRUE && !empty($spec['length'])) {
@@ -625,7 +701,8 @@ EOF
       // Maximum precision for SQL Server 2008 orn greater is 38.
       // For previous versions it's 28.
       if ($spec['precision'] > 38) {
-        watchdog('SQL Server Driver', "Field '@field' in table '@table' has had it's precision dropped from @precision to 38", 
+        // Logs an error
+        \Drupal::logger('sqlsrv')->warning("Field '@field' in table '@table' has had it's precision dropped from @precision to 38", 
                 array('@field' => $name, 
                       '@table' => $table,
                       '@precision' => $spec['precision']
@@ -647,8 +724,8 @@ EOF
 
     if (!$skip_checks) {
       if (isset($spec['default'])) {
-        $default = is_string($spec['default']) ? "'" . addslashes($spec['default']) . "'" : $spec['default'];
-        $sql .= ' CONSTRAINT {' . $table . '}_' . $name . '_df DEFAULT ' . $default;
+        $default = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
+        $sql .= " CONSTRAINT {$table_prefixed}_{$name}_df DEFAULT  $default";
       }
       if (!empty($spec['identity'])) {
         $sql .= ' IDENTITY';
@@ -658,6 +735,23 @@ EOF
       }
     }
     return $sql;
+  }
+
+  /**
+   * Get the SQL expression for a default value.
+   * 
+   * @param mixed $table 
+   * @param mixed $field 
+   * @param mixed $default 
+   */
+  private function defaultValueExpression($sqlsr_type, $default) {
+    // The actual expression depends on the target data type as it might require conversions.
+    $result = is_string($default) ? "'" . addslashes($default) . "'" : $default;
+    if (DatabaseUtils::GetMSSQLType($sqlsr_type) == 'varbinary') {
+      $default = addslashes($default);
+      $result = "CONVERT({$sqlsr_type}, '{$default}')";
+    }
+    return $result;
   }
 
   /**
@@ -825,7 +919,7 @@ EOF
     // Borrar la caché de table_exists
     fastcache::cache_clear_all('*', 'tableExists', TRUE);
     
-    $this->connection->query('EXEC sp_rename :old, :new', array(
+    $this->connection->query_direct('EXEC sp_rename :old, :new', array(
       ':old' => $old_table_info['schema'] . '.' . $old_table_info['table'],
       ':new' => $new_table_info['table'],
     ));
@@ -833,10 +927,10 @@ EOF
     // Constraint names are global in SQL Server, so we need to rename them
     // when renaming the table. For some strange reason, indexes are local to
     // a table.
-    $objects = $this->connection->query('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', array(':table' => $new_table_info['schema'] . '.' . $new_table_info['table']));
+    $objects = $this->connection->query_direct('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', array(':table' => $new_table_info['schema'] . '.' . $new_table_info['table']));
     foreach ($objects as $object) {
       if (preg_match('/^' . preg_quote($old_table_info['table']) . '_(.*)$/', $object->name, $matches)) {
-        $this->connection->query('EXEC sp_rename :old, :new, :type', array(
+        $this->connection->query_direct('EXEC sp_rename :old, :new, :type', array(
           ':old' => $old_table_info['schema'] . '.' . $object->name,
           ':new' => $new_table_info['table'] . '_' . $matches[1],
           ':type' => 'OBJECT',
@@ -854,8 +948,7 @@ EOF
     if (!$this->tableExists($table, TRUE)) {
       return FALSE;
     }
-
-    $this->connection->query('DROP TABLE {' . $table . '}');
+    $this->connection->query_direct('DROP TABLE {' . $table . '}');
     fastcache::cache_clear_all('*', 'tableExists', TRUE);
     return TRUE;
   }
@@ -882,6 +975,9 @@ EOF
     // Clear column information for table.
     $this->queryColumnInformationInvalidate($table);
 
+    // Use already prefixed table name.
+    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
+
     // If the field is declared NOT NULL, we have to first create it NULL insert
     // the initial data then switch to NOT NULL.
     if (!empty($spec['not null']) && !isset($spec['default'])) {
@@ -889,10 +985,13 @@ EOF
       $spec['not null'] = FALSE;
     }
 
-    // Create the field.
-    $query = "ALTER TABLE {{$table}} ADD ";
+    // Create the field. 
+    // Because the default values of fields can contain string literals
+    // with braces, we CANNOT allow the driver to prefix tables because the algorithm
+    // to do so is a crappy str_replace.
+    $query = "ALTER TABLE {$table_prefixed} ADD ";
     $query .= $this->createFieldSql($table, $field, $this->processField($spec));
-    $this->connection->query($query);
+    $this->connection->query_direct($query, array(), array('prefix_tables' => FALSE));
 
     // Clear column information for table.
     $this->queryColumnInformationInvalidate($table);
@@ -907,7 +1006,7 @@ EOF
     // Switch to NOT NULL now.
     if (!empty($fixnull)) {
       $spec['not null'] = TRUE;
-      $this->connection->query("ALTER TABLE {{$table}} ALTER COLUMN " . $this->createFieldSql($table, $field, $this->processField($spec), TRUE));
+      $this->connection->query_direct("ALTER TABLE {{$table}} ALTER COLUMN " . $this->createFieldSql($table, $field, $this->processField($spec), TRUE));
     }
 
     // Add the new keys.
@@ -927,30 +1026,25 @@ EOF
    * @param int $limit 
    */
   public function compressPrimaryKeyIndex($table, $limit = 900) {
-    // SQL Server supports transactional DDL, so we can just start a transaction
-    // here and pray for the best.
-    $transaction = $this->connection->startTransaction();
-
     // Introspect the schema and save the current primary key if the column
     // we are modifying is part of it.
     $primary_key_fields = $this->introspectPrimaryKeyFields($table);
-    
-    try {
 
-      // Clear current Primary Key.
-      $this->cleanUpPrimaryKey($table);
+    // SQL Server supports transactional DDL, so we can just start a transaction
+    // here and pray for the best.
+    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
 
-      // Recreate the Primary Key with the given limit size.
-      $this->createPrimaryKey($table, $primary_key_fields, $limit);
-      
-    }
-    catch (\Exception $e) {
-      $transaction->rollback();
-      throw $e;
-    }
-    
+    // Clear current Primary Key.
+    $this->cleanUpPrimaryKey($table);
+
+    // Recreate the Primary Key with the given limit size.
+    $this->createPrimaryKey($table, $primary_key_fields, $limit);
+
+    $transaction->commit();
+
     // Refresh introspection for this table.
     $this->queryColumnInformation($table, TRUE);
+
   }
   
   /**
@@ -965,15 +1059,12 @@ EOF
     if (($field != $field_new) && $this->fieldExists($table, $field_new)) {
       throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", array('%table' => $table, '%name' => $field, '%name_new' => $field_new)));
     }
-    
-    if($spec['type'] == 'serial') {
-      throw new \Exception(t('Cannot change %table.%field to %field_new with destination serial TYPE (IDENTITY) on SQL SERVER',
-          array('%table' => $table, '%field' => $field, '%field_new' => $field_new)));
-    }
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
-    //$transaction = $this->connection->startTransaction();
+
+    // @var DatabaseTransaction_sqlsrv
+    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
 
     // IMPORTANT NOTE: To maintain database portability, you have to explicitly recreate all indices and primary keys that are using the changed field.
     // That means that you have to drop all affected keys and indexes with db_drop_{primary_key,unique_key,index}() before calling db_change_field().
@@ -983,7 +1074,8 @@ EOF
     // with the new_keys parameter, and if the callee has done it's job (droping constraints/keys) then they will of course not be recreated.
     
     // Introspect the schema and save the current primary key if the column
-    // we are modifying is part of it.
+    // we are modifying is part of it. Make sure the schema is FRESH.
+    $this->queryColumnInformationInvalidate($table);
     $primary_key_fields = $this->introspectPrimaryKeyFields($table);
     if (in_array($field, $primary_key_fields)) {
       // Let's drop the PK
@@ -997,16 +1089,21 @@ EOF
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
+    // Verify if the old field specification was nullable.
+    $info = $this->queryColumnInformation($table);
+    $old_field_nullable = $info['columns'][$field]['is_nullable'] == TRUE;
+
     // Start by renaming the current column.
-    $this->connection->query('EXEC sp_rename :old, :new, :type', array(
+    $this->connection->query_direct('EXEC sp_rename :old, :new, :type', array(
       ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
       ':new' => $field . '_old',
       ':type' => 'COLUMN',
     ));
 
-    // If the field is declared NOT NULL, we have to first create it NULL insert
-    // the initial data then switch to NOT NULL.
-    if (!empty($spec['not null']) && !isset($spec['default'])) {
+    // If the new SPEC does not allow NULLS but the old SPEC did so, we
+    // need to bridge the data and manually populate default values.
+    $fixnull = FALSE;
+    if (!empty($spec['not null']) && $old_field_nullable) {
       $fixnull = TRUE;
       $spec['not null'] = FALSE;
     }
@@ -1017,12 +1114,17 @@ EOF
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion errors.
     $field_spec = $this->processField($spec);
-    $this->connection->query("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] AS {$field_spec['sqlsrv_type']})");
+    $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] AS {$field_spec['sqlsrv_type']})");
 
     // Switch to NOT NULL now.
-    if (!empty($fixnull)) {
+    if ($fixnull === TRUE) {
+      // There is no warranty that the old data did not have NULL values, we need to populate
+      // nulls with the default value because this won't be done by MSSQL by default.
+      $default_expression = $this->defaultValueExpression($field_spec['sqlsrv_type'], $field_spec['default']);
+      $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = {$default_expression} WHERE [{$field_new}] IS NULL");
+      // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
-      $this->connection->query('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $this->processField($spec), TRUE));
+      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $this->processField($spec), TRUE));
     }
 
     // Initialize new keys.
@@ -1055,10 +1157,10 @@ EOF
     $this->recreateTableKeys($table, $new_keys);
     
     // Refresh introspection for this table.
-    $this->queryColumnInformation($table, TRUE);
+    $this->queryColumnInformationInvalidate($table);
     
     // Commit.
-    unset($transaction);
+    $transaction->commit();
   }
 
   /**
@@ -1087,6 +1189,35 @@ EOF
   }
 
   /**
+   * Get database information from sys.databases
+   * 
+   * @return mixed
+   */
+  public function getDatabaseInfo() {
+    static $result;
+    if (isset($result)) {
+      return $result;
+    }
+    $sql = <<< EOF
+      select name
+        , db.snapshot_isolation_state
+        , db.snapshot_isolation_state_desc
+        , db.is_read_committed_snapshot_on
+        , db.recovery_model
+        , db.recovery_model_desc
+        , db.collation_name
+    from sys.databases db
+    WHERE DB_NAME(db.database_id) = :database
+EOF
+;
+    // Database is defaulted from active connection.
+    $options = $this->connection->getConnectionOptions();
+    $database = $options['database'];
+    $result = $this->connection->query_direct($sql, array(':database' => $database))->fetchObject();
+    return $result;
+  }
+
+  /**
    * Get the collation of current connection wether
    * it has or not a database defined in it.
    *
@@ -1105,12 +1236,12 @@ EOF
       if (!empty($database)) {
         // Default collation for specific table.
         $sql = "SELECT CONVERT (varchar, DATABASEPROPERTYEX('$database', 'collation'))";
-        return $this->connection->query($sql)->fetchField();
+        return $this->connection->query_direct($sql)->fetchField();
       }
       else {
         // Server default collation.
         $sql = "SELECT SERVERPROPERTY ('collation') as collation";
-        return $this->connection->query($sql)->fetchField();
+        return $this->connection->query_direct($sql)->fetchField();
       }
     }
     
@@ -1126,7 +1257,7 @@ EOF
     $params[':schema'] = $this->defaultSchema;
     $params[':table'] = $table;
     $params[':column'] = $column;
-    $result = $this->connection->query($sql, $params)->fetchObject();
+    $result = $this->connection->query_direct($sql, $params)->fetchObject();
     return $result->COLLATION_NAME;    
   }
   
@@ -1297,7 +1428,7 @@ EOF
     if ($primary_key_name = $this->primaryKeyName($table)) {
       if ($this->isTechnicalPrimaryKey($primary_key_name)) {
         // Destroy the existing technical primary key.
-        $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
+        $this->connection->query_direct('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
         $this->cleanUpTechnicalPrimaryColumn($table);
       }
       else {
@@ -1467,7 +1598,7 @@ EOF
    *
    * @status tested
    */
-  public function addIndex($table, $name, $fields) {
+  public function addIndex($table, $name, $fields, array $spec = array()) {
     if (!$this->tableExists($table, TRUE)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", array('%table' => $table, '%name' => $name)));
     }
@@ -1553,6 +1684,46 @@ EOF
     throw new \Error("Method not implemented.");
   }
   
+  #region Index
+  
+  /**
+   * Verify if a in index exists in the database.
+   *
+   * @param mixed $table 
+   * @param mixed $name 
+   * @return bool
+   */
+  public function _ExistsIndex($table, $index) {
+    $table = $this->connection->prefixTables('{' . $table . '}');
+    return (bool) $this->connection->query_direct('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', array(
+      ':table' => $table,
+      ':name' => $index
+    ))->fetchField();
+  }
+  
+  /**
+   * Drop an index, nothing to to if the index does not exists.
+   *
+   * @param mixed $table 
+   * @param mixed $index 
+   * @return void
+   */
+  public function _DropIndex($table, $index) {
+    if (!$this->_ExistsIndex($table, $index)) {
+      // Nothing to do....
+      return;
+    }
+    $table = $this->connection->prefixTables('{' . $table . '}');
+    $this->connection->query_direct('DROP INDEX :index ON :table',
+      array(
+        ':index' => $index,
+        ':table' => $table,
+      )
+    );
+  }
+  
+  #endregion
+
   #region Comment Related Functions (D8 only)
   
   /**

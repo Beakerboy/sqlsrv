@@ -140,7 +140,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
    *
    * @param mixed $key_index 
    * @param mixed $value_index 
-   * @return array|DatabaseStatement_sqlsrv
+   * @return array|Statement
    */
   public function fetchAllKeyed($key_index = 0, $value_index = 1) {
     // If we are asked for the default behaviour, rely

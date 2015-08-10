@@ -258,7 +258,7 @@ class Select extends QuerySelect {
       else {
         // We might not want an expression to appear in the select list.
         if ($expression['exclude'] !== TRUE) {
-          $fields[] = $expression['expression'] . ' AS ' . $expression['alias'];
+          $fields[] = $expression['expression'] . ' AS [' . $expression['alias'] .']';
         }
       }
     }
@@ -296,9 +296,9 @@ class Select extends QuerySelect {
     $query .= implode($cross_apply);
 
     // WHERE
-    if (count($this->where)) {
+    if (count($this->condition)) {
       // There is an implicit string cast on $this->condition.
-      $where = $this->where->__toString();
+      $where = (string) $this->condition;
       // References to expressions in cross-apply need to be updated.
       // Now we need to update all references to the expression aliases
       // and point them to the CROSS APPLY alias.
@@ -401,7 +401,7 @@ class Select extends QuerySelect {
     if (!$count->distinct && !isset($having[0])) {
 
       $used_aliases = array();
-      $this->GetUsedAliases($count->where, $used_aliases);
+      $this->GetUsedAliases($count->condition, $used_aliases);
       
       // When not executing a distinct query, we can zero-out existing fields
       // and expressions that are not used by a GROUP BY or HAVING. Fields

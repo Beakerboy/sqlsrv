@@ -11,63 +11,47 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\Update as QueryUpdate;
 use Drupal\Core\Database\Query\Condition;
 
+use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
+
+use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
+use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
+use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
+
 use PDO as PDO;
+use Exception as Exception;
+use PDOStatement as PDOStatement;
 
 class Update extends QueryUpdate {
 
   public function execute() {
-    // Now perform the special handling for BLOB fields.
-    $max_placeholder = 0;
+    // Fetch the list of blobs and sequences used on that table.
+    $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
+
+    // MySQL is a pretty slut that swallows everything thrown at it,
+    // like trying to update an identity field...
+    if (isset($columnInformation['identity']) && isset($this->fields[$columnInformation['identity']])) {
+      unset($this->fields[$columnInformation['identity']]);
+    }
 
     // Because we filter $fields the same way here and in __toString(), the
     // placeholders will all match up properly.
-    $stmt = $this->connection->PDOPrepare($this->connection->prefixTables((string)$this));
-
-    // Fetch the list of blobs and sequences used on that table.
-    $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
+    $stmt = $this->connection->prepareQuery((string)$this);
 
     // Expressions take priority over literal fields, so we process those first
     // and remove any literal fields that conflict.
     $fields = $this->fields;
-    $expression_fields = array();
-    foreach ($this->expressionFields as $field => $data) {
-      if (!empty($data['arguments'])) {
-        foreach ($data['arguments'] as $placeholder => $argument) {
-          // We assume that an expression will never happen on a BLOB field,
-          // which is a fairly safe assumption to make since in most cases
-          // it would be an invalid query anyway.
-          $stmt->bindParam($placeholder, $data['arguments'][$placeholder]);
-        }
-      }
-      unset($fields[$field]);
-    }
+    DatabaseUtils::BindExpressions($stmt, $this->expressionFields, $fields);
 
     // We use this array to store references to the blob handles.
     // This is necessary because the PDO will otherwise messes up with references.
     $blobs = array();
-    $blob_count = 0;
+    DatabaseUtils::BindValues($stmt, $fields, $blobs, ':db_update_placeholder_', $columnInformation);
 
-    foreach ($fields as $field => $value) {
-      $placeholder = ':db_update_placeholder_' . ($max_placeholder++);
-      if (isset($columnInformation['blobs'][$field])) {
-        $blobs[$blob_count] = fopen('php://memory', 'a');
-        fwrite($blobs[$blob_count], $value);
-        rewind($blobs[$blob_count]);
-        $stmt->bindParam($placeholder, $blobs[$blob_count], PDO::PARAM_LOB, 0, PDO::SQLSRV_ENCODING_BINARY);
-        $blob_count++;
-      }
-      else {
-        $stmt->bindParam($placeholder, $fields[$field]);
-      }
-    }
-
+    // Add conditions.
     if (count($this->condition)) {
       $this->condition->compile($this->connection, $this);
-
       $arguments = $this->condition->arguments();
-      foreach ($arguments as $placeholder => $value) {
-        $stmt->bindParam($placeholder, $arguments[$placeholder]);
-      }
+      DatabaseUtils::BindArguments($stmt, $arguments);
     }
 
     $options = $this->queryOptions;
