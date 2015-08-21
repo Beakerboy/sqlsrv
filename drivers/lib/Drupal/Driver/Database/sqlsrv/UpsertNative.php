@@ -112,7 +112,10 @@ class UpsertNative extends QueryUpsert {
     $update_mappings = array();
     foreach ($this->insertFields as $field) {
       $insert_mappings[] = "_source.[{$field}]";
-      $update_mappings[] = "_target.[{$field}] = _source.[{$field}]";
+      // Updating the unique / primary key is not necessary.
+      if (!in_array($field, $primary_key_cols)) {
+        $update_mappings[] = "_target.[{$field}] = _source.[{$field}]";
+      }
     }
 
     // "When matched" part
