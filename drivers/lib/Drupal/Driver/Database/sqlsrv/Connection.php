@@ -966,6 +966,15 @@ class Connection extends DatabaseConnection {
       throw new DatabaseNotFoundException($e->getMessage());
     }
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function upsert($table, array $options = array()) {
+    $class = $this->getDriverClass('UpsertNative');
+    //$class = $this->getDriverClass('Upsert');
+    return new $class($this, $table, $options);
+  }
 }
 
 /**

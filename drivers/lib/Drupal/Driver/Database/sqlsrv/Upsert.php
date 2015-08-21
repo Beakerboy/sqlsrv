@@ -18,7 +18,7 @@ use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
 /**
  * Implements the Upsert query for the MSSQL database driver. 
  * 
- * Upsert is simply a batched MERGE query - sort of...
+ * TODO: This class has been replaced by UpsertNative. Keeping this here for a while though..
  */
 class Upsert extends QueryUpsert {
 

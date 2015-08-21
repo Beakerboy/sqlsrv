@@ -23,6 +23,9 @@ use PDOStatement as PDOStatement;
 
 class Merge extends QueryMerge {
 
+  /**
+   * {@inheritdoc}
+   */
   public function execute() {
 
     if (!count($this->condition)) {
@@ -74,7 +77,9 @@ class Merge extends QueryMerge {
 
   }
 
-
+  /**
+   * {@inheritdoc}
+   */
   public function __toString() {
     // Initialize placeholder count.
     $max_placeholder = 0;
