@@ -46,9 +46,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
     }
 
     $logger = $this->dbh->getLogger();
-    if (!empty($logger)) {
-      $query_start = microtime(TRUE);
-    }
+    $query_start = microtime(TRUE);
 
     // If parameteres have already been binded
     // to the statement and we pass an empty array here
@@ -156,19 +154,5 @@ class Statement extends DatabaseStatement implements StatementInterface {
       $return[$record[$key_index]] = $record[$value_index];
     }
     return $return;
-  }
-  
-  /**
-   * Override of SelectQuery::orderRandom() for SQL Server.
-   *
-   * It seems that sorting by RAND() doesn't actually work, this is a less then
-   * elegant workaround.
-   *
-   * @status tested
-   */
-  public function orderRandom() {
-    $alias = $this->addExpression('NEWID()', 'random_field');
-    $this->orderBy($alias);
-    return $this;
   }
 }

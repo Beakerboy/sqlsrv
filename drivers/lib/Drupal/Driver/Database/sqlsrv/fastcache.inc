@@ -7,6 +7,12 @@
 
 include_once 'fastcacheitem.inc';
 
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\Cache;
+
+use Drupal\wincache\Cache\DummyTagChecksum;
+use Drupal\wincache\Cache\WincacheBackend;
+
 /**
  * Static caching layer.
  *
@@ -24,11 +30,13 @@ class fastcache {
   
   // @var fastcacheitem[]  $fastcacheitems
   private static $fastcacheitems = array();
+
   // @var bool $enabled
   private static $enabled = NULL;
+
   // @var bool $shutdown_registered
   private static $shutdown_registered = FALSE;
-  
+
   /**
    * Test info is loaded at database bootstrap phase
    * but this cache can be used earlier. Make sure
@@ -38,39 +46,15 @@ class fastcache {
    * @var string
    */
   private static $test_run_id;
-  
-  /**
-   * Add test prefix to current binary key, and account for atomic
-   * items where $bin = NULL;
-   *
-   * @param string $prefix 
-   */
-  private static function FixKeyAndBin(&$cid, &$bin) {
-    // We always need a binary, if non is specified, this item
-    // should be treated as having it's own binary.
-    if (empty($bin)) {
-      $bin = $cid;
-    }
-    // Try with the "official" test_run_id first.
-    if (isset($GLOBALS['drupal_test_info']['test_run_id'])) {
-      $bin = $GLOBALS['drupal_test_info']['test_run_id'] . $bin;
-      return;
-    }
-    // Only do this once per request, if the this is the testing system
-    // then $GLOBALS['drupal_test_info']['test_run_id'] will be set upon
-    // test context switching.
-    if (!isset(static::$test_run_id)) {
-      if ($test_prefix = drupal_valid_test_ua()) {
-        // Keep a local copy of the current test_prefix.
-        static::$test_run_id = $test_prefix;
-      }
-      else {
-        static::$test_run_id = '';
-      }
-    }
 
-    $bin = static::$test_run_id . $bin;
-  }
+  private static function FixKeyAndBin($key, $bin) {}
+
+  /**
+   * Summary of $cache
+   * 
+   * @var WincacheBackend
+   */
+  private static $cache;
   
   /**
    * Tell if cache persistence is enabled. If not, this cache
@@ -80,31 +64,13 @@ class fastcache {
    * and the lock implementation is DrupalWinCache
    */
   public static function Enabled($refresh = FALSE) {
-    // This needs a nice port to D8.
-    return FALSE;
-    if (static::$enabled === NULL || $refresh) {
-      // Make sure _cache_get_object exists, if fastache
-      // used out of database driver there is a chance that
-      // cache storage might not yet be initialized.
-      if (function_exists('_cache_get_object')) {
-        // If you only bootstrap to database the lock system is not yet started
-        // but if locking is not database dependant (memcache or wincache) you can run
-        // lock_initialize is ASAP.
-        $lock_file = variable_get('lock_inc', 'includes/lock.inc');
-        if ($lock_file != 'includes/lock.inc') {
-          require_once DRUPAL_ROOT . '/' . $lock_file;
-          lock_initialize();
-        }
-
-        global $WINCACHE_LOCK_ACTIVE;
-        // Only enabled storage if Cache Backend is DrupalWinCache and Locking backend is also Wincache based.
-        static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache') && $WINCACHE_LOCK_ACTIVE;
-      }
-      else {
-        static::$enabled = FALSE;
+    if (empty(static::$cache)) {
+      if (class_exists(\Drupal\wincache\Cache\WincacheBackend::class)) {
+        $checksum_provider = new DummyTagChecksum();
+        static::$cache = new WincacheBackend('fastcache', 'test', $checksum_provider);
       }
     }
-    return static::$enabled;
+    return !empty(static::$cache);
   }
 
   /**
@@ -128,7 +94,7 @@ class fastcache {
     if (!isset(static::$fastcacheitems[$bin])) {
       // If storage is enabled, try to load from cache.
       if (static::Enabled()) {
-        if ($cache = cache_get($bin, 'fastcache')) {
+        if ($cache = static::$cache->get($bin)) {
           static::$fastcacheitems[$bin] = new fastcacheitem($bin, $cache);
         }
         // Don't bother initializing this.
@@ -168,17 +134,17 @@ class fastcache {
       // Do not lock if this is an atomic binary ($cid = $bin).
       if ($cid === $bin) {
         static::$fastcacheitems[$bin]->persist = TRUE;
-        static::$fastcacheitems[$bin]->locked = FALSE;
+        //static::$fastcacheitems[$bin]->locked = FALSE;
       }
       else {
         // Do persist or lock if it is not enabled!
         if (static::Enabled()) {
           // Hold this locks longer than usual because
           // they run after the request has finished.
-          if (function_exists('lock_acquire') && lock_acquire('fastcache_' . $bin, 120)) {
-            static::$fastcacheitems[$bin]->persist = TRUE;
-            static::$fastcacheitems[$bin]->locked = TRUE;
-          }
+          // if (function_exists('lock_acquire') && lock_acquire('fastcache_' . $bin, 120)) {
+          static::$fastcacheitems[$bin]->persist = TRUE;
+          //  static::$fastcacheitems[$bin]->locked = TRUE;
+          //}
         }
       }
     }
@@ -192,10 +158,10 @@ class fastcache {
   public static function fastcache_persist () {
     foreach (static::$fastcacheitems as $cache) {
       if ($cache->persist == TRUE) {
-        cache_set($cache->bin, $cache->rawdata(), 'fastcache', CACHE_TEMPORARY);
-        if ($cache->locked) {
-          lock_release('fastcache_' . $cache->bin);
-        }
+        static::$cache->set($cache->bin, $cache->rawdata(), CacheBackendInterface::CACHE_PERMANENT);
+        //if ($cache->locked) {
+        //  lock_release('fastcache_' . $cache->bin);
+        //}
       }
     }
   }

@@ -13,6 +13,7 @@ class Utils {
 
   /**
    * Summary of BindArguments
+   * 
    * @param PDOStatement $stmt 
    * @param array $values 
    */
@@ -93,37 +94,6 @@ class Utils {
         $stmt->bindParam($placeholder, $blobs[$blob_key], PDO::PARAM_STR);
       }
     }
-  }
-
-  public static function GetConfigBoolean($name, $default = FALSE) {
-    global $conf;
-    // Isolation level.
-    if (isset($conf[$name])) {
-      $value = $conf[$name];
-      if (is_bool($value)) {
-        return $value;
-      }
-    }
-    return FALSE;
-  }
-
-  /**
-   * Get the value of a constant string from configuration.
-   * 
-   * @param mixed $name 
-   * @param mixed $default 
-   * @return mixed
-   */
-  public static function GetConfigConstant($name, $default) {
-    global $conf;
-    // Isolation level.
-    if (isset($conf[$name])) {
-      $level =  $conf[$name];
-      if($l = @constant($level)) {
-        return $l;
-      }
-    }
-    return $default;
   }
 
   /**

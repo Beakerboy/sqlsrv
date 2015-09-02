@@ -435,7 +435,12 @@ class Schema extends DatabaseSchema {
    * @return mixed
    */
   public function UserOptions() {
-    return $this->connection->query_direct('DBCC UserOptions')->fetchAllKeyed();
+    if ($cache = fastcache::cache_get('UserOptions', 'schema')) {
+      return $cache->data;
+    }
+    $result = $this->connection->query_direct('DBCC UserOptions')->fetchAllKeyed();
+    fastcache::cache_set('UserOptions', $result, 'schema');
+    return $result;
   }
 
   /**
@@ -692,12 +697,16 @@ EOF
     // Use a prefixed table.
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
-    $sql = $this->connection->quoteIdentifier($name) . ' ' . $spec['sqlsrv_type'];
-    $is_text = in_array($spec['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
-    if ($is_text === TRUE && !empty($spec['length'])) {
+    $sqlsrv_type = $spec['sqlsrv_type'];
+    $is_text = in_array($sqlsrv_type, array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
+    $lengthable = in_array($sqlsrv_type, array('char', 'varchar', 'nchar', 'nvarchar'));
+
+    $sql = $this->connection->quoteIdentifier($name) . ' ' . $sqlsrv_type;
+
+    if (!empty($spec['length']) && $lengthable) {
       $sql .= '(' . $spec['length'] . ')';
     }
-    elseif (in_array($spec['sqlsrv_type'], array('numeric', 'decimal')) && isset($spec['precision']) && isset($spec['scale'])) {
+    elseif (in_array($sqlsrv_type, array('numeric', 'decimal')) && isset($spec['precision']) && isset($spec['scale'])) {
       // Maximum precision for SQL Server 2008 orn greater is 38.
       // For previous versions it's 28.
       if ($spec['precision'] > 38) {
@@ -724,7 +733,7 @@ EOF
 
     if (!$skip_checks) {
       if (isset($spec['default'])) {
-        $default = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
+        $default = $this->defaultValueExpression($sqlsrv_type, $spec['default']);
         $sql .= " CONSTRAINT {$table_prefixed}_{$name}_df DEFAULT  $default";
       }
       if (!empty($spec['identity'])) {

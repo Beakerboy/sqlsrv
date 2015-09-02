@@ -26,6 +26,7 @@ use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransacti
 use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
 use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
 use Drupal\Driver\Database\sqlsrv\Context as DatabaseContext;
+use Drupal\Driver\Database\sqlsrv\DriverSettings;
 
 use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
 
@@ -42,20 +43,18 @@ include_once 'fastcache.inc';
  *
  * Temporary tables: temporary table support is done by means of global temporary tables (#)
  * to avoid the use of DIRECT QUERIES. You can enable and disable the use of direct queries
- * with $conn->directQuery = TRUE|FALSE.
+ * with $this->driver_settings->defaultDirectQuery = TRUE|FALSE.
  * http://blogs.msdn.com/b/brian_swan/archive/2010/06/15/ctp2-of-microsoft-driver-for-php-for-sql-server-released.aspx
  *
  */
 class Connection extends DatabaseConnection {
 
-  // Do not preprocess the query before execution.
-  public $bypassQueryPreprocess = FALSE;
-  
-  // Prepare statements with SQLSRV_ATTR_DIRECT_QUERY = TRUE.
-  public $directQuery = FALSE;
-
-  // Wether to have or not statement caching.
-  public $statementCaching = FALSE;
+  /**
+   * Database driver settings.
+   * 
+   * @var DriverSettings
+   */
+  public $driver_settings = NULL;
   
   /**
    * Override of DatabaseConnection::driver().
@@ -82,17 +81,12 @@ class Connection extends DatabaseConnection {
   const DATABASE_NOT_FOUND = 28000;
 
   /**
-   * The PDO constants do not matcc the actual isolation names
-   * used in SQL.
-   */
-  private static function DefaultTransactionIsolationLevelInStatement() {
-    return str_replace('_', ' ', DatabaseUtils::GetConfigConstant('MSSQL_DEFAULT_ISOLATION_LEVEL', FALSE));
-  }
-
-  /**
    * Constructs a Connection object.
    */
   public function __construct(\PDO $connection, array $connection_options) {
+
+    $this->driver_settings = DriverSettings::instanceFromSettings();
+
     // Needs to happen before parent construct.
     $this->statementClass = Statement::class;
     
@@ -108,10 +102,6 @@ class Connection extends DatabaseConnection {
     // Fetch the name of the user-bound schema. It is the schema that SQL Server
     // will use for non-qualified tables.
     $this->schema()->defaultSchema = $this->schema()->GetDefaultSchema();
-
-    // Set default direct query behaviour
-    $this->directQuery = TRUE;//DatabaseUtils::GetConfigBoolean('MSSQL_DEFAULT_DIRECTQUERY');
-    $this->statementCaching = DatabaseUtils::GetConfigBoolean('MSSQL_STATEMENT_CACHING');
   }
 
   /**
@@ -119,6 +109,9 @@ class Connection extends DatabaseConnection {
    */
   public static function open(array &$connection_options = array()) {
     
+    // Get driver settings.
+    $driver_settings = DriverSettings::instanceFromSettings();
+
     // Build the DSN.
     $options = array();
     $options['Server'] = $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : '');
@@ -128,9 +121,9 @@ class Connection extends DatabaseConnection {
     if (!empty($connection_options['database'])) {
       $options['Database'] = $connection_options['database'];
     }
-
+    
     // Set isolation level if specified.
-    if ($level = DatabaseUtils::GetConfigConstant('MSSQL_DEFAULT_ISOLATION_LEVEL', FALSE)) {
+    if ($level = $driver_settings->GetDefaultIsolationLevel()) {
       $options['TransactionIsolation'] = $level;
     }
 
@@ -151,8 +144,16 @@ class Connection extends DatabaseConnection {
     // $connection_options['pdo'][PDO::ATTR_STATEMENT_CLASS] = array(Statement::class, array(Statement::class));
 
     // Actually instantiate the PDO.
-    $pdo = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
-    
+    try {
+      $pdo = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+    }
+    catch (\Exception $e) {
+      if ($e->getCode() == static::DATABASE_NOT_FOUND) {       
+        throw new DatabaseNotFoundException($e->getMessage(), $e->getCode(), $e);
+      }     
+      throw new $e;
+    }
+
     return $pdo;
   }
 
@@ -178,8 +179,8 @@ class Connection extends DatabaseConnection {
     // the global configuration if set to different than NULL.
     $options = array_merge(array(
         'insecure' => FALSE,
-        'statement_caching' => $this->statementCaching,
-        'direct_query' => $this->directQuery,
+        'statement_caching' => $this->driver_settings->GetStatementCachingMode(),
+        'direct_query' => $this->driver_settings->GetDefaultDirectQueries(),
         'prefix_tables' => TRUE,
       ), $options);
 
@@ -239,7 +240,7 @@ class Connection extends DatabaseConnection {
     // you should execute your queries with PDO::SQLSRV_ATTR_DIRECT_QUERY set to True. 
     // For example, if you use temporary tables in your queries, PDO::SQLSRV_ATTR_DIRECT_QUERY must be set 
     // to True.
-    if (!$this->statementCaching || $options['direct_query'] == TRUE) {
+    if ($this->driver_settings->GetStatementCachingMode() != 'always' || $options['direct_query'] == TRUE) {
       $pdo_options[PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
     
@@ -275,7 +276,7 @@ class Connection extends DatabaseConnection {
   public function PDOPrepare($query, array $options = array()) {
 
     // Preprocess the query.
-    if (!$this->bypassQueryPreprocess) {
+    if (!$this->driver_settings->GetDeafultBypassQueryPreprocess()) {
       $query = $this->preprocessQuery($query);
     }
 
@@ -284,7 +285,7 @@ class Connection extends DatabaseConnection {
     // backtrace plus other details that aid in debugging deadlocks
     // or long standing locks. Use in combination with MSSQL profiler.
     global $conf;
-    if (DatabaseUtils::GetConfigBoolean('MSSQL_APPEND_CALLSTACK_COMMENT') == TRUE) {
+    if ($this->driver_settings->GetAppendCallstackComment()) {
       global $user;
       $trim = strlen(DRUPAL_ROOT);
       $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
@@ -807,7 +808,7 @@ class Connection extends DatabaseConnection {
     }
     $this->connection->rollBack();
     // Restore original transaction isolation level
-    if ($level = static::DefaultTransactionIsolationLevelInStatement()) {
+    if ($level = $this->driver_settings->GetDefaultTransactionIsolationLevelInStatement()) {
       if($savepoint['settings']->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) { 
         if ($level != $savepoint['settings']->Get_IsolationLevel()) {
           $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
@@ -929,7 +930,7 @@ class Connection extends DatabaseConnection {
         }
         finally {
           // Restore original transaction isolation level
-          if ($level = static::DefaultTransactionIsolationLevelInStatement()) { 
+          if ($level = $this->driver_settings->GetDefaultTransactionIsolationLevelInStatement()) { 
             if($state['settings']->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) { 
               if ($level != $state['settings']->Get_IsolationLevel()->__toString()) {
                 $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
@@ -971,8 +972,17 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function upsert($table, array $options = array()) {
-    $class = $this->getDriverClass('UpsertNative');
-    //$class = $this->getDriverClass('Upsert');
+    $name = $this->driver_settings->GetUseNativeUpsert() ? "UpsertNative" : "Upsert";
+    $class = $this->getDriverClass($name);
+    return new $class($this, $table, $options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function merge($table, array $options = array()) {
+    $name = $this->driver_settings->GetUseNativeMerge() ? "MargeNative" : "Merge";
+    $class = $this->getDriverClass($name);
     return new $class($this, $table, $options);
   }
 }

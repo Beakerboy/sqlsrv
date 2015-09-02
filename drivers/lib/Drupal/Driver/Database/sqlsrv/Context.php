@@ -2,6 +2,9 @@
 
 namespace Drupal\Driver\Database\sqlsrv;
 
+use Drupal\Core\Database\Database;
+use Drupal\Driver\Database\sqlsrv\DriverSettings;
+
 /**
  * Defines a behaviour scope for the database
  * driver that lasts until the object is destroyed.
@@ -16,26 +19,11 @@ class Context {
   var $connection;
   
   /**
-   * Bypass SQL Server specific query preprocessing.
+   * Settings before establishing this context.
    * 
-   * @var bool
+   * @var DriverSettings
    */
-  var $state_bypass = NULL;
-  
-  /**
-   * Use DIRECT_QUERY feature of the driver so that statements are not prepared.
-   * 
-   * @var bool
-   */
-  var $state_direct = NULL;
-
-  /**
-   * Prepared statement caching enabled for this connection. Incompatible
-   * with direct queries.
-   * 
-   * @var bool
-   */
-  var $statement_caching = NULL;
+  var $settings = NULL;
   
   /**
    * Define the behaviour of the database driver during the scope of the
@@ -65,34 +53,31 @@ class Context {
         $direct_query = NULL, 
         $statement_caching = NULL) {
 
-    if ($connection == NULL) {
-      $connection = Database::getConnection();
-    }
-    
-    $this->connection = $connection;
+    // Retain a copy of the setting and connections.
+    $this->connection = $connection ? $connection : Database::getConnection();
+    $this->settings = $this->connection->driver_settings;
 
-    $this->state_bypass = $this->connection->bypassQueryPreprocess;
-    $this->state_direct = $this->connection->directQuery;
-    $this->statement_caching = $this->connection->statementCaching;
+    // Override our custom settings.
+    $configuration = $this->settings->exportConfiguration();
     
     if ($bypass_queries !== NULL) {
-      $this->connection->bypassQueryPreprocess = $bypass_queries;
+      $configuration['default_bypass_query_preprocess'] = $bypass_queries; 
     }
 
     if ($direct_query !== NULL) {
-      $this->connection->directQuery = $direct_query;
+      $configuration['default_direct_queries'] = $direct_query; 
     }
 
     if ($statement_caching !== NULL) {
-      $this->connection->statementCaching = $statement_caching;
+      $configuration['statement_caching_mode'] = $statement_caching; 
     }
 
+    $settings = DriverSettings::instanceFromData($configuration);
+    $this->connection->driver_settings = $settings;
   }
   
   public function __destruct() {
     // Restore previous driver configuration.
-    $this->connection->bypassQueryPreprocess = $this->state_bypass;
-    $this->connection->directQuery = $this->state_direct;
-    $this->connection->statementCaching = $this->statement_caching;
+    $this->connection->driver_settings = $this->settings;
   }
 }
