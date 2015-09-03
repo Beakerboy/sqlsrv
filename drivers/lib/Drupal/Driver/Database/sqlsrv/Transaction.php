@@ -20,7 +20,8 @@ use PDO as PDO;
 use Exception as Exception;
 use PDOStatement as PDOStatement;
 
-class Transaction extends DatabaseTransaction { 
+class Transaction extends DatabaseTransaction {
+
   /**
    * A boolean value to indicate whether this transaction has been commited.
    *
@@ -37,19 +38,25 @@ class Transaction extends DatabaseTransaction {
 
   /**
    * Overriden to add settings.
-   *
-   * @param DatabaseConnection $connection 
-   * @param mixed $name 
-   * @param mixed $sane 
+   * 
+   * @param Connection $connection 
+   * 
+   * @param string $name 
+   * 
+   * @param DatabaseTransactionSettings $settings 
    */
-  public function __construct(DatabaseConnection $connection, $name = NULL, $settings = NULL) {
+  public function __construct(Connection $connection, $name = NULL, DatabaseTransactionSettings $settings = NULL) {
+
+    // Store connection and settings.
     $this->settings = $settings;
     $this->connection = $connection;
+
     // If there is no transaction depth, then no transaction has started. Name
     // the transaction 'drupal_transaction'.
     if (!$depth = $connection->transactionDepth()) {
       $this->name = 'drupal_transaction';
     }
+
     // Within transactions, savepoints are used. Each savepoint requires a
     // name. So if no name is present we need to create one.
     elseif (empty($name)) {
@@ -58,13 +65,20 @@ class Transaction extends DatabaseTransaction {
     else {
       $this->name = $name;
     }
+
+    // Do not push the transaction if this features is not enable.
+    if ($this->connection->driver_settings->GetEnableTransactions() === FALSE) {
+      return;
+    }
+
     $this->connection->pushTransaction($this->name, $settings);
   }
 
   /**
-   * Overriden __desctur to provide some mental health.
+   * Overriden __destruct to provide some mental health (sane support).
    */
   public function __destruct() {
+
     if (!$this->settings->Get_Sane()) {
       // If we rolled back then the transaction would have already been popped.
       if (!$this->rolledBack) {
@@ -82,20 +96,46 @@ class Transaction extends DatabaseTransaction {
   }
 
   /**
-   * The "sane" behaviour requires explicit commits.
+   * Commits the transaction. Only available for SANE transactions.
    * 
    * @throws DatabaseTransactionExplicitCommitNotAllowedException 
    */
   public function commit() {
+
+    // Insane transaction behaviour does not allow explicit commits.
     if (!$this->settings->Get_Sane()) {
       throw new DatabaseTransactionExplicitCommitNotAllowedException();
     }
+
     // Cannot commit a rolledback transaction...
     if ($this->rolledBack) {
-      throw new Exception('Cannot Commit after rollback.'); //DatabaseTransactionCannotCommitAfterRollbackException();
+      throw new DatabaseTransactionCannotCommitAfterRollbackException();
     }
+
     // Mark as commited, and commit!
     $this->commited = TRUE;
+
+    // Do not pop the transaction if this features is not enabled.
+    if ($this->connection->driver_settings->GetEnableTransactions() === FALSE) {
+      return;
+    }
+
+    // Finally pop it!
     $this->connection->popTransaction($this->name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function rollback() {
+
+    $this->rolledBack = TRUE;
+
+    // Do not pop the transaction if this features is not enable.
+    if ($this->connection->driver_settings->GetEnableTransactions() === FALSE) {
+      return;
+    }
+
+    $this->connection->rollback($this->name);
   }
 }

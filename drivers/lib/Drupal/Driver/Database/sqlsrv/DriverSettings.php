@@ -27,6 +27,8 @@ class DriverSettings {
 
   private $_appendStackComments;
 
+  private $_enableTransactions;
+
 
   /**
    * Default settings for the dabase driver.
@@ -42,6 +44,7 @@ class DriverSettings {
         'statement_caching_mode' => 'disabled',
         'append_stack_comments' => FALSE,
         'default_bypass_query_preprocess' => FALSE,
+        'enable_transactions' => TRUE,
       );
 
   /**
@@ -101,6 +104,7 @@ class DriverSettings {
     $this->_useNativeMerge =$this->CheckValid('use_native_merge', $configuration['use_native_merge'], array(TRUE, FALSE));
     $this->_statementCachingMode =$this->CheckValid('statement_caching_mode', $configuration['statement_caching_mode'], array('disabled', 'on-demand', 'always'));
     $this->_appendStackComments =$this->CheckValid('append_stack_comments', $configuration['append_stack_comments'], array(TRUE, FALSE));
+    $this->_enableTransactions =$this->CheckValid('enable_transactions', $configuration['enable_transactions'], array(TRUE, FALSE));
   }
 
   /**
@@ -119,6 +123,18 @@ class DriverSettings {
         'default_bypass_query_preprocess' => $this->GetDeafultBypassQueryPreprocess(),
         'default_statement_caching' => $this->GetDeafultStatementCaching(),
       );
+  }
+
+  /**
+   * Completely disable transaction management
+   * at the driver leve. The MSSQL PDO has some issues
+   * that show up during testing so we need to diable
+   * transactions to be able to run some tests...
+   * 
+   * @see https://github.com/Azure/msphpsql/issues/49
+   */
+  public function GetEnableTransactions() {
+    return $this->_enableTransactions;
   }
 
   /**

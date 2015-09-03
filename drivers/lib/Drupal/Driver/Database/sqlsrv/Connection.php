@@ -294,7 +294,11 @@ class Connection extends DatabaseConnection {
     // or long standing locks. Use in combination with MSSQL profiler.
     global $conf;
     if ($this->driver_settings->GetAppendCallstackComment()) {
-      global $user;
+      $oUser = \Drupal::currentUser();
+      $uid = NULL;
+      if ($oUser != NULL) {
+        $uid = $oUser->getAccount()->id();
+      }
       $trim = strlen(DRUPAL_ROOT);
       $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
       static $request_id;
@@ -304,7 +308,7 @@ class Connection extends DatabaseConnection {
       // Remove las item (it's alwasy PDOPrepare)
       $trace = array_splice($trace, 1);
       $comment = PHP_EOL . PHP_EOL;
-      $comment .= '-- uid:' . (empty($user) ? 'null' : $user->uid) . PHP_EOL;
+      $comment .= '-- uid:' . (($uid) ? $uid : 'NULL') . PHP_EOL;
       $uri = (isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'none') ;
       $uri = preg_replace("/[^a-zA-Z0-9]/i", "_", $uri);
       $comment .= '-- url:' . $uri . PHP_EOL;

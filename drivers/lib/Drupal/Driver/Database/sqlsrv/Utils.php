@@ -25,6 +25,7 @@ class Utils {
 
   /**
    * Summary of BindExpressions
+   * 
    * @param PDOStatement $stmt 
    * @param array $values 
    * @param array $remove_from 
