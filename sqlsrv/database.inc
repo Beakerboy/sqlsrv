@@ -802,7 +802,8 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     }
     else {
       if ($settings->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) {
-        $current_isolation_level = strtoupper($this->schema()->UserOptions()['isolation level']);
+        $user_options = $this->schema()->UserOptions();
+        $current_isolation_level = strtoupper($user_options['isolation level']);
         // Se what isolation level was requested.
         $level = $settings->Get_IsolationLevel()->__toString();
         if (strcasecmp($current_isolation_level, $level) !== 0) {
