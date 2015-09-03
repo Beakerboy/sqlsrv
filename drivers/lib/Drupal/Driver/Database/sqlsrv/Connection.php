@@ -32,10 +32,7 @@ use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
 
 use PDO as PDO;
 use PDOException as PDOException;
-use fastcache as fastcache;
 use Exception as Exception;
-
-include_once 'fastcache.inc';
 
 /**
  * @addtogroup database
@@ -81,11 +78,22 @@ class Connection extends DatabaseConnection {
   const DATABASE_NOT_FOUND = 28000;
 
   /**
+   * Summary of $cache
+   * 
+   * @var FastCache
+   */
+  public $cache;
+
+  /**
    * Constructs a Connection object.
    */
   public function __construct(\PDO $connection, array $connection_options) {
 
+    // Initialize settings.
     $this->driver_settings = DriverSettings::instanceFromSettings();
+
+    // Initialize cache.
+    $this->cache = new FastCache($connection_options['prefix']['default']);
 
     // Needs to happen before parent construct.
     $this->statementClass = Statement::class;
@@ -373,7 +381,9 @@ class Connection extends DatabaseConnection {
   }
 
   public function escapeField($field) {
-    if ($cache = fastcache::cache_get($field, 'schema_escapeField')) {
+    // TODO: Not really clear if using a cache here is really useful as the uncached implementation
+    // is fast out of the box anyways. Needs profiling.
+    if ($cache = $this->cache->get($field, 'schema_escapeField')) {
       return $cache->data;
     }
     if (strlen($field) > 0) {
@@ -382,7 +392,7 @@ class Connection extends DatabaseConnection {
     else {
       $result = '';
     }
-    fastcache::cache_set($field, $result, 'schema_escapeField');
+    $this->cache->set($field, $result, 'schema_escapeField');
     return $result;
   }
 
@@ -610,7 +620,7 @@ class Connection extends DatabaseConnection {
     // Drill through everything...
     $success = FALSE;
     $cache = wincache_ucache_get($query_signature, $success);
-    if (FALSE && $success) {
+    if ($success) {
       return $cache;
     }
 

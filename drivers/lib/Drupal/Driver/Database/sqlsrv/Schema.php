@@ -31,14 +31,19 @@ use Exception as Exception;
 use PDOException as PDOException;
 use PDOStatement as PDOStatement;
 
-use fastcache as fastcache;
-
 /**
  * @addtogroup schemaapi
  * @{
  */
 
 class Schema extends DatabaseSchema {
+
+  /**
+   * Connection.
+   * 
+   * @var Connection
+   */
+  protected $connection;
 
   /**
    * Default schema for SQL Server databases.
@@ -80,7 +85,7 @@ class Schema extends DatabaseSchema {
    * such as MySQL.
    */
   public function DrupalSpecificFunctions() {
-    if ($cache = fastcache::cache_get('drupal_specific_functions', 'schema')) {
+    if ($cache = $this->connection->cache->get('drupal_specific_functions', 'schema')) {
       return $cache->data;
     }
     $functions = array(
@@ -99,7 +104,7 @@ class Schema extends DatabaseSchema {
     if ($this->EngineVersionNumber() >= 11) {
       $functions = array_diff($functions, array('CONCAT'));
     }
-    fastcache::cache_set('drupal_specific_functions', $functions, 'schema');
+    $this->connection->cache->set('drupal_specific_functions', $functions, 'schema');
     return $functions;
   }
 
@@ -107,12 +112,12 @@ class Schema extends DatabaseSchema {
    * Return active default Schema.
    */
   public function GetDefaultSchema() {
-    if ($cache = fastcache::cache_get('default_schema', 'schema')) {
+    if ($cache = $this->connection->cache->get('default_schema', 'schema')) {
       $this->defaultSchema = $cache->data;
       return $this->defaultSchema;
     }
     $result = $this->connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
-    fastcache::cache_set('default_schema', $result, 'schema');
+    $this->connection->cache->set('default_schema', $result, 'schema');
     $this->defaultSchema =  $result;
     return $this->defaultSchema;
   }
@@ -123,7 +128,7 @@ class Schema extends DatabaseSchema {
    * @param mixed $table 
    */
   protected function queryColumnInformationInvalidate($table) {
-    fastcache::cache_clear_all('queryColumnInformation:' . $table, 'schema_queryColumnInformation');
+    $this->connection->cache->cache_clear_all('queryColumnInformation:' . $table, 'schema_queryColumnInformation');
   }
   
   /**
@@ -161,7 +166,7 @@ class Schema extends DatabaseSchema {
       throw new Exception('Temporary table introspection is not supported.');
     }
     
-    if ($cache = fastcache::cache_get('queryColumnInformation:' . $table, 'schema_queryColumnInformation')) {
+    if ($cache = $this->connection->cache->get('queryColumnInformation:' . $table, 'schema_queryColumnInformation')) {
       return $cache->data;
     }
 
@@ -272,8 +277,8 @@ class Schema extends DatabaseSchema {
       }
     }
     
-    fastcache::cache_set('queryColumnInformation:' . $table, $info, 'schema_queryColumnInformation');
-
+    $this->connection->cache->set('queryColumnInformation:' . $table, $info, 'schema_queryColumnInformation');
+    
     return $info;
   }
   
@@ -288,7 +293,7 @@ class Schema extends DatabaseSchema {
     // Reset caches after calling tableExists() otherwise it's results get cached again before
     // the table is created.
     $this->queryColumnInformationInvalidate($name);
-    fastcache::cache_clear_all('*', 'tableExists', TRUE);
+    $this->connection->cache->cache_clear_all('*', 'tableExists', TRUE);
 
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
@@ -391,10 +396,10 @@ class Schema extends DatabaseSchema {
    */
   public function tableExists($table, $reset = FALSE) {
     // Do not cache temporary tables (#)
-    if (!$reset && $table[0] != '#' && $cache = fastcache::cache_get($table, 'tableExists')) {
+    if (!$reset && $table[0] != '#' && $cache = $this->connection->cache->get($table, 'tableExists')) {
       return $cache->data;
     }
-    
+
     // Temporary tables and regular tables cannot be verified in the same way.
     $query = NULL;
     if ($table[0] == '#') {
@@ -409,7 +414,7 @@ class Schema extends DatabaseSchema {
       ->fetchField() !== FALSE;
     
     if ($table[0] != '#') {
-      fastcache::cache_set($table, $exists, 'tableExists');
+      $this->connection->cache->set($table, $exists, 'tableExists');
     }
     
     return $exists;
@@ -435,11 +440,11 @@ class Schema extends DatabaseSchema {
    * @return mixed
    */
   public function UserOptions() {
-    if ($cache = fastcache::cache_get('UserOptions', 'schema')) {
+    if ($cache = $this->connection->cache->get('UserOptions', 'schema')) {
       return $cache->data;
     }
     $result = $this->connection->query_direct('DBCC UserOptions')->fetchAllKeyed();
-    fastcache::cache_set('UserOptions', $result, 'schema');
+    $this->connection->cache->set('UserOptions', $result, 'schema');
     return $result;
   }
 
@@ -447,7 +452,7 @@ class Schema extends DatabaseSchema {
    * Retrieve Engine Version information.
    */
   public function EngineVersion() {
-    if ($cache = fastcache::cache_get('EngineVersion', 'schema')) {
+    if ($cache = $this->connection->cache->get('EngineVersion', 'schema')) {
       return $cache->data;
     }
 
@@ -459,7 +464,7 @@ class Schema extends DatabaseSchema {
 EOF
     )->fetchAssoc();
 
-    fastcache::cache_set('EngineVersion', $version, 'schema');
+    $this->connection->cache->set('EngineVersion', $version, 'schema');
     return $version;
   }
 
@@ -926,7 +931,7 @@ EOF
     }
 
     // Borrar la caché de table_exists
-    fastcache::cache_clear_all('*', 'tableExists', TRUE);
+    $this->connection->cache->cache_clear_all('*', 'tableExists', TRUE);
     
     $this->connection->query_direct('EXEC sp_rename :old, :new', array(
       ':old' => $old_table_info['schema'] . '.' . $old_table_info['table'],
@@ -958,7 +963,7 @@ EOF
       return FALSE;
     }
     $this->connection->query_direct('DROP TABLE {' . $table . '}');
-    fastcache::cache_clear_all('*', 'tableExists', TRUE);
+    $this->connection->cache->cache_clear_all('*', 'tableExists', TRUE);
     return TRUE;
   }
 

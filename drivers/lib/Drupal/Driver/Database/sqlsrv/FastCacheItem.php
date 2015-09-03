@@ -5,7 +5,10 @@
  * fastcacheitem Class.
  */
 
-class fastcacheitem {
+namespace Drupal\Driver\Database\sqlsrv;
+
+class FastCacheItem {
+
   public $persist = FALSE;
   public $changed = FALSE;
   public $locked = FALSE;
@@ -49,7 +52,7 @@ class fastcacheitem {
    * @param mixed $value 
    */
   public function data_set($key, $value) {
-    $container = new stdClass();
+    $container = new \stdClass();
     $container->data = $value;
     $this->data[$key] = $container;
   }
@@ -58,7 +61,7 @@ class fastcacheitem {
    * Retrieve a value from cache.
    *
    * @param mixed $key 
-   * @return bool|stdClass
+   * @return bool|\stdClass
    */
   public function data_get($key) {
     if (isset($this->data[$key])) {
