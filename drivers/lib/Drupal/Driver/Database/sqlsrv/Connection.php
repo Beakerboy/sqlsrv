@@ -991,7 +991,7 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function merge($table, array $options = array()) {
-    $name = $this->driver_settings->GetUseNativeMerge() ? "MargeNative" : "Merge";
+    $name = $this->driver_settings->GetUseNativeMerge() ? "MergeNative" : "Merge";
     $class = $this->getDriverClass($name);
     return new $class($this, $table, $options);
   }
