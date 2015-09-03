@@ -25,11 +25,11 @@ class Select extends QuerySelect {
    * Overriden with an aditional exclude parameter that tells not to include this expression (by default)
    * in the select list.
    *
-   * @param string $expression 
+   * @param string $expression
    *
-   * @param string $alias 
+   * @param string $alias
    *
-   * @param string $arguments 
+   * @param string $arguments
    *
    * @param string $exclude
    *   If set to TRUE, this expression will not be added to the select list. Useful
@@ -90,7 +90,7 @@ class Select extends QuerySelect {
           $this->queryOptions['sqlsrv_drop_columns'][] = $alias;
         }
       }
-      
+
       // The other way round is also true, if using aggregates, all the fields in the SELECT
       // must be present in the GROUP BY.
       if (!empty($this->group)) {
@@ -145,7 +145,7 @@ class Select extends QuerySelect {
       $needle = array($needle);
     }
     foreach($needle as $what) {
-      if(($pos = stripos($haystack, $what)) !== false) { 
+      if(($pos = stripos($haystack, $what)) !== false) {
         return $pos;
       }
     }
@@ -195,7 +195,7 @@ class Select extends QuerySelect {
     if (!$this->compiled()) {
       $this->compile($this->connection, $this);
     }
-    
+
     // Create a sanitized comment string to prepend to the query.
     $comments = $this->connection->makeComment($this->comments);
 
@@ -220,7 +220,7 @@ class Select extends QuerySelect {
           // or custom computed columns.
           foreach ($info['columns_clean'] as $column) {
             $fields[] = $this->connection->escapeTable($alias) . '.' . $column['name'];
-          }          
+          }
         }
       }
     }
@@ -253,7 +253,7 @@ class Select extends QuerySelect {
           $fields[] = $new_alias . ' AS ' . $expression['alias'];
         }
         // Store old expression and new representation.
-        $this->cross_apply_aliases[$expression['alias']] = 'cross_' . $expression['alias'] . '.cross_sqlsrv'; 
+        $this->cross_apply_aliases[$expression['alias']] = 'cross_' . $expression['alias'] . '.cross_sqlsrv';
       }
       else {
         // We might not want an expression to appear in the select list.
@@ -291,7 +291,7 @@ class Select extends QuerySelect {
         $query .= ' ON ' . $table['condition'];
       }
     }
-    
+
     // CROSS APPLY
     $query .= implode($cross_apply);
 
@@ -372,7 +372,7 @@ class Select extends QuerySelect {
     $this->orderBy($alias);
     return $this;
   }
-  
+
   private function GetUsedAliases(DatabaseCondition $condition, array &$aliases = array()) {
     foreach($condition->conditions() as $key => $c) {
       if (is_string($key) && substr($key, 0, 1) == '#') {
@@ -386,7 +386,7 @@ class Select extends QuerySelect {
       }
     }
   }
-  
+
   /**
    * This is like the default countQuery, but does not optimize field (or expressions)
    * that are being used in conditions.
@@ -402,7 +402,7 @@ class Select extends QuerySelect {
 
       $used_aliases = array();
       $this->GetUsedAliases($count->condition, $used_aliases);
-      
+
       // When not executing a distinct query, we can zero-out existing fields
       // and expressions that are not used by a GROUP BY or HAVING. Fields
       // listed in a GROUP BY or HAVING clause need to be present in the

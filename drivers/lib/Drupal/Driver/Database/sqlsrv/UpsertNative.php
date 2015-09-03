@@ -50,7 +50,7 @@ class UpsertNative extends QueryUpsert {
 
     // Initialize placeholder count.
     $max_placeholder = 0;
-    
+
     // Build the query.
     $stmt = $this->connection->prepareQuery((string) $this);
 
@@ -72,7 +72,6 @@ class UpsertNative extends QueryUpsert {
     return TRUE;
 
   }
-
 
   /**
    * {@inheritdoc}
@@ -104,7 +103,7 @@ class UpsertNative extends QueryUpsert {
     foreach ($primary_key_cols as $key) {
       $key_conditions[] = "_target.[$key] = _source.[$key]";
     }
-    
+
     $query[] = "USING ({$dataset}) _source" . PHP_EOL . 'ON ' . implode(' AND ', $key_conditions);
 
     // Mappings.

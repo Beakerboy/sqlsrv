@@ -43,7 +43,7 @@ class MergeNative extends QueryMerge {
 
     // Initialize placeholder count.
     $max_placeholder = 0;
-    
+
     // Build the query.
     $stmt = $this->connection->prepareQuery((string)$this);
 
@@ -73,7 +73,7 @@ class MergeNative extends QueryMerge {
         return static::STATUS_INSERT;
       default:
         throw new InvalidMergeQueryException(t('Invalid merge query: no results.'));
-    } 
+    }
 
   }
 

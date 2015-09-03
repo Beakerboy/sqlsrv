@@ -31,19 +31,19 @@ class Transaction extends DatabaseTransaction {
 
   /**
    * A boolean to indicate if the transaction scope should behave sanely.
-   * 
+   *
    * @var DatabaseTransactionSettings
    */
   protected $settings = FALSE;
 
   /**
    * Overriden to add settings.
-   * 
-   * @param Connection $connection 
-   * 
-   * @param string $name 
-   * 
-   * @param DatabaseTransactionSettings $settings 
+   *
+   * @param Connection $connection
+   *
+   * @param string $name
+   *
+   * @param DatabaseTransactionSettings $settings
    */
   public function __construct(Connection $connection, $name = NULL, DatabaseTransactionSettings $settings = NULL) {
 
@@ -97,8 +97,8 @@ class Transaction extends DatabaseTransaction {
 
   /**
    * Commits the transaction. Only available for SANE transactions.
-   * 
-   * @throws DatabaseTransactionExplicitCommitNotAllowedException 
+   *
+   * @throws DatabaseTransactionExplicitCommitNotAllowedException
    */
   public function commit() {
 

@@ -18,21 +18,21 @@ use Drupal\wincache\Cache\WincacheBackend;
  *
  * We need a special caching layer for the special
  * SQLServer use case.
- * 
+ *
  * Virtual binaries are loaded at once, stored and manipulated
  * in memory during request execution and persisted at once
  * during shutdown.
- * 
+ *
  * It uses regular cache backends for storage (see enabled())
  * and when not available, will only work as a volatile per
  * request cache.
- * 
+ *
  */
 class FastCache {
 
   /**
    * Build an instance of FastCache.
-   * 
+   *
    * @param string $prefix
    *   Unique site prefix.
    */
@@ -42,7 +42,7 @@ class FastCache {
     }
     $this->prefix = $prefix;
   }
-  
+
   // @var fastcacheitem[]  $fastcacheitems
   private $fastcacheitems = array();
 
@@ -62,9 +62,9 @@ class FastCache {
   /**
    * Make sure that keys without binaries have their own binaries
    * and that a valid test prefix is used.
-   * 
-   * @param string $key 
-   * @param string $bin 
+   *
+   * @param string $key
+   * @param string $bin
    * @return void
    */
   private function FixKeyAndBin(&$key, &$bin) {
@@ -78,15 +78,15 @@ class FastCache {
 
   /**
    * Summary of $cache
-   * 
+   *
    * @var WincacheBackend
    */
   private $cache;
-  
+
   /**
    * Tell if cache persistence is enabled. If not, this cache
    * will behave as DRUPAL_STATIC until the end of request.
-   * 
+   *
    * Only enable this cache if the backend is DrupalWinCache
    * and the lock implementation is DrupalWinCache
    */

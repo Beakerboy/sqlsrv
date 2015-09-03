@@ -14,12 +14,12 @@ class TransactionSettings {
 
   /**
    * Summary of __construct
-   * @param mixed $Sane 
-   * @param DatabaseTransactionScopeOption $ScopeOption 
-   * @param DatabaseTransactionIsolationLevel $IsolationLevel 
+   * @param mixed $Sane
+   * @param DatabaseTransactionScopeOption $ScopeOption
+   * @param DatabaseTransactionIsolationLevel $IsolationLevel
    */
-  public function __construct($Sane = FALSE, 
-      DatabaseTransactionScopeOption $ScopeOption = NULL, 
+  public function __construct($Sane = FALSE,
+      DatabaseTransactionScopeOption $ScopeOption = NULL,
       DatabaseTransactionIsolationLevel $IsolationLevel = NULL) {
     $this->_Sane = $Sane;
     if ($ScopeOption == NULL) {
@@ -67,7 +67,7 @@ class TransactionSettings {
 
   /**
    * Returns a default setting system-wide.
-   * 
+   *
    * @return TransactionSettings
    */
   public static function GetDefaults() {
@@ -79,14 +79,14 @@ class TransactionSettings {
       }
     }
     // Otherwise use Drupal's default behaviour (except for nesting!)
-    return new TransactionSettings(FALSE, 
-                DatabaseTransactionScopeOption::Required(), 
+    return new TransactionSettings(FALSE,
+                DatabaseTransactionScopeOption::Required(),
                 $isolation);
   }
 
   /**
    * Proposed better defaults.
-   * 
+   *
    * @return TransactionSettings
    */
   public static function GetBetterDefaults() {
@@ -98,19 +98,19 @@ class TransactionSettings {
       }
     }
     // Otherwise use Drupal's default behaviour (except for nesting!)
-    return new TransactionSettings(TRUE, 
-                DatabaseTransactionScopeOption::Required(), 
+    return new TransactionSettings(TRUE,
+                DatabaseTransactionScopeOption::Required(),
                 $isolation);
   }
 
   /**
    * Snapshot isolation is not compatible with DDL operations.
-   * 
+   *
    * @return TransactionSettings
    */
   public static function GetDDLCompatibleDefaults() {
-    return new TransactionSettings(TRUE, 
-                DatabaseTransactionScopeOption::Required(), 
+    return new TransactionSettings(TRUE,
+                DatabaseTransactionScopeOption::Required(),
                 DatabaseTransactionIsolationLevel::ReadCommitted());
   }
 }

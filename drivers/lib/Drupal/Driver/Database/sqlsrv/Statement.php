@@ -106,7 +106,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
         unset($this->columnNames[$k]);
       }
     }
-    
+
     return $return;
   }
 
@@ -132,12 +132,12 @@ class Statement extends DatabaseStatement implements StatementInterface {
     unset($statement);
     throw $exception;
   }
-  
+
   /**
    * Experimental, do not iterate if not needed.
    *
-   * @param mixed $key_index 
-   * @param mixed $value_index 
+   * @param mixed $key_index
+   * @param mixed $value_index
    * @return array|Statement
    */
   public function fetchAllKeyed($key_index = 0, $value_index = 1) {

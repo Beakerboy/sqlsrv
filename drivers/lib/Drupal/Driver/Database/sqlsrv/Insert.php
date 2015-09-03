@@ -34,13 +34,13 @@ class Insert extends QueryInsert {
 
     // Fetch the list of blobs and sequences used on that table.
     $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
-    
+
     // Find out if there is an identity field set in this insert.
     $this->setIdentity = !empty($columnInformation['identity']) && in_array($columnInformation['identity'], $this->insertFields);
     $identity = !empty($columnInformation['identity']) ? $columnInformation['identity'] : NULL;
 
     #region Select Based Insert
-    
+
     if (!empty($this->fromQuery)) {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = array();
@@ -61,18 +61,18 @@ class Insert extends QueryInsert {
         return NULL;
       }
     }
-    
+
     #endregion
 
     #region Inserts with no values (full defaults)
-    
+
     // Handle the case of full-default queries.
     if (empty($this->fromQuery) && (empty($this->insertFields) || empty($this->insertValues))) {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = array();
       $stmt = $this->connection->prepareQuery((string) $this);
       $stmt->execute();
-      
+
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       try {
         return $stmt->fetchColumn(0);
@@ -81,11 +81,11 @@ class Insert extends QueryInsert {
         return NULL;
       }
     }
-    
+
     #endregion
 
     #region Regular Inserts
-    
+
     // Each insert happens in its own query. However, we wrap it in a transaction
     // so that it is atomic where possible.
     $transaction = NULL;
@@ -103,14 +103,14 @@ class Insert extends QueryInsert {
     while (!empty($batch)) {
       // Give me a query with the amount of batch inserts.
       $query = (string) $this->__toString2(count($batch));
-      
+
       // Prepare the query.
       $stmt = $this->connection->prepareQuery($query);
 
       // We use this array to store references to the blob handles.
       // This is necessary because the PDO will otherwise messes up with references.
       $blobs = array();
-      
+
       $max_placeholder = 0;
       foreach ($batch as $insert_index => $insert_values) {
         $values = array_combine($this->insertFields, $insert_values);
@@ -144,7 +144,7 @@ class Insert extends QueryInsert {
 
     // Return the last inserted key.
     return empty($this->inserted_keys) ? NULL : end($this->inserted_keys);
-    
+
     #endregion
   }
 
@@ -158,9 +158,9 @@ class Insert extends QueryInsert {
 
   /**
    * The aspect of the query depends on the batch size...
-   * 
-   * @param mixed $batch_size 
-   * @throws Exception 
+   *
+   * @param mixed $batch_size
+   * @throws Exception
    * @return string
    */
   private function __toString2($batch_size) {

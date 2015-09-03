@@ -16,8 +16,8 @@ use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSett
 use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
 
 /**
- * Implements the Upsert query for the MSSQL database driver. 
- * 
+ * Implements the Upsert query for the MSSQL database driver.
+ *
  * TODO: This class has been replaced by UpsertNative. Keeping this here for a while though..
  */
 class Upsert extends QueryUpsert {

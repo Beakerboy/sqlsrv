@@ -29,10 +29,9 @@ class DriverSettings {
 
   private $_enableTransactions;
 
-
   /**
    * Default settings for the dabase driver.
-   * 
+   *
    * @var array
    */
   private static $default_driver_settings = array(
@@ -49,10 +48,10 @@ class DriverSettings {
 
   /**
    * Checks for a valid setting in the list of allowed values.
-   * 
-   * @param mixed $value 
-   * @param mixed $value 
-   * @param array $allowed 
+   *
+   * @param mixed $value
+   * @param mixed $value
+   * @param array $allowed
    */
   private function CheckValid($name, $value, array $allowed) {
     if (!in_array($value, $allowed)) {
@@ -63,7 +62,7 @@ class DriverSettings {
 
   /**
    * Builds a DriverSettings instance from the application settings.php file.
-   * 
+   *
    * @return DriverSettings
    */
   public static function instanceFromSettings() {
@@ -75,8 +74,8 @@ class DriverSettings {
   /**
    * Builds a DriverSettings instance from custom settings. Missing settings are merged
    * from the application settings.
-   * 
-   * @param mixed $configuration 
+   *
+   * @param mixed $configuration
    */
   public static function instanceFromData($configuration) {
     $configuration = array_merge(static::$default_driver_settings, $configuration);
@@ -109,7 +108,7 @@ class DriverSettings {
 
   /**
    * Export current driver configuration.
-   * 
+   *
    * @return array
    */
   public function exportConfiguration() {
@@ -130,7 +129,7 @@ class DriverSettings {
    * at the driver leve. The MSSQL PDO has some issues
    * that show up during testing so we need to diable
    * transactions to be able to run some tests...
-   * 
+   *
    * @see https://github.com/Azure/msphpsql/issues/49
    */
   public function GetEnableTransactions() {
@@ -147,17 +146,16 @@ class DriverSettings {
   /**
    * PDO Constant names do not match 1-to-1 the transaction names that
    * need to be used in SQL.
-   * 
+   *
    * @return mixed
    */
   public function GetDefaultTransactionIsolationLevelInStatement() {
     return str_replace('_', ' ', $this->GetDefaultIsolationLevel());
   }
 
-  
   /**
    * Default query preprocess.
-   * 
+   *
    * @return mixed
    */
   public function GetDeafultStatementCaching() {
@@ -166,7 +164,7 @@ class DriverSettings {
 
   /**
    * Default query preprocess.
-   * 
+   *
    * @return mixed
    */
   public function GetDeafultBypassQueryPreprocess() {
@@ -204,11 +202,11 @@ class DriverSettings {
   /**
    * Experimental statement caching for PDO prepared statement
    * reuse.
-   * 
+   *
    * 'disabled' => Never use statement caching.
    * 'on-demand' => Only use statement caching when implicitly set in a Context.
    * 'always' => Always use statement caching.
-   * 
+   *
    */
   public function GetStatementCachingMode() {
     return $this->_statementCachingMode;

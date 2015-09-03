@@ -34,7 +34,7 @@ class Tasks extends InstallTasks {
     $this->tasks[] = array(
       'function' => 'initializeDatabase',
       'arguments' => array(),
-    );    
+    );
     $this->tasks[] = array(
       'function' => 'enableModule',
       'arguments' => array(),
@@ -241,7 +241,7 @@ EOF
             END
 EOF
       );
-      
+
       // MD5(@value) function.
       $if_exists = $schema->functionExists('MD5') ? 'ALTER' : 'CREATE';
       $database->query(<<< EOF
@@ -251,7 +251,7 @@ EOF
             END
 EOF
       );
-      
+
       // LPAD(@str, @len, @padstr) function.
       $if_exists = $schema->functionExists('LPAD') ? 'ALTER' : 'CREATE';
       $database->query(<<< EOF
@@ -261,7 +261,7 @@ EOF
             END
 EOF
       );
-      
+
       // CONNECTION_ID() function.
       $if_exists = $schema->functionExists('CONNECTION_ID') ? 'ALTER' : 'CREATE';
       $database->query(<<< EOF
@@ -282,7 +282,7 @@ EOF
       $this->fail(t('Drupal could not be correctly setup with the existing database. Revise any errors.'));
     }
   }
-  
+
   /**
    * Enable the SQL Server module.
    */

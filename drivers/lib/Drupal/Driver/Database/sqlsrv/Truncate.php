@@ -9,7 +9,7 @@ namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Query\Truncate as QueryTruncate;
 
-class Truncate extends QueryTruncate { 
+class Truncate extends QueryTruncate {
 
   /**
    * {@inheritdoc}
