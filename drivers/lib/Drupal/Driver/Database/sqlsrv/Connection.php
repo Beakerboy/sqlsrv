@@ -266,7 +266,7 @@ class Connection extends DatabaseConnection {
     // Call our overriden prepare.
     $stmt = $this->PDOPrepare($query, $pdo_options);
 
-    // If statement caching is enabled, store current statement for reuse
+    // If statement caching is enabled, store current statement for reuse.
     if ($options['statement_caching'] === TRUE) {
       $this->statement_cache[$query] = $stmt;
     }
@@ -380,10 +380,16 @@ class Connection extends DatabaseConnection {
     return end($matches);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function quoteIdentifier($identifier) {
     return '[' . $identifier .']';
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function escapeField($field) {
     // TODO: Not really clear if using a cache here is really useful as the uncached implementation
     // is fast out of the box anyways. Needs profiling.
@@ -400,19 +406,22 @@ class Connection extends DatabaseConnection {
     return $result;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function quoteIdentifiers($identifiers) {
     return array_map(array($this, 'quoteIdentifier'), $identifiers);
   }
 
   /**
-   * Override of DatabaseConnection::escapeLike().
+   * {@inheritdoc}
    */
   public function escapeLike($string) {
     return addcslashes($string, '\%_[]');
   }
 
   /**
-   * Override of DatabaseConnection::queryRange().
+   * {@inheritdoc}
    */
   public function queryRange($query, $from, $count, array $args = array(), array $options = array()) {
     $query = $this->addRangeToQuery($query, $from, $count);
@@ -425,7 +434,7 @@ class Connection extends DatabaseConnection {
    * connections so we need to make sure that their
    * names are as unique as possible to prevent collisions.
    *
-   * @return
+   * @return string
    *   A table name.
    */
   protected function generateTemporaryTableName() {
@@ -437,9 +446,7 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Override of DatabaseConnection::queryTemporary().
-   *
-   * @status tested
+   * {@inheritdoc}
    */
   public function queryTemporary($query, array $args = array(), array $options = array()) {
     // Generate a new GLOBAL temporary table name and protect it from prefixing.

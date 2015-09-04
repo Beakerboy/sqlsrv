@@ -27,6 +27,15 @@ use PDOStatement as PDOStatement;
 
 class Insert extends QueryInsert {
 
+  /**
+   * Maximum number of inserts that the driver will perform
+   * on a single statement.
+   */
+  const MAX_BATCH_SIZE = 200;
+
+  /**
+   * {@inheritdoc}
+   */
   public function execute() {
     if (!$this->preExecute()) {
       return NULL;
@@ -86,14 +95,14 @@ class Insert extends QueryInsert {
 
     #region Regular Inserts
 
+    $this->inserted_keys = array();
+
     // Each insert happens in its own query. However, we wrap it in a transaction
     // so that it is atomic where possible.
     $transaction = NULL;
 
-    $batch_size = 200;
-
-    // At most we can process in batches of 250 elements.
-    $batch = array_splice($this->insertValues, 0, $batch_size);
+    // At most we can process in batches of $batch_size.
+    $batch = array_splice($this->insertValues, 0, Insert::MAX_BATCH_SIZE);
 
     // If we are going to need more than one batch for this... start a transaction.
     if (empty($this->queryOptions['sqlsrv_skip_transactions']) && !empty($this->insertValues)) {
@@ -102,7 +111,7 @@ class Insert extends QueryInsert {
 
     while (!empty($batch)) {
       // Give me a query with the amount of batch inserts.
-      $query = (string) $this->__toString2(count($batch));
+      $query = $this->BuildQuery(count($batch));
 
       // Prepare the query.
       $stmt = $this->connection->prepareQuery($query);
@@ -131,7 +140,7 @@ class Insert extends QueryInsert {
       }
 
       // Fetch the next batch.
-      $batch = array_splice($this->insertValues, 0, $batch_size);
+      $batch = array_splice($this->insertValues, 0, Insert::MAX_BATCH_SIZE);
     }
 
     // If we started a transaction, commit it.
@@ -150,23 +159,38 @@ class Insert extends QueryInsert {
 
   // Because we can handle multiple inserts, give
   // an option to retrieve all keys.
-  public $inserted_keys = array();
+  private $inserted_keys = array();
+
+  /**
+   * Retrieve an array of the keys resulting from
+   * the last insert.
+   * 
+   * @return mixed[]
+   */
+  public function GetInsertedKeys() {
+    return $this->inserted_keys();
+  }
 
   public function __toString() {
-    return $this->__toString2(1);
+    // Default to a query that inserts everything at the same time.
+    return $this->BuildQuery(count($this->insertValues));
   }
 
   /**
    * The aspect of the query depends on the batch size...
    *
-   * @param mixed $batch_size
+   * @param int $batch_size
+   *   The number of inserts to perform on a single statement.
+   * 
    * @throws Exception
+   * 
    * @return string
    */
-  private function __toString2($batch_size) {
+  private function BuildQuery($batch_size) {
+
     // Make sure we don't go crazy with this numbers.
-    if ($batch_size > 250) {
-      throw new Exception("MSSQL Native Batch Insert limited to 250.");
+    if ($batch_size > Insert::MAX_BATCH_SIZE) {
+      throw new \Exception("MSSQL Native Batch Insert limited to 250.");
     }
 
     // Fetch the list of blobs and sequences used on that table.

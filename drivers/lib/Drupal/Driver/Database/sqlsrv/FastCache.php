@@ -37,9 +37,17 @@ class FastCache {
    *   Unique site prefix.
    */
   public function __construct($prefix) {
+
     if (!is_string($prefix)) {
       throw new \Exception("FastCache prefix must be a string.");
     }
+
+    // Setup the cache if available.
+    if (class_exists(\Drupal\wincache\Cache\WincacheBackend::class)) {
+      $checksum_provider = new DummyTagChecksum();
+      $this->cache = new WincacheBackend('fastcache', $this->prefix, $checksum_provider);
+    }
+
     $this->prefix = $prefix;
   }
 
@@ -91,12 +99,6 @@ class FastCache {
    * and the lock implementation is DrupalWinCache
    */
   public function Enabled($refresh = FALSE) {
-    if (empty($this->cache)) {
-      if (class_exists(\Drupal\wincache\Cache\WincacheBackend::class)) {
-        $checksum_provider = new DummyTagChecksum();
-        $this->cache = new WincacheBackend('fastcache', $this->prefix, $checksum_provider);
-      }
-    }
     return !empty($this->cache);
   }
 
