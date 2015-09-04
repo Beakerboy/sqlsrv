@@ -11,7 +11,9 @@ function sqlsrv_requirements($phase) {
 
   $requirements = array();
 
-  if ($phase == 'runtime') {
+  $connection = Database::getConnection();
+  
+  if ($phase == 'runtime' && $connection->driver() == 'sqlsrv') {
     $connection = Database::getConnection();
     $options = $connection->getConnectionOptions();
     $schema = $connection->schema();
