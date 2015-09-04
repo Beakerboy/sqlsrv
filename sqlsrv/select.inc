@@ -29,6 +29,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
     return $alias;
   }
 
+
   /**
    * Override for SelectQuery::preExecute().
    *
@@ -102,6 +103,62 @@ class SelectQuery_sqlsrv extends SelectQuery {
           // have duplicate placeholders. Run as insecure.
           if (is_array($expression['arguments'])) {
             $this->queryOptions['insecure'] = TRUE;
+          }
+        }
+      }
+    }
+
+    // Verify type bindings in the conditions, and throw the Exception
+    // now to prevent a bug in MSSQLPDO where transactions are f**** UP
+    // when the driver throws a PDOException().
+    // @see https://github.com/Azure/msphpsql/issues/50
+    //
+    // TODO: Remove when the issue is fixed in the PDO driver.
+    if (DatabaseUtils::GetConfigBoolean('MSSQL_VERIFY_NUMERIC_BINDINGS')) {
+
+
+      foreach($this->where->conditions() as $condition) {
+        if (!isset($condition['field']) || !is_string($condition['field'])) {
+          continue;
+        }
+
+        // Make sure we have a valid $table.$field format.
+        $parts = explode('.', $condition['field']);
+        if (count($parts) !== 2) {
+          continue;
+        }
+        list($table, $field_alias) = $parts;
+
+        // Fin the real field name if this was an alias.
+        $fields = $this->getFields();
+        $field = $field_alias;
+        if (isset($fields[$field_alias])) {
+          $field = $fields[$field_alias]['field'];
+        }
+
+        // Get the real table name.
+        $tables = $this->getTables();
+        if (!isset($tables[$table])) {
+          continue;
+        }
+        $real_table = $tables[$table]['table'];
+
+        /** @var DatabaseSchema_sqlsrv **/
+        $schema = $this->connection->schema();
+
+        $spec = $schema->queryColumnInformation($real_table);
+        $col_spec = $spec['columns'][$field];
+        $values = $condition['value'];
+        if (!is_array($values)) {
+          $values = array($values);
+        }
+
+        foreach($values as $value) {
+          if (!is_numeric($value) && !is_bool($value)) {
+            if (in_array($col_spec['type'], array('int', 'bigint'))) {
+              // This is anyways going to throw an exception when running the query against the PDO driver.
+              throw new \PDOException('Invalid type binding!');
+            }
           }
         }
       }
