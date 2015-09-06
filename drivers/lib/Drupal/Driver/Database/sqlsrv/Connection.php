@@ -522,30 +522,52 @@ class Connection extends DatabaseConnection {
       }
     }
     catch (\PDOException $e) {
-      if ($options['throw_exception']) {
-        // Wrap the exception in another exception, because PHP does not allow
-        // overriding Exception::getMessage(). Its message is the extra database
-        // debug information.
-        if ($stmt instanceof StatementInterface) {
-          $query_string = $stmt->getQueryString();
-        }
-        else {
-          $query_string = $query;
-        }
-        $message = $e->getMessage() . ": " . $query_string . "; " . print_r($args, TRUE);
-        // Match all SQLSTATE 23xxx errors.
-        if (substr($e->getCode(), -6, -3) == '23') {
-          $exception = new IntegrityConstraintViolationException($message, $e->getCode(), $e);
-        }
-        else {
-          $exception = new DatabaseExceptionWrapper($message, 0, $e);
-        }
-        $exception->query_string = $query_string;
-        $exception->args = $args;
-        throw $exception;
-      }
-      return NULL;
+      // Most database drivers will return NULL here, but some of them
+      // (e.g. the SQLite driver) may need to re-run the query, so the return
+      // value will be the same as for static::query().
+      return $this->handleQueryException($e, $query, $args, $options);
     }
+  }
+
+  /**
+   * Wraps and re-throws any PDO exception thrown by static::query().
+   *
+   * @param \PDOException $e
+   *   The exception thrown by static::query().
+   * @param $query
+   *   The query executed by static::query().
+   * @param array $args
+   *   An array of arguments for the prepared statement.
+   * @param array $options
+   *   An associative array of options to control how the query is run.
+   *
+   * @return \Drupal\Core\Database\StatementInterface|int|null
+   *   Most database drivers will return NULL when a PDO exception is thrown for
+   *   a query, but some of them may need to re-run the query, so they can also
+   *   return a \Drupal\Core\Database\StatementInterface object or an integer.
+   *
+   * @throws \Drupal\Core\Database\DatabaseExceptionWrapper
+   * @throws \Drupal\Core\Database\IntegrityConstraintViolationException
+   */
+  public function handleQueryException(\PDOException $e, $query, array $args = array(), $options = array()) {
+
+      // Wrap the exception in another exception, because PHP does not allow
+      // overriding Exception::getMessage(). Its message is the extra database
+      // debug information.
+      $query_string = $query;
+      $message = $e->getMessage() . ": " . $query_string . "; " . print_r($args, TRUE);
+      // Match all SQLSTATE 23xxx errors.
+      if (substr($e->getCode(), -6, -3) == '23') {
+        $exception = new IntegrityConstraintViolationException($message, $e->getCode(), $e);
+      }
+      else {
+        $exception = new DatabaseExceptionWrapper($message, 0, $e);
+      }
+      $exception->query_string = $query_string;
+      $exception->args = $args;
+      throw $exception;
+
+    return NULL;
   }
 
   /**
@@ -594,29 +616,10 @@ class Connection extends DatabaseConnection {
       }
     }
     catch (\PDOException $e) {
-      if ($options['throw_exception']) {
-        // Wrap the exception in another exception, because PHP does not allow
-        // overriding Exception::getMessage(). Its message is the extra database
-        // debug information.
-        if ($stmt instanceof StatementInterface) {
-          $query_string = $stmt->getQueryString();
-        }
-        else {
-          $query_string = $query;
-        }
-        $message = $e->getMessage() . ": " . $query_string . "; " . print_r($args, TRUE);
-        // Match all SQLSTATE 23xxx errors.
-        if (substr($e->getCode(), -6, -3) == '23') {
-          $exception = new IntegrityConstraintViolationException($message, $e->getCode(), $e);
-        }
-        else {
-          $exception = new DatabaseExceptionWrapper($message, 0, $e);
-        }
-        $exception->query_string = $query_string;
-        $exception->args = $args;
-        throw $exception;
-      }
-      return NULL;
+      // Most database drivers will return NULL here, but some of them
+      // (e.g. the SQLite driver) may need to re-run the query, so the return
+      // value will be the same as for static::query().
+      return $this->handleQueryException($e, $query, $args, $options);
     }
   }
 
