@@ -1,5 +1,7 @@
 <?php
 
+use DatabaseConnection_sqlsrv as Connection;
+
 /**
  * Implements hook_requirements().
  *
@@ -12,9 +14,9 @@ function sqlsrv_requirements($phase) {
   $requirements = array();
 
   $connection = Database::getConnection();
-  
+
   if ($phase == 'runtime' && $connection->driver() == 'sqlsrv') {
-    $connection = Database::getConnection();
+
     $options = $connection->getConnectionOptions();
     $schema = $connection->schema();
     $version = $schema->EngineVersion();
@@ -23,9 +25,12 @@ function sqlsrv_requirements($phase) {
     $extensiondata = sqlsrv_REData(new ReflectionExtension('pdo_sqlsrv'));
     
     // Report database engine version
+    $uinfo = $schema->UserOptions();
+    $uinfo_parts = array_map(function($a, $b) { $a = strtoupper($a); $b = strtoupper($b); return "$a=$b"; }, array_keys($uinfo), $uinfo);
     $requirements['sqlsrv_edition'] = array(
       'title' => t('MS SQL Server'),
       'severity' => REQUIREMENT_INFO,
+      'description' => implode(' | ', $uinfo_parts),
       'value' => t('@version [@level] @edition', 
         array('@version' => $version['VERSION'],
                '@level' => $version['LEVEL'],
@@ -93,11 +98,60 @@ function sqlsrv_requirements($phase) {
       'description' => t('Use at least the 3.2.0.0 version of the MSSQL PDO driver.')
     );
     
-    // TODO: Report GROUP_CONCAT availability
-    // TODO: Report binary column spec compatiblity of current driver, and warn about
-    // serious performance issues.
-    // TODO: Report install function availability (SUBSTRING, CONCAT, IF, MD5, etc...)
+    // Make sure that the module's driver code is the same one as the effectively
+    // deployed driver code....
+    // TODO:// Nicer than just showing the error, 
+    // would be to offer the option to autodploy the driver...
+    $deployed_ok = sqlsrv_verify_driver();
+    $requirements['sqlsrv_deployed_files'] = array(
+      'title' => t('MSSQL Server Deployed Driver'),
+      'description' => t('Deployed driver match.'),
+      'severity' => $deployed_ok === TRUE ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+      'description' => $deployed_ok === TRUE ? t('Deployed driver matches module version.') : t('The deployed driver files do not match the module driver.'),
+      );    
   }
 
   return $requirements;
 }
+
+
+/**
+ * Verify that the deployed driver is the same one as the module
+ * version.
+ * 
+ * @return bool
+ */
+function sqlsrv_verify_driver() {
+
+  // Location of the effective driver.
+  $class = Connection::class;
+  $reflector = new ReflectionClass($class);
+  $driver_dir = dirname($reflector->getFileName());
+
+  // Location for the module's driver.
+  $module_dir = dirname(__FILE__) . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, array('sqlsrv'));
+
+  return sqlsrv_directory_checksum($driver_dir) === sqlsrv_directory_checksum($module_dir);
+}
+
+/**
+ * Calculate a unique identifier for a directory and it's contents
+ * based on file sizes and names.
+ * 
+ * TODO:// This thing will not notice files being moved around in directories
+ * as long as they keep same name and size.
+ * 
+ * @param string $directory 
+ * @return string
+ */
+function sqlsrv_directory_checksum($directory) {
+  $files = file_scan_directory($directory, '/\.*/i');
+  $checksum = 0;
+  $names = '';
+  foreach ($files as $file) {
+    $checksum += filesize($file->uri);
+    $names .= $file->name;
+  }
+  return $checksum . '-' . md5($names);
+}
+
