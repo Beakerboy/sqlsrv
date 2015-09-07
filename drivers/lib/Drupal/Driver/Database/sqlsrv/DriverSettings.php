@@ -29,6 +29,8 @@ class DriverSettings {
 
   private $_enableTransactions;
 
+  private $_monitorDriverStatus;
+
   /**
    * Default settings for the dabase driver.
    *
@@ -44,6 +46,7 @@ class DriverSettings {
         'append_stack_comments' => FALSE,
         'default_bypass_query_preprocess' => FALSE,
         'enable_transactions' => TRUE,
+        'monitor_driver_status' => TRUE,
       );
 
   /**
@@ -104,6 +107,7 @@ class DriverSettings {
     $this->_statementCachingMode =$this->CheckValid('statement_caching_mode', $configuration['statement_caching_mode'], array('disabled', 'on-demand', 'always'));
     $this->_appendStackComments =$this->CheckValid('append_stack_comments', $configuration['append_stack_comments'], array(TRUE, FALSE));
     $this->_enableTransactions =$this->CheckValid('enable_transactions', $configuration['enable_transactions'], array(TRUE, FALSE));
+    $this->_monitorDriverStatus =$this->CheckValid('monitor_driver_status', $configuration['monitor_driver_status'], array(TRUE, FALSE));
   }
 
   /**
@@ -121,7 +125,12 @@ class DriverSettings {
         'append_stack_comments' => $this->GetAppendCallstackComment(),
         'default_bypass_query_preprocess' => $this->GetDeafultBypassQueryPreprocess(),
         'default_statement_caching' => $this->GetDeafultStatementCaching(),
+        'monitorDriverStatus' => $this->GetMonitorDriverStatus(),
       );
+  }
+
+  public function GetMonitorDriverStatus() {
+    return $this->_monitorDriverStatus;
   }
 
   /**
