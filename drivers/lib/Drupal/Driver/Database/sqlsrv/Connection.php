@@ -550,11 +550,17 @@ class Connection extends DatabaseConnection {
    * @throws \Drupal\Core\Database\IntegrityConstraintViolationException
    */
   public function handleQueryException(\PDOException $e, $query, array $args = array(), $options = array()) {
-
+    if ($options['throw_exception']) {
       // Wrap the exception in another exception, because PHP does not allow
       // overriding Exception::getMessage(). Its message is the extra database
       // debug information.
-      $query_string = $query;
+      if ($query instanceof StatementInterface) {
+        $query_string = $query->getQueryString();
+      }
+      else {
+        $query_string = $query;
+      }
+
       $message = $e->getMessage() . ": " . $query_string . "; " . print_r($args, TRUE);
       // Match all SQLSTATE 23xxx errors.
       if (substr($e->getCode(), -6, -3) == '23') {
@@ -566,6 +572,7 @@ class Connection extends DatabaseConnection {
       $exception->query_string = $query_string;
       $exception->args = $args;
       throw $exception;
+    }
 
     return NULL;
   }

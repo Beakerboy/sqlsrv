@@ -24,6 +24,10 @@ use PDOStatement as PDOStatement;
 class Update extends QueryUpdate {
 
   public function execute() {
+
+    // Retrieve query options.
+    $options = $this->queryOptions;
+
     // Fetch the list of blobs and sequences used on that table.
     $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
 
@@ -56,7 +60,8 @@ class Update extends QueryUpdate {
 
     $options = $this->queryOptions;
     $options['already_prepared'] = TRUE;
-    $stmt->execute();
+
+    $this->connection->query($stmt, array(), $options);
 
     return $stmt->rowCount();
   }

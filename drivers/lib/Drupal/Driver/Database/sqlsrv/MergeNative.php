@@ -32,6 +32,9 @@ class MergeNative extends QueryMerge {
       throw new InvalidMergeQueryException(t('Invalid merge query: no conditions'));
     }
 
+    // Retrieve query options.
+    $options = $this->queryOptions;
+
     // Keep a reference to the blobs.
     $blobs = array();
 
@@ -60,7 +63,8 @@ class MergeNative extends QueryMerge {
     DatabaseUtils::BindValues($stmt, $this->insertFields, $blobs, ':db_merge_placeholder_', $columnInformation, $max_placeholder);
 
     // 4. Run the query, this will return UPDATE or INSERT
-    $stmt->execute();
+    $this->connection->query($stmt, array(), $options);
+
     $result = NULL;
     foreach ($stmt as $value) {
       $result = $value->{'$action'};

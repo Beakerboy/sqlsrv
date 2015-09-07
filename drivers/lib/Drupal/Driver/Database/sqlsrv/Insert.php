@@ -48,6 +48,9 @@ class Insert extends QueryInsert {
     $this->setIdentity = !empty($columnInformation['identity']) && in_array($columnInformation['identity'], $this->insertFields);
     $identity = !empty($columnInformation['identity']) ? $columnInformation['identity'] : NULL;
 
+    // Retrieve query options.
+    $options = $this->queryOptions;
+
     #region Select Based Insert
 
     if (!empty($this->fromQuery)) {
@@ -60,7 +63,8 @@ class Insert extends QueryInsert {
       $arguments = $this->fromQuery->getArguments();
       DatabaseUtils::BindArguments($stmt, $arguments);
 
-      $stmt->execute();
+      // Run the query
+      $this->connection->query($stmt, array(), $options);
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       try {
@@ -80,7 +84,9 @@ class Insert extends QueryInsert {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = array();
       $stmt = $this->connection->prepareQuery((string) $this);
-      $stmt->execute();
+
+      // Run the query
+      $this->connection->query($stmt, array(), $options);
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       try {
@@ -126,7 +132,8 @@ class Insert extends QueryInsert {
         DatabaseUtils::BindValues($stmt, $values, $blobs, ':db_insert', $columnInformation, $max_placeholder, $insert_index);
       }
 
-      $stmt->execute(array(), array('fetch' => PDO::FETCH_ASSOC));
+      // Run the query
+      $this->connection->query($stmt, array(), array_merge($options, array('fetch' => PDO::FETCH_ASSOC)));
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       // When the column does not have an identity column, no results are thrown back.
@@ -164,7 +171,7 @@ class Insert extends QueryInsert {
   /**
    * Retrieve an array of the keys resulting from
    * the last insert.
-   * 
+   *
    * @return mixed[]
    */
   public function GetInsertedKeys() {
@@ -181,9 +188,9 @@ class Insert extends QueryInsert {
    *
    * @param int $batch_size
    *   The number of inserts to perform on a single statement.
-   * 
+   *
    * @throws Exception
-   * 
+   *
    * @return string
    */
   private function BuildQuery($batch_size) {

@@ -112,8 +112,8 @@ class Utils {
 
   /**
    * Get some info about extensions...
-   * 
-   * @param \ReflectionExtension $re 
+   *
+   * @param \ReflectionExtension $re
    * @return array
    */
   public static function ExtensionData($name) {
@@ -124,7 +124,7 @@ class Utils {
 
     $_data['getName'] = $re->getName() ?: NULL;
     $_data['getVersion'] = $re->getVersion() ?: NULL;
-    $_data['getClassName'] = PHP_EOL.implode(", ",$re->getClassNames()) ?: NULL;     
+    $_data['getClassName'] = PHP_EOL.implode(", ",$re->getClassNames()) ?: NULL;
     foreach ($re->getConstants() as $key => $value) $_data['getConstants'] .= "\n{$key}:={$value}";
     $_data['getDependencies'] = $re->getDependencies() ?: NULL;
     $_data['getFunctions'] = PHP_EOL.implode(", ",array_keys($re->getFunctions())) ?: NULL;

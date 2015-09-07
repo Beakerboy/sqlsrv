@@ -31,6 +31,9 @@ class UpsertNative extends QueryUpsert {
    */
   public function execute() {
 
+    // Retrieve query options.
+    $options = $this->queryOptions;
+
     // Initialize result array.
     $this->result = array();
 
@@ -61,7 +64,8 @@ class UpsertNative extends QueryUpsert {
     }
 
     // 4. Run the query, this will return UPDATE or INSERT
-    $stmt->execute();
+    $this->connection->query($stmt, array(), $options);
+
     foreach ($stmt as $value) {
       $this->result[] = $value->{'$action'};
     }
