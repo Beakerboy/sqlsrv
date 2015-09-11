@@ -147,6 +147,9 @@ class SelectQuery_sqlsrv extends SelectQuery {
         $schema = $this->connection->schema();
 
         $spec = $schema->queryColumnInformation($real_table);
+        if (!isset($spec['columns'][$field])) {
+          continue;
+        }
         $col_spec = $spec['columns'][$field];
         $values = $condition['value'];
         if (!is_array($values)) {
