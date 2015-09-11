@@ -24,8 +24,10 @@ class fastcache {
   
   // @var fastcacheitem[]  $fastcacheitems
   private static $fastcacheitems = array();
+
   // @var bool $enabled
   private static $enabled = NULL;
+
   // @var bool $shutdown_registered
   private static $shutdown_registered = FALSE;
   
@@ -95,8 +97,9 @@ class fastcache {
         }
 
         global $WINCACHE_LOCK_ACTIVE;
-        // Only enabled storage if Cache Backend is DrupalWinCache and Locking backend is also Wincache based.
-        static::$enabled = is_a(_cache_get_object('fastcache'), 'DrupalWinCache') && $WINCACHE_LOCK_ACTIVE;
+        // Only enabled storage if Cache Backend is DrupalWinCache or ChainedFastBackend.
+        $object = _cache_get_object('fastcache');
+        static::$enabled = (is_a($object, \DrupalWinCache::class) || is_a($object, \ChainedFastBackend::class)) && $WINCACHE_LOCK_ACTIVE;
       }
       else {
         static::$enabled = FALSE;
