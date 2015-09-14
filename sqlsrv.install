@@ -9,7 +9,7 @@ use DatabaseConnection_sqlsrv as Connection;
  */
 function sqlsrv_requirements($phase) {
 
-  include_once(DRUPAL_ROOT . '/includes/database/sqlsrv/reflexiondata.inc');
+  
 
   $requirements = array();
 
@@ -20,7 +20,12 @@ function sqlsrv_requirements($phase) {
     $options = $connection->getConnectionOptions();
     $schema = $connection->schema();
     $version = $schema->EngineVersion();
-    
+
+    // Find out where the driver is.
+    $object = new ReflectionObject($connection);
+    $driver_path = dirname($object->getFileName());
+    include_once($driver_path . DIRECTORY_SEPARATOR . 'reflexiondata.inc');
+
     // Report PDO version
     $extensiondata = sqlsrv_REData(new ReflectionExtension('pdo_sqlsrv'));
     
