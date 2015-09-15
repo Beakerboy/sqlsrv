@@ -26,17 +26,18 @@ function sqlsrv_uninstall() {
  * @status: Needs global revision.
  */
 function sqlsrv_requirements($phase) {
+
   $requirements = array();
 
-  /** @var Connection $connection */
-  $connection = Database::getConnection();
-
-  // Nothing to do if we are not running on MSSQL.
-  if ($connection->driver() !== 'sqlsrv') {
-    return $requirements;
-  }
-
   if ($phase == 'runtime') {
+
+    /** @var Connection $connection */
+    $connection = Database::getConnection();
+
+    // Nothing to do if we are not running on MSSQL.
+    if ($connection->driver() !== 'sqlsrv') {
+      return array();
+    }
 
     $options = $connection->getConnectionOptions();
     $schema = $connection->schema();
