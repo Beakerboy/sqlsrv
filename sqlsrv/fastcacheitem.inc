@@ -45,19 +45,19 @@ class fastcacheitem {
   /**
    * Set a value in cache.
    *
-   * @param mixed $key 
-   * @param mixed $value 
+   * @param mixed $key
+   * @param mixed $value
    */
   public function data_set($key, $value) {
     $container = new stdClass();
     $container->data = $value;
     $this->data[$key] = $container;
   }
-  
+
   /**
    * Retrieve a value from cache.
    *
-   * @param mixed $key 
+   * @param mixed $key
    * @return bool|stdClass
    */
   public function data_get($key) {
@@ -71,11 +71,11 @@ class fastcacheitem {
    * Clear a cache item.
    *
    * @param string $key
-   *   If set, the cache ID or an array of cache IDs. Otherwise, all cache entries that 
+   *   If set, the cache ID or an array of cache IDs. Otherwise, all cache entries that
    **  can expire are deleted. The $wildcard argument will be ignored if set to NULL.
-   * @param bool $wildcard 
-   *  If TRUE, the $cid argument must contain a string value and cache 
-   *  IDs starting with $cid are deleted in addition to the exact cache 
+   * @param bool $wildcard
+   *  If TRUE, the $cid argument must contain a string value and cache
+   *  IDs starting with $cid are deleted in addition to the exact cache
    *  ID specified by $cid. If $wildcard is TRUE and $cid is '*', the entire cache is emptied.
    */
   public function clear($key, $wildcard = FALSE) {
@@ -95,7 +95,7 @@ class fastcacheitem {
         // Completely reset this binary.
         unset($this->data);
         $this->data = array();
-      } 
+      }
       else {
         // Only reset items that start with $key.
         foreach ($this->data as $k => $v) {

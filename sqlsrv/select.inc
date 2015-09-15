@@ -2,16 +2,15 @@
 
 class SelectQuery_sqlsrv extends SelectQuery {
 
-
   /**
    * Overriden with an aditional exclude parameter that tells not to include this expression (by default)
    * in the select list.
    *
-   * @param string $expression 
+   * @param string $expression
    *
-   * @param string $alias 
+   * @param string $alias
    *
-   * @param string $arguments 
+   * @param string $arguments
    *
    * @param string $exclude
    *   If set to TRUE, this expression will not be added to the select list. Useful
@@ -28,7 +27,6 @@ class SelectQuery_sqlsrv extends SelectQuery {
     $this->expressions[$alias]['expand'] = $expand;
     return $alias;
   }
-
 
   /**
    * Override for SelectQuery::preExecute().
@@ -74,7 +72,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
           $this->queryOptions['sqlsrv_drop_columns'][] = $alias;
         }
       }
-      
+
       // The other way round is also true, if using aggregates, all the fields in the SELECT
       // must be present in the GROUP BY.
       if (!empty($this->group)) {
@@ -115,7 +113,6 @@ class SelectQuery_sqlsrv extends SelectQuery {
     //
     // TODO: Remove when the issue is fixed in the PDO driver.
     if (DatabaseUtils::GetConfigBoolean('MSSQL_VERIFY_NUMERIC_BINDINGS')) {
-
 
       foreach($this->where->conditions() as $condition) {
         if (!isset($condition['field']) || !is_string($condition['field'])) {
@@ -188,7 +185,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
       $needle = array($needle);
     }
     foreach($needle as $what) {
-      if(($pos = stripos($haystack, $what)) !== false) { 
+      if(($pos = stripos($haystack, $what)) !== false) {
         return $pos;
       }
     }
@@ -221,7 +218,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
   // Aliases for expressions that should
   // be replaced.
   private $cross_apply_aliases;
-  
+
   // A subset of $cross_apply_aliases that
   // only contains the the cross-join expanded
   // expressions.
@@ -236,11 +233,11 @@ class SelectQuery_sqlsrv extends SelectQuery {
     // by the logic of the regex above, this will always be the last match.
     return end($matches);
   }
-  
+
   /**
    * This function needs some work....
    *
-   * @param mixed $statement 
+   * @param mixed $statement
    * @return mixed
    */
   protected function replaceExpressionAliases($statement) {
@@ -258,13 +255,13 @@ class SelectQuery_sqlsrv extends SelectQuery {
     }
     return $statement;
   }
-  
+
   /**
    * Verify in an expression has an aggregate.
    *
    * Needs some more work.
    *
-   * @param mixed $expression 
+   * @param mixed $expression
    * @return bool|int
    */
   protected function expressionContainsAggregate($expression) {
@@ -279,7 +276,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
     if (!$this->compiled()) {
       $this->compile($this->connection, $this);
     }
-    
+
     // Create a sanitized comment string to prepend to the query.
     $comments = $this->connection->makeComment($this->comments);
 
@@ -304,7 +301,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
           // or custom computed columns.
           foreach ($info['columns_clean'] as $column) {
             $fields[] = $this->connection->escapeTable($alias) . '.' . $column['name'];
-          }          
+          }
         }
       }
     }
@@ -386,7 +383,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
         $query .= ' ON ' . $table['condition'];
       }
     }
-    
+
     // CROSS APPLY
     $query .= implode($cross_apply);
 
@@ -484,8 +481,8 @@ class SelectQuery_sqlsrv extends SelectQuery {
   /**
    * Add a hint that is appended to all tables
    * in the query.
-   * @param mixed $hint 
-   * @throws Exception 
+   * @param mixed $hint
+   * @throws Exception
    */
   public function WithNoLock() {
     $this->nolock = TRUE;
@@ -506,7 +503,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
 
       $used_aliases = array();
       $this->GetUsedAliases($count->where, $used_aliases);
-      
+
       // When not executing a distinct query, we can zero-out existing fields
       // and expressions that are not used by a GROUP BY or HAVING. Fields
       // listed in a GROUP BY or HAVING clause need to be present in the

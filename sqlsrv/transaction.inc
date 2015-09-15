@@ -2,9 +2,9 @@
 
 /**
  * Overriden to bring some commonsense to transaction management.
- * 
+ *
  * The "sane" approach is to require explicit transaction commits!
- * 
+ *
  * Drupal uses the other way round, commits are implicit unless you explicitly
  * rollback.
  */
@@ -19,7 +19,7 @@ class DatabaseTransaction_sqlsrv extends DatabaseTransaction {
 
   /**
    * A boolean to indicate if the transaction scope should behave sanely.
-   * 
+   *
    * @var DatabaseTransactionSettings
    */
   protected $settings = FALSE;
@@ -27,9 +27,9 @@ class DatabaseTransaction_sqlsrv extends DatabaseTransaction {
   /**
    * Overriden to add settings.
    *
-   * @param DatabaseConnection $connection 
-   * @param mixed $name 
-   * @param mixed $sane 
+   * @param DatabaseConnection $connection
+   * @param mixed $name
+   * @param mixed $sane
    */
   public function __construct(DatabaseConnection $connection, $name = NULL, $settings = NULL) {
     $this->settings = $settings;
@@ -72,8 +72,8 @@ class DatabaseTransaction_sqlsrv extends DatabaseTransaction {
 
   /**
    * The "sane" behaviour requires explicit commits.
-   * 
-   * @throws DatabaseTransactionExplicitCommitNotAllowedException 
+   *
+   * @throws DatabaseTransactionExplicitCommitNotAllowedException
    */
   public function commit() {
     if (!$this->settings->Get_Sane()) {
@@ -92,9 +92,9 @@ class DatabaseTransaction_sqlsrv extends DatabaseTransaction {
 /**
  * Like db_transaction() but transaction behaviour is more
  * sane requiring explicit commits.
- * 
- * @param mixed $name 
- * @param array $options 
+ *
+ * @param mixed $name
+ * @param array $options
  * @return DatabaseTransaction
  */
 function db_transaction_sane(DatabaseTransactionSettings $settings = NULL) {
@@ -138,12 +138,12 @@ class DatabaseTransactionSettings {
 
   /**
    * Summary of __construct
-   * @param mixed $Sane 
-   * @param DatabaseTransactionScopeOption $ScopeOption 
-   * @param DatabaseTransactionIsolationLevel $IsolationLevel 
+   * @param mixed $Sane
+   * @param DatabaseTransactionScopeOption $ScopeOption
+   * @param DatabaseTransactionIsolationLevel $IsolationLevel
    */
-  public function __construct($Sane = FALSE, 
-      DatabaseTransactionScopeOption $ScopeOption = NULL, 
+  public function __construct($Sane = FALSE,
+      DatabaseTransactionScopeOption $ScopeOption = NULL,
       DatabaseTransactionIsolationLevel $IsolationLevel = NULL) {
     $this->_Sane = $Sane;
     if ($ScopeOption == NULL) {
@@ -191,7 +191,7 @@ class DatabaseTransactionSettings {
 
   /**
    * Returns a default setting system-wide.
-   * 
+   *
    * @return DatabaseTransactionSettings
    */
   public static function GetDefaults() {
@@ -204,14 +204,14 @@ class DatabaseTransactionSettings {
       }
     }
     // Otherwise use Drupal's default behaviour (except for nesting!)
-    return new DatabaseTransactionSettings(FALSE, 
-                DatabaseTransactionScopeOption::Required(), 
+    return new DatabaseTransactionSettings(FALSE,
+                DatabaseTransactionScopeOption::Required(),
                 $isolation);
   }
 
   /**
    * Proposed better defaults.
-   * 
+   *
    * @return DatabaseTransactionSettings
    */
   public static function GetBetterDefaults() {
@@ -223,19 +223,19 @@ class DatabaseTransactionSettings {
       }
     }
     // Otherwise use Drupal's default behaviour (except for nesting!)
-    return new DatabaseTransactionSettings(TRUE, 
-                DatabaseTransactionScopeOption::Required(), 
+    return new DatabaseTransactionSettings(TRUE,
+                DatabaseTransactionScopeOption::Required(),
                 $isolation);
   }
 
   /**
    * Snapshot isolation is not compatible with DDL operations.
-   * 
+   *
    * @return DatabaseTransactionSettings
    */
   public static function GetDDLCompatibleDefaults() {
-    return new DatabaseTransactionSettings(TRUE, 
-                DatabaseTransactionScopeOption::Required(), 
+    return new DatabaseTransactionSettings(TRUE,
+                DatabaseTransactionScopeOption::Required(),
                 DatabaseTransactionIsolationLevel::ReadCommitted());
   }
 }

@@ -3,14 +3,14 @@
 /**
  * Get basic information about an installed PHP extension.
  *
- * @param ReflectionExtension $re 
+ * @param ReflectionExtension $re
  * @return array
  */
 function sqlsrv_REData(ReflectionExtension $re) {
   $_data = [];
   $_data['getName'] = $re->getName() ?: NULL;
   $_data['getVersion'] = $re->getVersion() ?: NULL;
-  $_data['getClassName'] = PHP_EOL.implode(", ",$re->getClassNames()) ?: NULL;     
+  $_data['getClassName'] = PHP_EOL.implode(", ",$re->getClassNames()) ?: NULL;
   foreach ($re->getConstants() as $key => $value) {
     $_data['getConstants'] .= "\n{$key}:={$value}";
   }

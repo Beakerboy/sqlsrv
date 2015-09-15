@@ -15,13 +15,16 @@ class InsertQuery_sqlsrv extends InsertQuery {
 
     // Fetch the list of blobs and sequences used on that table.
     $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
-    
+
     // Find out if there is an identity field set in this insert.
     $this->setIdentity = !empty($columnInformation['identity']) && in_array($columnInformation['identity'], $this->insertFields);
     $identity = !empty($columnInformation['identity']) ? $columnInformation['identity'] : NULL;
 
+    // Retrieve query options.
+    $options = $this->queryOptions;
+
     #region Select Based Insert
-    
+
     if (!empty($this->fromQuery)) {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = array();
@@ -32,7 +35,8 @@ class InsertQuery_sqlsrv extends InsertQuery {
       $arguments = $this->fromQuery->getArguments();
       DatabaseUtils::BindArguments($stmt, $arguments);
 
-      $stmt->execute();
+      // Run the query
+      $this->connection->query($stmt, array(), $options);
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       try {
@@ -42,18 +46,20 @@ class InsertQuery_sqlsrv extends InsertQuery {
         return NULL;
       }
     }
-    
+
     #endregion
 
     #region Inserts with no values (full defaults)
-    
+
     // Handle the case of full-default queries.
     if (empty($this->fromQuery) && (empty($this->insertFields) || empty($this->insertValues))) {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = array();
       $stmt = $this->connection->prepareQuery((string) $this);
-      $stmt->execute();
-      
+
+      // Run the query
+      $this->connection->query($stmt, array(), $options);
+
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       try {
         return $stmt->fetchColumn(0);
@@ -62,7 +68,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
         return NULL;
       }
     }
-    
+
     #endregion
 
     #region Regular Inserts
@@ -84,21 +90,22 @@ class InsertQuery_sqlsrv extends InsertQuery {
     while (!empty($batch)) {
       // Give me a query with the amount of batch inserts.
       $query = (string) $this->__toString2(count($batch));
-      
+
       // Prepare the query.
       $stmt = $this->connection->prepareQuery($query);
 
       // We use this array to store references to the blob handles.
       // This is necessary because the PDO will otherwise messes up with references.
       $blobs = array();
-      
+
       $max_placeholder = 0;
       foreach ($batch as $insert_index => $insert_values) {
         $values = array_combine($this->insertFields, $insert_values);
         DatabaseUtils::BindValues($stmt, $values, $blobs, ':db_insert', $columnInformation, $max_placeholder, $insert_index);
       }
 
-      $stmt->execute(array(), array('fetch' => PDO::FETCH_ASSOC));
+      // Run the query
+      $this->connection->query($stmt, array(), array_merge($options, array('fetch' => PDO::FETCH_ASSOC)));
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       // When the column does not have an identity column, no results are thrown back.
@@ -125,7 +132,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
 
     // Return the last inserted key.
     return empty($this->inserted_keys) ? NULL : end($this->inserted_keys);
-    
+
     #endregion
   }
 
@@ -139,9 +146,9 @@ class InsertQuery_sqlsrv extends InsertQuery {
 
   /**
    * The aspect of the query depends on the batch size...
-   * 
-   * @param mixed $batch_size 
-   * @throws Exception 
+   *
+   * @param mixed $batch_size
+   * @throws Exception
    * @return string
    */
   private function __toString2($batch_size) {
@@ -220,6 +227,9 @@ class InsertQuery_sqlsrv extends InsertQuery {
 class UpdateQuery_sqlsrv extends UpdateQuery {
 
   public function execute() {
+    // Retrieve query options.
+    $options = $this->queryOptions;
+
     // Fetch the list of blobs and sequences used on that table.
     $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
 
@@ -252,7 +262,9 @@ class UpdateQuery_sqlsrv extends UpdateQuery {
 
     $options = $this->queryOptions;
     $options['already_prepared'] = TRUE;
-    $stmt->execute();
+
+    // Run the statement.
+    $this->connection->query($stmt, array(), $options);
 
     return $stmt->rowCount();
   }
@@ -301,7 +313,7 @@ class TruncateQuery_sqlsrv extends TruncateQuery {
 
 /**
  * SQL Server-specific implementation of the MERGE operation.
- * 
+ *
  * Tested to be at least 50% faster than parent's implementation.
  */
 class MergeQuery_sqlsrv extends MergeQuery {
@@ -310,6 +322,9 @@ class MergeQuery_sqlsrv extends MergeQuery {
     if (!count($this->condition)) {
       throw new InvalidMergeQueryException(t('Invalid merge query: no conditions'));
     }
+
+    // Retrieve query options.
+    $options = $this->queryOptions;
 
     // Keep a reference to the blobs.
     $blobs = array();
@@ -322,7 +337,7 @@ class MergeQuery_sqlsrv extends MergeQuery {
 
     // Initialize placeholder count.
     $max_placeholder = 0;
-    
+
     // Build the query.
     $stmt = $this->connection->prepareQuery((string)$this);
 
@@ -339,7 +354,8 @@ class MergeQuery_sqlsrv extends MergeQuery {
     DatabaseUtils::BindValues($stmt, $this->insertFields, $blobs, ':db_merge_placeholder_', $columnInformation, $max_placeholder);
 
     // 4. Run the query, this will return UPDATE or INSERT
-    $stmt->execute();
+    $this->connection->query($stmt, array(), $options);
+
     $result = NULL;
     foreach ($stmt as $value) {
       $result = $value->{'$action'};
@@ -349,7 +365,7 @@ class MergeQuery_sqlsrv extends MergeQuery {
         return static::STATUS_UPDATE;
       case 'INSERT':
         return static::STATUS_INSERT;
-    } 
+    }
   }
 
   public function __toString() {

@@ -1,11 +1,10 @@
 <?php
 
-
 class DatabaseUtils {
   /**
    * Summary of BindArguments
-   * @param PDOStatement $stmt 
-   * @param array $values 
+   * @param PDOStatement $stmt
+   * @param array $values
    */
   public static function BindArguments(\PDOStatement $stmt, array &$values) {
     foreach ($values as $key => &$value) {
@@ -15,9 +14,9 @@ class DatabaseUtils {
 
   /**
    * Summary of BindExpressions
-   * @param PDOStatement $stmt 
-   * @param array $values 
-   * @param array $remove_from 
+   * @param PDOStatement $stmt
+   * @param array $values
+   * @param array $remove_from
    */
   public static function BindExpressions(\PDOStatement $stmt, array &$values, array &$remove_from) {
     foreach ($values as $key => $value) {
@@ -42,28 +41,28 @@ class DatabaseUtils {
   /**
    * Binds a set of values to a PDO Statement,
    * taking care of properly managing binary data.
-   * 
+   *
    * @param PDOStatement $stmt
    * PDOStatement to bind the values to
-   * 
-   * @param array $values 
-   * Values to bind. It's an array where the keys are column 
+   *
+   * @param array $values
+   * Values to bind. It's an array where the keys are column
    * names and the values what is going to be inserted.
-   * 
-   * @param array $blobs 
+   *
+   * @param array $blobs
    * When sending binary data to the PDO driver, we need to keep
    * track of the original references to data
-   * 
-   * @param array $ref_prefix 
+   *
+   * @param array $ref_prefix
    * The $ref_holder might be shared between statements, use this
    * prefix to prevent key colision.
-   * 
-   * @param mixed $placeholder_prefix 
+   *
+   * @param mixed $placeholder_prefix
    * Prefix to use for generating the query placeholders.
-   * 
+   *
    * @param mixed $max_placeholder
    * Placeholder count, if NULL will start with 0.
-   * 
+   *
    */
   public static function BindValues(\PDOStatement $stmt, array &$values, array &$blobs, $placeholder_prefix, $columnInformation, &$max_placeholder = NULL, $blob_suffix = NULL) {
     if (empty($max_placeholder)) {
@@ -100,9 +99,9 @@ class DatabaseUtils {
 
   /**
    * Get the value of a constant string from configuration.
-   * 
-   * @param mixed $name 
-   * @param mixed $default 
+   *
+   * @param mixed $name
+   * @param mixed $default
    * @return mixed
    */
   public static function GetConfigConstant($name, $default) {
@@ -119,8 +118,8 @@ class DatabaseUtils {
 
   /**
    * Returns the spec for a MSSQL data type definition.
-   * 
-   * @param mixed $type 
+   *
+   * @param mixed $type
    */
   public static function GetMSSQLType($type) {
     $matches = array();

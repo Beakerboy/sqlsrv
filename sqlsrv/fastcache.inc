@@ -21,7 +21,7 @@ include_once 'fastcacheitem.inc';
  * the request is over.
  */
 class fastcache {
-  
+
   // @var fastcacheitem[]  $fastcacheitems
   private static $fastcacheitems = array();
 
@@ -30,7 +30,7 @@ class fastcache {
 
   // @var bool $shutdown_registered
   private static $shutdown_registered = FALSE;
-  
+
   /**
    * Test info is loaded at database bootstrap phase
    * but this cache can be used earlier. Make sure
@@ -40,12 +40,12 @@ class fastcache {
    * @var string
    */
   private static $test_run_id;
-  
+
   /**
    * Add test prefix to current binary key, and account for atomic
    * items where $bin = NULL;
    *
-   * @param string $prefix 
+   * @param string $prefix
    */
   private static function FixKeyAndBin(&$cid, &$bin) {
     // We always need a binary, if non is specified, this item
@@ -73,11 +73,11 @@ class fastcache {
 
     $bin = static::$test_run_id . $bin;
   }
-  
+
   /**
    * Tell if cache persistence is enabled. If not, this cache
    * will behave as DRUPAL_STATIC until the end of request.
-   * 
+   *
    * Only enable this cache if the backend is DrupalWinCache
    * and the lock implementation is DrupalWinCache
    */
@@ -193,7 +193,7 @@ class fastcache {
   public static function fastcache_persist () {
     // Try to be the last of the last...
     register_shutdown_function(array('fastcache','_fastcache_persist'));
-  }  
+  }
 
   /**
    * Persist the binaries.

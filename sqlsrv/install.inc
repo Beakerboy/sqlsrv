@@ -182,49 +182,49 @@ EOF
 
   // Modify the default options form to allow Windows authentication.
   public function getFormOptions($database) {
-    
+
     $form = array();
-    
-    drupal_set_message(t('To install this version of the MS SQL Server driver make sure you have this patch in core: <a target="_blank" href="!url">!url</a>', 
+
+    drupal_set_message(t('To install this version of the MS SQL Server driver make sure you have this patch in core: <a target="_blank" href="!url">!url</a>',
       array('!url' => 'https://www.drupal.org/node/2376239')), 'warning');
-    
+
     include_once('reflexiondata.inc');
     $extensiondata = sqlsrv_REData(new ReflectionExtension('pdo_sqlsrv'));
-    
+
     // Client buffer size.
     $buffer_size = $extensiondata['getINIEntries']['pdo_sqlsrv.client_buffer_max_kb_size'];
     $buffer_size_min = (12240 * 2);
     $buffer_size_ok = $buffer_size >= $buffer_size_min;
-	
+
     if (!$buffer_size_ok) {
       drupal_set_message(t('pdo_sqlsrv.client_buffer_max_kb_size needs to be of at least @min, currently @current.',
         array('@min' => '24480Kb', '@current' => "{$buffer_size}Kb")), 'error');
     }
-    
+
     // PDO version, and require at least 3.2.
     $version_ok = version_compare($extensiondata['getVersion'] , '3.2') >= 0;
-    
+
     if (!$version_ok) {
       drupal_set_message(t('This version of the MS SQL Server driver needs at least the @min version of the SQL Server PDO, currently running @current. Download from <a href="!download">here</a>.',
           array(
-		  '@min' => '3.2', 
+		  '@min' => '3.2',
 		  '@current' => $extensiondata['getVersion'],
 		  '!download' => 'http://www.microsoft.com/en-us/download/details.aspx?id=20098',
 		  ))
 		  , 'error');
     }
-	
+
   	// Check that Wincache user cache is enabled and big enough.
   	$wincache_ok = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info(TRUE)) && ($meminfo = @wincache_ucache_meminfo()));
   	if ($wincache_ok) {
   	  // Minimum 15 Mb of usercache.
   	  $wincache_ok = $meminfo['memory_total'] >= 20 * 1024 * 1024;
   	}
-	
+
   	if (!$wincache_ok) {
       drupal_set_message(t('This version of the MS SQL Server needs the Wincache PHP extension with a minimum ucachesize of 20Mb.'), 'error');
     }
-    
+
     // If there is something wrong do not allow the user to install.
     if (!$buffer_size_ok || !$version_ok || !$wincache_ok) {
   	  drupal_set_message(t('Please review the errors and refresh this page when fixed.'), 'status');
@@ -234,8 +234,8 @@ EOF
       '#type' => 'markup',
       '#markup' => theme_status_messages(array('display' => NULL)),
     );
-    
-  	if ($buffer_size_ok && $version_ok && $wincache_ok) { 
+
+  	if ($buffer_size_ok && $version_ok && $wincache_ok) {
       $form = array_merge($form, parent::getFormOptions($database));
       // Make username not required.
       $form['username']['#required'] = FALSE;
