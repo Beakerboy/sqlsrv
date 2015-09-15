@@ -949,6 +949,12 @@ EOF
       throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", array('%field' => $field, '%table' => $table)));
     }
 
+    /** @var DatabaseTransaction_sqlsrv $transaction */
+    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
+
+    // Prepare the specifications.
+    $spec = $this->processField($spec);
+
     // Clear column information for table.
     $this->queryColumnInformationInvalidate($table);
 
@@ -956,8 +962,9 @@ EOF
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
     // If the field is declared NOT NULL, we have to first create it NULL insert
-    // the initial data then switch to NOT NULL.
-    if (!empty($spec['not null']) && !isset($spec['default'])) {
+    // the initial data (or populate default values) and then switch to NOT NULL.
+    $fixnull = FALSE;
+    if (!empty($spec['not null'])) {
       $fixnull = TRUE;
       $spec['not null'] = FALSE;
     }
@@ -967,7 +974,7 @@ EOF
     // with braces, we CANNOT allow the driver to prefix tables because the algorithm
     // to do so is a crappy str_replace.
     $query = "ALTER TABLE {$table_prefixed} ADD ";
-    $query .= $this->createFieldSql($table, $field, $this->processField($spec));
+    $query .= $this->createFieldSql($table, $field, $spec);
     $this->connection->query_direct($query, array(), array('prefix_tables' => FALSE));
 
     // Clear column information for table.
@@ -981,15 +988,25 @@ EOF
     }
 
     // Switch to NOT NULL now.
-    if (!empty($fixnull)) {
+    if ($fixnull === TRUE) {
+      // There is no warranty that the old data did not have NULL values, we need to populate
+      // nulls with the default value because this won't be done by MSSQL by default.
+      if (!empty($spec['default'])) {
+        $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
+        $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field}] = {$default_expression} WHERE [{$field}] IS NULL");
+      }
+      // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
-      $this->connection->query_direct("ALTER TABLE {{$table}} ALTER COLUMN " . $this->createFieldSql($table, $field, $this->processField($spec), TRUE));
+      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field, $spec, TRUE));
     }
 
     // Add the new keys.
     if (isset($new_keys)) {
       $this->recreateTableKeys($table, $new_keys);
     }
+
+    // Commit.
+    $transaction->commit();
 
     // Clear column information for table.
     $this->queryColumnInformationInvalidate($table);
@@ -1040,8 +1057,11 @@ EOF
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
 
-    // @var DatabaseTransaction_sqlsrv $transaction
+    /** @var DatabaseTransaction_sqlsrv $transaction */
     $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
+
+    // Prepare the specifications.
+    $spec = $this->processField($spec);
 
     // IMPORTANT NOTE: To maintain database portability, you have to explicitly recreate all indices and primary keys that are using the changed field.
     // That means that you have to drop all affected keys and indexes with db_drop_{primary_key,unique_key,index}() before calling db_change_field().
@@ -1066,10 +1086,6 @@ EOF
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
-    // Verify if the old field specification was nullable.
-    $info = $this->queryColumnInformation($table);
-    $old_field_nullable = $info['columns'][$field]['is_nullable'] == TRUE;
-
     // Start by renaming the current column.
     $this->connection->query_direct('EXEC sp_rename :old, :new, :type', array(
       ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
@@ -1077,10 +1093,11 @@ EOF
       ':type' => 'COLUMN',
     ));
 
-    // If the new SPEC does not allow NULLS but the old SPEC did so, we
-    // need to bridge the data and manually populate default values.
+    // If the new column does not allow nulls, we need to
+    // create it first as nullable, then either migrate
+    // data from previous column or populate default values.
     $fixnull = FALSE;
-    if (!empty($spec['not null']) && $old_field_nullable) {
+    if (!empty($spec['not null'])) {
       $fixnull = TRUE;
       $spec['not null'] = FALSE;
     }
@@ -1090,18 +1107,19 @@ EOF
 
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion errors.
-    $field_spec = $this->processField($spec);
-    $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] AS {$field_spec['sqlsrv_type']})");
+    $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] AS {$spec['sqlsrv_type']})");
 
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
       // There is no warranty that the old data did not have NULL values, we need to populate
       // nulls with the default value because this won't be done by MSSQL by default.
-      $default_expression = $this->defaultValueExpression($field_spec['sqlsrv_type'], $field_spec['default']);
-      $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = {$default_expression} WHERE [{$field_new}] IS NULL");
+      if (!empty($spec['default'])) {
+        $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
+        $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = {$default_expression} WHERE [{$field_new}] IS NULL");
+      }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
-      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $this->processField($spec), TRUE));
+      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $spec, TRUE));
     }
 
     // Initialize new keys.
