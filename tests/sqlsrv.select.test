@@ -225,25 +225,80 @@ class SqlServerSelectTest extends DatabaseTestCase {
    */
   public function testEscapeLike() {
     // Test expected escaped characters
-    // using backslashes.
     $string = 't[e%s]t_\\';
-    $expected = 't\\[e\\%s\\]t\\_\\\\';
+    $expected = 't[[]e[%]s[]]t[_]\\';
     $actual = db_like($string);
     $this->assertEqual($actual, $expected, 'Properly escaped LIKE statement wildcards.');
-    
-    // Test unescaped wildcard.
+
+    db_insert('test_task')
+      ->fields(array(
+        'task' => 'T\\est',
+      ))
+      ->execute();
+
+    $query = db_select('test_task', 't');
+    $query->fields('t');
+    $query->condition('t.task', db_like('T\\est'), 'LIKE');
+    $result = $query->execute()->fetchAll();
+    $this->assertEqual(count($result), 1, t('db_select returned the correct number of total rows.'));
+
+    db_insert('test_task')
+      ->fields(array(
+        'task' => 'T\'est',
+      ))
+      ->execute();
+
+    $query = db_select('test_task', 't');
+    $query->fields('t');
+    $query->condition('t.task', db_like('T\'est'), 'LIKE');
+    $result = $query->execute()->fetchAll();
+    $this->assertEqual(count($result), 1, t('db_select returned the correct number of total rows.'));
+
+    // db_select: Test unescaped wildcard.
     $query = db_select('test_task', 't');
     $query->condition('t.task', '[s]leep', 'LIKE');
-    $query->addExpression('(t.task)', 'taskname');
+    $query->fields('t');
     $result = $query->execute()->fetchAll();
-    $this->assertEqual(count($result), 2, t('Returned the correct number of total rows.'));
-    
-    // Test escaped wildcard.
+    $this->assertEqual(count($result), 2, t('db_select returned the correct number of total rows.'));
+
+    // db_select: Test unescaped wildcard.
+    $query = db_select('test_task', 't');
+    $query->condition('t.task', '[s]leep', 'LIKE');
+    $query->fields('t');
+    $result = $query->execute()->fetchAll();
+    $this->assertEqual(count($result), 2, t('db_select returned the correct number of total rows.'));
+
+    // db_select: Test escaped wildcard.
     $query = db_select('test_task', 't');
     $query->condition('t.task', db_like('[s]leep'), 'LIKE');
-    $query->addExpression('(t.task)', 'taskname');    
+    $query->fields('t');
     $result = $query->execute()->fetchAll();
-    $this->assertEqual(count($result), 0, t('Returned the correct number of total rows.'));
-    
+    $this->assertEqual(count($result), 0, t('db_select returned the correct number of total rows.'));
+
+    // db_select->where: Test unescaped wildcard.
+    $query = db_select('test_task', 't');
+    $query->where('t.task LIKE :task', array(':task' => '[s]leep'));
+    $query->fields('t');
+    $result = $query->execute()->fetchAll();
+    $this->assertEqual(count($result), 2, t('db_select returned the correct number of total rows.'));
+
+    // db_select->where: Test escaped wildcard.
+    $query = db_select('test_task', 't');
+    $query->where('t.task LIKE :task', array(':task' => db_like('[s]leep')));
+    $query->fields('t');
+    $result = $query->execute()->fetchAll();
+    $this->assertEqual(count($result), 0, t('db_select returned the correct number of total rows.'));
+
+    // db_query: Test unescaped wildcard.
+    $query = db_query('SELECT COUNT(*) FROM {test_task} WHERE task LIKE :task',
+      array(':task' => '[s]leep'));
+    $result = $query->fetchField();
+    $this->assertEqual($result, 2, t('db_query returned the correct number of total rows.'));
+
+    // db_query: Test escaped wildcard.
+    $query = db_query('SELECT COUNT(*) FROM {test_task} WHERE task LIKE :task',
+      array(':task' => db_like('[s]leep')));
+    $result = $query->fetchField();
+    $this->assertEqual($result, 0, t('db_query returned the correct number of total rows.'));
   }
 }
