@@ -146,6 +146,9 @@ function sqlsrv_requirements($phase) {
     $manager = new IndexManager($connection);
     $manager->DeployNew();
 
+    // Redeploy functions
+    Utils::DeployCustomFunctions($connection, TRUE);
+
     // Make sure that the module's driver code is the same one as the effectively
     // deployed driver code....
     // TODO:// Nicer than just showing the error, 

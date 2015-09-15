@@ -1,0 +1,17 @@
+functions:
+  - name: CONCAT
+    file: ScalarValued/CONCAT.sql
+  - name: CONNECTION_ID
+    file: ScalarValued/CONNECTION_ID.sql
+  - name: GREATEST
+    file: ScalarValued/GREATEST.sql
+  - name: IF
+    file: ScalarValued/IF.sql
+  - name: LPAD
+    file: ScalarValued/LPAD.sql
+  - name: MD5
+    file: ScalarValued/MD5.sql
+  - name: SUBSTRING
+    file: ScalarValued/SUBSTRING.sql
+  - name: SUBSTRING_INDEX
+    file: ScalarValued/SUBSTRING_INDEX.sql

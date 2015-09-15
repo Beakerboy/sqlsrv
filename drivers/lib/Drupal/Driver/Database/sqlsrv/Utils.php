@@ -6,6 +6,8 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\Update as QueryUpdate;
 use Drupal\Core\Database\Query\Condition;
 
+use Symfony\Component\Yaml\Parser;
+
 use PDO as PDO;
 use PDOStatement as PDOStatement;
 
@@ -140,5 +142,43 @@ class Utils {
    */
   public static function WindowsOS() {
     return strncasecmp(PHP_OS, 'WIN', 3) == 0;
+  }
+
+  /**
+   * Deploy custom functions for Drupal Compatiblity.
+   * 
+   * @param Connection $connection 
+   *   Connection used for deployment.
+   * 
+   * @param boolean $redeploy
+   *   Wether to redeploy existing functions, or only missing ones.
+   */
+  public static function DeployCustomFunctions(Connection $connection, $redeploy = FALSE) {
+    $yaml = new Parser();
+    $base_path = dirname(__FILE__) . '/Programability';
+    $configuration = $yaml->parse(file_get_contents("$base_path/configuration.yml"));
+
+    /** @var Schema $schema */
+    $schema = $connection->schema();
+
+    foreach ($configuration['functions'] as $function) {
+      $name = $function['name'];
+      $path = "$base_path/{$function['file']}";
+      $exists = $schema->functionExists($name);
+      if ($exists && !$redeploy) {
+        continue;
+      }
+      if ($exists) {
+        $connection->query_direct("DROP FUNCTION [{$name}]");
+      }
+      $script = trim(static::remove_utf8_bom(file_get_contents($path)));
+      $connection->query_direct($script);
+    }
+  }
+
+  private static function remove_utf8_bom($text) {
+    $bom = pack('H*','EFBBBF');
+    $text = preg_replace("/^$bom/", '', $text);
+    return $text;
   }
 }

@@ -51,13 +51,13 @@ class FastCache {
     $this->prefix = $prefix;
   }
 
-  // @var fastcacheitem[]  $fastcacheitems
+  /** @var FastCacheItem[]  $fastcacheitems */
   private $fastcacheitems = array();
 
-  // @var bool $enabled
+  /** @var bool $enabled */
   private $enabled = NULL;
 
-  // @var bool $shutdown_registered
+  /** @var bool $shutdown_registered */
   private $shutdown_registered = FALSE;
 
   /**

@@ -12,6 +12,7 @@ use Drupal\Core\Database\Install\Tasks as InstallTasks;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Driver\Database\sqlsrv\Connection;
 use Drupal\Driver\Database\sqlsrv\Schema;
+use Drupal\Driver\Database\sqlsrv\Utils;
 
 /**
  * Specifies installation tasks for PostgreSQL databases.
@@ -149,132 +150,12 @@ class Tasks extends InstallTasks {
     // like we do with table names. This is so that we don't double up if more
     // than one instance of Drupal is running on a single database. We therefore
     // avoid trying to create them again in that case.
-
     try {
-      $database = Database::getConnection();
-      $database->bypassQueryPreprocess = TRUE;
-      $schema = $database->schema();
 
-      // SUBSTRING() function.
-      $substring_exists = $schema->functionExists('SUBSTRING') ? 'ALTER' : 'CREATE';
-      $database->query(<<< EOF
-{$substring_exists} FUNCTION [SUBSTRING](@op1 nvarchar(max), @op2 sql_variant, @op3 sql_variant) RETURNS nvarchar(max) AS
-BEGIN
-  RETURN CAST(SUBSTRING(CAST(@op1 AS nvarchar(max)), CAST(@op2 AS int), CAST(@op3 AS int)) AS nvarchar(max))
-END
-EOF
-      );
+      /** @var Connection $database */
+      $connection = Database::getConnection();
 
-      // SUBSTRING_INDEX() function.
-      $substring_index_exists = $schema->functionExists('SUBSTRING_INDEX') ? 'ALTER' : 'CREATE';
-      $database->query(<<< EOF
-            {$substring_index_exists} FUNCTION [SUBSTRING_INDEX](@string varchar(8000), @delimiter char(1), @count int) RETURNS varchar(8000) AS
-            BEGIN
-              DECLARE @result varchar(8000)
-              DECLARE @end int
-              DECLARE @part int
-              SET @end = 0
-              SET @part = 0
-              IF (@count = 0)
-              BEGIN
-                SET @result = ''
-              END
-              ELSE
-              BEGIN
-                IF (@count < 0)
-                BEGIN
-                  SET @string = REVERSE(@string)
-                END
-                WHILE (@part < ABS(@count))
-                BEGIN
-                  SET @end = CHARINDEX(@delimiter, @string, @end + 1)
-                  IF (@end = 0)
-                  BEGIN
-                    SET @end = LEN(@string) + 1
-                    BREAK
-                  END
-                  SET @part = @part + 1
-                END
-                SET @result = SUBSTRING(@string, 1, @end - 1)
-                IF (@count < 0)
-                BEGIN
-                  SET @result = REVERSE(@result)
-                END
-              END
-              RETURN @result
-            END
-EOF
-      );
-
-      // GREATEST() function.
-      $greatest_exists = $schema->functionExists('GREATEST') ? 'ALTER' : 'CREATE';
-      $database->query(<<< EOF
-            {$greatest_exists} FUNCTION [GREATEST](@op1 sql_variant, @op2 sql_variant) RETURNS sql_variant AS
-            BEGIN
-              DECLARE @result sql_variant
-              SET @result = CASE WHEN @op1 >= @op2 THEN @op1 ELSE @op2 END
-              RETURN @result
-            END
-EOF
-      );
-
-      // CONCAT() function.
-      $concat_exists = $schema->functionExists('CONCAT') ? 'ALTER' : 'CREATE';
-      $database->query(<<< EOF
-            {$concat_exists} FUNCTION [CONCAT](@op1 sql_variant, @op2 sql_variant) RETURNS nvarchar(4000) AS
-            BEGIN
-              DECLARE @result nvarchar(4000)
-              SET @result = CAST(@op1 AS nvarchar(4000)) + CAST(@op2 AS nvarchar(4000))
-              RETURN @result
-            END
-EOF
-      );
-
-      // IF(expr1, expr2, expr3) function.
-      $if_exists = $schema->functionExists('IF') ? 'ALTER' : 'CREATE';
-      $database->query(<<< EOF
-            {$if_exists} FUNCTION [IF](@expr1 sql_variant, @expr2 sql_variant, @expr3 sql_variant) RETURNS sql_variant AS
-            BEGIN
-              DECLARE @result sql_variant
-              SET @result = CASE WHEN CAST(@expr1 AS int) != 0 THEN @expr2 ELSE @expr3 END
-              RETURN @result
-            END
-EOF
-      );
-
-      // MD5(@value) function.
-      $if_exists = $schema->functionExists('MD5') ? 'ALTER' : 'CREATE';
-      $database->query(<<< EOF
-            {$if_exists} FUNCTION [dbo].[MD5](@value varchar(255)) RETURNS varchar(32) AS
-            BEGIN
-	            RETURN SUBSTRING(sys.fn_sqlvarbasetostr(HASHBYTES('MD5', @value)),3,32);
-            END
-EOF
-      );
-
-      // LPAD(@str, @len, @padstr) function.
-      $if_exists = $schema->functionExists('LPAD') ? 'ALTER' : 'CREATE';
-      $database->query(<<< EOF
-            {$if_exists} FUNCTION [dbo].[LPAD](@str nvarchar(max), @len int, @padstr nvarchar(max)) RETURNS nvarchar(4000) AS
-            BEGIN
-	            RETURN left(@str + replicate(@padstr,@len),@len);
-            END
-EOF
-      );
-
-      // CONNECTION_ID() function.
-      $if_exists = $schema->functionExists('CONNECTION_ID') ? 'ALTER' : 'CREATE';
-      $database->query(<<< EOF
-            {$if_exists} FUNCTION [dbo].[CONNECTION_ID]() RETURNS smallint AS
-            BEGIN
-              DECLARE @var smallint
-              SELECT @var = @@SPID
-              RETURN @Var
-            END
-EOF
-      );
-
-      $database->bypassQueryPreprocess = FALSE;
+      Utils::DeployCustomFunctions($connection);
 
       $this->pass(t('SQLServer has initialized itself.'));
     }
