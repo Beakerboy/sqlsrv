@@ -672,7 +672,9 @@ EOF
     $sql = $this->connection->quoteIdentifier($name) . ' ' . $spec['sqlsrv_type_full'];
 
     // When binary is true, case sensitivity is requested.
-    $sql .= ' COLLATE ' . $spec['sqlsrv_collation'];
+    if (isset($spec['sqlsrv_collation'])) {
+      $sql .= ' COLLATE ' . $spec['sqlsrv_collation'];
+    }
 
     if (isset($spec['not null']) && $spec['not null']) {
       $sql .= ' NOT NULL';
@@ -812,6 +814,29 @@ EOF
       $field['sqlsrv_is_text'] = in_array($field['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
     }
 
+    // Collation only makes sense for text fields
+    // Detect target collation
+    if ($field['sqlsrv_is_text'] && !isset($field['sqlsrv_collation'])) {
+      if (!empty($field['collation'])) {
+        // Try to match to an SQL Server collation
+        switch($field['collation']) {
+          case 'ascii_bin':
+            $field['sqlsrv_collation'] = 'Latin1_General_BIN';
+            break;
+        }
+      }
+
+      // If still no collation, resort to default behaviour.
+      if (empty($field['sqlsrv_collation'])) {
+        if ($field['sqlsrv_is_text'] === TRUE && isset($field['binary']) && $field['binary'] === TRUE) {
+          $field['sqlsrv_collation'] = self::DEFAULT_COLLATION_CS;
+        }
+        else {
+          $field['sqlsrv_collation'] = self::DEFAULT_COLLATION_CI;
+        }
+      }
+    }
+
     // The full native type (TYPE (LENGTH))
     if (!isset($field['sqlsrv_type_full'])) {
       $sqlsrv_type_full = $field['sqlsrv_type'];
@@ -826,29 +851,12 @@ EOF
         }
         $sqlsrv_type_full .= '(' . $field['precision'] . ', ' . $field['scale'] . ')';
       }
+
       $field['sqlsrv_type_full'] = $sqlsrv_type_full;
+
     }
 
-    // Detect target collation
-    if (empty($field['sqlsrv_collation'])) {
-      if (!empty($field['collation'])) {
-        // Try to match to an SQL Server collation
-        switch($field['collation']) {
-          case 'ascii_bin':
-            $field['sqlsrv_collation'] = 'Latin1_General_BIN';
-            break;
-        }
-      }
-      // If still no collation, resort to default behaviour.
-      if (empty($field['sqlsrv_collation'])) {
-        if ($field['sqlsrv_is_text'] === TRUE && isset($field['binary']) && $field['binary'] === TRUE) {
-          $field['sqlsrv_collation'] = self::DEFAULT_COLLATION_CS;
-        }
-        else {
-          $field['sqlsrv_collation'] = self::DEFAULT_COLLATION_CI;
-        }
-      }
-    }
+    
 
     return $field;
   }
@@ -1120,8 +1128,10 @@ EOF
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion errors.
     $field_spec = $this->processField($spec);
+
     // Change collation if needed
-    $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] COLLATE {$field_spec['sqlsrv_collation']} AS {$field_spec['sqlsrv_type_full']})");
+    $collate_expression = isset($field_spec['sqlsrv_collation']) ? "COLLATE {$field_spec['sqlsrv_collation']}" : "";
+    $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] {$collate_expression} AS {$field_spec['sqlsrv_type_full']})");
 
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
