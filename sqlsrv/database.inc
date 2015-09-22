@@ -550,13 +550,18 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   public function handleQueryException(\PDOException $e, $query, array $args = array(), $options = array()) {
     if ($options['throw_exception']) {
       // Add additional debug information.
-      if ($query instanceof DatabaseStatementInterface) {
-        $e->query_string = $query->getQueryString();
+      if ($query instanceof DatabaseStatement_sqlsrv) {
+        /** @var DatabaseStatement_sqlsrv $statement */
+        $statement = $query;
+        $e->query_string = $statement->getQueryString();
+        $e->args = $statement->GetBoundParameters();
       }
       else {
         $e->query_string = $query;
       }
-      $e->args = $args;
+      if (empty($e->args)) {
+        $e->args = $args;
+      }
       throw $e;
     }
     return NULL;
@@ -1040,6 +1045,63 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements Database
       $return[$record[$key_index]] = $record[$value_index];
     }
     return $return;
+  }
+
+  /**
+   * Get parameters bound to this statement.
+   *
+   * @return string[]
+   */
+  public function &GetBoundParameters() {
+    return $this->boundParams;
+  }
+
+  /**
+   * @var string[] $boundParams - array of arrays containing values that have been bound to the query as parameters
+   */
+  protected $boundParams = array();
+
+  /**
+   * Overrides the default \PDOStatement method to add the named parameter and it's reference to the array of bound
+   * parameters - then accesses and returns parent::bindParam method
+   *
+   * @param string $param
+   * @param mixed $value
+   * @param int $datatype
+   * @param int $length
+   * @param mixed $driverOptions
+   * @return bool - default of \PDOStatement::bindParam()
+   */
+  public function bindParam($param, &$value, $datatype = PDO::PARAM_STR, $length = 0, $driverOptions = FALSE) {
+    $this->boundParams[$param] = array(
+          "value"       => &$value
+        , "datatype"    => $datatype
+    );
+
+    if (empty($driverOptions)) {
+      return parent::bindParam($param, $value, $datatype, $length);
+    }
+    else {
+      return parent::bindParam($param, $value, $datatype, $length, $driverOptions);
+    }
+  }
+
+  /**
+   * Overrides the default \PDOStatement method to add the named parameter and it's value to the array of bound values
+   * - then accesses and returns parent::bindValue method
+   *
+   * @param string $param
+   * @param string $value
+   * @param int $datatype
+   * @return bool - default of \PDOStatement::bindValue()
+   */
+  public function bindValue($param, $value, $datatype = PDO::PARAM_STR) {
+    $this->boundParams[$param] = array(
+          "value"       => $value
+        , "datatype"    => $datatype
+    );
+
+    return parent::bindValue($param, $value, $datatype);
   }
 }
 

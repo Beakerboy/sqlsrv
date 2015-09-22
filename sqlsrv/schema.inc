@@ -668,33 +668,11 @@ EOF
    *    The field specification, as per the schema data structure format.
    */
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
-    // Use a prefixed table.
-    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
-    $sql = $this->connection->quoteIdentifier($name) . ' ' . $spec['sqlsrv_type'];
-    $is_text = in_array($spec['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
-    if ($is_text === TRUE && !empty($spec['length'])) {
-      $sql .= '(' . $spec['length'] . ')';
-    }
-    elseif (in_array($spec['sqlsrv_type'], array('numeric', 'decimal')) && isset($spec['precision']) && isset($spec['scale'])) {
-      // Maximum precision for SQL Server 2008 orn greater is 38.
-      // For previous versions it's 28.
-      if ($spec['precision'] > 38) {
-        watchdog('SQL Server Driver', "Field '@field' in table '@table' has had it's precision dropped from @precision to 38",
-                array('@field' => $name,
-                      '@table' => $table,
-                      '@precision' => $spec['precision']
-                  )
-                );
-        $spec['precision'] = 38;
-      }
-      $sql .= '(' . $spec['precision'] . ', ' . $spec['scale'] . ')';
-    }
+    $sql = $this->connection->quoteIdentifier($name) . ' ' . $spec['sqlsrv_type_full'];
 
     // When binary is true, case sensitivity is requested.
-    if ($is_text === TRUE && isset($spec['binary']) && $spec['binary'] === TRUE) {
-      $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
-    }
+    $sql .= ' COLLATE ' . $spec['sqlsrv_collation'];
 
     if (isset($spec['not null']) && $spec['not null']) {
       $sql .= ' NOT NULL';
@@ -702,6 +680,8 @@ EOF
 
     if (!$skip_checks) {
       if (isset($spec['default'])) {
+        // Use a prefixed table.
+        $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
         $default = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
         $sql .= " CONSTRAINT {$table_prefixed}_{$name}_df DEFAULT  $default";
       }
@@ -810,17 +790,66 @@ EOF
    *   A field description array, as specified in the schema documentation.
    */
   protected function processField($field) {
+
+    // Default size to normal.
     if (!isset($field['size'])) {
       $field['size'] = 'normal';
     }
+
     // Set the correct database-engine specific datatype.
     if (!isset($field['sqlsrv_type'])) {
       $map = $this->getFieldTypeMap();
       $field['sqlsrv_type'] = $map[$field['type'] . ':' . $field['size']];
     }
+
+    // Serial is identity.
     if ($field['type'] == 'serial') {
       $field['identity'] = TRUE;
     }
+
+    // If this is a text field.
+    if (!isset($field['sqlsrv_is_text'])) {
+      $field['sqlsrv_is_text'] = in_array($field['sqlsrv_type'], array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
+    }
+
+    // The full native type (TYPE (LENGTH))
+    if (!isset($field['sqlsrv_type_full'])) {
+      $sqlsrv_type_full = $field['sqlsrv_type'];
+      if ($field['sqlsrv_is_text'] === TRUE && !empty($field['length'])) {
+        $sqlsrv_type_full .= '(' . $field['length'] . ')';
+      }
+      elseif (in_array($field['sqlsrv_type'], array('numeric', 'decimal')) && isset($field['precision']) && isset($field['scale'])) {
+        // Maximum precision for SQL Server 2008 or greater is 38.
+        // For previous versions it's 28.
+        if ($field['precision'] > 38) {
+          $field['precision'] = 38;
+        }
+        $sqlsrv_type_full .= '(' . $field['precision'] . ', ' . $field['scale'] . ')';
+      }
+      $field['sqlsrv_type_full'] = $sqlsrv_type_full;
+    }
+
+    // Detect target collation
+    if (empty($field['sqlsrv_collation'])) {
+      if (!empty($field['collation'])) {
+        // Try to match to an SQL Server collation
+        switch($field['collation']) {
+          case 'ascii_bin':
+            $field['sqlsrv_collation'] = 'Latin1_General_BIN';
+            break;
+        }
+      }
+      // If still no collation, resort to default behaviour.
+      if (empty($field['sqlsrv_collation'])) {
+        if ($field['sqlsrv_is_text'] === TRUE && isset($field['binary']) && $field['binary'] === TRUE) {
+          $field['sqlsrv_collation'] = self::DEFAULT_COLLATION_CS;
+        }
+        else {
+          $field['sqlsrv_collation'] = self::DEFAULT_COLLATION_CI;
+        }
+      }
+    }
+
     return $field;
   }
 
@@ -949,12 +978,6 @@ EOF
       throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", array('%field' => $field, '%table' => $table)));
     }
 
-    /** @var DatabaseTransaction_sqlsrv $transaction */
-    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
-
-    // Prepare the specifications.
-    $spec = $this->processField($spec);
-
     // Clear column information for table.
     $this->queryColumnInformationInvalidate($table);
 
@@ -962,9 +985,8 @@ EOF
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
     // If the field is declared NOT NULL, we have to first create it NULL insert
-    // the initial data (or populate default values) and then switch to NOT NULL.
-    $fixnull = FALSE;
-    if (!empty($spec['not null'])) {
+    // the initial data then switch to NOT NULL.
+    if (!empty($spec['not null']) && !isset($spec['default'])) {
       $fixnull = TRUE;
       $spec['not null'] = FALSE;
     }
@@ -974,7 +996,7 @@ EOF
     // with braces, we CANNOT allow the driver to prefix tables because the algorithm
     // to do so is a crappy str_replace.
     $query = "ALTER TABLE {$table_prefixed} ADD ";
-    $query .= $this->createFieldSql($table, $field, $spec);
+    $query .= $this->createFieldSql($table, $field, $this->processField($spec));
     $this->connection->query_direct($query, array(), array('prefix_tables' => FALSE));
 
     // Clear column information for table.
@@ -988,25 +1010,15 @@ EOF
     }
 
     // Switch to NOT NULL now.
-    if ($fixnull === TRUE) {
-      // There is no warranty that the old data did not have NULL values, we need to populate
-      // nulls with the default value because this won't be done by MSSQL by default.
-      if (!empty($spec['default'])) {
-        $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field}] = {$default_expression} WHERE [{$field}] IS NULL");
-      }
-      // Now it's time to make this non-nullable.
+    if (!empty($fixnull)) {
       $spec['not null'] = TRUE;
-      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field, $spec, TRUE));
+      $this->connection->query_direct("ALTER TABLE {{$table}} ALTER COLUMN " . $this->createFieldSql($table, $field, $this->processField($spec), TRUE));
     }
 
     // Add the new keys.
     if (isset($new_keys)) {
       $this->recreateTableKeys($table, $new_keys);
     }
-
-    // Commit.
-    $transaction->commit();
 
     // Clear column information for table.
     $this->queryColumnInformationInvalidate($table);
@@ -1057,11 +1069,8 @@ EOF
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
 
-    /** @var DatabaseTransaction_sqlsrv $transaction */
+    // @var DatabaseTransaction_sqlsrv $transaction
     $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
-
-    // Prepare the specifications.
-    $spec = $this->processField($spec);
 
     // IMPORTANT NOTE: To maintain database portability, you have to explicitly recreate all indices and primary keys that are using the changed field.
     // That means that you have to drop all affected keys and indexes with db_drop_{primary_key,unique_key,index}() before calling db_change_field().
@@ -1086,6 +1095,10 @@ EOF
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
+    // Verify if the old field specification was nullable.
+    $info = $this->queryColumnInformation($table);
+    $old_field_nullable = $info['columns'][$field]['is_nullable'] == TRUE;
+
     // Start by renaming the current column.
     $this->connection->query_direct('EXEC sp_rename :old, :new, :type', array(
       ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
@@ -1093,11 +1106,10 @@ EOF
       ':type' => 'COLUMN',
     ));
 
-    // If the new column does not allow nulls, we need to
-    // create it first as nullable, then either migrate
-    // data from previous column or populate default values.
+    // If the new SPEC does not allow NULLS but the old SPEC did so, we
+    // need to bridge the data and manually populate default values.
     $fixnull = FALSE;
-    if (!empty($spec['not null'])) {
+    if (!empty($spec['not null']) && $old_field_nullable) {
       $fixnull = TRUE;
       $spec['not null'] = FALSE;
     }
@@ -1107,19 +1119,19 @@ EOF
 
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion errors.
-    $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] AS {$spec['sqlsrv_type']})");
+    $field_spec = $this->processField($spec);
+    // Change collation if needed
+    $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] COLLATE {$field_spec['sqlsrv_collation']} AS {$field_spec['sqlsrv_type_full']})");
 
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
       // There is no warranty that the old data did not have NULL values, we need to populate
       // nulls with the default value because this won't be done by MSSQL by default.
-      if (!empty($spec['default'])) {
-        $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = {$default_expression} WHERE [{$field_new}] IS NULL");
-      }
+      $default_expression = $this->defaultValueExpression($field_spec['sqlsrv_type'], $field_spec['default']);
+      $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = {$default_expression} WHERE [{$field_new}] IS NULL");
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
-      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $spec, TRUE));
+      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $this->processField($spec), TRUE));
     }
 
     // Initialize new keys.
