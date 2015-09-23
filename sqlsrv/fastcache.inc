@@ -111,9 +111,9 @@ class fastcache {
   /**
    * cache_clear_all wrapper.
    */
-  public static function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
+  public static function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE, $volatile = FALSE) {
     static::FixKeyAndBin($cid, $bin);
-    if (!isset(static::$fastcacheitems[$bin])) {
+    if (!$volatile && !isset(static::$fastcacheitems[$bin])) {
       static::cache_load_ensure($bin, TRUE);
     }
     // If the cache did not exist, it will still not be loaded.
