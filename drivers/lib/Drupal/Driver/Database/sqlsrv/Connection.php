@@ -417,7 +417,7 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function escapeLike($string) {
-    return addcslashes($string, '\%_[]');
+    return preg_replace('/([\\[\\]%_])/', '[$1]', $string);
   }
 
   /**
@@ -718,12 +718,10 @@ class Connection extends DatabaseConnection {
 
   public function mapConditionOperator($operator) {
     // SQL Server doesn't need special escaping for the \ character in a string
-    // literal, because it uses '' to escape the single quote, not \'. Sadly
-    // PDO doesn't know that and interpret \' as an escaping character. We
-    // use a function call here to be safe.
+    // literal, because it uses '' to escape the single quote, not \'.
     static $specials = array(
-    'LIKE' => array('postfix' => " ESCAPE CHAR(92)"),
-    'NOT LIKE' => array('postfix' => " ESCAPE CHAR(92)"),
+    'LIKE' => array(),
+    'NOT LIKE' => array(),
     );
     return isset($specials[$operator]) ? $specials[$operator] : NULL;
   }
