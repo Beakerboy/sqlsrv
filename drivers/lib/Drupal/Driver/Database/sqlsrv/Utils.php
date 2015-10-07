@@ -101,8 +101,10 @@ class Utils {
 
   /**
    * Returns the spec for a MSSQL data type definition.
-   *
-   * @param mixed $type
+   * 
+   * @param string $type
+   * 
+   * @return string
    */
   public static function GetMSSQLType($type) {
     $matches = array();

@@ -705,15 +705,17 @@ EOF
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
     $sqlsrv_type = $spec['sqlsrv_type'];
-    $is_text = in_array($sqlsrv_type, array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
-    $lengthable = in_array($sqlsrv_type, array('char', 'varchar', 'nchar', 'nvarchar'));
+    $sqlsrv_type_native = $spec['sqlsrv_type_native'];
+
+    $is_text = in_array($sqlsrv_type_native, array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
+    $lengthable = in_array($sqlsrv_type_native, array('char', 'varchar', 'nchar', 'nvarchar'));
 
     $sql = $this->connection->quoteIdentifier($name) . ' ' . $sqlsrv_type;
 
     if (!empty($spec['length']) && $lengthable) {
       $sql .= '(' . $spec['length'] . ')';
     }
-    elseif (in_array($sqlsrv_type, array('numeric', 'decimal')) && isset($spec['precision']) && isset($spec['scale'])) {
+    elseif (in_array($sqlsrv_type_native, array('numeric', 'decimal')) && isset($spec['precision']) && isset($spec['scale'])) {
       // Maximum precision for SQL Server 2008 orn greater is 38.
       // For previous versions it's 28.
       if ($spec['precision'] > 38) {
@@ -851,11 +853,17 @@ EOF
     if (!isset($field['size'])) {
       $field['size'] = 'normal';
     }
+    
     // Set the correct database-engine specific datatype.
     if (!isset($field['sqlsrv_type'])) {
       $map = $this->getFieldTypeMap();
       $field['sqlsrv_type'] = $map[$field['type'] . ':' . $field['size']];
     }
+
+    if (isset($field['sqlsrv_type'])) {
+      $field['sqlsrv_type_native'] = Utils::GetMSSQLType($field['sqlsrv_type']);
+    }
+
     if ($field['type'] == 'serial') {
       $field['identity'] = TRUE;
     }
