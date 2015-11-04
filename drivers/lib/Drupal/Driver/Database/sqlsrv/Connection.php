@@ -995,24 +995,6 @@ class Connection extends DatabaseConnection {
       throw new DatabaseNotFoundException($e->getMessage());
     }
   }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function upsert($table, array $options = array()) {
-    $name = $this->driver_settings->GetUseNativeUpsert() ? "UpsertNative" : "Upsert";
-    $class = $this->getDriverClass($name);
-    return new $class($this, $table, $options);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function merge($table, array $options = array()) {
-    $name = $this->driver_settings->GetUseNativeMerge() ? "MergeNative" : "Merge";
-    $class = $this->getDriverClass($name);
-    return new $class($this, $table, $options);
-  }
 }
 
 /**
