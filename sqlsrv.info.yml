@@ -1,0 +1,11 @@
+name: 'SQL Server'
+type: module
+description: 'Driver for SQL Server and SQL Azure'
+package: Database engines
+# version: VERSION
+# core: 8.x
+# Information added by Drupal.org packaging script on 2015-08-21
+version: '8.x-1.0-beta3+2-dev'
+core: '8.x'
+project: 'sqlsrv'
+datestamp: 1440156841
