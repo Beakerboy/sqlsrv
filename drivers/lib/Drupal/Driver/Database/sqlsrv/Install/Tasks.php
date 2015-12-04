@@ -184,7 +184,7 @@ class Tasks extends InstallTasks {
       $form = array();
       $form['message'] =
           array(
-            '#markup' => t('This driver depends on the PhpMsql library. You can use the community *supported* <a href="https://www.drupal.org/project/sqlsrv">8.x-1.x</a> version of the driver or get PhpMSSQL from <a href="http://www.drupalonwindows.com/en/content/phpmssql">here</a>. See README.rm for deployment instructions.')
+            '#markup' => t('This driver depends on the PhpMsql library. You can use the community *supported* <a href="https://www.drupal.org/project/sqlsrv">8.x-1.x</a> version of the driver or get PhpMSSQL from <a href="http://www.drupalonwindows.com/en/content/phpmssql">here</a>. Due to a <a herf="https://github.com/Azure/msphpsql/issues/50">bug</a> in the Mssql PDO driver the 8.x-1.x branch is prompt to data loss under some situations. See README.rm for deployment instructions.')
           
         );
       return $form;
