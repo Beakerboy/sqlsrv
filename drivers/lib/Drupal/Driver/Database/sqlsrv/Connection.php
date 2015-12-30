@@ -10,6 +10,7 @@ use Drupal\Core\Database\IntegrityConstraintViolationException;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\DatabaseNotFoundException;
+use Drupal\Core\Database\SchemaObjectDoesNotExistException;
 use Drupal\Core\Database\Connection as DatabaseConnection;
 use Drupal\Core\Database\TransactionNoActiveException as DatabaseTransactionNoActiveException;
 use Drupal\Core\Database\TransactionCommitFailedException as DatabaseTransactionCommitFailedException;
@@ -89,16 +90,17 @@ class Connection extends DatabaseConnection {
     // Store connection options for future reference.
     $this->connectionOptions = &$connection_options;
   }
+
   /**
    * {@inheritdoc}
    */
   public static function open(array &$connection_options = array()) {
-    
+
     // Just for installation purposes.
     if (!class_exists(\mssql\Connection::class)) {
       throw new DatabaseNotFoundException('The PhpMssql library is not available.');
     }
-    
+
     // Get driver settings.
     $driver_settings = ConnectionSettings::instanceFromData();
     // Build the DSN.
@@ -261,7 +263,6 @@ class Connection extends DatabaseConnection {
     // to append to each query, in the form of comments, the current
     // backtrace plus other details that aid in debugging deadlocks
     // or long standing locks. Use in combination with MSSQL profiler.
-    global $conf;
     if ($this->driver_settings->GetAppendCallstackComment()) {
       // The current user service might not be available
       // if this is too early bootstrap
@@ -525,6 +526,9 @@ class Connection extends DatabaseConnection {
       // Match all SQLSTATE 23xxx errors.
       if (substr($e->getCode(), -6, -3) == '23') {
         $exception = new IntegrityConstraintViolationException($message, $e->getCode(), $e);
+      }
+      else if ($e->getCode() == '42S02') {
+        $exception = new SchemaObjectDoesNotExistException($e->getMessage(), 0, $e);
       }
       else {
         $exception = new DatabaseExceptionWrapper($message, 0, $e);
