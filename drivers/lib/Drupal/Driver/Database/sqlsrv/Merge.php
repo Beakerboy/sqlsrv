@@ -14,10 +14,18 @@ use PDO as PDO;
 use Exception as Exception;
 use PDOStatement as PDOStatement;
 class Merge extends QueryMerge {
+
+  /**
+   * Returned by execute() no 
+   * records have been affected.
+   */
+  const STATUS_NONE = -1;
+
   /**
    * @var Connection
    */
   protected $connection;
+
   /**
    * {@inheritdoc}
    */
@@ -58,7 +66,12 @@ class Merge extends QueryMerge {
       case 'INSERT':
         return static::STATUS_INSERT;
       default:
-        throw new InvalidMergeQueryException(t('Invalid merge query: no results.'));
+        if (!empty($this->expressionFields)) {
+          throw new InvalidMergeQueryException(t('Invalid merge query: no results.'));
+        }
+        else {
+          return static::STATUS_NONE;
+        }
     }
   }
   /**

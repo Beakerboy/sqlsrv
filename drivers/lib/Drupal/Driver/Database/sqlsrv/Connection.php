@@ -80,7 +80,7 @@ class Connection extends DatabaseConnection {
    */
   public function __construct(\PDO $connection, array $connection_options) {
     // Initialize settings.
-    $this->driver_settings = ConnectionSettings::instanceFromData();
+    $this->driver_settings = $connection_options['driver_settings'];
     // Needs to happen before parent construct.
     $this->statementClass = Statement::class;
     parent::__construct($connection, $connection_options);
@@ -95,14 +95,12 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public static function open(array &$connection_options = array()) {
-
     // Just for installation purposes.
     if (!class_exists(\mssql\Connection::class)) {
       throw new DatabaseNotFoundException('The PhpMssql library is not available.');
     }
-
     // Get driver settings.
-    $driver_settings = ConnectionSettings::instanceFromData();
+    $driver_settings = ConnectionSettings::instanceFromData(\Drupal\Core\Site\Settings::get('mssql', []));
     // Build the DSN.
     $options = array();
     $options['Server'] = $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : '');
@@ -136,6 +134,7 @@ class Connection extends DatabaseConnection {
       }
       throw $e;
     }
+    $connection_options['driver_settings'] = $driver_settings;
     return $pdo;
   }
   /**
