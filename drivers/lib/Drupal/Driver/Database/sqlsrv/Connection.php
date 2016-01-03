@@ -241,8 +241,11 @@ class Connection extends DatabaseConnection {
     // Lets you access rows in any order. Creates a client-side cursor query.
     $pdo_options[PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = PDO::SQLSRV_CURSOR_BUFFERED;
     #endregion
+    if ($this->driver_settings->GetAppendCallstackComment()) {
+      $query = $this->addDebugInfoToQuery($query);
+    }
     // Call our overriden prepare.
-    $stmt = $this->PDOPrepare($query, $pdo_options);
+    $stmt = $this->connection->prepare($query, $pdo_options);
     // If statement caching is enabled, store current statement for reuse.
     if ($options['statement_caching'] === TRUE) {
       $this->statement_cache[$query] = $stmt;
@@ -250,50 +253,44 @@ class Connection extends DatabaseConnection {
     return $stmt;
   }
   /**
-   * Internal function: prepare a query by calling PDO directly.
-   *
-   * This function has to be public because it is called by other parts of the
-   * database layer, but do not call it directly, as you risk locking down the
-   * PHP process.
+   * Adds debugging information to a query
+   * in the form of comments.
+   * 
+   * @param string $query 
+   * @return string
    */
-  public function PDOPrepare($query, array $options = array()) {
-
-    // You can set the MSSQL_APPEND_CALLSTACK_COMMENT to TRUE
-    // to append to each query, in the form of comments, the current
-    // backtrace plus other details that aid in debugging deadlocks
-    // or long standing locks. Use in combination with MSSQL profiler.
-    if ($this->driver_settings->GetAppendCallstackComment()) {
-      // The current user service might not be available
-      // if this is too early bootstrap
-      $uid = NULL;
-      static $loading_user;
-      // Use loading user to prevent recursion!
-      // Because the user entity can be stored in
-      // the database itself.
-      if (empty($loading_user)) {
-        try {
-          $loading_user = TRUE;
-          $oUser = \Drupal::currentUser();
-          $uid = NULL;
-          if ($oUser != NULL) {
-            $uid = $oUser->getAccount()->id();
-          }
-        }
-        catch (\Exception $e) {
-        }
-        finally {
-          $loading_user = FALSE;
+  protected function addDebugInfoToQuery($query) {
+    // The current user service might not be available
+    // if this is too early bootstrap
+    $uid = NULL;
+    static $loading_user;
+    // Use loading user to prevent recursion!
+    // Because the user entity can be stored in
+    // the database itself.
+    if (empty($loading_user)) {
+      try {
+        $loading_user = TRUE;
+        $oUser = \Drupal::currentUser();
+        $uid = NULL;
+        if ($oUser != NULL) {
+          $uid = $oUser->getAccount()->id();
         }
       }
-      // Drupal specific aditional information for the dump.
-      $extra = array(
-        '-- uid:' . (($uid) ? $uid : 'NULL')
-        );
-      $comment = $this->connection->GetCallstackAsComment(DRUPAL_ROOT, $extra);
-      $query = $comment . $query;
+      catch (\Exception $e) {
+      }
+      finally {
+        $loading_user = FALSE;
+      }
     }
-    return parent::prepare($query, $options);
+    // Drupal specific aditional information for the dump.
+    $extra = array(
+      '-- uid:' . (($uid) ? $uid : 'NULL')
+      );
+    $comment = $this->connection->GetCallstackAsComment(DRUPAL_ROOT, $extra);
+    $query = $comment . $query;
+    return $query;
   }
+
   /**
    * This is the original replacement regexp from Microsoft.
    *
@@ -352,12 +349,10 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function escapeField($field) {
-    if (strlen($field) > 0) {
-      return implode('.', array_map(array($this, 'quoteIdentifier'), explode('.', preg_replace('/[^A-Za-z0-9_.]+/', '', $field))));
-    }
-    else {
+    if (empty($field)) {
       return '';
     }
+    return implode('.', array_map(array($this, 'quoteIdentifier'), explode('.', preg_replace('/[^A-Za-z0-9_.]+/', '', $field))));
   }
   /**
    * Prefix a single table name.
@@ -752,7 +747,6 @@ class Connection extends DatabaseConnection {
         $rolled_back_other_active_savepoints = TRUE;
       }
     }
-    $this->clearDescriptionColumnCache();
     $this->connection->rollBack();
     // Restore original transaction isolation level
     if ($level = $this->driver_settings->GetDefaultTransactionIsolationLevelInStatement()) {
@@ -765,13 +759,6 @@ class Connection extends DatabaseConnection {
     if ($rolled_back_other_active_savepoints) {
       throw new DatabaseTransactionOutOfOrderException();
     }
-  }
-  /**
-   * Once a transaction is over, we can reset
-   * the static column cache.
-   */
-  protected function clearDescriptionColumnCache() {
-    drupal_static_reset('createDescriptionSql');
   }
   /**
    * Summary of pushTransaction
@@ -874,7 +861,6 @@ class Connection extends DatabaseConnection {
       if (empty($this->transactionLayers)) {
         try {
           // PDO::commit() can either return FALSE or throw an exception itself
-          $this->clearDescriptionColumnCache();
           if (!$this->connection->commit()) {
             throw new DatabaseTransactionCommitFailedException();
           }
