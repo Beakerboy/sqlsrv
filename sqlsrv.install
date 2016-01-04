@@ -10,6 +10,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Driver\Database\sqlsrv\Connection;
 use Drupal\Driver\Database\sqlsrv\Utils;
 use Drupal\sqlsrv\Indexes\IndexManager;
+use Drupal\Driver\Database\sqlsrv\Install\Tasks as MssqlInstallTasks;
 
 /**
  * Implements hook_uninstall().
@@ -36,20 +37,26 @@ function sqlsrv_requirements($phase) {
 
     // Nothing to do if we are not running on MSSQL.
     if ($connection->driver() !== 'sqlsrv') {
-      return array();
+      $requirements['sqlsrv_unused'] = array(
+        'title' => t('MSSQL Server'),
+        'severity' => REQUIREMENT_WARNING,
+        'description' => 'Driver module enabled but driver not used.',
+        'value' => t('The MSSQL driver module is enabled, but it looks like you are not using the MSSQL database engine driver. Please, disable the MSSQL module.'),
+      );
+      return $requirements;
     }
 
     $options = $connection->getConnectionOptions();
     $schema = $connection->schema();
-    $collation = $schema->getCollation();
     $version = $connection->Scheme()->EngineVersion();
+    $database = $connection->prefixTable($connection->getDatabaseName());
 
-    $requirements .= \Drupal\Driver\Database\sqlsrv\Install\Tasks::InstallRequirements();
+    $requirements = MssqlInstallTasks::InstallRequirements();
 
     // Report database engine version
     $uinfo =  $connection->Scheme()->UserOptions();
 
-    $uinfo_parts = array_map(function($a, $b) { $a = strtoupper($a); $b = strtoupper($b); return "$a=$b"; }, array_keys($uinfo), $uinfo);
+    $uinfo_parts = array_map(function($a, $b) { $a = strtoupper($a); $b = strtoupper($b); return "$a=$b"; }, array_keys($uinfo->getSettings()), $uinfo->getSettings());
     $requirements['sqlsrv_edition'] = array(
       'title' => t('MSSQL Server'),
       'severity' => REQUIREMENT_INFO,
@@ -62,16 +69,17 @@ function sqlsrv_requirements($phase) {
     );
 
     // Report database name and size.
-    $size = $schema->getSizeInfo();
+    $size = $connection->Scheme()->getSizeInfo($database);
     $size_db = format_size($size->RowSizeMB * 1024 * 1024);
+    $table_count = $size->TableCount;
     $requirements['sqlsrv_database'] = array(
       'title' => t('MSSQL Server Database'),
       'severity' => REQUIREMENT_OK,
-      'value' => "{$options['database']} ({$size_db})",
+      'value' => "{$options['database']} ({$size_db}, {$table_count} tables)",
     );
 
     // Wincache module availability.
-    $wincache_module = \Drupal::moduleHandler()->moduleExists('wincache');
+    $wincache_module = \Drupal::moduleHandler()->moduleExists('wincachedrupal');
     $requirements['sqlsrv_wincache_extension'] = array(
       'title' => t('MSSQL Server Wincache module'),
       'value' => $wincache_module ? phpversion('wincache') : t('Not available'),
@@ -80,17 +88,16 @@ function sqlsrv_requirements($phase) {
     );
 
     // Report encoding for database.
-    $collation = $schema->getCollation();
+    $collation = $connection->Scheme()->getCollation($database, $connection->schema()->GetDefaultSchema());
     $case_insensitive = stripos($collation, '_CI') !== FALSE;
     $requirements['sqlsrv_encoding_database'] = array(
       'title' => t('MSSQL Server Database encoding'),
       'severity' => $case_insensitive ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-      'description' => $case_insensitive ? NULL : t('Drupal needs a default case insensitive collation database to run on.'),
+      'description' => $case_insensitive ? t('Default case insensitive collation found.') : t('Drupal needs a default case insensitive collation database to run on.'),
       'value' => t('@collation', array('@collation' => $collation)),
     );
 
     // TODO: Report install function availability (SUBSTRING, CONCAT, IF, MD5, etc...)
-    $schema = $connection->schema();
     $functions = $schema->DrupalSpecificFunctions();
     $briefing = array();
     $error = FALSE;
@@ -114,9 +121,6 @@ function sqlsrv_requirements($phase) {
     $path = dirname(__FILE__) .'/src/Indexes/Implementations';
     $manager = new IndexManager($connection, $path);
     $manager->DeployNew();
-
-    // Redeploy functions
-    //::DeployCustomFunctions($connection, TRUE);
 
     // Make sure that the module's driver code is the same one as the effectively
     // deployed driver code....

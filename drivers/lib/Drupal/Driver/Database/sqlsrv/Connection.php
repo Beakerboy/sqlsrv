@@ -769,7 +769,7 @@ class Connection extends DatabaseConnection {
    */
   public function pushTransaction($name, $settings = NULL) {
     if ($settings == NULL) {
-      $settings = DatabaseTransactionSettings::GetBetterDefaults();
+      $settings = DatabaseTransactionSettings::GetDefaults();
     }
     if (!$this->supportsTransactions()) {
       return;
@@ -914,6 +914,15 @@ class Connection extends DatabaseConnection {
    */
   public function errorInfo() {
     return $this->connection->errorInfo();
+  }
+  /**
+   * Return the name of the database in use,
+   * not prefixed!
+   */
+  public function getDatabaseName($prefixed = FALSE) {
+    // Database is defaulted from active connection.
+    $options = $this->getConnectionOptions();
+    return $prefixed ? $this->prefixTable($options['database']) : $options['database'];
   }
 }
 

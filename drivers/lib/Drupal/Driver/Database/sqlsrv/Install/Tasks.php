@@ -123,9 +123,9 @@ class Tasks extends InstallTasks {
    */
   protected function checkEncoding() {
     try {
-      $database = Database::getConnection();
-      $schema = $database->schema();
-      $collation = $schema->getCollation();
+      /** @var \Drupal\Driver\Database\sqlsrv\Connection */
+      $connection = Database::getConnection();
+      $collation = $connection->Scheme()->getCollation($connection->getDatabaseName(TRUE), $connection->schema()->defaultSchema);
       if ($collation == Schema::DEFAULT_COLLATION_CI || stristr($collation, '_CI') !== FALSE) {
         $this->pass(t('Database is encoded in case insensitive collation: $collation'));
       }

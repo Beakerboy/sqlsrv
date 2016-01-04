@@ -87,7 +87,9 @@ class TransactionSettings {
   public static function GetBetterDefaults() {
     // Use snapshot if available.
     $isolation = DatabaseTransactionIsolationLevel::Ignore();
-    if ($info = Database::getConnection()->schema()->getDatabaseInfo()) {
+    /** @var Connection */
+    $connection = Database::getConnection();
+    if ($info = $connection->Scheme()->getDatabaseInfo($connection->getDatabaseName(TRUE))) {
       if ($info->snapshot_isolation_state == TRUE) {
         $isolation = DatabaseTransactionIsolationLevel::Snapshot();
       }
