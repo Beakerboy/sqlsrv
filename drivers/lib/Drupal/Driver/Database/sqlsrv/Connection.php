@@ -919,10 +919,10 @@ class Connection extends DatabaseConnection {
    * Return the name of the database in use,
    * not prefixed!
    */
-  public function getDatabaseName($prefixed = FALSE) {
+  public function getDatabaseName() {
     // Database is defaulted from active connection.
     $options = $this->getConnectionOptions();
-    return $prefixed ? $this->prefixTable($options['database']) : $options['database'];
+    return $options['database'];
   }
 }
 

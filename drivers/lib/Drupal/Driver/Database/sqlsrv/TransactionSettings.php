@@ -89,7 +89,7 @@ class TransactionSettings {
     $isolation = DatabaseTransactionIsolationLevel::Ignore();
     /** @var Connection */
     $connection = Database::getConnection();
-    if ($info = $connection->Scheme()->getDatabaseInfo($connection->getDatabaseName(TRUE))) {
+    if ($info = $connection->Scheme()->getDatabaseInfo($connection->getDatabaseName())) {
       if ($info->snapshot_isolation_state == TRUE) {
         $isolation = DatabaseTransactionIsolationLevel::Snapshot();
       }

@@ -125,7 +125,7 @@ class Tasks extends InstallTasks {
     try {
       /** @var \Drupal\Driver\Database\sqlsrv\Connection */
       $connection = Database::getConnection();
-      $collation = $connection->Scheme()->getCollation($connection->getDatabaseName(TRUE), $connection->schema()->defaultSchema);
+      $collation = $connection->Scheme()->getCollation($connection->getDatabaseName(), $connection->schema()->defaultSchema);
       if ($collation == Schema::DEFAULT_COLLATION_CI || stristr($collation, '_CI') !== FALSE) {
         $this->pass(t('Database is encoded in case insensitive collation: $collation'));
       }
@@ -268,7 +268,7 @@ class Tasks extends InstallTasks {
       $error = array();
       $error['title'] = 'MSSQL Server PDO Version';
       $error['severity'] = REQUIREMENT_ERROR;
-      $error['description'] = t('This version of the MS SQL Server needs the Wincache PHP extension with a minimum ucachesize of 20Mb.');
+      $error['description'] = t('This version of the MS SQL Server needs the Wincache PHP extension with a minimum ucachesize of 20Mb. If you are seeing this message from CLI make sure that you have enabled wincache CLI support.');
       $errors['sqlsrv_wincache_ucache'] = $error;
     }
 
