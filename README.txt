@@ -1,14 +1,20 @@
-Drop the driver Folder into the root of your Drupal installation.
+INSTALLATION
 
-Drop the mssql library in \drivers\lib\Drupal\Driver\Database\sqlsrv.
+  Drop the driver Folder into the root of your Drupal installation.
 
-You can get a copy from here: http://www.drupalonwindows.com/en/content/phpmssql
+  Drop the PhpMssql library in \drivers\lib\Drupal\Driver\Database\sqlsrv inside a folder named mssql, so that
+  you end up with files such as:
 
-After setting up Drupal you will need to manually INSTALL the MSSQL server module. To do so go to admin/modules.
+  \drivers\lib\Drupal\Driver\Database\mssql\src\Connection.php
+  \drivers\lib\Drupal\Driver\Database\mssql\src\Scheme.php
+  \drivers\lib\Drupal\Driver\Database\mssql\src\Utils.php
+  ...
 
-Installing the module is recommended because, among other things, it deployes drupal specific optimizations for the database.
+  You can get a copy from here: http://www.drupalonwindows.com/en/content/phpmssql
 
 UDPATING THE DRIVER
 
-To update the driver you will need to manually copy the \drivers\lib\Drupal\Driver\Database\sqlsrv folder
-and to manually update the PhpMssql library when updates are available.
+  To update the driver you will need to manually copy the \drivers\lib\Drupal\Driver\Database\sqlsrv folder
+  and to manually update the PhpMssql library when updates are available.
+
+  Using Drupal's update module will only update the sqlsrv module, but not the driver.
