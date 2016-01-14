@@ -38,15 +38,17 @@ class Upsert extends QueryUpsert {
     $columnInformation = $this->connection->schema()->getTableIntrospection($this->table);
     // Initialize placeholder count.
     $max_placeholder = 0;
-    // Build the query.
-    $stmt = $this->connection->prepareQuery((string) $this, array('prefix_tables' => FALSE));
+    // Build the query, ensure that we have retries for concurrency control
+    $options['integrityretry'] = TRUE;
+    $options['prefix_tables'] = FALSE;
+    $stmt = $this->connection->prepareQuery((string) $this, $options);
     // 3. Bind the dataset.
     foreach ($this->insertValues as $insert_values) {
       $fields = array_combine($this->insertFields, $insert_values);
       $stmt->BindValues($fields, $blobs, ':db_insert_placeholder_', $columnInformation, $max_placeholder);
     }
     // 4. Run the query, this will return UPDATE or INSERT
-    $this->connection->query($stmt, array(), $options);
+    $this->connection->query($stmt, array());
     // Captura the results.
     foreach ($stmt as $value) {
       $this->result[] = $value->{'$action'};

@@ -179,7 +179,9 @@ class Connection extends DatabaseConnection {
         'statement_caching' => $this->driver_settings->GetStatementCachingMode(),
         'direct_query' => $this->driver_settings->GetDefaultDirectQueries(),
         'prefix_tables' => TRUE,
+        'integrityretry' => FALSE,
       ), $options);
+
     // Prefix tables. There is no global setting for this.
     if ($options['prefix_tables'] !== FALSE) {
       $query = $this->prefixTables($query);
@@ -218,6 +220,10 @@ class Connection extends DatabaseConnection {
       // Never use this when you need special column binding.
       // THIS ONLY WORKS IF SET AT THE STATEMENT LEVEL.
       $pdo_options[PDO::ATTR_EMULATE_PREPARES] = TRUE;
+    }
+    // We need this behaviour to make UPSERT and MERGE more robust.
+    if ($options['integrityretry'] == TRUE) {
+      $pdo_options[\mssql\Connection::PDO_RETRYONINTEGRITYVIOLATION] = TRUE;
     }
     // We run the statements in "direct mode" because the way PDO prepares
     // statement in non-direct mode cause temporary tables to be destroyed

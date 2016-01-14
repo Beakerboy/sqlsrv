@@ -16,7 +16,7 @@ use PDOStatement as PDOStatement;
 class Merge extends QueryMerge {
 
   /**
-   * Returned by execute() no 
+   * Returned by execute() no
    * records have been affected.
    */
   const STATUS_NONE = -1;
@@ -43,8 +43,9 @@ class Merge extends QueryMerge {
     $this->setIdentity = !empty($columnInformation['identity']) && in_array($columnInformation['identity'], array_keys($this->insertFields));
     // Initialize placeholder count.
     $max_placeholder = 0;
-    // Build the query.
-    $stmt = $this->connection->prepareQuery((string)$this);
+    // Build the query, ensure that we have retries for concurrency control
+    $options['integrityretry'] = TRUE;
+    $stmt = $this->connection->prepareQuery((string)$this, $options);
     // Build the arguments: 1. condition.
     $arguments = $this->condition->arguments();
     $stmt->BindArguments($arguments);
@@ -55,7 +56,7 @@ class Merge extends QueryMerge {
     // 3. When not matched part.
     $stmt->BindValues($this->insertFields, $blobs, ':db_merge_placeholder_', $columnInformation, $max_placeholder);
     // 4. Run the query, this will return UPDATE or INSERT
-    $this->connection->query($stmt, array(), $options);
+    $this->connection->query($stmt, array());
     $result = NULL;
     foreach ($stmt as $value) {
       $result = $value->{'$action'};
