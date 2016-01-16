@@ -672,8 +672,10 @@ class Connection extends DatabaseConnection {
   /**
    * {@inhertidoc}
    */
-  public function nextId($existing = 0) {
-    return $this->connection->nextId($existing, 'drupal');
+  public function nextId($existing = 0, $name = 'drupal') {
+    // The sequence ID must be unique for
+    // this installation.
+    return $this->connection->nextId($existing, $this->prefixTable($name));
   }
   /**
    * Override DatabaseConnection::escapeTable().

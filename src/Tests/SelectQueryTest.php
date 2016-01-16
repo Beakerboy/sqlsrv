@@ -61,7 +61,18 @@ class SelectQueryTest extends KernelTestBase {
     db_insert('test_task')->fields(array('task' => 'found new band'))->execute();
     db_insert('test_task')->fields(array('task' => 'perform at superbowl'))->execute();
   }
-  
+
+  /**
+   * The current connection object.
+   * 
+   * @return \Drupal\Driver\Database\sqlsrv\Connection
+   */
+  protected function getConnection() {
+    /** @var \Drupal\Driver\Database\sqlsrv\Connection */
+    $connection = \Drupal\Core\Database\Database::getConnection();
+    return $connection;
+  }
+
   /**
    * Checks that invalid sort directions in ORDER BY get converted to ASC.
    */
@@ -237,7 +248,31 @@ class SelectQueryTest extends KernelTestBase {
     // The table should not exist now.
     $this->assertFALSE(db_table_exists($table), 'The temporary table does not exists.');
   }
-  
+
+  public function testSequence() {
+    
+    $connection = $this->getConnection();
+
+    $sequence1 = 'firstsequence';
+    $sequence2 = 'secondsequence';
+
+    $this->assertEquals(1, $connection->nextId(0, $sequence1));
+    $this->assertEquals(2, $connection->nextId(0, $sequence1));
+    $this->assertEquals(3, $connection->nextId(0, $sequence1));
+    $this->assertEquals(4, $connection->nextId(0, $sequence1));
+    $this->assertEquals(5, $connection->nextId(0, $sequence1));
+
+    $this->assertEquals(10, $connection->nextId(9, $sequence1));
+    $this->assertEquals(11, $connection->nextId(5, $sequence1));
+    $this->assertEquals(12, $connection->nextId(3, $sequence1));
+
+    $this->assertEquals(4, $connection->nextId(3, $sequence2));
+    $this->assertEquals(5, $connection->nextId(3, $sequence2));
+    $this->assertEquals(6, $connection->nextId(3, $sequence2));
+
+    $this->assertEquals(13, $connection->nextId(3, $sequence1));
+  }
+
   /**
    * Test LIKE statement wildcards are properly escaped.
    */
