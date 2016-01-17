@@ -16,7 +16,7 @@ class SqlsrvServiceProvider implements ServiceProviderInterface {
       $definition->setClass(\Drupal\sqlsrv\Lock\DatabaseLockBackend::class);
     }
     $definition = $container->getDefinition('lock.persistent');
-    if ($definition->getClass() == \Drupal\Core\Lock\DatabaseLockBackend::class) {
+    if ($definition->getClass() == \Drupal\Core\Lock\PersistentDatabaseLockBackend::class) {
       $definition->setClass(\Drupal\sqlsrv\Lock\PersistentDatabaseLockBackend::class);
     }
   }
