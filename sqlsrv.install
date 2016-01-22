@@ -49,7 +49,7 @@ function sqlsrv_requirements($phase) {
     $options = $connection->getConnectionOptions();
     $schema = $connection->schema();
     $version = $connection->Scheme()->EngineVersion();
-    $database = $connection->prefixTable($connection->getDatabaseName());
+    $database = $connection->getDatabaseName();
 
     $requirements = MssqlInstallTasks::InstallRequirements();
 
