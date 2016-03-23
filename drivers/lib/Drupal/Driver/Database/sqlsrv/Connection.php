@@ -115,10 +115,7 @@ class Connection extends DatabaseConnection {
       $options['TransactionIsolation'] = $level;
     }
     // Build the DSN
-    $dsn = 'sqlsrv:';
-    foreach ($options as $key => $value) {
-      $dsn .= (empty($key) ? '' : "{$key}=") . $value . ';';
-    }
+    $dsn = $driver_settings->buildDSN($options);
     // PDO Options are set at a connection level.
     // and apply to all statements.
     $connection_options['pdo'] = array();
