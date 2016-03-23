@@ -5,9 +5,9 @@ INSTALLATION
   Drop the PhpMssql library in \drivers\lib\Drupal\Driver\Database\sqlsrv inside a folder named mssql, so that
   you end up with files such as:
 
-  \drivers\lib\Drupal\Driver\Database\mssql\src\Connection.php
-  \drivers\lib\Drupal\Driver\Database\mssql\src\Scheme.php
-  \drivers\lib\Drupal\Driver\Database\mssql\src\Utils.php
+  \drivers\lib\Drupal\Driver\Database\sqlsrv\mssql\src\Connection.php
+  \drivers\lib\Drupal\Driver\Database\sqlsrv\mssql\src\Scheme.php
+  \drivers\lib\Drupal\Driver\Database\sqlsrv\mssql\src\Utils.php
   ...
 
   You can get a copy from here: http://www.drupalonwindows.com/en/content/phpmssql
