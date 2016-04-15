@@ -397,10 +397,6 @@ class Schema extends DatabaseSchema {
    *   True if the table exists, false otherwise.
    */
   public function tableExists($table, $reset = FALSE) {
-    // Do not cache temporary tables (#)
-    if (!$reset && $table[0] != '#' && $cache = $this->connection->cache->get($table, 'tableExists')) {
-      return $cache->data;
-    }
 
     // Temporary tables and regular tables cannot be verified in the same way.
     $query = NULL;
@@ -414,10 +410,6 @@ class Schema extends DatabaseSchema {
     $exists = $this->connection
       ->query_direct($query)
       ->fetchField() !== FALSE;
-
-    if ($table[0] != '#') {
-      $this->connection->cache->set($table, $exists, 'tableExists');
-    }
 
     return $exists;
   }
@@ -710,10 +702,10 @@ EOF
     $is_text = in_array($sqlsrv_type_native, array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
     $lengthable = in_array($sqlsrv_type_native, array('char', 'varchar', 'nchar', 'nvarchar'));
 
-    $sql = $this->connection->quoteIdentifier($name) . ' ' . $sqlsrv_type;
+    $sql = $this->connection->quoteIdentifier($name) . ' ';
 
     if (!empty($spec['length']) && $lengthable) {
-      $sql .= '(' . $spec['length'] . ')';
+      $sql .= $sqlsrv_type_native . '(' . $spec['length'] . ')';
     }
     elseif (in_array($sqlsrv_type_native, array('numeric', 'decimal')) && isset($spec['precision']) && isset($spec['scale'])) {
       // Maximum precision for SQL Server 2008 orn greater is 38.
@@ -728,7 +720,10 @@ EOF
                 );
         $spec['precision'] = 38;
       }
-      $sql .= '(' . $spec['precision'] . ', ' . $spec['scale'] . ')';
+      $sql .= $sqlsrv_type_native . '(' . $spec['precision'] . ', ' . $spec['scale'] . ')';
+    }
+    else {
+      $sql .= $sqlsrv_type;
     }
 
     // When binary is true, case sensitivity is requested.

@@ -42,12 +42,6 @@ class FastCache {
       throw new \Exception("FastCache prefix must be a string.");
     }
 
-    // Setup the cache if available.
-    if (class_exists(\Drupal\wincache\Cache\WincacheBackend::class)) {
-      $checksum_provider = new DummyTagChecksum();
-      $this->cache = new WincacheBackend('fastcache', $this->prefix, $checksum_provider);
-    }
-
     $this->prefix = $prefix;
   }
 
