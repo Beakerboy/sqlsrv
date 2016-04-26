@@ -85,9 +85,6 @@ class Schema extends DatabaseSchema {
    * such as MySQL.
    */
   public function DrupalSpecificFunctions() {
-    if ($cache = $this->connection->cache->get('drupal_specific_functions', 'schema')) {
-      return $cache->data;
-    }
     $functions = array(
       'SUBSTRING',
       'SUBSTRING_INDEX',
@@ -104,7 +101,6 @@ class Schema extends DatabaseSchema {
     if ($this->EngineVersionNumber() >= 11) {
       $functions = array_diff($functions, array('CONCAT'));
     }
-    $this->connection->cache->set('drupal_specific_functions', $functions, 'schema');
     return $functions;
   }
 
@@ -112,23 +108,9 @@ class Schema extends DatabaseSchema {
    * Return active default Schema.
    */
   public function GetDefaultSchema() {
-    if ($cache = $this->connection->cache->get('default_schema', 'schema')) {
-      $this->defaultSchema = $cache->data;
-      return $this->defaultSchema;
-    }
     $result = $this->connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
-    $this->connection->cache->set('default_schema', $result, 'schema');
     $this->defaultSchema =  $result;
     return $this->defaultSchema;
-  }
-
-  /**
-   * Clear introspection cache for a specific table.
-   *
-   * @param mixed $table
-   */
-  protected function queryColumnInformationInvalidate($table) {
-    $this->connection->cache->cache_clear_all('queryColumnInformation:' . $table, 'schema_queryColumnInformation');
   }
 
   /**
@@ -152,8 +134,6 @@ class Schema extends DatabaseSchema {
    */
   public function queryColumnInformation($table, $refresh = FALSE) {
 
-    // No worry for the tableExists() check, results
-    // are cached.
     if (empty($table) || !$this->tableExists($table)) {
       return array();
     }
@@ -164,10 +144,6 @@ class Schema extends DatabaseSchema {
     // for now this is not supported.
     if ($table_info['table'][0] == '#') {
       throw new Exception('Temporary table introspection is not supported.');
-    }
-
-    if ($cache = $this->connection->cache->get('queryColumnInformation:' . $table, 'schema_queryColumnInformation')) {
-      return $cache->data;
     }
 
     $info = array();
@@ -277,8 +253,6 @@ class Schema extends DatabaseSchema {
       }
     }
 
-    $this->connection->cache->set('queryColumnInformation:' . $table, $info, 'schema_queryColumnInformation');
-
     return $info;
   }
 
@@ -289,11 +263,6 @@ class Schema extends DatabaseSchema {
     if ($this->tableExists($name, FALSE)) {
       throw new SchemaObjectExistsException(t('Table %name already exists.', array('%name' => $name)));
     }
-
-    // Reset caches after calling tableExists() otherwise it's results get cached again before
-    // the table is created.
-    $this->queryColumnInformationInvalidate($name);
-    $this->connection->cache->cache_clear_all('*', 'tableExists', TRUE);
 
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
@@ -343,9 +312,6 @@ class Schema extends DatabaseSchema {
         }
       }
     }
-
-    // Invalidate introspection cache.
-    $this->queryColumnInformationInvalidate($name);
   }
 
   /**
@@ -388,15 +354,14 @@ class Schema extends DatabaseSchema {
   }
 
   /**
-   * Find if a table already exists. Results are cached, use
-   * $reset = TRUE to get a fresh copy.
+   * Find if a table already exists.
    *
    * @param $table
    *   Name of the table.
    * @return
    *   True if the table exists, false otherwise.
    */
-  public function tableExists($table, $reset = FALSE) {
+  public function tableExists($table) {
 
     // Temporary tables and regular tables cannot be verified in the same way.
     $query = NULL;
@@ -434,11 +399,7 @@ class Schema extends DatabaseSchema {
    * @return mixed
    */
   public function UserOptions() {
-    if ($cache = $this->connection->cache->get('UserOptions', 'schema')) {
-      return $cache->data;
-    }
     $result = $this->connection->query_direct('DBCC UserOptions')->fetchAllKeyed();
-    $this->connection->cache->set('UserOptions', $result, 'schema');
     return $result;
   }
 
@@ -446,10 +407,6 @@ class Schema extends DatabaseSchema {
    * Retrieve Engine Version information.
    */
   public function EngineVersion() {
-    if ($cache = $this->connection->cache->get('EngineVersion', 'schema')) {
-      return $cache->data;
-    }
-
     $version = $this->connection
     ->query_direct(<<< EOF
     SELECT CONVERT (varchar,SERVERPROPERTY('productversion')) AS VERSION,
@@ -457,8 +414,6 @@ class Schema extends DatabaseSchema {
     CONVERT (varchar,SERVERPROPERTY('edition')) AS EDITION
 EOF
     )->fetchAssoc();
-
-    $this->connection->cache->set('EngineVersion', $version, 'schema');
     return $version;
   }
 
@@ -635,9 +590,6 @@ EOF
     if ($index) {
       $this->addIndex($table, $this->COMPUTED_PK_COLUMN_INDEX, $fields);
     }
-
-    // Invalidate current introspection.
-    $this->queryColumnInformationInvalidate($table);
   }
 
   /**
@@ -935,9 +887,6 @@ EOF
       throw new PDOException(t('Cannot rename a table across schema.'));
     }
 
-    // Borrar la caché de table_exists
-    $this->connection->cache->cache_clear_all('*', 'tableExists', TRUE);
-
     $this->connection->query_direct('EXEC sp_rename :old, :new', array(
       ':old' => $old_table_info['schema'] . '.' . $old_table_info['table'],
       ':new' => $new_table_info['table'],
@@ -968,7 +917,6 @@ EOF
       return FALSE;
     }
     $this->connection->query_direct('DROP TABLE {' . $table . '}');
-    $this->connection->cache->cache_clear_all('*', 'tableExists', TRUE);
     return TRUE;
   }
 
@@ -997,9 +945,6 @@ EOF
     // Prepare the specifications.
     $spec = $this->processField($spec);
 
-    // Clear column information for table.
-    $this->queryColumnInformationInvalidate($table);
-
     // Use already prefixed table name.
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
@@ -1018,9 +963,6 @@ EOF
     $query = "ALTER TABLE {$table_prefixed} ADD ";
     $query .= $this->createFieldSql($table, $field, $spec);
     $this->connection->query_direct($query, array(), array('prefix_tables' => FALSE));
-
-    // Clear column information for table.
-    $this->queryColumnInformationInvalidate($table);
 
     // Load the initial data.
     if (isset($spec['initial'])) {
@@ -1049,9 +991,6 @@ EOF
 
     // Commit.
     $transaction->commit();
-
-    // Clear column information for table.
-    $this->queryColumnInformationInvalidate($table);
   }
 
   /**
@@ -1116,7 +1055,6 @@ EOF
 
     // Introspect the schema and save the current primary key if the column
     // we are modifying is part of it. Make sure the schema is FRESH.
-    $this->queryColumnInformationInvalidate($table);
     $primary_key_fields = $this->introspectPrimaryKeyFields($table);
     if (in_array($field, $primary_key_fields)) {
       // Let's drop the PK
@@ -1194,9 +1132,6 @@ EOF
 
     // Add the new keys.
     $this->recreateTableKeys($table, $new_keys);
-
-    // Refresh introspection for this table.
-    $this->queryColumnInformationInvalidate($table);
 
     // Commit.
     $transaction->commit();
@@ -1366,8 +1301,7 @@ EOF
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
     $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
-    // Clear introspection cache.
-    $this->queryColumnInformationInvalidate($table);
+
     return TRUE;
   }
 
@@ -1657,7 +1591,6 @@ EOF
       }
     }
     $this->connection->query($sql);
-    $this->queryColumnInformationInvalidate($table);
   }
 
   /**
@@ -1681,8 +1614,6 @@ EOF
     if ($expand) {
       $this->compressPrimaryKeyIndex($table);
     }
-
-    $this->queryColumnInformationInvalidate($table);
 
     return TRUE;
   }
