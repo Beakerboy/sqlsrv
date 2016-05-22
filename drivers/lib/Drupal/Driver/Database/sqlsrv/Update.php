@@ -31,12 +31,6 @@ class Update extends QueryUpdate {
     // Fetch the list of blobs and sequences used on that table.
     $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
 
-    // MySQL is a pretty slut that swallows everything thrown at it,
-    // like trying to update an identity field...
-    if (isset($columnInformation['identity']) && isset($this->fields[$columnInformation['identity']])) {
-      unset($this->fields[$columnInformation['identity']]);
-    }
-
     // Because we filter $fields the same way here and in __toString(), the
     // placeholders will all match up properly.
     $stmt = $this->connection->prepareQuery((string)$this);
