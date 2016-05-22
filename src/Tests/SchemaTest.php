@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\sqlsrv\Tests\SqlServerSchemaTest.
+ * Definition of Drupal\sqlsrv\Tests\SchemaTest.
  */
 
 namespace Drupal\sqlsrv\Tests;
