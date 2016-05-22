@@ -75,7 +75,7 @@ function sqlsrv_requirements($phase) {
     $requirements['sqlsrv_database'] = array(
       'title' => t('MSSQL Server Database'),
       'severity' => REQUIREMENT_OK,
-      'value' => "{$options['database']} ({$size_db}, {$table_count} tables)",
+      'value' => "{$options['driver']}://{$options['host']}:{$options['port']}/{$options['database']} ({$size_db}, {$table_count} tables)",
     );
 
     // Wincache module availability.
