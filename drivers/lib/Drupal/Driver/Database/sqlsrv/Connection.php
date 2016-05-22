@@ -177,6 +177,7 @@ class Connection extends DatabaseConnection {
         'direct_query' => $this->driver_settings->GetDefaultDirectQueries(),
         'prefix_tables' => TRUE,
         'integrityretry' => FALSE,
+        'resilientretry' => TRUE,
       ), $options);
 
     // Prefix tables. There is no global setting for this.
@@ -221,6 +222,9 @@ class Connection extends DatabaseConnection {
     // We need this behaviour to make UPSERT and MERGE more robust.
     if ($options['integrityretry'] == TRUE) {
       $pdo_options[\mssql\Connection::PDO_RETRYONINTEGRITYVIOLATION] = TRUE;
+    }
+    if ($options['resilientretry'] == TRUE) {
+      $pdo_options[\mssql\Connection::PDO_RESILIENTRETRY] = TRUE;
     }
     // We run the statements in "direct mode" because the way PDO prepares
     // statement in non-direct mode cause temporary tables to be destroyed
@@ -597,20 +601,17 @@ class Connection extends DatabaseConnection {
     }
     // Force quotes around some SQL Server reserved keywords.
     if (preg_match('/^SELECT/i', $query)) {
-      $query = preg_replace_callback(self::RESERVED_REGEXP, array($this, 'replaceReservedCallback'), $query);
+      $query = preg_replace_callback(self::RESERVED_REGEXP, [$this, 'replaceReservedCallback'], $query);
     }
     // Last chance to modify some SQL Server-specific syntax.
-    $replacements = array();
+    $replacements = [];
     // Add prefixes to Drupal-specific functions.
     $defaultSchema = $this->schema()->GetDefaultSchema();
     foreach ($this->schema()->DrupalSpecificFunctions() as $function) {
       $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] =  "{$defaultSchema}.$1(";
     }
     // Rename some functions.
-    $funcs = array(
-      'LENGTH' => 'LEN',
-      'POW' => 'POWER',
-    );
+    $funcs = ['LENGTH' => 'LEN', 'POW' => 'POWER'];
     foreach ($funcs as $function => $replacement) {
       $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] = $replacement . '(';
     }
