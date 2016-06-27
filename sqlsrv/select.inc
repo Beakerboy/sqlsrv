@@ -147,6 +147,17 @@ class SelectQuery_sqlsrv extends SelectQuery {
         if (!isset($spec['columns'][$field])) {
           continue;
         }
+
+        // If no operator defined SKIP
+        if (!isset($condition['operator'])) {
+          continue;
+        }
+
+        // Only do this validation for very specific operators (note that IS NULL is an operator itself)
+        if (!in_array($condition['operator'], array('=', '<', '>', 'IN', '<>', '>=', '<='))) {
+          continue;
+        }
+
         $col_spec = $spec['columns'][$field];
         $values = $condition['value'];
         if (!is_array($values)) {
@@ -157,7 +168,8 @@ class SelectQuery_sqlsrv extends SelectQuery {
           if (!is_numeric($value) && !is_bool($value)) {
             if (in_array($col_spec['type'], array('int', 'bigint'))) {
               // This is anyways going to throw an exception when running the query against the PDO driver.
-              throw new \PDOException('Invalid type binding!');
+              $exception = new \PDOException("Invalid type binding for column {$real_table}.{$col_spec['name']} and value [{$value}]");
+              throw $exception;
             }
           }
         }
@@ -286,6 +298,9 @@ class SelectQuery_sqlsrv extends SelectQuery {
       $query .= 'DISTINCT ';
     }
 
+    $has_range = !empty($this->range);
+    $order = $this->order;
+
     // FIELDS and EXPRESSIONS
     $fields = array();
     foreach ($this->tables as $alias => $table) {
@@ -350,6 +365,16 @@ class SelectQuery_sqlsrv extends SelectQuery {
         }
       }
     }
+
+    // If this is a range query, we MUST specify an order...
+    if ($has_range && empty($order)) {
+      $fields[] = '1 as __tempsort';
+      if (!is_array($order)) {
+        $order = [];
+      }
+      $order['__tempsort'] = '';
+    }
+
     $query .= implode(', ', $fields);
 
     // FROM - We presume all queries have a FROM, as any query that doesn't won't need the query builder anyway.
@@ -416,24 +441,17 @@ class SelectQuery_sqlsrv extends SelectQuery {
     // The ORDER BY clause is invalid in views, inline functions, derived
     // tables, subqueries, and common table expressions, unless TOP or FOR XML
     // is also specified.
-    $sorted = FALSE;
-    if ($this->order && (empty($this->inSubQuery) || !empty($this->range))) {
+    if ($order && (empty($this->inSubQuery) || !empty($this->range))) {
       $query .= "\nORDER BY ";
       $fields = array();
-      foreach ($this->order as $field => $direction) {
+      foreach ($order as $field => $direction) {
         $fields[] = $field . ' ' . $direction;
       }
       $query .= implode(', ', $fields);
-      $sorted = TRUE;
     }
 
     // RANGE
-    if (!empty($this->range)) {
-      // To get OFFSET FETCH to work the query needs
-      // to have an order by. Use the recommended sort.
-      if (!$sorted) {
-        $query .= "\nORDER BY 1";
-      }
+    if ($has_range) {
       $query = $this->connection->addRangeToQuery($query, $this->range['start'], $this->range['length']);
     }
 
