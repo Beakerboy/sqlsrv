@@ -233,6 +233,8 @@ class Select extends QuerySelect {
     if ($this->distinct) {
       $query .= 'DISTINCT ';
     }
+    $has_range = !empty($this->range);
+    $order = $this->order;
     // FIELDS and EXPRESSIONS
     $fields = array();
     foreach ($this->tables as $alias => $table) {
@@ -289,6 +291,14 @@ class Select extends QuerySelect {
           $fields[] = $expression['expression'] . ' AS [' . $expression['alias'] .']';
         }
       }
+    }
+    // If this is a range query, we MUST specify an order...
+    if ($has_range && empty($order)) {
+      $fields[] = '1 as __tempsort';
+      if (!is_array($order)) {
+        $order = [];
+      }
+      $order['__tempsort'] = '';
     }
     $query .= implode(', ', $fields);
     // FROM - We presume all queries have a FROM, as any query that doesn't won't need the query builder anyway.
@@ -353,23 +363,16 @@ class Select extends QuerySelect {
     // The ORDER BY clause is invalid in views, inline functions, derived
     // tables, subqueries, and common table expressions, unless TOP or FOR XML
     // is also specified.
-    $sorted = FALSE;
-    if ($this->order && (empty($this->inSubQuery) || !empty($this->range))) {
+    if ($order && (empty($this->inSubQuery) || !empty($this->range))) {
       $query .= "\nORDER BY ";
       $fields = array();
-      foreach ($this->order as $field => $direction) {
+      foreach ($order as $field => $direction) {
         $fields[] = $field . ' ' . $direction;
       }
       $query .= implode(', ', $fields);
-      $sorted = TRUE;
     }
     // RANGE
     if (!empty($this->range)) {
-      // To get OFFSET FETCH to work the query needs
-      // to have an order by. Use the recommended sort.
-      if (!$sorted) {
-        $query .= "\nORDER BY 1";
-      }
       $query = $this->connection->addRangeToQuery($query, $this->range['start'], $this->range['length']);
     }
     // UNION is a little odd, as the select queries to combine are passed into
