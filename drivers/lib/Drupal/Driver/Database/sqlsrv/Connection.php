@@ -262,8 +262,8 @@ class Connection extends DatabaseConnection {
   /**
    * Adds debugging information to a query
    * in the form of comments.
-   * 
-   * @param string $query 
+   *
+   * @param string $query
    * @return string
    */
   protected function addDebugInfoToQuery($query) {
@@ -671,9 +671,24 @@ class Connection extends DatabaseConnection {
    * {@inhertidoc}
    */
   public function nextId($existing = 0, $name = 'drupal') {
-    // The sequence ID must be unique for
-    // this installation.
-    return $this->connection->nextId($existing, $this->prefixTable($name));
+    if (version_compare($this->Scheme()->EngineVersion()->Version(), '11', '>')) {
+      // Native sequence support is only available for SLQ Server 2012 and beyound
+      return $this->connection->nextId($existing, $this->prefixTable($name));
+    }
+    else {
+      // If an exiting value is passed, for its insertion into the sequence table.
+      if ($existing > 0) {
+        try {
+          $this->query_direct('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', array(':existing' => $existing));
+        }
+        catch (Exception $e) {
+          // Doesn't matter if this fails, it just means that this value is already
+          // present in the table.
+        }
+      }
+      // Refactored to use OUTPUT because under high concurrency LAST_INSERTED_ID does not work properly.
+      return $this->query_direct('INSERT INTO {sequences} OUTPUT (Inserted.[value]) DEFAULT VALUES')->fetchField();
+    }
   }
   /**
    * Override DatabaseConnection::escapeTable().
