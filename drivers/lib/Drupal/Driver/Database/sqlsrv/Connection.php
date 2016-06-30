@@ -678,12 +678,9 @@ class Connection extends DatabaseConnection {
     else {
       // If an exiting value is passed, for its insertion into the sequence table.
       if ($existing > 0) {
-        try {
-          $this->query_direct('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', array(':existing' => $existing));
-        }
-        catch (Exception $e) {
-          // Doesn't matter if this fails, it just means that this value is already
-          // present in the table.
+        $exists = $this->query_direct("SELECT COUNT(*) FROM {sequences} WHERE value = :existing", [':existing' => $existing])->fetchField();
+        if (!$exists) {
+          $this->query_direct('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', [':existing' => $existing]);
         }
       }
       // Refactored to use OUTPUT because under high concurrency LAST_INSERTED_ID does not work properly.
