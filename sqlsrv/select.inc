@@ -168,8 +168,12 @@ class SelectQuery_sqlsrv extends SelectQuery {
           if (!is_numeric($value) && !is_bool($value)) {
             if (in_array($col_spec['type'], array('int', 'bigint'))) {
               // This is anyways going to throw an exception when running the query against the PDO driver.
-              $exception = new \PDOException("Invalid type binding for column {$real_table}.{$col_spec['name']} and value [{$value}]");
-              throw $exception;
+              // Only trigger the exception if inside a transaction, to maximize backwards compatibility.
+              if ($this->connection->inTransaction()) {
+                $type = gettype($value);
+                $exception = new \PDOException("Invalid type binding for column ({$col_spec['type']}){$real_table}.{$col_spec['name']} and value ({$type})[{$value}]");
+                throw $exception;
+              }
             }
           }
         }
