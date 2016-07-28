@@ -75,6 +75,16 @@ class fastcache {
   }
 
   /**
+   * Although the cache might be enabled, using locks
+   * is optional. Only use locks when a fastck locking
+   * backend is available, such as Wincache.
+   */
+  public static function UseLocks() {
+    global $WINCACHE_LOCK_ACTIVE;
+    return $WINCACHE_LOCK_ACTIVE;
+  }
+
+  /**
    * Tell if cache persistence is enabled. If not, this cache
    * will behave as DRUPAL_STATIC until the end of request.
    *
@@ -95,11 +105,9 @@ class fastcache {
           require_once DRUPAL_ROOT . '/' . $lock_file;
           lock_initialize();
         }
-
-        global $WINCACHE_LOCK_ACTIVE;
         // Only enabled storage if Cache Backend is DrupalWinCache or ChainedFastBackend.
         $object = _cache_get_object('fastcache');
-        static::$enabled = (is_a($object, \DrupalWinCache::class) || is_a($object, \ChainedFastBackend::class)) && $WINCACHE_LOCK_ACTIVE;
+        static::$enabled = (is_a($object, \DrupalWinCache::class) || is_a($object, \ChainedFastBackend::class));
       }
       else {
         static::$enabled = FALSE;
@@ -171,9 +179,14 @@ class fastcache {
         if (static::Enabled()) {
           // Hold this locks longer than usual because
           // they run after the request has finished.
-          if (function_exists('lock_acquire') && lock_acquire('fastcache_' . $bin, 120)) {
+          if (static::UseLocks()) {
+            if (function_exists('lock_acquire') && lock_acquire('fastcache_' . $bin, 120)) {
+              static::$fastcacheitems[$bin]->persist = TRUE;
+              static::$fastcacheitems[$bin]->locked = TRUE;
+            }
+          }
+          else {
             static::$fastcacheitems[$bin]->persist = TRUE;
-            static::$fastcacheitems[$bin]->locked = TRUE;
           }
         }
       }

@@ -676,7 +676,7 @@ EOF
       $sql .= ' COLLATE ' . $spec['sqlsrv_collation'];
     }
 
-    if (isset($spec['not null']) && $spec['not null']) {
+    if (isset($spec['not null']) && $spec['not null'] == TRUE) {
       $sql .= ' NOT NULL';
     }
 
@@ -1001,7 +1001,7 @@ EOF
     // If the field is declared NOT NULL, we have to first create it NULL insert
     // the initial data (or populate default values) and then switch to NOT NULL.
     $fixnull = FALSE;
-    if (!empty($spec['not null'])) {
+    if (isset($spec['not null']) && $spec['not null'] == TRUE) {
       $fixnull = TRUE;
       $spec['not null'] = FALSE;
     }
@@ -1030,11 +1030,11 @@ EOF
       // nulls with the default value because this won't be done by MSSQL by default.
       if (isset($spec['default'])) {
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field}] = {$default_expression} WHERE [{$field}] IS NULL");
+        $this->connection->query_direct("UPDATE [$table_prefixed] SET [$field] = $default_expression WHERE [$field] IS NULL", array(), array('prefix_tables' => FALSE));
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
-      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field, $spec, TRUE));
+      $this->connection->query_direct("ALTER TABLE [$table_prefixed] ALTER COLUMN " . $this->createFieldSql($table, $field, $spec, TRUE), array(), array('prefix_tables' => FALSE));
     }
 
     // Add the new keys.
@@ -1123,9 +1123,12 @@ EOF
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
+    // Use already prefixed table name.
+    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
+
     // Start by renaming the current column.
     $this->connection->query_direct('EXEC sp_rename :old, :new, :type', array(
-      ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
+      ':old' => "[$table_prefixed].$field",
       ':new' => $field . '_old',
       ':type' => 'COLUMN',
     ));
@@ -1134,7 +1137,7 @@ EOF
     // create it first as nullable, then either migrate
     // data from previous column or populate default values.
     $fixnull = FALSE;
-    if (!empty($spec['not null'])) {
+    if (isset($spec['not null']) && $spec['not null'] == TRUE) {
       $fixnull = TRUE;
       $spec['not null'] = FALSE;
     }
@@ -1153,11 +1156,11 @@ EOF
       // nulls with the default value because this won't be done by MSSQL by default.
       if (isset($spec['default'])) {
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = {$default_expression} WHERE [{$field_new}] IS NULL");
+        $this->connection->query_direct("UPDATE [$table_prefixed] SET [{$field_new}] = {$default_expression} WHERE [{$field_new}] IS NULL", array(), array('prefix_tables' => FALSE));
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
-      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $spec, TRUE));
+      $this->connection->query_direct("ALTER TABLE [$table_prefixed] ALTER COLUMN " . $this->createFieldSql($table, $field_new, $spec, TRUE), array(), array('prefix_tables' => FALSE));
     }
 
     // Initialize new keys.
@@ -1417,6 +1420,7 @@ EOF
    * @status complete
    */
   public function fieldSetDefault($table, $field, $default) {
+    throw new \Exception('Not implemented.');
     if (!$this->fieldExists($table, $field)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot set default value of field %table.%field: field doesn't exist.", array('%table' => $table, '%field' => $field)));
     }
@@ -1425,7 +1429,7 @@ EOF
       $default = 'NULL';
     }
     elseif (is_string($default)) {
-      $default = "'" . addslashes($spec['default']) . "'";
+      $default = "'" . addslashes($default) . "'";
     }
 
     // Try to remove any existing default first.

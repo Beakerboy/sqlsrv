@@ -54,6 +54,14 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     return 'sqlsrv';
   }
 
+  public function utf8mb4IsActive() {
+    return TRUE;
+  }
+
+  public function utf8mb4IsSupported() {
+    return TRUE;
+  }
+
   /**
    * The PDO constants do not matcc the actual isolation names
    * used in SQL.
