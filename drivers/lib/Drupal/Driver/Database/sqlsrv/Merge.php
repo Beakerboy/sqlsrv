@@ -33,6 +33,10 @@ class Merge extends QueryMerge {
     if (!count($this->condition)) {
       throw new InvalidMergeQueryException(t('Invalid merge query: no conditions'));
     }
+    // Check that the table does exist.
+    if (!$this->connection->schema()->tableExists($this->table)) {
+      throw new \Drupal\Core\Database\SchemaObjectDoesNotExistException("Table $this->table does not exist.");
+    }
     // Retrieve query options.
     $options = $this->queryOptions;
     // Keep a reference to the blobs.
