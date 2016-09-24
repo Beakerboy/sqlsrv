@@ -592,12 +592,10 @@ class Connection extends DatabaseConnection {
    */
   public function preprocessQuery($query) {
     // Generate a cache signature for this query.
-    $query_signature = 'query_cache_' . md5($query);
+    $query_signature = md5($query);
     // Drill through everything...
-    $success = FALSE;
-    $cache = wincache_ucache_get($query_signature, $success);
-    if ($success) {
-      return $cache;
+    if ($cache = $this->connection->Cache('query_cache')->Get($query_signature)) {
+      return $cache->data;
     }
     // Force quotes around some SQL Server reserved keywords.
     if (preg_match('/^SELECT/i', $query)) {
@@ -621,7 +619,7 @@ class Connection extends DatabaseConnection {
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
     // Assuming that queries have placeholders, the total number of different
     // queries stored in the cache is not that big.
-    wincache_ucache_set($query_signature, $query);
+    $this->connection->Cache('query_cache')->Set($query_signature, $query);
     return $query;
   }
   /**
