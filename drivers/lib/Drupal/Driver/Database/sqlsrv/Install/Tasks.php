@@ -217,18 +217,6 @@ class Tasks extends InstallTasks {
 
     #endregion
 
-    #region check for Wincache
-
-    if (!extension_loaded('wincache')) {
-      $error = array();
-      $error['title'] = 'MSSQL Server Wincache availability';
-      $error['severity'] = REQUIREMENT_ERROR;
-      $error['description'] = t('This driver needs the <a href="https://pecl.php.net/package/WinCache">Wincache PHP extension</a>.');
-      $errors['sqlsrv_wincache_enabled'] = $error;
-    }
-
-    #endregion
-
     #region check for MS SQL PDO version and client buffer size
 
     $sqlsrv_extension_data = Utils::ExtensionData('pdo_sqlsrv');
@@ -252,27 +240,6 @@ class Tasks extends InstallTasks {
       'value' => "{$buffer_size} Kb",
       'description' => "pdo_sqlsrv.client_buffer_max_kb_size setting must be of at least {$buffer_size_min}Kb. Currently {$buffer_size}Kb.",
     );
-
-    #endregion
-
-    #region check that the Wincache usercache is enabled
-
-    // Check that Wincache user cache is enabled and big enough.
-  	$wincache_ok = (function_exists('wincache_ucache_info') && ($cache = @wincache_ucache_info(TRUE)) && ($meminfo = @wincache_ucache_meminfo()));
-  	if ($wincache_ok) {
-  	  // Minimum 20 Mb of usercache.
-  	  $wincache_ok = $meminfo['memory_total'] >= 20 * 1024 * 1024;
-  	}
-
-  	if (!$wincache_ok) {
-      $error = array();
-      $error['title'] = 'MSSQL Server PDO Version';
-      $error['severity'] = REQUIREMENT_ERROR;
-      $error['description'] = t('This version of the MS SQL Server needs the Wincache PHP extension with a minimum ucachesize of 20Mb. If you are seeing this message from CLI make sure that you have enabled wincache CLI support.');
-      $errors['sqlsrv_wincache_ucache'] = $error;
-    }
-
-    #endregion
 
     return $errors;
   }
