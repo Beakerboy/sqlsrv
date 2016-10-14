@@ -113,7 +113,7 @@ class Merge extends QueryMerge {
       unset($fields[$field]);
     }
     foreach ($fields as $field => $value) {
-      $update_fields[] = $field . '=:db_merge_placeholder_' . ($max_placeholder++);
+      $update_fields[] = $this->connection->quoteIdentifier($field) . '=:db_merge_placeholder_' . ($max_placeholder++);
     }
     if (!empty($update_fields)) {
       $query[] = 'WHEN MATCHED THEN UPDATE SET ' . implode(', ', $update_fields);
