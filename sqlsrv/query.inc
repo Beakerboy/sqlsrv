@@ -354,7 +354,22 @@ class MergeQuery_sqlsrv extends MergeQuery {
     DatabaseUtils::BindValues($stmt, $this->insertFields, $blobs, ':db_merge_placeholder_', $columnInformation, $max_placeholder);
 
     // 4. Run the query, this will return UPDATE or INSERT
-    $this->connection->query($stmt, array(), $options);
+    // MERGE queries should be atomic, yet you can run into concurrency
+    // issues, so implement some retry logic. This is more elaborate and generic
+    // in the 8.x-2.x version of the driver, just a quick workaround here.
+    try {
+      $this->connection->query($stmt, [], $options);
+    }
+    catch (\PDOException $e) {
+      if (in_array((string) $e->getCode(), ['23000'])) {
+        // Try again...
+        $this->connection->query($stmt, [], $options);
+      }
+      else {
+        // Rethrow.
+        throw $e;
+      }
+    }
 
     $result = NULL;
     foreach ($stmt as $value) {
@@ -405,7 +420,7 @@ class MergeQuery_sqlsrv extends MergeQuery {
     }
 
     foreach ($fields as $field => $value) {
-      $update_fields[] = $field . '=:db_merge_placeholder_' . ($max_placeholder++);
+      $update_fields[] = $this->connection->quoteIdentifier($field) . '=:db_merge_placeholder_' . ($max_placeholder++);
     }
 
     if (!empty($update_fields)) {
