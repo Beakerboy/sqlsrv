@@ -41,6 +41,18 @@ class Insert extends QueryInsert {
   /**
    * {@inheritdoc}
    */
+  public function __construct($connection, $table, array $options = array()) {
+    if (!isset($options['return'])) {
+      // We use internally the OUTPUT function to retrieve
+      // inserted ID's
+      $options['return'] = Database::RETURN_NULL;
+    }
+    parent::__construct($connection, $table, $options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function execute() {
     if (!$this->preExecute()) {
       return NULL;
