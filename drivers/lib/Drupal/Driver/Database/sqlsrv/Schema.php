@@ -1035,30 +1035,68 @@ class Schema extends DatabaseSchema {
    * @status tested
    */
   public function addUniqueKey($table, $name, $fields) {
+
     if (!$this->tableExists($table)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add unique key %name to table %table: table doesn't exist.", array('%table' => $table, '%name' => $name)));
     }
+
     if ($this->uniqueKeyExists($table, $name)) {
       throw new DatabaseSchemaObjectExistsException(t("Cannot add unique key %name to table %table: unique key already exists.", array('%table' => $table, '%name' => $name)));
     }
-    $this->createTechnicalPrimaryColumn($table);
-    // Then, build a expression based on the columns.
-    $column_expression = array();
-    foreach ($fields as $field) {
-      if (is_array($field)) {
-        $column_expression[] = "SUBSTRING(CAST([$field[0]] AS varbinary(max)), 1, [$field[1]])";
-      }
-      else {
-        $column_expression[] = "CAST([$field] AS varbinary(max))";
+
+    // The ANSI standard says that unique constraints should allow
+    // multiple nulls. Check al columns in the constraint, if any of them is nullable,
+    // make the constraint depend on the technical primary key.
+    $info = $this->getColumnIntrospection($table, $fields);
+    $has_nullables = FALSE;
+    foreach ($info as $column) {
+      // is_nullable has a 0 or 1 integer values.
+      if ($column['is_nullable'] == TRUE) {
+        $has_nullables = TRUE;
+        break;
       }
     }
-    $column_expression = implode(' + ', $column_expression);
-    // Build a computed column based on the expression that replaces NULL
-    // values with the globally unique identifier generated previously.
-    // This is (very) unlikely to result in a collision with any actual value
-    // in the columns of the unique key.
-    $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$this->TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
-    $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON [{{$table}}] (__unique_{$name})");
+
+    // If there is a nullable column in the unique constraint
+    // we need some workaround to emulate the ANSI behaviour.
+    if ($has_nullables) {
+
+      $this->createTechnicalPrimaryColumn($table);
+
+      // Then, build a expression based on the columns.
+      $column_expression = [];
+      foreach ($fields as $field) {
+        if (is_array($field)) {
+          $column_expression[] = "SUBSTRING(CAST([$field[0]] AS varbinary(max)), 1, [$field[1]])";
+        }
+        else {
+          $column_expression[] = "CAST([$field] AS varbinary(max))";
+        }
+      }
+      $column_expression = implode(' + ', $column_expression);
+
+
+      // Build a computed column based on the expression that replaces NULL
+      // values with the globally unique identifier generated previously.
+      // This is (very) unlikely to result in a collision with any actual value
+      // in the columns of the unique key.
+      $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$this->TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
+      $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON [{{$table}}] (__unique_{$name})");
+    }
+    else {
+      $column_expression = [];
+      foreach ($fields as $field) {
+        if (is_array($field)) {
+          $column_expression[] = $field[0];
+        }
+        else {
+          $column_expression[] = $field;
+        }
+      }
+      array_walk($column_expression, [$this->connection, 'escapeField']);
+      $column_expression = implode(',', $column_expression);
+      $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON [{{$table}}] ({$column_expression})");
+    }
   }
   /**
    * Override DatabaseSchema::dropUniqueKey().
@@ -1067,8 +1105,11 @@ class Schema extends DatabaseSchema {
     if (!$this->uniqueKeyExists($table, $name)) {
       return FALSE;
     }
-    $this->connection->query('DROP INDEX ' . $name . '_unique ON [{' . $table . '}]');
-    $this->connection->query('ALTER TABLE [{' . $table . '}] DROP COLUMN __unique_' . $name);
+    $this->connection->query("DROP INDEX {$name}_unique ON [{{$table}}]");
+    // Some unique keys do not have an emulated unique column.
+    if ($this->connection->Scheme()->FieldExists($table, "__unique_{$name}")) {
+      $this->connection->query("ALTER TABLE [{{$table}}] DROP COLUMN __unique_$name");
+    }
     // Try to clean-up the technical primary key if possible.
     $this->cleanUpTechnicalPrimaryColumn($table);
     return TRUE;
