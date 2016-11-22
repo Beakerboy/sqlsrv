@@ -942,7 +942,10 @@ class Connection extends DatabaseConnection {
   }
 }
 
-include_once 'PhpMssqlAutoloader.php';
+// Support legacy way of bringing in the mssql code
+if (!class_exists(\mssql\Connection::class)) {
+  include_once 'PhpMssqlAutoloader.php';
+}
 
 /**
  * @} End of "addtogroup database".
