@@ -396,8 +396,11 @@ class SelectQuery_sqlsrv extends SelectQuery {
         $subquery->preExecute();
         $table_string = '(' . (string) $subquery . ')';
       }
-      else {
+      elseif (is_string($table['table'])) {
         $table_string = '{' . $this->connection->escapeTable($table['table']) . '}';
+      }
+      else {
+        $table_string = (string) $table['table'];
       }
 
       // Don't use the AS keyword for table aliases, as some
@@ -570,5 +573,27 @@ class SelectQuery_sqlsrv extends SelectQuery {
     $query->addExpression('COUNT(*)');
 
     return $query;
+  }
+}
+
+/**
+ * Represents a literal that can be used in different
+ * parts of the query builders...
+ */
+class LiteralExpression {
+
+  protected $literal;
+
+  /**
+   * Get an instance of DatabaseExpression
+   *
+   * @param mixed $literal
+   */
+  public function __construct($literal) {
+    $this->literal = $literal;
+  }
+
+  public function __toString() {
+    return $this->literal;
   }
 }
