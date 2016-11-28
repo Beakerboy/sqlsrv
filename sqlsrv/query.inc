@@ -8,6 +8,13 @@
  */
 class InsertQuery_sqlsrv extends InsertQuery {
 
+  public function __construct($connection, $table, array $options = []) {
+    if (!isset($options['return'])) {
+      $options['return'] = Database::RETURN_NULL;
+    }
+    parent::__construct($connection, $table, $options);
+  }
+
   public function execute() {
     if (!$this->preExecute()) {
       return NULL;
@@ -105,7 +112,7 @@ class InsertQuery_sqlsrv extends InsertQuery {
       }
 
       // Run the query
-      $this->connection->query($stmt, array(), array_merge($options, array('fetch' => PDO::FETCH_ASSOC)));
+      $this->connection->query($stmt, [], array_merge($options, ['fetch' => PDO::FETCH_ASSOC]));
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       // When the column does not have an identity column, no results are thrown back.
@@ -178,7 +185,9 @@ class InsertQuery_sqlsrv extends InsertQuery {
       $output = "OUTPUT (Inserted.{$identity})";
     }
     else {
-      $output = "OUTPUT (1)";
+      // Empty is the default for
+      // a missing lastInsertId()
+      $output = "OUTPUT ('')";
     }
 
     // If we're selecting from a SelectQuery, finish building the query and
