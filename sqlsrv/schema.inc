@@ -129,7 +129,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
     // No worry for the tableExists() check, results
     // are cached.
     if (empty($table) || !$this->tableExists($table)) {
-      return array();
+      throw new DatabaseSchemaObjectDoesNotExistException("The table '{$table}' does not exist.");
     }
 
     $table_info = $this->getPrefixInfo($table);
@@ -1285,9 +1285,9 @@ EOF
     $sql = <<< EOF
       SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, COLLATION_NAME, DATA_TYPE
         FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_SCHEMA = ':schema'
-        AND TABLE_NAME = ':table'
-        AND COLUMN_NAME = ':column'
+        WHERE TABLE_SCHEMA = :schema
+        AND TABLE_NAME = :table
+        AND COLUMN_NAME = :column
 EOF
 ;
     $params = array();
