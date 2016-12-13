@@ -8,7 +8,6 @@
 use Drupal\Core\Database\Database;
 
 use Drupal\Driver\Database\sqlsrv\Connection;
-use Drupal\Driver\Database\sqlsrv\Utils;
 use Drupal\sqlsrv\Indexes\IndexManager;
 use Drupal\Driver\Database\sqlsrv\Install\Tasks as MssqlInstallTasks;
 
@@ -53,19 +52,23 @@ function sqlsrv_requirements($phase) {
 
     $requirements = MssqlInstallTasks::InstallRequirements();
 
-    // Report database engine version
-    $uinfo =  $connection->Scheme()->UserOptions();
+    // Report information about the driver....
+    $uinfo = $connection->Scheme()->UserOptions()->getSettings();
+    if (method_exists($connection->Scheme(), 'getDriverAttributes')) {
+      $attrs = $connection->Scheme()->getDriverAttributes();
+      $uinfo = array_merge($uinfo, $attrs->getAll());
+    }
 
-    $uinfo_parts = array_map(function($a, $b) { $a = strtoupper($a); $b = strtoupper($b); return "$a=$b"; }, array_keys($uinfo->getSettings()), $uinfo->getSettings());
+    $uinfo_parts = array_map(function($a, $b) { return "$a=$b"; }, array_keys($uinfo), $uinfo);
+
     $requirements['sqlsrv_edition'] = array(
       'title' => t('MSSQL Server'),
       'severity' => REQUIREMENT_INFO,
       'description' => implode(' | ', $uinfo_parts),
-      'value' => t('@version @level @ @edition | @name',
+      'value' => t('@version @level @ @edition',
         array('@version' => $version->Version(),
                '@level' => $version->Level(),
-               '@edition' => $version->Edition(),
-               '@name' => $options['database'])),
+               '@edition' => $version->Edition())),
     );
 
     // Report database name and size.
