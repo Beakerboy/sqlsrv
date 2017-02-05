@@ -261,12 +261,12 @@ class SchemaTest extends KernelTestBase {
    *     "CI_AI" -> Case insensitive / Accent insesitive
    *     "CI_AS" -> Case insensitive / Accent sensitive
    */
-  private function AddChangeWithBinarySearchHelper(array $results, $type) {
+  private function AddChangeWithBinarySearchHelper(array $results, string $type, string $fieldtype) {
     foreach ($results as $search => $result) {
       // By default, datase collation
       // should be case insensitive returning both rows.
-      $count = db_query('SELECT COUNT(*) FROM {test_table_binary} WHERE name = :name', array(':name' => $search))->fetchField();
-      $this->assertEqual($count, $result[$type], 'Returned the correct number of total rows.');
+      $count = db_query('SELECT COUNT(*) FROM {test_table_binary} WHERE name = :name', [':name' => $search])->fetchField();
+      $this->assertEqual($count, $result[$type], "Returned the correct number of total rows for a {$type} search on fieldtype {$fieldtype}");
     }
   }
 
@@ -291,68 +291,65 @@ class SchemaTest extends KernelTestBase {
 
     db_create_table('test_table_binary', $table_spec);
 
-    $samples = array("Sandra", "sandra", "sÁndra");
+    $samples = ["Sandra", "sandra", "sÁndra"];
 
     foreach ($samples as $sample) {
-      db_insert('test_table_binary')
-        ->fields(array(
-          'name' => $sample,
-        ))->execute();
+      db_insert('test_table_binary')->fields(['name' => $sample])->execute();
     }
 
     // Strings to be tested.
-    $results = array(
-      "SaNDRa" => array("CS_AS" => 0, "CI_AI" => 3, "CI_AS" => 2),
-      "SÁNdRA" => array("CS_AS" => 0, "CI_AI" => 3, "CI_AS" => 1),
-      "SANDRA" => array("CS_AS" => 0, "CI_AI" => 3, "CI_AS" => 2),
-      "sandra" => array("CS_AS" => 1, "CI_AI" => 3, "CI_AS" => 2),
-      "Sandra" => array("CS_AS" => 1, "CI_AI" => 3, "CI_AS" => 2),
-      "sÁndra" => array("CS_AS" => 1, "CI_AI" => 3, "CI_AS" => 1),
-      "pedro" => array("CS_AS" => 0, "CI_AI" => 0, "CI_AS" => 0),
-      );
+    $results = [
+      "SaNDRa" => ["CS_AS" => 0, "CI_AI" => 3, "CI_AS" => 2],
+      "SÁNdRA" => ["CS_AS" => 0, "CI_AI" => 3, "CI_AS" => 1],
+      "SANDRA" => ["CS_AS" => 0, "CI_AI" => 3, "CI_AS" => 2],
+      "sandra" => ["CS_AS" => 1, "CI_AI" => 3, "CI_AS" => 2],
+      "Sandra" => ["CS_AS" => 1, "CI_AI" => 3, "CI_AS" => 2],
+      "sÁndra" => ["CS_AS" => 1, "CI_AI" => 3, "CI_AS" => 1],
+      "pedro" => ["CS_AS" => 0, "CI_AI" => 0, "CI_AS" => 0],
+      ];
 
     // Test case insensitive.
-    $this->AddChangeWithBinarySearchHelper($results, "CI_AI");
+    $this->AddChangeWithBinarySearchHelper($results, "CI_AI", "varchar");
 
     // Now let's change the field
     // to case sensistive / accent sensitive.
-    db_change_field('test_table_binary', 'name', 'name', array(
+    db_change_field('test_table_binary', 'name', 'name', [
           'type' => 'varchar',
           'length' => 255,
           'binary' => true
-        ));
+        ]);
 
     // Test case sensitive.
-    $this->AddChangeWithBinarySearchHelper($results, "CS_AS");
+    $this->AddChangeWithBinarySearchHelper($results, "CS_AS", "varchar:binary");
 
     // Let's make this even harder, convert to BLOB and back to text.
     // Blob is binary so works like CS/AS
-    db_change_field('test_table_binary', 'name', 'name', array(
+    db_change_field('test_table_binary', 'name', 'name', [
       'type' => 'blob',
-    ));
+    ]);
 
     // Test case sensitive. Varbinary behaves as Case Insensitive / Accent Sensitive.
     // NEVER store text as blob, it behaves as CI_AI!!!
-    $this->AddChangeWithBinarySearchHelper($results, "CI_AI");
+    $this->AddChangeWithBinarySearchHelper($results, "CI_AI", "blob");
 
     // Back to Case Insensitive / Accent Insensitive
-    db_change_field('test_table_binary', 'name', 'name', array(
+    db_change_field('test_table_binary', 'name', 'name', [
           'type' => 'varchar',
           'length' => 255,
-        ));
+        ]);
 
     // Test case insensitive.
-    $this->AddChangeWithBinarySearchHelper($results, "CI_AI");
+    $this->AddChangeWithBinarySearchHelper($results, "CI_AI", "varchar");
 
 
     // Test varchar_ascii support
-    db_change_field('test_table_binary', 'name', 'name', array(
+    db_change_field('test_table_binary', 'name', 'name', [
       'type' => 'varchar_ascii'
-    ));
+    ]);
 
 
     // Test case insensitive.
-    $this->AddChangeWithBinarySearchHelper($results, "CS_AS");
+    $this->AddChangeWithBinarySearchHelper($results, "CS_AS", "varchar_ascii");
 
   }
 
