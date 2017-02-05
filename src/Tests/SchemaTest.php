@@ -332,7 +332,8 @@ class SchemaTest extends KernelTestBase {
     ));
 
     // Test case sensitive. Varbinary behaves as Case Insensitive / Accent Sensitive.
-    $this->AddChangeWithBinarySearchHelper($results, "CI_AS");
+    // NEVER store text as blob, it behaves as CI_AI!!!
+    $this->AddChangeWithBinarySearchHelper($results, "CI_AI");
 
     // Back to Case Insensitive / Accent Insensitive
     db_change_field('test_table_binary', 'name', 'name', array(
@@ -342,6 +343,16 @@ class SchemaTest extends KernelTestBase {
 
     // Test case insensitive.
     $this->AddChangeWithBinarySearchHelper($results, "CI_AI");
+
+
+    // Test varchar_ascii support
+    db_change_field('test_table_binary', 'name', 'name', array(
+      'type' => 'varchar_ascii'
+    ));
+
+
+    // Test case insensitive.
+    $this->AddChangeWithBinarySearchHelper($results, "CS_AS");
 
   }
 

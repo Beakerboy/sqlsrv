@@ -331,7 +331,7 @@ class Schema extends DatabaseSchema {
    * @return array|string
    */
   protected function createKeySql($fields, $as_array = FALSE) {
-    $ret = array();
+    $ret = [];
     foreach ($fields as $field) {
       if (is_array($field)) {
         $ret[] = $field[0];
@@ -372,7 +372,8 @@ class Schema extends DatabaseSchema {
     // Look if an XML column is present in the fields list.
     $xml_field = NULL;
     foreach ($fields as $field) {
-      if (isset($info['columns'][$field]['type']) && $info['columns'][$field]['type'] == 'xml') {
+      $type = $info['columns'][$field]['type'] ?? NULL;
+      if ($type == 'xml') {
         $xml_field = $field;
         break;
       }
@@ -397,6 +398,40 @@ class Schema extends DatabaseSchema {
     }
   }
   /**
+   * Determine what the correct sql server collation
+   * is for a specific field.
+   *
+   * @param array $field
+   *   The field specification
+   */
+  protected function getMssqlCollation(array $field) {
+    // The ascii_bin type is just a text field with a special collation,
+    // it is the fastest collation available on MSSQL Server to compare string
+    // as it does this at the binary level.
+    if (in_array($field['type'], ['ascii_bin', 'varchar_ascii'])) {
+      return self::DEFAULT_COLLATION_BINARY;
+    }
+    // The collation property is out of specification,
+    // but used sometimes in contrib (such as advagg).
+    if (!empty($field['collation'])) {
+      // Try to match to an SQL Server collation
+      switch($field['collation']) {
+        case 'ascii_bin':
+          return self::DEFAULT_COLLATION_BINARY;
+      }
+    }
+    // Temporary workaround for issue in core.
+    // @see https://www.drupal.org/node/2580671
+    // TODO: Remove when this is fixed in core.
+    $mysqltype = $field['mysql_type'] ?? NULL;
+    if ($mysqltype === 'blob') {
+      return self::DEFAULT_COLLATION_BINARY;
+    }
+    // Finally, use CS or CI
+    $binary = $field['binary'] ?? FALSE;
+    return $binary ? self::DEFAULT_COLLATION_CS : self::DEFAULT_COLLATION_CI;
+  }
+  /**
    * Set database-engine specific properties for a field.
    *
    * @param $field
@@ -404,9 +439,7 @@ class Schema extends DatabaseSchema {
    */
   protected function processField($field) {
     // Default size to normal.
-    if (!isset($field['size'])) {
-      $field['size'] = 'normal';
-    }
+    $field['size'] = $field['size'] ?? 'normal';
     // Set the correct database-engine specific datatype.
     if (!isset($field['sqlsrv_type'])) {
       $map = $this->getFieldTypeMap();
@@ -414,44 +447,18 @@ class Schema extends DatabaseSchema {
       $field['sqlsrv_type_simple'] = DatabaseUtils::GetMSSQLType($field['sqlsrv_type']);
     }
     // Serial is identity.
-    if ($field['type'] == 'serial') {
-      $field['identity'] = TRUE;
-    }
+    $field['identity'] = $field['type'] == 'serial';
     // If this is a text field.
-    if (!isset($field['sqlsrv_is_text'])) {
-      $field['sqlsrv_is_text'] = DatabaseUtils::IsTextType($field['sqlsrv_type']);
-    }
-    // The ascii_bin type has a special collation.
-    if ($field['type'] == 'ascii_bin' || $field['type'] == 'varchar_ascii') {
-      $field['collation'] = self::DEFAULT_COLLATION_BINARY;
-    }
-    // Collation only makes sense for text fields
-    // Detect target collation
-    if ($field['sqlsrv_is_text'] && !isset($field['sqlsrv_collation'])) {
-      if (!empty($field['collation'])) {
-        // Try to match to an SQL Server collation
-        switch($field['collation']) {
-          case 'ascii_bin':
-            $field['sqlsrv_collation'] = self::DEFAULT_COLLATION_BINARY;
-            break;
-        }
-      }
-      // If still no collation, resort to default behaviour.
-      if (empty($field['sqlsrv_collation'])) {
-        if ($field['sqlsrv_is_text'] === TRUE && isset($field['binary']) && $field['binary'] === TRUE) {
-          $field['sqlsrv_collation'] = self::DEFAULT_COLLATION_CS;
-        }
-        else {
-          $field['sqlsrv_collation'] = self::DEFAULT_COLLATION_CI;
-        }
-      }
+    $field['sqlsrv_is_text'] = $field['sqlsrv_is_text'] ?? DatabaseUtils::IsTextType($field['sqlsrv_type']);
+    if ($field['sqlsrv_is_text']) {
+      $field['sqlsrv_collation'] = $field['sqlsrv_collation'] ?? $this->getMssqlCollation($field);
     }
     // Adjust the length of the field if specified
     if (isset($field['length']) && $field['length'] > 0) {
       $field['sqlsrv_type'] = $field['sqlsrv_type_simple'] . '(' . $field['length'] . ')';
     }
     // Adjust numeric fields.
-    if (in_array($field['sqlsrv_type_simple'], array('numeric', 'decimal')) && isset($field['precision']) && isset($field['scale'])) {
+    if (in_array($field['sqlsrv_type_simple'], ['numeric', 'decimal']) && isset($field['precision']) && isset($field['scale'])) {
       // Maximum precision for SQL Server 2008 or greater is 38.
       // For previous versions it's 28.
       if ($field['precision'] > 38) {
@@ -469,7 +476,7 @@ class Schema extends DatabaseSchema {
     // Put :normal last so it gets preserved by array_flip.  This makes
     // it much easier for modules (such as schema.module) to map
     // database types back into schema types.
-    return array(
+    return [
       'varchar:normal' => 'nvarchar',
       'char:normal' => 'nchar',
       'varchar_ascii:normal' => 'varchar(255)',
@@ -500,7 +507,7 @@ class Schema extends DatabaseSchema {
       'date:normal'     => 'date',
       'datetime:normal' => 'datetime2(0)',
       'time:normal'     => 'time(0)',
-    );
+    ];
   }
   /**
    * Override DatabaseSchema::renameTable().
