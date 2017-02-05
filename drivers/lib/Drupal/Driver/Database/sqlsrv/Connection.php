@@ -121,6 +121,10 @@ class Connection extends DatabaseConnection {
     $connection_options['pdo'] = array();
     // Set proper error mode for all statements
     $connection_options['pdo'][PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION;
+    // Use native types. This makes fetches x3 faster!
+    // @see https://github.com/Microsoft/msphpsql/issues/189
+    $connection_options['pdo'][PDO::SQLSRV_ATTR_FETCHES_NUMERIC_TYPE] = TRUE;
+    $connection_options['pdo'][PDO::ATTR_STRINGIFY_FETCHES] = FALSE;
     // Actually instantiate the PDO.
     try {
       $pdo = new ConnectionBase($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
@@ -637,8 +641,12 @@ class Connection extends DatabaseConnection {
     }
     else {
       if ($this->connection->Scheme()->EngineVersionNumber() >= 11) {
-        // As of SQL Server 2012 there is an easy (and faster!) way to page results.
-        $query = $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
+        if (strripos($query, 'ORDER BY') === FALSE) {
+          $query = "SELECT Q.*, 0 as TempSort FROM ({$query}) as Q ORDER BY TempSort OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
+        }
+        else {
+          $query = "{$query} OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
+        }
       }
       else {
         // More complex case: use a TOP query to retrieve $from + $count rows, and
@@ -655,6 +663,7 @@ class Connection extends DatabaseConnection {
     }
     return $query;
   }
+
   public function mapConditionOperator($operator) {
     // SQL Server doesn't need special escaping for the \ character in a string
     // literal, because it uses '' to escape the single quote, not \'.
