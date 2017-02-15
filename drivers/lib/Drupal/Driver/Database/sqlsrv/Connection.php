@@ -114,6 +114,8 @@ class Connection extends DatabaseConnection {
     if ($level = $driver_settings->GetDefaultIsolationLevel()) {
       $options['TransactionIsolation'] = $level;
     }
+    // Disable MARS
+    $options['MultipleActiveResultSets'] = 'false';
     // Build the DSN
     $dsn = $driver_settings->buildDSN($options);
     // PDO Options are set at a connection level.
