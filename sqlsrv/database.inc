@@ -103,6 +103,8 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       $options['TransactionIsolation'] = $level;
     }
 
+    $options['MultipleActiveResultSets'] = 'false';
+
     // Set default direct query behaviour
     $this->directQuery = DatabaseUtils::GetConfigBoolean('MSSQL_DEFAULT_DIRECTQUERY');
     $this->statementCaching = DatabaseUtils::GetConfigBoolean('MSSQL_STATEMENT_CACHING');
@@ -115,7 +117,12 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
     // PDO Options are set at a connection level.
     // and apply to all statements.
-    $connection_options['pdo'] = array();
+    $connection_options['pdo'] = [];
+
+    // Use native types. This makes fetches x3 faster!
+    // @see https://github.com/Microsoft/msphpsql/issues/189
+    $connection_options['pdo'][PDO::SQLSRV_ATTR_FETCHES_NUMERIC_TYPE] = TRUE;
+    $connection_options['pdo'][PDO::ATTR_STRINGIFY_FETCHES] = FALSE;
 
     // Set proper error mode for all statements
     $connection_options['pdo'][PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION;
@@ -980,13 +987,6 @@ class DatabaseStatement_sqlsrv extends DatabaseStatementBase implements Database
         case 'varbinary':
           $null[$i] = NULL;
           $this->bindColumn($i + 1, $null[$i], PDO::PARAM_LOB, 0, PDO::SQLSRV_ENCODING_BINARY);
-          break;
-        case 'int':
-        case 'bit':
-        case 'smallint':
-        case 'tinyint':
-          $null[$i] = NULL;
-          $this->bindColumn($i + 1, $null[$i], PDO::PARAM_INT);
           break;
       }
     }
