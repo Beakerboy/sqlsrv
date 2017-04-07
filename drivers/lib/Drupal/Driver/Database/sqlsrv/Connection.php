@@ -94,7 +94,7 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    */
-  public static function open(array &$connection_options = array()) {
+  public static function open(array &$connection_options = []) {
     // Just for installation purposes.
     if (!class_exists(\mssql\Connection::class)) {
       throw new DatabaseNotFoundException('The PhpMssql library is not available.');
@@ -102,7 +102,7 @@ class Connection extends DatabaseConnection {
     // Get driver settings.
     $driver_settings = ConnectionSettings::instanceFromData(\Drupal\Core\Site\Settings::get('mssql', []));
     // Build the DSN.
-    $options = array();
+    $options = [];
     $options['Server'] = $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : '');
     // We might not have a database in the
     // connection options, for example, during
@@ -120,7 +120,7 @@ class Connection extends DatabaseConnection {
     $dsn = $driver_settings->buildDSN($options);
     // PDO Options are set at a connection level.
     // and apply to all statements.
-    $connection_options['pdo'] = array();
+    $connection_options['pdo'] = [];
     // Set proper error mode for all statements
     $connection_options['pdo'][PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION;
     // Use native types. This makes fetches x3 faster!
@@ -162,11 +162,11 @@ class Connection extends DatabaseConnection {
    *
    * @var mixed
    */
-  private $statement_cache = array();
+  private $statement_cache = [];
   /**
    * Internal prepare a query.
    */
-  public function prepareQuery($query, array $options = array()) {
+  public function prepareQuery($query, array $options = []) {
     // Preprocess the query.
     $bypass = isset($options['bypass_query_preprocess']) && $options['bypass_query_preprocess'] == TRUE ? TRUE : FALSE;
 
@@ -197,7 +197,7 @@ class Connection extends DatabaseConnection {
       return $this->statement_cache[$query];
     }
     #region PDO Options
-    $pdo_options = array();
+    $pdo_options = [];
     // Set insecure options if requested so.
     if ($options['insecure'] === TRUE) {
       // We have to log this, prepared statements are a security RISK.
@@ -394,7 +394,7 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    */
-  public function queryRange($query, $from, $count, array $args = array(), array $options = array()) {
+  public function queryRange($query, $from, $count, array $args = [], array $options = []) {
     $query = $this->addRangeToQuery($query, $from, $count);
     return $this->query($query, $args, $options);
   }
@@ -419,7 +419,7 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    */
-  public function queryTemporary($query, array $args = array(), array $options = array()) {
+  public function queryTemporary($query, array $args = [], array $options = []) {
     // Generate a new GLOBAL temporary table name and protect it from prefixing.
     // SQL Server requires that temporary tables to be non-qualified.
     $tablename = '##' . $this->generateTemporaryTableName();
@@ -431,7 +431,7 @@ class Connection extends DatabaseConnection {
     $prefixes[$tablename] = '';
     $this->setPrefix($prefixes);
     // Having comments in the query can be tricky and break the SELECT FROM  -> SELECT INTO conversion
-    $comments = array();
+    $comments = [];
     $query = $this->connection->Scheme()->removeSQLComments($query, $comments);
     // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
     $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
@@ -444,7 +444,7 @@ class Connection extends DatabaseConnection {
    * This method is overriden to manage the insecure (EMULATE_PREPARE)
    * behaviour to prevent some compatibility issues with SQL Server.
    */
-  public function query($query, array $args = array(), $options = array()) {
+  public function query($query, array $args = [], $options = []) {
     // Use default values if not already set.
     $options += $this->defaultOptions();
     $stmt = NULL;
@@ -513,7 +513,7 @@ class Connection extends DatabaseConnection {
    * @throws \Drupal\Core\Database\DatabaseExceptionWrapper
    * @throws \Drupal\Core\Database\IntegrityConstraintViolationException
    */
-  public function handleQueryException(\PDOException $e, $query, array $args = array(), $options = array()) {
+  public function handleQueryException(\PDOException $e, $query, array $args = [], $options = []) {
     if ($options['throw_exception']) {
       // Wrap the exception in another exception, because PHP does not allow
       // overriding Exception::getMessage(). Its message is the extra database
@@ -561,7 +561,7 @@ class Connection extends DatabaseConnection {
    * @throws PDOException
    * @return mixed
    */
-  public function query_direct($query, array $args = array(), $options = array()) {
+  public function query_direct($query, array $args = [], $options = []) {
     // Use default values if not already set.
     $options += $this->defaultOptions();
     $stmt = NULL;
@@ -670,8 +670,8 @@ class Connection extends DatabaseConnection {
     // SQL Server doesn't need special escaping for the \ character in a string
     // literal, because it uses '' to escape the single quote, not \'.
     static $specials = array(
-    'LIKE' => array(),
-    'NOT LIKE' => array(),
+    'LIKE' => [],
+    'NOT LIKE' => [],
     );
     return isset($specials[$operator]) ? $specials[$operator] : NULL;
   }
@@ -703,7 +703,7 @@ class Connection extends DatabaseConnection {
    */
   public function escapeTable($table) {
     // A static cache is better suited for this.
-    static $tables = array();
+    static $tables = [];
     if (isset($tables[$table])) {
       return $tables[$table];
     }

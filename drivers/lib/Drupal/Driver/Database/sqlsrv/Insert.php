@@ -41,7 +41,7 @@ class Insert extends QueryInsert {
   /**
    * {@inheritdoc}
    */
-  public function __construct($connection, $table, array $options = array()) {
+  public function __construct($connection, $table, array $options = []) {
     if (!isset($options['return'])) {
       // We use internally the OUTPUT function to retrieve
       // inserted ID's
@@ -77,7 +77,7 @@ class Insert extends QueryInsert {
 
     if (!empty($this->fromQuery)) {
       // Re-initialize the values array so that we can re-use this query.
-      $this->insertValues = array();
+      $this->insertValues = [];
 
       $stmt = $this->connection->prepareQuery((string) $this);
 
@@ -86,7 +86,7 @@ class Insert extends QueryInsert {
       DatabaseUtils::BindArguments($stmt, $arguments);
 
       // Run the query
-      $this->connection->query($stmt, array(), $options);
+      $this->connection->query($stmt, [], $options);
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       try {
@@ -104,11 +104,11 @@ class Insert extends QueryInsert {
     // Handle the case of full-default queries.
     if (empty($this->fromQuery) && (empty($this->insertFields) || empty($this->insertValues))) {
       // Re-initialize the values array so that we can re-use this query.
-      $this->insertValues = array();
+      $this->insertValues = [];
       $stmt = $this->connection->prepareQuery((string) $this);
 
       // Run the query
-      $this->connection->query($stmt, array(), $options);
+      $this->connection->query($stmt, [], $options);
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       try {
@@ -123,7 +123,7 @@ class Insert extends QueryInsert {
 
     #region Regular Inserts
 
-    $this->inserted_keys = array();
+    $this->inserted_keys = [];
 
     // Each insert happens in its own query. However, we wrap it in a transaction
     // so that it is atomic where possible.
@@ -146,7 +146,7 @@ class Insert extends QueryInsert {
 
       // We use this array to store references to the blob handles.
       // This is necessary because the PDO will otherwise messes up with references.
-      $blobs = array();
+      $blobs = [];
 
       $max_placeholder = 0;
       foreach ($batch as $insert_index => $insert_values) {
@@ -155,7 +155,7 @@ class Insert extends QueryInsert {
       }
 
       // Run the query
-      $this->connection->query($stmt, array(), array_merge($options, array('fetch' => PDO::FETCH_ASSOC)));
+      $this->connection->query($stmt, [], array_merge($options, array('fetch' => PDO::FETCH_ASSOC)));
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       // When the column does not have an identity column, no results are thrown back.
@@ -178,7 +178,7 @@ class Insert extends QueryInsert {
     }
 
     // Re-initialize the values array so that we can re-use this query.
-    $this->insertValues = array();
+    $this->insertValues = [];
 
     // Return the last inserted key.
     return empty($this->inserted_keys) ? NULL : end($this->inserted_keys);
@@ -188,7 +188,7 @@ class Insert extends QueryInsert {
 
   // Because we can handle multiple inserts, give
   // an option to retrieve all keys.
-  private $inserted_keys = array();
+  private $inserted_keys = [];
 
   /**
    * Retrieve an array of the keys resulting from
@@ -265,10 +265,10 @@ class Insert extends QueryInsert {
 
     // Build the list of placeholders, a set of placeholders
     // for each element in the batch.
-    $placeholders = array();
+    $placeholders = [];
     $field_count = count($this->insertFields);
     for($j = 0; $j < $batch_size; $j++) {
-      $batch_placeholders = array();
+      $batch_placeholders = [];
       for ($i = 0; $i < $field_count; ++$i) {
         $batch_placeholders[] = ':db_insert' . (($field_count * $j) + $i);
       }

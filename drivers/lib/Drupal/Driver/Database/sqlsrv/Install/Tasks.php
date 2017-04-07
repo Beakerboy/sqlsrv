@@ -30,15 +30,15 @@ class Tasks extends InstallTasks {
   public function __construct() {
     $this->tasks[] = array(
       'function' => 'checkEncoding',
-      'arguments' => array(),
+      'arguments' => [],
     );
     $this->tasks[] = array(
       'function' => 'checkRequirements',
-      'arguments' => array(),
+      'arguments' => [],
     );
     $this->tasks[] = array(
       'function' => 'initializeDatabase',
-      'arguments' => array(),
+      'arguments' => [],
     );
   }
 
@@ -202,13 +202,13 @@ class Tasks extends InstallTasks {
   public static function InstallRequirements() {
 
     // Array of requirement errors.
-    $errors = array();
+    $errors = [];
 
     #region Check for PhpMssql
 
     include_once (__DIR__ . '/../PhpMssqlAutoloader.php');
     if (!class_exists(\mssql\Connection::class)) {
-      $error = array();
+      $error = [];
       $error['title'] = 'MSSQL Server PhpMssql';
       $error['severity'] = REQUIREMENT_ERROR;
       $error['description'] = t('This driver depends on the PhpMsql library. You can use the community *supported* <a href="https://www.drupal.org/project/sqlsrv">8.x-1.x</a> version of the driver or get PhpMSSQL from <a href="http://www.drupalonwindows.com/en/content/phpmssql">here</a>. See README.rm for deployment instructions.');
@@ -260,7 +260,7 @@ class Tasks extends InstallTasks {
     // Add a description for about leaving username blank.
     $form['username']['#description'] = t('Leave username (and password) blank to use Windows authentication.');
 
-    $form['#submit'] = array();
+    $form['#submit'] = [];
 
     return $form;
   }

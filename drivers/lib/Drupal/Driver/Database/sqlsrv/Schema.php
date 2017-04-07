@@ -132,7 +132,7 @@ class Schema extends DatabaseSchema {
     // Create the table with a default technical primary key.
     // $this->createTableSql already prefixes the table name, and we must inhibit prefixing at the query level
     // because field default _context_menu_block_active_values definitions can contain string literals with braces.
-    $this->connection->query_direct($this->createTableSql($name, $table), array(), array('prefix_tables' => FALSE));
+    $this->connection->query_direct($this->createTableSql($name, $table), [], array('prefix_tables' => FALSE));
     // If the spec had a primary key, set it now after all fields have been created.
     // We are creating the keys after creating the table so that createPrimaryKey
     // is able to introspect column definition from the database to calculate index sizes
@@ -228,7 +228,7 @@ class Schema extends DatabaseSchema {
     $csv_fields = $this->createKeySql($fields, FALSE);
     $real_table = $this->connection->prefixTable($table);
     $size = $this->connection->Scheme()->calculateClusteredIndexRowSizeBytes($real_table, $this->createKeySql($fields, TRUE));
-    $result = array();
+    $result = [];
     $index = FALSE;
     // Add support for nullable columns in a primary key.
     $nullable = FALSE;
@@ -269,7 +269,7 @@ class Schema extends DatabaseSchema {
    *   The SQL statement to create the table.
    */
   protected function createTableSql($name, $table) {
-    $sql_fields = array();
+    $sql_fields = [];
     foreach ($table['fields'] as $field_name => $field) {
       $sql_fields[] = $this->createFieldSql($name, $field_name, $this->processField($field));
     }
@@ -562,7 +562,7 @@ class Schema extends DatabaseSchema {
    *
    * @status complete
    */
-  public function addField($table, $field, $spec, $new_keys = array()) {
+  public function addField($table, $field, $spec, $new_keys = []) {
     if (!$this->tableExists($table)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", array('%field' => $field, '%table' => $table)));
     }
@@ -590,7 +590,7 @@ class Schema extends DatabaseSchema {
     // to do so is a crappy str_replace.
     $query = "ALTER TABLE {$table_prefixed} ADD ";
     $query .= $this->createFieldSql($table, $field, $spec);
-    $this->connection->query_direct($query, array(), array('prefix_tables' => FALSE));
+    $this->connection->query_direct($query, [], array('prefix_tables' => FALSE));
     // Clear column information for table.
     $this->getTableIntrospectionInvalidate($table);
     // Load the initial data.
@@ -605,11 +605,11 @@ class Schema extends DatabaseSchema {
       // nulls with the default value because this won't be done by MSSQL by default.
       if (isset($spec['default'])) {
         $default_expression = $this->connection->Scheme()->DefaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $this->connection->query_direct("UPDATE [$table_prefixed] SET [$field] = $default_expression WHERE [$field] IS NULL", array(), array('prefix_tables' => FALSE));
+        $this->connection->query_direct("UPDATE [$table_prefixed] SET [$field] = $default_expression WHERE [$field] IS NULL", [], array('prefix_tables' => FALSE));
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
-      $this->connection->query_direct("ALTER TABLE [$table_prefixed] ALTER COLUMN " . $this->createFieldSql($table, $field, $spec, TRUE), array(), array('prefix_tables' => FALSE));
+      $this->connection->query_direct("ALTER TABLE [$table_prefixed] ALTER COLUMN " . $this->createFieldSql($table, $field, $spec, TRUE), [], array('prefix_tables' => FALSE));
     }
     // Add the new keys.
     if (isset($new_keys)) {
@@ -653,7 +653,7 @@ class Schema extends DatabaseSchema {
    *
    * @status complete
    */
-  public function changeField($table, $field, $field_new, $spec, $new_keys = array()) {
+  public function changeField($table, $field, $field_new, $spec, $new_keys = []) {
     if (!$this->fieldExists($table, $field)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", array('%table' => $table, '%name' => $field)));
     }
@@ -714,17 +714,17 @@ class Schema extends DatabaseSchema {
       // nulls with the default value because this won't be done by MSSQL by default.
       if (isset($spec['default'])) {
         $default_expression = $this->connection->Scheme()->DefaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $this->connection->query_direct("UPDATE [$real_table] SET [$field_new] = $default_expression WHERE [$field_new] IS NULL", array(), array('prefix_tables' => FALSE));
+        $this->connection->query_direct("UPDATE [$real_table] SET [$field_new] = $default_expression WHERE [$field_new] IS NULL", [], array('prefix_tables' => FALSE));
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
-      $this->connection->query_direct("ALTER TABLE [$real_table] ALTER COLUMN " . $this->createFieldSql($table, $field_new, $spec, TRUE), array(), array('prefix_tables' => FALSE));
+      $this->connection->query_direct("ALTER TABLE [$real_table] ALTER COLUMN " . $this->createFieldSql($table, $field_new, $spec, TRUE), [], array('prefix_tables' => FALSE));
     }
     // Initialize new keys.
     if (!isset($new_keys)) {
       $new_keys = array(
-        'unique keys' => array(),
-        'primary keys' => array()
+        'unique keys' => [],
+        'primary keys' => []
       );
     }
     // Recreate the primary key if no new primary key
@@ -763,9 +763,9 @@ class Schema extends DatabaseSchema {
     // use that to see if we have a primary key
     // before iterating.
     if (!isset($data['primary_key_index']) || !isset($data['indexes'][$data['primary_key_index']])) {
-      return array();
+      return [];
     }
-    $result = array();
+    $result = [];
     $index = $data['indexes'][$data['primary_key_index']];
     foreach ($index['columns'] as $column) {
       if ($column['name'] != $this->COMPUTED_PK_COLUMN_NAME) {
@@ -889,7 +889,7 @@ class Schema extends DatabaseSchema {
     catch (Exception $e) {}
 
     // Create the new default.
-    $this->connection->query_direct("ALTER TABLE [$real_table] ADD CONSTRAINT [$constraint_name] DEFAULT $default_expression FOR [$field]", array(), array('prefix_tables' => FALSE));
+    $this->connection->query_direct("ALTER TABLE [$real_table] ADD CONSTRAINT [$constraint_name] DEFAULT $default_expression FOR [$field]", [], array('prefix_tables' => FALSE));
 
     $transaction->commit();
   }
@@ -1138,7 +1138,7 @@ class Schema extends DatabaseSchema {
    *
    * @status tested
    */
-  public function addIndex($table, $name, $fields, array $spec = array()) {
+  public function addIndex($table, $name, $fields, array $spec = []) {
     if (!$this->tableExists($table)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", array('%table' => $table, '%name' => $name)));
     }

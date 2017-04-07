@@ -40,7 +40,7 @@ class Merge extends QueryMerge {
     // Retrieve query options.
     $options = $this->queryOptions;
     // Keep a reference to the blobs.
-    $blobs = array();
+    $blobs = [];
     // Fetch the list of blobs and sequences used on that table.
     $columnInformation = $this->connection->schema()->getTableIntrospection($this->table);
     // Find out if there is an identity field set in this insert.
@@ -60,7 +60,7 @@ class Merge extends QueryMerge {
     // 3. When not matched part.
     $stmt->BindValues($this->insertFields, $blobs, ':db_merge_placeholder_', $columnInformation, $max_placeholder);
     // 4. Run the query, this will return UPDATE or INSERT
-    $this->connection->query($stmt, array());
+    $this->connection->query($stmt, []);
     $result = NULL;
     foreach ($stmt as $value) {
       $result = $value->{'$action'};
@@ -86,7 +86,7 @@ class Merge extends QueryMerge {
     // Initialize placeholder count.
     $max_placeholder = 0;
     $max_placeholder_conditions =  0;
-    $query = array();
+    $query = [];
     // Enable direct insertion to identity columns if necessary.
     if (!empty($this->setIdentity)) {
       $query[] = 'SET IDENTITY_INSERT {' . $this->table . '} ON;';
@@ -94,8 +94,8 @@ class Merge extends QueryMerge {
     $query[] = 'MERGE INTO {' . $this->table . '} _target';
     // 1. Condition part.
     $this->condition->compile($this->connection, $this);
-    $key_conditions = array();
-    $template_item = array();
+    $key_conditions = [];
+    $template_item = [];
     $conditions = $this->conditions();
     unset($conditions['#conjunction']);
     foreach ($conditions as $condition) {
@@ -107,7 +107,7 @@ class Merge extends QueryMerge {
     // Expressions take priority over literal fields, so we process those first
     // and remove any literal fields that conflict.
     $fields = $this->updateFields;
-    $update_fields = array();
+    $update_fields = [];
     foreach ($this->expressionFields as $field => $data) {
       $update_fields[] = $field . '=' . $data['expression'];
       unset($fields[$field]);
@@ -121,7 +121,7 @@ class Merge extends QueryMerge {
     // 3. "When not matched" part.
     if ($this->insertFields) {
       // Build the list of placeholders.
-      $placeholders = array();
+      $placeholders = [];
       for ($i = 0; $i < count($this->insertFields); ++$i) {
         $placeholders[] = ':db_merge_placeholder_' . ($max_placeholder++);
       }

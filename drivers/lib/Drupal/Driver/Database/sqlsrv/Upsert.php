@@ -35,9 +35,9 @@ class Upsert extends QueryUpsert {
     // Retrieve query options.
     $options = $this->queryOptions;
     // Initialize result array.
-    $this->result = array();
+    $this->result = [];
     // Keep a reference to the blobs.
-    $blobs = array();
+    $blobs = [];
     // Fetch the list of blobs and sequences used on that table.
     $columnInformation = $this->connection->schema()->getTableIntrospection($this->table);
     // Initialize placeholder count.
@@ -52,7 +52,7 @@ class Upsert extends QueryUpsert {
       $stmt->BindValues($fields, $blobs, ':db_insert_placeholder_', $columnInformation, $max_placeholder);
     }
     // 4. Run the query, this will return UPDATE or INSERT
-    $this->connection->query($stmt, array());
+    $this->connection->query($stmt, []);
     // Captura the results.
     foreach ($stmt as $value) {
       $this->result[] = $value->{'$action'};
@@ -69,7 +69,7 @@ class Upsert extends QueryUpsert {
     $columnInformation = $this->connection->schema()->getTableIntrospection($this->table);
     // Find out if there is an identity field set in this insert.
     $setIdentity = !empty($columnInformation['identity']) && in_array($columnInformation['identity'], array_keys($this->insertFields));
-    $query = array();
+    $query = [];
     $real_table = $this->connection->prefixTable($this->table);
     // Enable direct insertion to identity columns if necessary.
     if ($setIdentity === TRUE) {
@@ -82,7 +82,7 @@ class Upsert extends QueryUpsert {
     $columns = implode(', ', $this->connection->quoteIdentifiers($this->insertFields));
     $dataset = "SELECT T.* FROM (values" . implode(',', $values) .") as T({$columns})";
     // Build primery key conditions
-    $key_conditions = array();
+    $key_conditions = [];
     // Fetch the list of blobs and sequences used on that table.
     $primary_key_cols = array_column($columnInformation['indexes'][$columnInformation['primary_key_index']]['columns'], 'name');
     foreach ($primary_key_cols as $key) {
@@ -90,8 +90,8 @@ class Upsert extends QueryUpsert {
     }
     $query[] = "USING ({$dataset}) _source" . PHP_EOL . 'ON ' . implode(' AND ', $key_conditions);
     // Mappings.
-    $insert_mappings = array();
-    $update_mappings = array();
+    $insert_mappings = [];
+    $update_mappings = [];
     foreach ($this->insertFields as $field) {
       $insert_mappings[] = "_source.[$field]";
       // Updating the unique / primary key is not necessary.

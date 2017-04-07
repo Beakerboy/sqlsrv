@@ -37,7 +37,7 @@ class Select extends QuerySelect {
    *   that cannot be cross joined (aggregates).
    * @return string
    */
-  public function addExpression($expression, $alias = NULL, $arguments = array(), $exclude = FALSE, $expand = TRUE) {
+  public function addExpression($expression, $alias = NULL, $arguments = [], $exclude = FALSE, $expand = TRUE) {
     $alias = parent::addExpression($expression, $alias, $arguments);
     $this->expressions[$alias]['exclude'] = $exclude;
     $this->expressions[$alias]['expand'] = $expand;
@@ -80,7 +80,7 @@ class Select extends QuerySelect {
         }
         if (!isset($this->fields[$field]) && !isset($this->expressions[$field]) && !$found) {
           $alias = '_field_' . ($counter++);
-          $this->addExpression($field, $alias, array(), FALSE, FALSE);
+          $this->addExpression($field, $alias, [], FALSE, FALSE);
           $this->queryOptions['sqlsrv_drop_columns'][] = $alias;
         }
       }
@@ -236,7 +236,7 @@ class Select extends QuerySelect {
     $has_range = !empty($this->range);
     $order = $this->order;
     // FIELDS and EXPRESSIONS
-    $fields = array();
+    $fields = [];
     foreach ($this->tables as $alias => $table) {
       // Table might be a subquery, so nothing to do really.
       if (is_string($table['table']) && !empty($table['all_fields'])) {
@@ -264,8 +264,8 @@ class Select extends QuerySelect {
     // The way to emulate that behaviour in SQL Server is to
     // fit all that in a CROSS_APPLY with an alias and then consume
     // it from WHERE or AGGREGATE.
-    $cross_apply = array();
-    $this->cross_apply_aliases = array();
+    $cross_apply = [];
+    $this->cross_apply_aliases = [];
     foreach ($this->expressions as $alias => $expression) {
       // Only use CROSS_APPLY for non-aggregate expresions. This trick
       // will not work, and does not make sense, for aggregates.
@@ -365,7 +365,7 @@ class Select extends QuerySelect {
     // is also specified.
     if ($order && (empty($this->inSubQuery) || !empty($this->range))) {
       $query .= "\nORDER BY ";
-      $fields = array();
+      $fields = [];
       foreach ($order as $field => $direction) {
         $fields[] = $field . ' ' . $direction;
       }
@@ -397,7 +397,7 @@ class Select extends QuerySelect {
     $this->orderBy($alias);
     return $this;
   }
-  private function GetUsedAliases(DatabaseCondition $condition, array &$aliases = array()) {
+  private function GetUsedAliases(DatabaseCondition $condition, array &$aliases = []) {
     foreach($condition->conditions() as $key => $c) {
       if (is_string($key) && substr($key, 0, 1) == '#') {
         continue;
@@ -420,7 +420,7 @@ class Select extends QuerySelect {
     $group_by = $count->getGroupBy();
     $having = $count->havingConditions();
     if (!$count->distinct && !isset($having[0])) {
-      $used_aliases = array();
+      $used_aliases = [];
       $this->GetUsedAliases($count->condition, $used_aliases);
       // When not executing a distinct query, we can zero-out existing fields
       // and expressions that are not used by a GROUP BY or HAVING. Fields
@@ -450,7 +450,7 @@ class Select extends QuerySelect {
     // Ordering a count query is a waste of cycles, and breaks on some
     // databases anyway.
     $orders = &$count->getOrderBy();
-    $orders = array();
+    $orders = [];
     if ($count->distinct && !empty($group_by)) {
       // If the query is distinct and contains a GROUP BY, we need to remove the
       // distinct because SQL99 does not support counting on distinct multiple fields.

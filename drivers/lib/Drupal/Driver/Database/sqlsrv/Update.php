@@ -61,7 +61,7 @@ class Update extends QueryUpdate {
 
     // We use this array to store references to the blob handles.
     // This is necessary because the PDO will otherwise messes up with references.
-    $blobs = array();
+    $blobs = [];
     $stmt->BindValues($fields, $blobs, ':db_update_placeholder_', $columnInformation);
 
     // Add conditions.
@@ -74,7 +74,7 @@ class Update extends QueryUpdate {
     $options = $this->queryOptions;
     $options['already_prepared'] = TRUE;
 
-    $this->connection->query($stmt, array(), $options);
+    $this->connection->query($stmt, [], $options);
 
     return $stmt->rowCount();
   }
@@ -87,7 +87,7 @@ class Update extends QueryUpdate {
     // Expressions take priority over literal fields, so we process those first
     // and remove any literal fields that conflict.
     $fields = $this->fields;
-    $update_fields = array();
+    $update_fields = [];
     foreach ($this->expressionFields as $field => $data) {
       $update_fields[] = $this->connection->quoteIdentifier($field) . '=' . $data['expression'];
       unset($fields[$field]);

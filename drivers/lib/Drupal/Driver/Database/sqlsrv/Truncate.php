@@ -10,7 +10,7 @@ class Truncate extends QueryTruncate {
    * {@inheritdoc}
    */
   public function execute() {
-    return $this->connection->query((string) $this, array(), $this->queryOptions);
+    return $this->connection->query((string) $this, [], $this->queryOptions);
   }
   /**
    * {@inheritdoc}
