@@ -544,6 +544,7 @@ class Schema extends DatabaseSchema {
         ));
       }
     }
+    $this->connection->GetConnection()->Cache('sqlsrv-table-exists')->Clear($old_table_info['table']);
   }
   /**
    * {@inhertidoc}
