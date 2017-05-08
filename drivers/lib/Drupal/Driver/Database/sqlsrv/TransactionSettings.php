@@ -73,11 +73,6 @@ class TransactionSettings {
   public static function GetDefaults() {
     // Use snapshot if available.
     $isolation = DatabaseTransactionIsolationLevel::Ignore();
-    if ($info =  Database::getConnection()->schema()->getDatabaseInfo()) {
-      if ($info->snapshot_isolation_state == TRUE) {
-        $isolation = DatabaseTransactionIsolationLevel::Snapshot();
-      }
-    }
     // Otherwise use Drupal's default behaviour (except for nesting!)
     return new TransactionSettings(FALSE,
                 DatabaseTransactionScopeOption::Required(),
@@ -92,11 +87,6 @@ class TransactionSettings {
   public static function GetBetterDefaults() {
     // Use snapshot if available.
     $isolation = DatabaseTransactionIsolationLevel::Ignore();
-    if ($info = Database::getConnection()->schema()->getDatabaseInfo()) {
-      if ($info->snapshot_isolation_state == TRUE) {
-        $isolation = DatabaseTransactionIsolationLevel::Snapshot();
-      }
-    }
     // Otherwise use Drupal's default behaviour (except for nesting!)
     return new TransactionSettings(TRUE,
                 DatabaseTransactionScopeOption::Required(),
