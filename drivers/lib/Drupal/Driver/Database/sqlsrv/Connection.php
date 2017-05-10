@@ -362,10 +362,15 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function escapeField($field) {
-    if (empty($field)) {
-      return '';
+    if (!isset($this->escapedNames[$field])) {
+      if (empty($field)) {
+        $this->escapedNames[$field] = '';
+      }
+      else {
+        $this->escapedNames[$field] = implode('.', array_map(array($this, 'quoteIdentifier'), explode('.', preg_replace('/[^A-Za-z0-9_.]+/', '', $field))));
+      }
     }
-    return implode('.', array_map(array($this, 'quoteIdentifier'), explode('.', preg_replace('/[^A-Za-z0-9_.]+/', '', $field))));
+    return $this->escapedNames[$field];
   }
   /**
    * Prefix a single table name.
