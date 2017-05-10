@@ -116,7 +116,7 @@ function sqlsrv_requirements($phase) {
     $requirements['sqlsrv_custom_functions'] = array(
           'title' => t('MSSQL Server Custom Functions'),
           'description' => $error === TRUE ? t('Some custom functions are not available. Make sure you deploy them.') : t('All custom functions available.'),
-          'severity' => $error === TRUE ? REQUIREMENT_ERROR : REQUIREMENT_OK,
+          'severity' => $error === TRUE ? REQUIREMENT_WARNING : REQUIREMENT_OK,
           'value' => implode( ' | ', $briefing),
     );
 
