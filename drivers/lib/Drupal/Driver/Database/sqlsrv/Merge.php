@@ -1,18 +1,10 @@
 <?php
-/**
- * @file
- * Definition of Drupal\Driver\Database\sqlsrv\Merge
- */
+
 namespace Drupal\Driver\Database\sqlsrv;
+
 use Drupal\Core\Database\Query\Merge as QueryMerge;
-use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
-use mssql\Settings\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
-use mssql\Settings\TransactionScopeOption as DatabaseTransactionScopeOption;
-use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
 use Drupal\Core\Database\Query\InvalidMergeQueryException;
-use PDO as PDO;
-use Exception as Exception;
-use PDOStatement as PDOStatement;
+
 class Merge extends QueryMerge {
 
   /**
@@ -22,9 +14,19 @@ class Merge extends QueryMerge {
   const STATUS_NONE = -1;
 
   /**
+   * The database connection
+   *
    * @var Connection
    */
   protected $connection;
+
+  /**
+   * Keep track of the number of
+   * placeholders in the compiled query
+   *
+   * @var int
+   */
+  protected $totalPlaceholders;
 
   /**
    * {@inheritdoc}
@@ -47,9 +49,14 @@ class Merge extends QueryMerge {
     $this->setIdentity = !empty($columnInformation['identity']) && in_array($columnInformation['identity'], array_keys($this->insertFields));
     // Initialize placeholder count.
     $max_placeholder = 0;
+    // Stringify the query
+    $query = $this->__toString();
     // Build the query, ensure that we have retries for concurrency control
     $options['integrityretry'] = TRUE;
-    $stmt = $this->connection->prepareQuery((string)$this, $options);
+    if ($this->totalPlaceholders >= 2100) {
+      $options['insecure'] = TRUE;
+    }
+    $stmt = $this->connection->prepareQuery($query, $options);
     // Build the arguments: 1. condition.
     $arguments = $this->condition->arguments();
     $stmt->BindArguments($arguments);
@@ -79,6 +86,7 @@ class Merge extends QueryMerge {
         }
     }
   }
+
   /**
    * {@inheritdoc}
    */
@@ -122,7 +130,8 @@ class Merge extends QueryMerge {
     if ($this->insertFields) {
       // Build the list of placeholders.
       $placeholders = [];
-      for ($i = 0; $i < count($this->insertFields); ++$i) {
+      $insertFieldsCount = count($this->insertFields);
+      for ($i = 0; $i < $insertFieldsCount; ++$i) {
         $placeholders[] = ':db_merge_placeholder_' . ($max_placeholder++);
       }
       $query[] = 'WHEN NOT MATCHED THEN INSERT (' . implode(', ', $this->connection->quoteIdentifiers(array_keys($this->insertFields))) . ') VALUES (' . implode(', ', $placeholders) . ')';
@@ -132,6 +141,7 @@ class Merge extends QueryMerge {
     }
     // Return information about the query.
     $query[] = 'OUTPUT $action;';
+    $this->totalPlaceholders = $max_placeholder + $max_placeholder_conditions;
     return implode(PHP_EOL, $query);
   }
 }
