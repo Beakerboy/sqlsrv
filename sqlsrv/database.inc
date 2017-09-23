@@ -362,17 +362,15 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
   }
 
   public function escapeField($field) {
-    if ($cache = fastcache::cache_get($field, 'schema_escapeField')) {
-      return $cache->data;
+    if (!isset($this->escapedNames[$field])) {
+      if (empty($field)) {
+        $this->escapedNames[$field] = '';
+      }
+      else {
+        $this->escapedNames[$field] = implode('.', array_map(array($this, 'quoteIdentifier'), explode('.', preg_replace('/[^A-Za-z0-9_.]+/', '', $field))));
+      }
     }
-    if (strlen($field) > 0) {
-      $result = implode('.', array_map(array($this, 'quoteIdentifier'), explode('.', preg_replace('/[^A-Za-z0-9_.]+/', '', $field))));
-    }
-    else {
-      $result = '';
-    }
-    fastcache::cache_set($field, $result, 'schema_escapeField');
-    return $result;
+    return $this->escapedNames[$field];
   }
 
   public function quoteIdentifiers($identifiers) {
@@ -586,15 +584,6 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
    * Internal function: massage a query to make it compliant with SQL Server.
    */
   public function preprocessQuery($query) {
-    // Generate a cache signature for this query.
-    $query_signature = 'query_cache_' . md5($query);
-
-    // Drill through everything...
-    $success = FALSE;
-    $cache = wincache_ucache_get($query_signature, $success);
-    if ($success) {
-      return $cache;
-    }
 
     // Force quotes around some SQL Server reserved keywords.
     if (preg_match('/^SELECT/i', $query)) {
@@ -625,10 +614,6 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
 
     // Now do all the replacements at once.
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
-
-    // Store the processed query, and make sure we expire it some time
-    // so that scarcely used queries don't stay in the cache forever.
-    wincache_ucache_set($query_signature, $query, rand(600, 3600));
 
     return $query;
   }
