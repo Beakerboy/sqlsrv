@@ -12,7 +12,7 @@ include_once 'fastcacheitem.inc';
  *
  * Database layer for SQL Server
  * is very Regex intensive.
- * Cannot use a regultar cache
+ * Cannot use a regular cache
  * backend because the enormous number
  * of cache_get and cache_set calls
  * end up crashing memcache or wincache!
@@ -75,16 +75,6 @@ class fastcache {
   }
 
   /**
-   * Although the cache might be enabled, using locks
-   * is optional. Only use locks when a fastck locking
-   * backend is available, such as Wincache.
-   */
-  public static function UseLocks() {
-    global $WINCACHE_LOCK_ACTIVE;
-    return $WINCACHE_LOCK_ACTIVE;
-  }
-
-  /**
    * Tell if cache persistence is enabled. If not, this cache
    * will behave as DRUPAL_STATIC until the end of request.
    *
@@ -97,14 +87,6 @@ class fastcache {
       // used out of database driver there is a chance that
       // cache storage might not yet be initialized.
       if (function_exists('_cache_get_object')) {
-        // If you only bootstrap to database the lock system is not yet started
-        // but if locking is not database dependant (memcache or wincache) you can run
-        // lock_initialize is ASAP.
-        $lock_file = variable_get('lock_inc', 'includes/lock.inc');
-        if ($lock_file != 'includes/lock.inc') {
-          require_once DRUPAL_ROOT . '/' . $lock_file;
-          lock_initialize();
-        }
         // Only enabled storage if Cache Backend is DrupalWinCache or ChainedFastBackend.
         $object = _cache_get_object('fastcache');
         static::$enabled = (is_a($object, \DrupalWinCache::class) || is_a($object, \ChainedFastBackend::class));
@@ -169,31 +151,13 @@ class fastcache {
     static::cache_load_ensure($bin);
     if (static::$fastcacheitems[$bin]->changed == FALSE) {
       static::$fastcacheitems[$bin]->changed = TRUE;
-      // Do not lock if this is an atomic binary ($cid = $bin).
-      if ($cid === $bin) {
+      // Do persist or lock if it is not enabled!
+      if (static::Enabled()) {
         static::$fastcacheitems[$bin]->persist = TRUE;
-        static::$fastcacheitems[$bin]->locked = FALSE;
-      }
-      else {
-        // Do persist or lock if it is not enabled!
-        if (static::Enabled()) {
-          // Hold this locks longer than usual because
-          // they run after the request has finished.
-          if (static::UseLocks()) {
-            if (function_exists('lock_acquire') && lock_acquire('fastcache_' . $bin, 120)) {
-              static::$fastcacheitems[$bin]->persist = TRUE;
-              static::$fastcacheitems[$bin]->locked = TRUE;
-            }
-          }
-          else {
-            static::$fastcacheitems[$bin]->persist = TRUE;
-          }
+        if (static::$shutdown_registered == FALSE) {
+          register_shutdown_function(array('fastcache','fastcache_persist'));
+          static::$shutdown_registered = TRUE;
         }
-      }
-      // Register shutdown persistence once, only if enabled!
-      if (static::$shutdown_registered == FALSE && static::Enabled()) {
-        register_shutdown_function(array('fastcache','fastcache_persist'));
-        static::$shutdown_registered = TRUE;
       }
     }
     static::$fastcacheitems[$bin]->data_set($cid, $data);
@@ -215,14 +179,10 @@ class fastcache {
     foreach (static::$fastcacheitems as &$cache) {
       if ($cache->persist == TRUE) {
         cache_set($cache->bin, $cache->rawdata(), 'fastcache', CACHE_TEMPORARY);
-        if ($cache->locked) {
-          lock_release('fastcache_' . $cache->bin);
-        }
       }
       // The binaries might be utilized on other shutdown functions...
       $cache->changed = FALSE;
       $cache->persist = FALSE;
-      $cache->locked = FALSE;
     }
 
     // Fastcache may be reutilized during shutdown, make sure
