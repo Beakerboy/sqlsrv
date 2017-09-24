@@ -4,4 +4,4 @@ description: 'Driver for SQL Server and SQL Azure'
 package: Database engines
 required: true
 # version: VERSION
-# core: 8.x
+core: 8.x
