@@ -69,18 +69,18 @@ function sqlsrv_requirements($phase) {
 
       if ($is_windows) {
         // Test WinCache.
-        $wincache_enabled = fastcache::Enabled();
+        $wincache_enabled = function_exists('wincache_ucache_get');
         $wincache_module = module_exists('wincachedrupal');
         $requirements['sqlsrv_wincache_extension'] = array(
           'title' => t('MS SQL Server Wincache extension'),
           'value' => $wincache_module ? phpversion('wincache') : t('Not available'),
-          'severity' => $wincache_module ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+          'severity' => $wincache_module ? REQUIREMENT_OK : REQUIREMENT_WARNING,
           'description' => $wincache_module ? NULL : t('It is highly recommended to install and enable the <a href="http://sourceforge.net/projects/wincache/files/">Wincache PHP extension</a> on Windows Server systems to get the best performance from Drupal.'),
         );
         $requirements['sqlsrv_wincache_integration'] = array(
           'title' => t('MS SQL Server Wincache integration'),
           'value' => $wincache_enabled ? t('Available') : t('Not available'),
-          'severity' => $wincache_enabled ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+          'severity' => $wincache_enabled ? REQUIREMENT_OK : REQUIREMENT_WARNING,
           'description' => $wincache_enabled ? NULL : t('To enable the SQL Server driver wincache integration the fastcache backend and the locking backend must be set to use Wincache.'),
         );
       }
@@ -103,61 +103,8 @@ function sqlsrv_requirements($phase) {
         'value' => t('@level', array('@level' => $extensiondata['getVersion'])),
         'description' => t('Use at least the 3.2.0.0 version of the MSSQL PDO driver.')
       );
-
-      // Make sure that the module's driver code is the same one as the effectively
-      // deployed driver code....
-      // TODO:// Nicer than just showing the error,
-      // would be to offer the option to autodploy the driver...
-      $deployed_ok = sqlsrv_verify_driver();
-      $requirements['sqlsrv_deployed_files'] = array(
-        'title' => t('MSSQL Server Deployed Driver'),
-        'description' => t('Deployed driver match.'),
-        'severity' => $deployed_ok === TRUE ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-        'description' => $deployed_ok === TRUE ? t('Deployed driver matches module version.') : t('The deployed driver files do not match the module driver.'),
-        );
     }
-
   }
 
   return $requirements;
-}
-
-/**
- * Verify that the deployed driver is the same one as the module
- * version.
- *
- * @return bool
- */
-function sqlsrv_verify_driver() {
-
-  // Location of the effective driver.
-  $class = Connection::class;
-  $reflector = new ReflectionClass($class);
-  $driver_dir = dirname($reflector->getFileName());
-
-  // Location for the module's driver.
-  $module_dir = dirname(__FILE__) . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, array('sqlsrv'));
-
-  return sqlsrv_directory_checksum($driver_dir) === sqlsrv_directory_checksum($module_dir);
-}
-
-/**
- * Calculate a unique identifier for a directory and it's contents
- * based on file sizes and names.
- *
- * TODO:// This thing will not notice files being moved around in directories
- * as long as they keep same name and size.
- *
- * @param string $directory
- * @return string
- */
-function sqlsrv_directory_checksum($directory) {
-  $files = file_scan_directory($directory, '/\.*/i');
-  $checksum = 0;
-  $names = '';
-  foreach ($files as $file) {
-    $checksum += filesize($file->uri);
-    $names .= $file->name;
-  }
-  return $checksum . '-' . md5($names);
 }
