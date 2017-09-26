@@ -315,7 +315,7 @@ class SelectQuery_sqlsrv extends SelectQuery {
           $fields[] = $this->connection->escapeTable($alias) . '.*';
         }
         else {
-          $info = $this->connection->schema()->queryColumnInformation($table['table']);
+          $info = $this->connection->schema()->queryColumnInformation($this->connection->escapeTable($table['table']));
           // Some fields need to be "transparent" to Drupal, including technical primary keys
           // or custom computed columns.
           foreach ($info['columns_clean'] as $column) {
