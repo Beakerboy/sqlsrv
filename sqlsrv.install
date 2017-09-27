@@ -70,18 +70,11 @@ function sqlsrv_requirements($phase) {
       if ($is_windows) {
         // Test WinCache.
         $wincache_enabled = function_exists('wincache_ucache_get');
-        $wincache_module = module_exists('wincachedrupal');
         $requirements['sqlsrv_wincache_extension'] = array(
           'title' => t('MS SQL Server Wincache extension'),
-          'value' => $wincache_module ? phpversion('wincache') : t('Not available'),
-          'severity' => $wincache_module ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-          'description' => $wincache_module ? NULL : t('It is highly recommended to install and enable the <a href="http://sourceforge.net/projects/wincache/files/">Wincache PHP extension</a> on Windows Server systems to get the best performance from Drupal.'),
-        );
-        $requirements['sqlsrv_wincache_integration'] = array(
-          'title' => t('MS SQL Server Wincache integration'),
-          'value' => $wincache_enabled ? t('Available') : t('Not available'),
+          'value' => $wincache_enabled ? phpversion('wincache') : t('Not available'),
           'severity' => $wincache_enabled ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-          'description' => $wincache_enabled ? NULL : t('To enable the SQL Server driver wincache integration the fastcache backend and the locking backend must be set to use Wincache.'),
+          'description' => $wincache_enabled ? NULL : t('It is highly recommended to install and enable the <a href="http://sourceforge.net/projects/wincache/files/">Wincache PHP extension</a> on Windows Server systems to get the best performance from Drupal.'),
         );
       }
 
