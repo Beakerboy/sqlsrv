@@ -8,7 +8,16 @@
  */
 class InsertQuery_sqlsrv extends InsertQuery {
 
+  /**
+   * Wether or not to use OUTPUT to obtains inserted identifiers.
+   */
+  protected $use_output = TRUE;
+
   public function __construct($connection, $table, array $options = []) {
+    global $conf;
+    if (isset($conf['MSSQL_INSERT_DISABLE_OUTPUT']) && $conf['MSSQL_INSERT_DISABLE_OUTPUT'] === TRUE) {
+     $this->use_output = FALSE;
+    }
     if (!isset($options['return'])) {
       $options['return'] = Database::RETURN_NULL;
     }
@@ -45,12 +54,17 @@ class InsertQuery_sqlsrv extends InsertQuery {
       // Run the query
       $this->connection->query($stmt, array(), $options);
 
-      // We can only have 1 identity column per table (or none, where fetchColumn will fail)
-      try {
-        return $stmt->fetchColumn(0);
+      if ($this->use_output) {
+        // We can only have 1 identity column per table (or none, where fetchColumn will fail)
+        try {
+          return $stmt->fetchColumn(0);
+        }
+        catch(\PDOException $e) {
+          return NULL;
+        }
       }
-      catch(\PDOException $e) {
-        return NULL;
+      else {
+        return $this->connection->lastInsertId();
       }
     }
 
@@ -67,12 +81,17 @@ class InsertQuery_sqlsrv extends InsertQuery {
       // Run the query
       $this->connection->query($stmt, array(), $options);
 
-      // We can only have 1 identity column per table (or none, where fetchColumn will fail)
-      try {
-        return $stmt->fetchColumn(0);
+      if ($this->use_output) {
+        // We can only have 1 identity column per table (or none, where fetchColumn will fail)
+        try {
+          return $stmt->fetchColumn(0);
+        }
+        catch(\PDOException $e) {
+          return NULL;
+        }
       }
-      catch(\PDOException $e) {
-        return NULL;
+      else {
+        return $this->connection->lastInsertId();
       }
     }
 
@@ -116,12 +135,14 @@ class InsertQuery_sqlsrv extends InsertQuery {
 
       // We can only have 1 identity column per table (or none, where fetchColumn will fail)
       // When the column does not have an identity column, no results are thrown back.
-      foreach($stmt as $insert) {
-        try {
-          $this->inserted_keys[] = $insert[$identity];
-        }
-        catch(\Exception $e) {
-          $this->inserted_keys[] = NULL;
+      if ($this->use_output) {
+        foreach($stmt as $insert) {
+          try {
+            $this->inserted_keys[] = $insert[$identity];
+          }
+          catch(\Exception $e) {
+            $this->inserted_keys[] = NULL;
+          }
         }
       }
 
@@ -188,6 +209,10 @@ class InsertQuery_sqlsrv extends InsertQuery {
       // Empty is the default for
       // a missing lastInsertId()
       $output = "OUTPUT ('')";
+    }
+
+    if ($this->use_output === FALSE) {
+      $output = '';
     }
 
     // If we're selecting from a SelectQuery, finish building the query and
