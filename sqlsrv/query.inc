@@ -145,6 +145,9 @@ class InsertQuery_sqlsrv extends InsertQuery {
           }
         }
       }
+      else {
+        $this->inserted_keys[] = $this->connection->lastInsertId();
+      }
 
       // Fetch the next batch.
       $batch = array_splice($this->insertValues, 0, $batch_size);
