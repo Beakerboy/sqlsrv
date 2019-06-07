@@ -6,10 +6,7 @@ services:
 - mssql2017
 - iis
 install:
-  # net start MSSQL$SQL2017
   ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual
-    Set-Service 'SQLAgent$SQL2014' -StartupType Manual
-    #net start W3SVC
     new-item c:\tools\php\ext -itemtype directory
     new-item c:\tmp -itemtype directory
     rmdir c:\tmp /s /q
