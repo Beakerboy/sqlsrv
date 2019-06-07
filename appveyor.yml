@@ -7,16 +7,14 @@ services:
 - iis
 install:
   ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual
-    new-item c:\tools\php\ext -itemtype directory
-    new-item c:\tmp -itemtype directory
-    rmdir c:\tmp /s /q
-    new-item c:\tmp -itemtype directory
-    (New-Object Net.WebClient).DownloadFile('https://github.com/Microsoft/msphpsql/releases/download/4.1.5-Windows/7.0.zip','C:\tmp\sqlsrv.zip')
+    new-item C:\tools\php\ext -itemtype directory
+    new-item C:\tmp -itemtype directory
+    (New-Object Net.WebClient).DownloadFile('https://github.com/microsoft/msphpsql/releases/download/v5.6.0/Windows-7.1.zip','C:\tmp\sqlsrv.zip')
     (new-object -com shell.application).namespace('C:\tmp').CopyHere((new-object -com shell.application).namespace('C:\tmp\sqlsrv.zip').Items(),16)
-    copy /Y "c:\tmp\7.0\x64\php_pdo_sqlsrv_7_nts.dll" "c:\tools\php\ext\php_pdo_sqlsrv.dll"
-    (Get-Item c:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo"
+    copy /Y "C:\tmp\7.0\x64\php_pdo_sqlsrv_7_nts.dll" "c:\tools\php\ext\php_pdo_sqlsrv.dll"
+    (Get-Item C:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo"
     rmdir c:\tmp /s /q
-    new-item c:\tmp -itemtype directory
+    new-item C:\tmp -itemtype directory
     (New-Object Net.WebClient).DownloadFile('http://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.0-nts-vc14-x64.zip','C:\tmp\wincache.zip')
     (new-object -com shell.application).namespace('C:\tmp').CopyHere((new-object -com shell.application).namespace('C:\tmp\wincache.zip').Items(),16)
     copy /-Y "c:\tmp\php_wincache.dll" "c:\tools\php\ext\php_wincache.dll
