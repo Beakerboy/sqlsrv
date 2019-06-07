@@ -53,8 +53,8 @@ install:
     Add-Content php.ini-production "'npdo_sqlsrv.client_buffer_max_kb_size=24480"
     copy php.ini-production php.ini
     echo Setup certificate store
-    (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\cacert.pem')
-    Add-Content php.ini "'ncurl.cainfo=\"C:\cacert.pem\""
+    (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\tmp\cacert.pem')
+    Add-Content php.ini "'ncurl.cainfo=\"C:\\tmp\\cacert.pem\""
     SET PATH=C:\tools\php;%PATH%
     ($env:Path)
     new-item c:\composer -itemtype directory
