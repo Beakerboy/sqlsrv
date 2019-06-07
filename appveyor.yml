@@ -69,22 +69,12 @@ install:
     composer config repositories.drupal composer https://packages.drupal.org/8
     composer require drupal/sqlsrv:~1.0
     xcopy /S /I /E %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
-    #composer config repositories.1 git https://%GITLABUSERNAME%:%GITLABPASSWORD%@gitlab.com/david-garcia-garcia/mssql.git
-    #composer require david/mssql
     '@php %cd%\vendor\drupal\console\bin\drupal ' + $([char]37) + '*' | Out-File %cd%/web/drupal.bat -Encoding ASCII
     cd /d C:\projects\drupal-project\web
     drupal about
     drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2014" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
     drupal about
     cd /d C:\projects\drupal-project
-    #powershell -command "(New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2294731-39-phpunit-windows.patch','%cd%\patch.patch')"
-    #git apply patch.patch --directory=web
-    #powershell -command "(New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/use_the_php_binary-2748883-15.patch','%cd%\patch.patch')"
-    #git apply patch.patch --directory=web
-    #powershell -command "(New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/simpletest_is_broken_on-2605284-61.patch','%cd%\patch.patch')"
-    #git apply patch.patch --directory=web
-    #powershell -command "(New-Object Net.WebClient).DownloadFile('https://patch-diff.githubusercontent.com/raw/hechoendrupal/drupal-console/pull/3134.patch','%cd%\patch.patch')"
-    #git apply patch.patch --directory=vendor/drupal/console
     cd /d C:\projects\drupal-project\web
     drupal module:install simpletest
     choco install -y urlrewrite
