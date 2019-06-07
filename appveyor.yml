@@ -27,31 +27,31 @@ install:
     net start wuauserv
     cinst -y --allow-empty-checksums php -version 7.0.9
     cd c:\tools\php
+    echo date.timezone="UTC" >> php.ini-production
+    echo extension_dir=ext >> php.ini-production
+    echo extension=php_openssl.dll >> php.ini-production
+    echo extension=php_wincache.dll >> php.ini-production
+    echo extension=php_pdo_sqlsrv.dll >> php.ini-production
+    echo extension=php_com_dotnet.dll >> php.ini-production
+    echo extension=php_sockets.dll >> php.ini-production
+    echo extension=php_mbstring.dll >> php.ini-production
+    echo extension=php_soap.dll >> php.ini-production
+    echo extension=php_curl.dll >> php.ini-production
+    echo extension=php_gd2.dll >> php.ini-production
+    echo extension=php_gettext.dll >> php.ini-production
+    echo zend_extension=php_opcache.dll >> php.ini-production
+    echo opcache.enable=1 >> php.ini-production
+    echo opcache.enable_cli=1 >> php.ini-production
+    echo opcache.memory_consumption=128 >> php.ini-production
+    echo opcache.revalidate_freq=1500 >> php.ini-production
+    echo opcache.max_accelerated_files=8000 >> php.ini-production
+    echo wincache.ucenabled=1 >> php.ini-production
+    echo wincache.ucachesize=128 >> php.ini-production
+    echo wincache.fcenabled=0 >> php.ini-production
+    echo realpath_cache_size=5M >> php.ini-production
+    echo realpath_cache_ttl=1800 >> php.ini-production
+    echo pdo_sqlsrv.client_buffer_max_kb_size=24480 >> php.ini-production
     copy php.ini-production php.ini
-    echo date.timezone="UTC" >> php.ini
-    echo extension_dir=ext >> php.ini
-    echo extension=php_openssl.dll >> php.ini
-    echo extension=php_wincache.dll >> php.ini
-    echo extension=php_pdo_sqlsrv.dll >> php.ini
-    echo extension=php_com_dotnet.dll >> php.ini
-    echo extension=php_sockets.dll >> php.ini
-    echo extension=php_mbstring.dll >> php.ini
-    echo extension=php_soap.dll >> php.ini
-    echo extension=php_curl.dll >> php.ini
-    echo extension=php_gd2.dll >> php.ini
-    echo extension=php_gettext.dll >> php.ini
-    echo zend_extension=php_opcache.dll >> php.ini
-    echo opcache.enable=1 >> php.ini
-    echo opcache.enable_cli=1 >> php.ini
-    echo opcache.memory_consumption=128 >> php.ini
-    echo opcache.revalidate_freq=1500 >> php.ini
-    echo opcache.max_accelerated_files=8000 >> php.ini
-    echo wincache.ucenabled=1 >> php.ini
-    echo wincache.ucachesize=128 >> php.ini
-    echo wincache.fcenabled=0 >> php.ini
-    echo realpath_cache_size=5M >> php.ini
-    echo realpath_cache_ttl=1800 >> php.ini
-    echo pdo_sqlsrv.client_buffer_max_kb_size=24480 >> php.ini
     echo Setup certificate store
     (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\cacert.pem')
     echo curl.cainfo="C:\cacert.pem" >> php.ini
