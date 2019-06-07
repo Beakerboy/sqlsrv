@@ -7,23 +7,23 @@ services:
 - iis
 install:
   # net start MSSQL$SQL2017
-  ps: "Set-Service 'SQLAgent$SQL2017' -StartupType Manual"
-    "Set-Service 'SQLAgent$SQL2014' -StartupType Manual"
+  ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual
+    Set-Service 'SQLAgent$SQL2014' -StartupType Manual
     #net start W3SVC
-    "new-item c:\tools\php\ext -itemtype directory"
-    "new-item c:\tmp -itemtype directory"
+    new-item c:\tools\php\ext -itemtype directory
+    new-item c:\tmp -itemtype directory
     rmdir c:\tmp /s /q
-    "new-item c:\tmp -itemtype directory"
-    "(New-Object Net.WebClient).DownloadFile('https://github.com/Microsoft/msphpsql/releases/download/4.1.5-Windows/7.0.zip','C:\tmp\sqlsrv.zip')"
-    "(new-object -com shell.application).namespace('C:\tmp').CopyHere((new-object -com shell.application).namespace('C:\tmp\sqlsrv.zip').Items(),16)"
+    new-item c:\tmp -itemtype directory
+    (New-Object Net.WebClient).DownloadFile('https://github.com/Microsoft/msphpsql/releases/download/4.1.5-Windows/7.0.zip','C:\tmp\sqlsrv.zip')
+    (new-object -com shell.application).namespace('C:\tmp').CopyHere((new-object -com shell.application).namespace('C:\tmp\sqlsrv.zip').Items(),16)
     copy /Y "c:\tmp\7.0\x64\php_pdo_sqlsrv_7_nts.dll" "c:\tools\php\ext\php_pdo_sqlsrv.dll"
-    "(Get-Item c:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo"
+    (Get-Item c:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo"
     rmdir c:\tmp /s /q
-    "new-item c:\tmp -itemtype directory"
-    "(New-Object Net.WebClient).DownloadFile('http://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.0-nts-vc14-x64.zip','C:\tmp\wincache.zip')"
-    "(new-object -com shell.application).namespace('C:\tmp').CopyHere((new-object -com shell.application).namespace('C:\tmp\wincache.zip').Items(),16)"
-    copy /-Y "c:\tmp\php_wincache.dll" "c:\tools\php\ext\php_wincache.dll"
-    "(Get-Item c:\tools\php\ext\php_wincache.dll).VersionInfo"
+    new-item c:\tmp -itemtype directory
+    (New-Object Net.WebClient).DownloadFile('http://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.0-nts-vc14-x64.zip','C:\tmp\wincache.zip')
+    (new-object -com shell.application).namespace('C:\tmp').CopyHere((new-object -com shell.application).namespace('C:\tmp\wincache.zip').Items(),16)
+    copy /-Y "c:\tmp\php_wincache.dll" "c:\tools\php\ext\php_wincache.dll
+    (Get-Item c:\tools\php\ext\php_wincache.dll).VersionInfo
     cinst -y OpenSSL.Light
     SET PATH=C:\Program Files\OpenSSL;%PATH%
     sc config wuauserv start= auto
@@ -56,15 +56,15 @@ install:
     echo realpath_cache_ttl=1800 >> php.ini
     echo pdo_sqlsrv.client_buffer_max_kb_size=24480 >> php.ini
     echo Setup certificate store
-    "(New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\cacert.pem')"
+    (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\cacert.pem')
     echo curl.cainfo="C:\cacert.pem" >> php.ini
     SET PATH=C:\tools\php;%PATH%
     ($env:Path)
-    "new-item c:\composer -itemtype directory"
+    new-item c:\composer -itemtype directory
     cd /d C:\composer
     php -r "readfile('http://getcomposer.org/installer');" | php
-    "(Get-Item C:\composer\composer.phar).length"
-    "'@php C:\composer\composer.phar ' + $([char]37) + '*' | Out-File C:\composer\composer.bat -Encoding ASCII"
+    (Get-Item C:\composer\composer.phar).length
+    '@php C:\composer\composer.phar ' + $([char]37) + '*' | Out-File C:\composer\composer.bat -Encoding ASCII
     SET PATH=C:\composer;%PATH%
     cd /d C:\projects\
     composer create-project -n drupal-composer/drupal-project:8.x-dev
@@ -73,8 +73,8 @@ install:
     composer require drupal/sqlsrv:~1.0
     xcopy /S /I /E %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
     #composer config repositories.1 git https://%GITLABUSERNAME%:%GITLABPASSWORD%@gitlab.com/david-garcia-garcia/mssql.git
-    composer require david/mssql
-    "'@php %cd%\vendor\drupal\console\bin\drupal ' + $([char]37) + '*' | Out-File %cd%/web/drupal.bat -Encoding ASCII"
+    #composer require david/mssql
+    '@php %cd%\vendor\drupal\console\bin\drupal ' + $([char]37) + '*' | Out-File %cd%/web/drupal.bat -Encoding ASCII
     cd /d C:\projects\drupal-project\web
     drupal about
     drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2014" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
@@ -91,9 +91,9 @@ install:
     cd /d C:\projects\drupal-project\web
     drupal module:install simpletest
     choco install -y urlrewrite
-    "New-WebSite -Name 'MyWebsite' -PhysicalPath 'c:\projects\drupal-project\web' -Force"
+    New-WebSite -Name 'MyWebsite' -PhysicalPath 'c:\projects\drupal-project\web' -Force
     echo 127.0.0.1 www.mysite.com >> %WINDIR%\System32\Drivers\Etc\Hosts
-    "Import-Module WebAdministration; Set-ItemProperty 'IIS:\Sites\MyWebsite' -name Bindings -value @{protocol='http';bindingInformation='*:80:www.mysite.com'}"
+    Import-Module WebAdministration; Set-ItemProperty 'IIS:\Sites\MyWebsite' -name Bindings -value @{protocol='http';bindingInformation='*:80:www.mysite.com'}
     SET PATH=%systemroot%\system32\inetsrv\;%PATH%
     echo Change default anonymous user AUTH to ApplicationPool
     appcmd set config -section:anonymousAuthentication /username:"" --password
@@ -103,7 +103,7 @@ install:
     appcmd set config /section:system.webServer/handlers /+[name='PHP-FastCGI',path='*.php',verb='*',modules='FastCgiModule',scriptProcessor='C:\tools\php\php-cgi.exe',resourceType='Either']
     iisreset
     NET START W3SVC
-    "wget http://www.mysite.com/"
+    wget http://www.mysite.com/
 test_script:
 - cmd: >-
     cd /d C:\projects\drupal-project
