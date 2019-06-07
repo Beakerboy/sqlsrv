@@ -6,7 +6,8 @@ services:
 - mssql2017
 - iis
 install:
-  ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual
+  ps:
+    Set-Service 'SQLAgent$SQL2017' -StartupType Manual
     new-item C:\tools\php\ext -itemtype directory
     new-item C:\tmp -itemtype directory
     (New-Object Net.WebClient).DownloadFile('https://github.com/microsoft/msphpsql/releases/download/v5.6.0/Windows-7.1.zip','C:\tmp\sqlsrv.zip')
