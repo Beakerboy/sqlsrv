@@ -11,7 +11,6 @@ image:
 install:
   - ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
   - cmd: mkdir c:\testlogs
-  - cmd: mkdir c:\tools
   - cmd: mkdir c:\tools\php73
   - ps: Start-Service 'MSSQL$SQL2017' | out-null
   - ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual | out-null
