@@ -1,0 +1,9 @@
+{
+    "name": "drupal/sqlsrv",
+    "description": "Driver for SQL Server and SQL Azure",
+    "type": "drupal-module",
+    "minimum-stability": "stable",
+    "require": {
+        "php" : "^7.0"
+    }
+}
