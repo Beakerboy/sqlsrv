@@ -52,7 +52,7 @@ install:
   - ps: Add-Content php.ini "curl.cainfo=C:/tmp/cacert.pem"
   - cmd: cinst -y -r OpenSSL.Light
   - cmd: SET PATH=C:\Program Files\OpenSSL;%PATH%
-#  - ps: Get-Content c:\tools\php\php.ini
+  - ps: Get-Content c:\tools\php\php.ini
   - cmd: SET PATH=C:\tools\php;%PATH%
   - cmd: SET PATH=C:\tools\php\ext;%PATH%
   - ps: ($env:Path)
@@ -60,7 +60,7 @@ install:
   - cmd: cd /d C:\composer
   - ps: (Get-Item c:\tools\php\ext\php_wincache.dll).VersionInfo
 #  - cmd: dir /q C:\tools\php\ext
-  - cmd: php -i
+#  - cmd: php -i
   - cmd: php -r "readfile('http://getcomposer.org/installer');" | php
   - ps: (Get-Item C:\composer\composer.phar).length
   - ps: "'@php C:\\composer\\composer.phar ' + $([char]37) + '*' | Out-File C:\\composer\\composer.bat -Encoding ASCII"
