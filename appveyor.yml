@@ -38,8 +38,8 @@ install:
   - ps: Add-Content C:\tools\php74\php.ini "extension=php_mbstring"
   - ps: Add-Content C:\tools\php74\php.ini "extension=php_curl"
   - ps: Add-Content C:\tools\php74\php.ini "extension=php_gd2.dll"
-  - ps: Add-Content C:\tools\php74\php.ini "curl.cainfo=C:\tools\php74\cacert.pem"
-  - ps: Add-Content C:\tools\php74\php.ini "openssl.cafile=C:\tools\php74\cacert.pem"
+  - ps: Add-Content C:\tools\php74\php.ini 'curl.cainfo="C:\tools\php74\cacert.pem"'
+  - ps: Add-Content C:\tools\php74\php.ini 'openssl.cafile="C:\tools\php74\cacert.pem"'
   - cmd: cd /d C:\composer
   - cmd: choco install composer -y --no-progress 2>&1 > C:\TestLogs\choco_install_composer.txt & exit 0
   - ps: Get-Content C:\TestLogs\choco_install_composer.txt
