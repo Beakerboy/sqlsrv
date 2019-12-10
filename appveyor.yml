@@ -51,7 +51,6 @@ install:
   - ps: Add-Content php.ini-production "nrealpath_cache_size=5M"
   - ps: Add-Content php.ini-production "nrealpath_cache_ttl=1800"
   - ps: Add-Content php.ini-production "npdo_sqlsrv.client_buffer_max_kb_size=24480"
-  - cmd: copy php.ini-production php.ini
   - cmd: echo Setup certificate store
   - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\tmp\cacert.pem')
   - ps: Add-Content php.ini "'ncurl.cainfo=\"C:\\tmp\\cacert.pem\""
