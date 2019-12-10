@@ -30,7 +30,7 @@ install:
   - ps: Add-Content php.ini "ndate.timezone=UTC"
   - ps: Add-Content php.ini "nextension_dir=ext"
 #  - ps: Add-Content php.ini "nextension=php_openssl.dll"
-  - ps: Add-Content php.ini "'nextension=php_wincache.dll"
+  - ps: Add-Content php.ini "nextension=php_wincache.dll"
   - ps: Add-Content php.ini "nextension=php_pdo_sqlsrv.dll"
   - ps: Add-Content php.ini "nextension=php_com_dotnet.dll"
   - ps: Add-Content php.ini "nextension=php_sockets.dll"
