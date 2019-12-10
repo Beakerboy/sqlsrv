@@ -11,85 +11,84 @@ install:
   - ps: new-item c:\tmp -itemtype directory
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/microsoft/msphpsql/releases/download/v5.6.0/Windows-7.1.zip','c:\tmp\sqlsrv.zip')
   - ps: (new-object -com shell.application).namespace('c:\tmp').CopyHere((new-object -com shell.application).namespace('c:\tmp\sqlsrv.zip').Items(),16)
-  - ps: >-
-      copy /Y "c:\tmp\7.0\x64\php_pdo_sqlsrv_7_nts.dll" "c:\tools\php\ext\php_pdo_sqlsrv.dll"
-      (Get-Item c:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo"
-      rmdir c:\tmp /s /q
-      new-item c:\tmp -itemtype directory
-      (New-Object Net.WebClient).DownloadFile('http://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.0-nts-vc14-x64.zip','C:\tmp\wincache.zip')
-      (new-object -com shell.application).namespace('C:\tmp').CopyHere((new-object -com shell.application).namespace('C:\tmp\wincache.zip').Items(),16)
-      copy /-Y "c:\tmp\php_wincache.dll" "c:\tools\php\ext\ 
-      (Get-Item c:\tools\php\ext\php_wincache.dll).VersionInfo
-      cinst -y OpenSSL.Light
-      SET PATH=C:\Program Files\OpenSSL;%PATH%
-      sc config wuauserv start= auto
-      net start wuauserv
-      cinst -y --allow-empty-checksums php -version 7.0.9
-      cd c:\tools\php
-      Add-Content php.ini-production "'ndate.timezone=\"UTC\""
-      Add-Content php.ini-production "'nextension_dir=ext"
-      Add-Content php.ini-production "'nextension=php_openssl.dll"
-      Add-Content php.ini-production "'nextension=php_wincache.dll"
-      Add-Content php.ini-production "'nextension=php_pdo_sqlsrv.dll"
-      Add-Content php.ini-production "'nextension=php_com_dotnet.dll"
-      Add-Content php.ini-production "'nextension=php_sockets.dll"
-      Add-Content php.ini-production "'nextension=php_mbstring.dll"
-      Add-Content php.ini-production "'nextension=php_soap.dll"
-      Add-Content php.ini-production "'nextension=php_curl.dll"
-      Add-Content php.ini-production "'nextension=php_gd2.dll"
-      Add-Content php.ini-production "'nextension=php_gettext.dll"
-      Add-Content php.ini-production "'nzend_extension=php_opcache.dll"
-      Add-Content php.ini-production "'nopcache.enable=1"
-      Add-Content php.ini-production "'nopcache.enable_cli=1"
-      Add-Content php.ini-production "'nopcache.memory_consumption=128"
-      Add-Content php.ini-production "'nopcache.revalidate_freq=1500"
-      Add-Content php.ini-production "'nopcache.max_accelerated_files=8000"
-      Add-Content php.ini-production "'nwincache.ucenabled=1"
-      Add-Content php.ini-production "'nwincache.ucachesize=128"
-      Add-Content php.ini-production "'nwincache.fcenabled=0"
-      Add-Content php.ini-production "'nrealpath_cache_size=5M"
-      Add-Content php.ini-production "'nrealpath_cache_ttl=1800"
-      Add-Content php.ini-production "'npdo_sqlsrv.client_buffer_max_kb_size=24480"
-      copy php.ini-production php.ini
-      echo Setup certificate store
-      (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\tmp\cacert.pem')
-      Add-Content php.ini "'ncurl.cainfo=\"C:\\tmp\\cacert.pem\""
-      SET PATH=C:\tools\php;%PATH%
-      ($env:Path)
-      new-item c:\composer -itemtype directory
-      cd /d C:\composer
-      php -r "readfile('http://getcomposer.org/installer');" | php
-      (Get-Item C:\composer\composer.phar).length
-      '@php C:\composer\composer.phar ' + $([char]37) + '*' | Out-File C:\composer\composer.bat -Encoding ASCII
-      SET PATH=C:\composer;%PATH%
-      cd /d C:\projects\
-      composer create-project -n drupal-composer/drupal-project:8.x-dev
-      cd /d C:\projects\drupal-project
-      composer config repositories.drupal composer https://packages.drupal.org/8
-      composer require drupal/sqlsrv:~1.0
-      xcopy /S /I /E %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
-      '@php %cd%\vendor\drupal\console\bin\drupal ' + $([char]37) + '*' | Out-File %cd%/web/drupal.bat -Encoding ASCII
-      cd /d C:\projects\drupal-project\web
-      drupal about
-      drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2014" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
-      drupal about
-      cd /d C:\projects\drupal-project
-      cd /d C:\projects\drupal-project\web
-      drupal module:install simpletest
-      choco install -y urlrewrite
-      New-WebSite -Name 'MyWebsite' -PhysicalPath 'c:\projects\drupal-project\web' -Force
-      echo 127.0.0.1 www.mysite.com >> %WINDIR%\System32\Drivers\Etc\Hosts
-      Import-Module WebAdministration; Set-ItemProperty 'IIS:\Sites\MyWebsite' -name Bindings -value @{protocol='http';bindingInformation='*:80:www.mysite.com'}
-      SET PATH=%systemroot%\system32\inetsrv\;%PATH%
-      echo Change default anonymous user AUTH to ApplicationPool
-      appcmd set config -section:anonymousAuthentication /username:"" --password
-      echo Setup FAST-CGI configuration
-      appcmd set config /section:system.webServer/fastCGI /+[fullPath='C:\tools\php\php-cgi.exe']
-      echo Setup FACT-CGI handler
-      appcmd set config /section:system.webServer/handlers /+[name='PHP-FastCGI',path='*.php',verb='*',modules='FastCgiModule',scriptProcessor='C:\tools\php\php-cgi.exe',resourceType='Either']
-      iisreset
-      NET START W3SVC
-      wget http://www.mysite.com/
+  - ps: copy /Y "c:\tmp\7.0\x64\php_pdo_sqlsrv_7_nts.dll" "c:\tools\php\ext\php_pdo_sqlsrv.dll"
+  - ps: (Get-Item c:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo"
+  - ps: rmdir c:\tmp /s /q
+  - ps: new-item c:\tmp -itemtype directory
+  - ps: (New-Object Net.WebClient).DownloadFile('http://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.0-nts-vc14-x64.zip','C:\tmp\wincache.zip')
+  - ps: (new-object -com shell.application).namespace('C:\tmp').CopyHere((new-object -com shell.application).namespace('C:\tmp\wincache.zip').Items(),16)
+  - ps: copy /-Y "c:\tmp\php_wincache.dll" "c:\tools\php\ext\ 
+  - ps: (Get-Item c:\tools\php\ext\php_wincache.dll).VersionInfo
+  - ps: cinst -y OpenSSL.Light
+  - ps: SET PATH=C:\Program Files\OpenSSL;%PATH%
+  - ps: sc config wuauserv start= auto
+  - ps: net start wuauserv
+  - ps: cinst -y --allow-empty-checksums php -version 7.0.9
+  - ps: cd c:\tools\php
+  - ps:  Add-Content php.ini-production "'ndate.timezone=\"UTC\""
+  - ps: Add-Content php.ini-production "'nextension_dir=ext"
+  - ps: Add-Content php.ini-production "'nextension=php_openssl.dll"
+  - ps: Add-Content php.ini-production "'nextension=php_wincache.dll"
+  - ps: Add-Content php.ini-production "'nextension=php_pdo_sqlsrv.dll"
+  - ps: Add-Content php.ini-production "'nextension=php_com_dotnet.dll"
+  - ps: Add-Content php.ini-production "'nextension=php_sockets.dll"
+  - ps: Add-Content php.ini-production "'nextension=php_mbstring.dll"
+  - ps: Add-Content php.ini-production "'nextension=php_soap.dll"
+  - ps: Add-Content php.ini-production "'nextension=php_curl.dll"
+  - ps: Add-Content php.ini-production "'nextension=php_gd2.dll"
+  - ps: Add-Content php.ini-production "'nextension=php_gettext.dll"
+  - ps: Add-Content php.ini-production "'nzend_extension=php_opcache.dll"
+  - ps: Add-Content php.ini-production "'nopcache.enable=1"
+  - ps: Add-Content php.ini-production "'nopcache.enable_cli=1"
+  - ps: Add-Content php.ini-production "'nopcache.memory_consumption=128"
+  - ps: Add-Content php.ini-production "'nopcache.revalidate_freq=1500"
+  - ps: Add-Content php.ini-production "'nopcache.max_accelerated_files=8000"
+  - ps: Add-Content php.ini-production "'nwincache.ucenabled=1"
+  - ps: Add-Content php.ini-production "'nwincache.ucachesize=128"
+  - ps: Add-Content php.ini-production "'nwincache.fcenabled=0"
+  - ps: Add-Content php.ini-production "'nrealpath_cache_size=5M"
+  - ps: Add-Content php.ini-production "'nrealpath_cache_ttl=1800"
+  - ps: Add-Content php.ini-production "'npdo_sqlsrv.client_buffer_max_kb_size=24480"
+  - ps: copy php.ini-production php.ini
+  - ps: echo Setup certificate store
+  - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\tmp\cacert.pem')
+  - ps: Add-Content php.ini "'ncurl.cainfo=\"C:\\tmp\\cacert.pem\""
+  - ps: SET PATH=C:\tools\php;%PATH%
+  - ps: ($env:Path)
+  - ps: new-item c:\composer -itemtype directory
+  - ps: cd /d C:\composer
+  - ps: php -r "readfile('http://getcomposer.org/installer');" | php
+  - ps: (Get-Item C:\composer\composer.phar).length
+  - ps: '@php C:\composer\composer.phar ' + $([char]37) + '*' | Out-File C:\composer\composer.bat -Encoding ASCII
+  - ps: SET PATH=C:\composer;%PATH%
+  - ps: cd /d C:\projects\
+  - ps: composer create-project -n drupal-composer/drupal-project:8.x-dev
+  - ps: cd /d C:\projects\drupal-project
+  - ps: composer config repositories.drupal composer https://packages.drupal.org/8
+  - ps: composer require drupal/sqlsrv:~1.0
+  - ps: xcopy /S /I /E %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
+  - ps: '@php %cd%\vendor\drupal\console\bin\drupal ' + $([char]37) + '*' | Out-File %cd%/web/drupal.bat -Encoding ASCII
+  - ps: cd /d C:\projects\drupal-project\web
+  - ps: drupal about
+  - ps: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2014" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+  - ps: drupal about
+  - ps: cd /d C:\projects\drupal-project
+  - ps: cd /d C:\projects\drupal-project\web
+  - ps: drupal module:install simpletest
+  - ps: choco install -y urlrewrite
+  - ps: New-WebSite -Name 'MyWebsite' -PhysicalPath 'c:\projects\drupal-project\web' -Force
+  - ps: echo 127.0.0.1 www.mysite.com >> %WINDIR%\System32\Drivers\Etc\Hosts
+  - ps: Import-Module WebAdministration; Set-ItemProperty 'IIS:\Sites\MyWebsite' -name Bindings -value @{protocol='http';bindingInformation='*:80:www.mysite.com'}
+  - ps: SET PATH=%systemroot%\system32\inetsrv\;%PATH%
+  - ps: echo Change default anonymous user AUTH to ApplicationPool
+  - ps: appcmd set config -section:anonymousAuthentication /username:"" --password
+  - ps: echo Setup FAST-CGI configuration
+  - ps: appcmd set config /section:system.webServer/fastCGI /+[fullPath='C:\tools\php\php-cgi.exe']
+  - ps: echo Setup FACT-CGI handler
+  - ps: appcmd set config /section:system.webServer/handlers /+[name='PHP-FastCGI',path='*.php',verb='*',modules='FastCgiModule',scriptProcessor='C:\tools\php\php-cgi.exe',resourceType='Either']
+  - ps: iisreset
+  - ps: NET START W3SVC
+  - ps: wget http://www.mysite.com/
 test_script:
 - cmd: >-
     cd /d C:\projects\drupal-project
