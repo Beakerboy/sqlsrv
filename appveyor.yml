@@ -33,6 +33,7 @@ install:
   - cmd: cd c:\tools\php
   - cmd: copy php.ini-production php.ini
   # Add custom changes to php.ini
+  - ps: Add-Content php.ini 'error_log="C:\Windows\Temp\php_errors.log"'
   - ps: Add-Content php.ini "date.timezone=UTC"
   - ps: Add-Content php.ini 'extension_dir="C:\tools\php\ext\"'
   - ps: Add-Content php.ini "extension=php_openssl.dll"
@@ -72,7 +73,8 @@ install:
   # Prove file is there
   - ps: (Get-Item c:\tools\php\ext\php_wincache.dll).VersionInfo
 #  - cmd: dir /q C:\tools\php\ext
-#  - cmd: php -i
+  - cmd: php -i
+  - ps: Get-Content C:\Windows\Temp\php_errors.log
 # Print permissions of all php extensions
   - cmd: cd C:\tools\php\ext
   - ps: Dir | Get-Acl
