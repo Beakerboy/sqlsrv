@@ -16,6 +16,7 @@ install:
   - cmd: rmdir c:\tmp /s /q
   - ps: new-item c:\tmp -itemtype directory
   - ps: (New-Object Net.WebClient).DownloadFile('https://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.1-nts-vc14-x64.zip','c:\tmp\wincache.zip')
+  - ps: Get-Content c:\tmp\wincache.zip
   - ps: Expand-Archive -Path c:\tmp\wincache.zip -DestinationPath c:\tmp
   - cmd: dir c:\tmp
   - cmd: copy /-Y c:\tmp\php_wincache.dll c:\tools\php\ext\ 
