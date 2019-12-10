@@ -26,48 +26,49 @@ install:
   - ps: $cli=New-Object Net.WebClient;$cli.Headers['User-Agent'] = 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)';$cli.DownloadFile('https://windows.php.net/downloads/releases/php-7.1.33-Win32-VC14-x64.zip','c:\tmp\php.zip')
   - ps: Expand-Archive -Path c:\tmp\php.zip -DestinationPath c:\tools\php
   - cmd: cd c:\tools\php
-  - ps: Add-Content php.ini-production "'ndate.timezone=\"UTC\""
-  - ps: Add-Content php.ini-production "'nextension_dir=ext"
-#  - ps: Add-Content php.ini-production "'nextension=php_openssl.dll"
+  - cmd: copy php.ini-production php.ini
+  - ps: Add-Content php.ini-production "ndate.timezone=\"UTC\""
+  - ps: Add-Content php.ini-production "nextension_dir=ext"
+#  - ps: Add-Content php.ini-production "nextension=php_openssl.dll"
   - ps: Add-Content php.ini-production "'nextension=php_wincache.dll"
-  - ps: Add-Content php.ini-production "'nextension=php_pdo_sqlsrv.dll"
-  - ps: Add-Content php.ini-production "'nextension=php_com_dotnet.dll"
-  - ps: Add-Content php.ini-production "'nextension=php_sockets.dll"
-  - ps: Add-Content php.ini-production "'nextension=php_mbstring.dll"
-  - ps: Add-Content php.ini-production "'nextension=php_soap.dll"
-  - ps: Add-Content php.ini-production "'nextension=php_curl.dll"
-  - ps: Add-Content php.ini-production "'nextension=php_gd2.dll"
-  - ps: Add-Content php.ini-production "'nextension=php_gettext.dll"
-  - ps: Add-Content php.ini-production "'nzend_extension=php_opcache.dll"
-  - ps: Add-Content php.ini-production "'nopcache.enable=1"
-  - ps: Add-Content php.ini-production "'nopcache.enable_cli=1"
-  - ps: Add-Content php.ini-production "'nopcache.memory_consumption=128"
-  - ps: Add-Content php.ini-production "'nopcache.revalidate_freq=1500"
-  - ps: Add-Content php.ini-production "'nopcache.max_accelerated_files=8000"
-  - ps: Add-Content php.ini-production "'nwincache.ucenabled=1"
-  - ps: Add-Content php.ini-production "'nwincache.ucachesize=128"
-  - ps: Add-Content php.ini-production "'nwincache.fcenabled=0"
-  - ps: Add-Content php.ini-production "'nrealpath_cache_size=5M"
-  - ps: Add-Content php.ini-production "'nrealpath_cache_ttl=1800"
-  - ps: Add-Content php.ini-production "'npdo_sqlsrv.client_buffer_max_kb_size=24480"
-  - ps: copy php.ini-production php.ini
-  - ps: echo Setup certificate store
+  - ps: Add-Content php.ini-production "nextension=php_pdo_sqlsrv.dll"
+  - ps: Add-Content php.ini-production "nextension=php_com_dotnet.dll"
+  - ps: Add-Content php.ini-production "nextension=php_sockets.dll"
+  - ps: Add-Content php.ini-production "nextension=php_mbstring.dll"
+  - ps: Add-Content php.ini-production "nextension=php_soap.dll"
+  - ps: Add-Content php.ini-production "nextension=php_curl.dll"
+  - ps: Add-Content php.ini-production "nextension=php_gd2.dll"
+  - ps: Add-Content php.ini-production "nextension=php_gettext.dll"
+  - ps: Add-Content php.ini-production "nzend_extension=php_opcache.dll"
+  - ps: Add-Content php.ini-production "nopcache.enable=1"
+  - ps: Add-Content php.ini-production "nopcache.enable_cli=1"
+  - ps: Add-Content php.ini-production "nopcache.memory_consumption=128"
+  - ps: Add-Content php.ini-production "nopcache.revalidate_freq=1500"
+  - ps: Add-Content php.ini-production "nopcache.max_accelerated_files=8000"
+  - ps: Add-Content php.ini-production "nwincache.ucenabled=1"
+  - ps: Add-Content php.ini-production "nwincache.ucachesize=128"
+  - ps: Add-Content php.ini-production "nwincache.fcenabled=0"
+  - ps: Add-Content php.ini-production "nrealpath_cache_size=5M"
+  - ps: Add-Content php.ini-production "nrealpath_cache_ttl=1800"
+  - ps: Add-Content php.ini-production "npdo_sqlsrv.client_buffer_max_kb_size=24480"
+  - cmd: copy php.ini-production php.ini
+  - cmd: echo Setup certificate store
   - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\tmp\cacert.pem')
   - ps: Add-Content php.ini "'ncurl.cainfo=\"C:\\tmp\\cacert.pem\""
-  - ps: SET PATH=C:\tools\php;%PATH%
+  - cmd: SET PATH=C:\tools\php;%PATH%
   - ps: ($env:Path)
   - ps: new-item c:\composer -itemtype directory
-  - ps: cd /d C:\composer
-  - ps: php -r "readfile('http://getcomposer.org/installer');" | php
+  - cmd: cd /d C:\composer
+  - cmd: php -r "readfile('http://getcomposer.org/installer');" | php
   - ps: (Get-Item C:\composer\composer.phar).length
   - ps: "'@php C:\\composer\\composer.phar ' + $([char]37) + '*' | Out-File C:\\composer\\composer.bat -Encoding ASCII"
-  - ps: SET PATH=C:\composer;%PATH%
-  - ps: cd /d C:\projects\
-  - ps: composer create-project -n drupal-composer/drupal-project:8.x-dev
-  - ps: cd /d C:\projects\drupal-project
-  - ps: composer config repositories.drupal composer https://packages.drupal.org/8
-  - ps: composer require drupal/sqlsrv:~1.0
-  - ps: xcopy /S /I /E %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
+  - cmd: SET PATH=C:\composer;%PATH%
+  - cmd: cd /d C:\projects\
+  - cmd: composer create-project -n drupal-composer/drupal-project:8.x-dev
+  - cmd: cd /d C:\projects\drupal-project
+  - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
+  - cmd: composer require drupal/sqlsrv:~1.0
+  - cmd: xcopy /S /I /E %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
   - ps: "'@php %cd%\\vendor\\drupal\\console\\bin\\drupal ' + $([char]37) + '*' | Out-File %cd%/web/drupal.bat -Encoding ASCII"
   - ps: cd /d C:\projects\drupal-project\web
   - ps: drupal about
