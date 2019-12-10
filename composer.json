@@ -10,7 +10,6 @@
         }
     ],
     "require": {
-        "php" : "^7.0",
-        "drupal/core": "*"
+        "php" : "^7.0"
     }
 }
