@@ -23,7 +23,8 @@ install:
 #  - ps: SET PATH=C:\Program Files\OpenSSL;%PATH%
   - cmd: sc config wuauserv start=auto
   - cmd: net start wuauserv
-  - cmd: cinst -y --allow-empty-checksums php -version 7.0.9
+  - ps: $cli=New-Object Net.WebClient;$cli.Headers['User-Agent'] = 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)';$cli.DownloadFile('https://windows.php.net/downloads/releases/php-7.1.33-Win32-VC14-x64.zip','c:\tmp\php.zip')
+  - ps: Expand-Archive -Path c:\tmp\php.zip -DestinationPath c:\tools\php
   - cmd: cd c:\tools\php
   - ps: Add-Content php.ini-production "'ndate.timezone=\"UTC\""
   - ps: Add-Content php.ini-production "'nextension_dir=ext"
