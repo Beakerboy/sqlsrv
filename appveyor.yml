@@ -41,7 +41,6 @@ install:
   - ps: Add-Content C:\tools\php73\php.ini 'openssl.cafile="C:\tools\php74\cacert.pem"'
   - cmd: cd /d C:\composer
   - cmd: choco install composer --version=4.10.0 -y --no-progress
-#  - ps: Get-Content C:\TestLogs\choco_install_composer.txt
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
   - ps: |
