@@ -57,8 +57,8 @@ install:
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
   # Copy driver
   - cmd: xcopy /S /I /E /Y %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
-  - cmd: composer config repositories.1 git https://%GITLABUSERNAME%:%GITLABPASSWORD%@gitlab.com/david-garcia-garcia/mssql.git
-  - cmd: composer require david/mssql
+#  - cmd: composer config repositories.1 git https://%GITLABUSERNAME%:%GITLABPASSWORD%@gitlab.com/david-garcia-garcia/mssql.git
+  - cmd: composer require drupal/sqlsrv
   - ps: |
       $cwd = (Get-Location).Path;
       "php $cwd\vendor\drupal\console\bin\drupal " + $([char]37) + "*" | Out-File $cwd/web/drupal.bat -Encoding ASCII
