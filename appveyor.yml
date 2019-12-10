@@ -12,11 +12,10 @@ image:
 install:
   - ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
   - cmd: mkdir c:\testlogs
-  - cmd: mkdir c:\tools\php74
   - ps: Start-Service 'MSSQL$SQL2017' | out-null
   - ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual | out-null
   - ps: Start-Service W3SVC | out-null
-  - ps: choco install php -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
+  - ps: choco install php --version=7.3.12 -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\TestLogs\choco_install_urlrewrite.txt
   - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\TestLogs\choco_install_openssl.txt
   - ps: | 
@@ -30,19 +29,19 @@ install:
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
   - cmd: sc config wuauserv start= auto
   - cmd: net start wuauserv
-  - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php74\cacert.pem')
+  - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php73\cacert.pem')
   - ps: new-item c:\composer -itemtype directory
-  - ps: $Env:Path = "C:\tools\php74;" + $Env:Path;
-  - ps: Add-Content C:\tools\php74\php.ini "extension_dir=ext"
-  - ps: Add-Content C:\tools\php74\php.ini "extension=php_openssl"
-  - ps: Add-Content C:\tools\php74\php.ini "extension=php_mbstring"
-  - ps: Add-Content C:\tools\php74\php.ini "extension=php_curl"
-  - ps: Add-Content C:\tools\php74\php.ini "extension=php_gd2.dll"
-  - ps: Add-Content C:\tools\php74\php.ini 'curl.cainfo="C:\tools\php74\cacert.pem"'
-  - ps: Add-Content C:\tools\php74\php.ini 'openssl.cafile="C:\tools\php74\cacert.pem"'
+  - ps: $Env:Path = "C:\tools\php73;" + $Env:Path;
+  - ps: Add-Content C:\tools\php73\php.ini "extension_dir=ext"
+  - ps: Add-Content C:\tools\php73\php.ini "extension=php_openssl"
+  - ps: Add-Content C:\tools\php73\php.ini "extension=php_mbstring"
+  - ps: Add-Content C:\tools\php73\php.ini "extension=php_curl"
+  - ps: Add-Content C:\tools\php73\php.ini "extension=php_gd2.dll"
+  - ps: Add-Content C:\tools\php73\php.ini 'curl.cainfo="C:\tools\php74\cacert.pem"'
+  - ps: Add-Content C:\tools\php73\php.ini 'openssl.cafile="C:\tools\php74\cacert.pem"'
   - cmd: cd /d C:\composer
-  - cmd: choco install composer -y --ia '"/DEV=C:\tools\php74 /PHP=C:\tools\php74"' 2>&1 > C:\TestLogs\choco_install_composer.txt & exit 0
-  - ps: Get-Content C:\TestLogs\choco_install_composer.txt
+  - cmd: choco install composer --version=4.10.0 -y --no-progress
+#  - ps: Get-Content C:\TestLogs\choco_install_composer.txt
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
   - ps: |
