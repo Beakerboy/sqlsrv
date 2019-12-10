@@ -12,12 +12,12 @@ install:
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/microsoft/msphpsql/releases/download/v5.6.0/Windows-7.1.zip','c:\tmp\sqlsrv.zip')
   - ps: Expand-Archive -LiteralPath c:\tmp\sqlsrv.zip -DestinationPath c:\tmp
   - cmd: copy /Y c:\tmp\Windows-7.1\x64\php_pdo_sqlsrv_71_nts.dll c:\tools\php\ext\php_pdo_sqlsrv.dll
-  - ps: (Get-Item c:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo"
-  - ps: rmdir c:\tmp /s /q
+  - ps: (Get-Item c:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo
+  - cmd: rmdir c:\tmp /s /q
   - ps: new-item c:\tmp -itemtype directory
   - ps: (New-Object Net.WebClient).DownloadFile('http://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.0-nts-vc14-x64.zip','C:\tmp\wincache.zip')
   - ps: (new-object -com shell.application).namespace('C:\tmp').CopyHere((new-object -com shell.application).namespace('C:\tmp\wincache.zip').Items(),16)
-  - ps: copy /-Y "c:\tmp\php_wincache.dll" "c:\tools\php\ext\ 
+  - cmd: copy /-Y c:\tmp\php_wincache.dll c:\tools\php\ext\ 
   - ps: (Get-Item c:\tools\php\ext\php_wincache.dll).VersionInfo
   - ps: cinst -y OpenSSL.Light
   - ps: SET PATH=C:\Program Files\OpenSSL;%PATH%
