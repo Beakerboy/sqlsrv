@@ -1,0 +1,8 @@
+# Only use this for environment with name "local"
+scope-environment-regex: 'local.*'
+deployers:
+  php:
+    runtime:
+      - {type: 'ini', multivalue: true, 'key':zend_extension, 'value':php_xdebug.dll}
+      - {type: 'ini','key':opcache.revalidate_freq , 'value': 5}
+      - {type: 'ini','key':opcache.validate_timestamps , 'value': On}
