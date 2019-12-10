@@ -706,7 +706,7 @@ class Connection extends DatabaseConnection {
         $query = '
           SELECT * FROM (
             SELECT sub2.*, ROW_NUMBER() OVER(ORDER BY sub2.__line2) AS __line3 FROM (
-              SELECT 1 AS __line2, sub1.* FROM (' . $query . ') AS sub1
+              SELECT sub1.*, 1 AS __line2 FROM (' . $query . ') AS sub1
             ) as sub2
           ) AS sub3
           WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
