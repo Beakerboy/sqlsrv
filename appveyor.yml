@@ -11,7 +11,7 @@ install:
   - ps: new-item c:\tmp -itemtype directory
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/microsoft/msphpsql/releases/download/v5.6.0/Windows-7.1.zip','c:\tmp\sqlsrv.zip')
   - ps: (new-object -com shell.application).namespace('c:\tmp').CopyHere((new-object -com shell.application).namespace('c:\tmp\sqlsrv.zip').Items(),16)
-  - cmd: copy /Y "c:\tmp\7.0\x64\php_pdo_sqlsrv_7_nts.dll" "c:\tools\php\ext\php_pdo_sqlsrv.dll"
+  - cmd: copy /Y c:\tmp\7.0\x64\php_pdo_sqlsrv_7_nts.dll c:\tools\php\ext\php_pdo_sqlsrv.dll
   - ps: (Get-Item c:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo"
   - ps: rmdir c:\tmp /s /q
   - ps: new-item c:\tmp -itemtype directory
