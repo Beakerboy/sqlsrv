@@ -12,9 +12,5 @@
     "require": {
         "php" : "^7.0",
         "drupal/core": "*"
-    },
-    "require-dev": {
-        "drupal-composer/drupal-project": "*",
-        "hirak/prestissimo": "*"
     }
 }
