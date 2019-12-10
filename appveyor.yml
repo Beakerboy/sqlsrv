@@ -1,0 +1,97 @@
+skip_tags: true
+init:
+  - ps: ''
+services:
+  - mssql2017
+  - iis
+hosts:
+  www.mydrupalsite.com: 127.0.0.1
+image:
+  - Visual Studio 2019
+install:
+  - ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
+  - cmd: mkdir c:\testlogs
+  - ps: Start-Service 'MSSQL$SQL2017' | out-null
+  - ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual | out-null
+  - ps: Start-Service W3SVC | out-null
+  - ps: choco install php -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
+  - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\TestLogs\choco_install_urlrewrite.txt
+  - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\TestLogs\choco_install_openssl.txt
+  - ps: | 
+      $WorkingDir = Convert-Path .
+      $ZipPath = Join-Path $WorkingDir '\chef_cmdlet.zip'
+      (New-Object Net.WebClient).DownloadFile('https://ci.appveyor.com/api/projects/David19767/iischef/artifacts/iischef.cmdlet.zip?branch=1.x', $ZipPath)
+      $DESTINATION= Join-Path $env:ProgramFiles "\WindowsPowerShell\Modules\Chef"
+      New-Item -ItemType directory -Force -Path $DESTINATION
+      (new-object -com shell.application).namespace($DESTINATION).CopyHere((new-object -com shell.application).namespace($ZipPath).Items(),16)
+      Remove-Item $ZipPath
+  - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
+  - cmd: sc config wuauserv start= auto
+  - cmd: net start wuauserv
+  - ps: (New-Object Net.WebClient).DownloadFile('http://curl.haxx.se/ca/cacert.pem', 'C:\tools\php73\cacert.pem')
+  - ps: new-item c:\composer -itemtype directory
+  - ps: $Env:Path = "C:\tools\php73;" + $Env:Path;
+  - ps: Add-Content C:\tools\php73\php.ini "extension_dir=ext `n"
+  - ps: Add-Content C:\tools\php73\php.ini "extension=php_openssl `n"
+  - ps: Add-Content C:\tools\php73\php.ini "extension=php_mbstring `n"
+  - ps: Add-Content C:\tools\php73\php.ini "extension=php_curl `n"
+  - ps: Add-Content C:\tools\php73\php.ini "extension=php_gd2.dll `n"
+  - ps: Add-Content C:\tools\php73\php.ini "curl.cainfo=C:\tools\php73\cacert.pem `n"
+  - ps: Add-Content C:\tools\php73\php.ini "openssl.cafile=C:\tools\php73\cacert.pem `n"
+  - cmd: cd /d C:\composer
+  - cmd: choco install composer -y --no-progress
+  - ps: refreshenv
+  - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
+  - ps: |
+      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpcomposer') {
+        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
+  - cmd: composer global require hirak/prestissimo
+  - cmd: cd /d c:\projects
+  - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
+  - cmd: cd /d C:\projects\drupal-project
+  - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
+  - cmd: composer require drupal/sqlsrv:dev-2.x@dev
+  # Replace the pulled module with the local files, only for this CI
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
+  # Copy driver
+  - cmd: xcopy /S /I /E /Y %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
+  - cmd: composer config repositories.1 git https://%GITLABUSERNAME%:%GITLABPASSWORD%@gitlab.com/david-garcia-garcia/mssql.git
+  - cmd: composer require david/mssql
+  - ps: |
+      $cwd = (Get-Location).Path;
+      "php $cwd\vendor\drupal\console\bin\drupal " + $([char]37) + "*" | Out-File $cwd/web/drupal.bat -Encoding ASCII
+  - cmd: cd /d C:\projects\drupal-project\web
+  - cmd: xcopy "%APPVEYOR_BUILD_FOLDER%\chef" "C:\projects\drupal-project\chef" /r /s /i
+  - ps: Invoke-ChefSelfInstall -Path "c:\chef"
+  - ps: Invoke-ChefAppDeployPath "C:\projects\drupal-project" drupal -Install
+  - ps: $site = Invoke-ChefAppGetDeployment drupal
+  - ps: $Env:DATABASENAME = $site.DeploymentActive.GetRuntimeSetting("services.default.database", "");
+  - ps: $Env:DATABASEPASSWORD = $site.DeploymentActive.GetRuntimeSetting("services.default.password", "");
+  - ps: $Env:DATABASEUSER = $site.DeploymentActive.GetRuntimeSetting("services.default.username", "");
+  - ps: $Env:DATABASEHOST = $site.DeploymentActive.GetRuntimeSetting("services.default.host", "");
+  - ps: $Env:SITERUNTIMEPATH = $site.DeploymentActive.runtimePath;
+  # Make the site's PHP environment the default PHP environment
+  - cmd: set path=%SITERUNTIMEPATH%\php;%path%
+  - cmd: drupal about
+  - ps: |
+      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpinstall') {
+        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      }
+  - cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2017" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+  - cmd: cd /d C:\projects\drupal-project
+  - ps: $Env:CWD = (Get-Location).path;
+  # - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/use_the_php_binary-2748883-15.patch',"$Env:CWD\patch.patch")
+  # - cmd: git apply patch.patch --directory=web
+  - cmd: cd /d C:\projects\drupal-project\web
+  - cmd: drupal module:install simpletest
+  - cmd: drupal module:install sqlsrv
+  - ps: wget "http://sqlsrv.drupal.org/"
+build_script:
+  - cmd: echo "No build"
+test_script:
+  - cmd: cd /d C:\projects\drupal-project
+  - cmd: mkdir c:\testresults\
+  - cmd: echo Tests not run because they need to be updated as they are using deprecated implementations
+  # - cmd: php web/core/scripts/run-tests.sh --php php --verbose --url "http://sqlsrv.drupal.org/" --xml c:\testresults\ "Common" --class Drupal\sqlsrv\Tests\SchemaTest
+  # - cmd: php web/core/scripts/run-tests.sh --php php --verbose --url "http://sqlsrv.drupal.org/" --xml c:\testresults\ "Common" --class Drupal\sqlsrv\Tests\SelectQueryTest
