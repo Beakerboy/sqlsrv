@@ -19,8 +19,6 @@ install:
   - ps: Expand-Archive -Path c:\tmp\wincache.zip -DestinationPath c:\tmp
   - cmd: copy /-Y c:\tmp\php_wincache.dll c:\tools\php\ext\ 
   - ps: (Get-Item c:\tools\php\ext\php_wincache.dll).VersionInfo
-#  - cmd: cinst -y -r OpenSSL.Light
-#  - ps: SET PATH=C:\Program Files\OpenSSL;%PATH%
   - cmd: sc config wuauserv start=auto
   - cmd: net start wuauserv
   - ps: $cli=New-Object Net.WebClient;$cli.Headers['User-Agent'] = 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)';$cli.DownloadFile('https://windows.php.net/downloads/releases/php-7.1.33-Win32-VC14-x64.zip','c:\tmp\php.zip')
@@ -54,6 +52,8 @@ install:
   - cmd: echo Setup certificate store
   - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\tmp\cacert.pem')
   - ps: Add-Content php.ini "ncurl.cainfo=C:\\tmp\\cacert.pem"
+  - cmd: cinst -y -r OpenSSL.Light
+  - cmd: SET PATH=C:\Program Files\OpenSSL;%PATH%
   - cmd: SET PATH=C:\tools\php;%PATH%
   - ps: ($env:Path)
   - ps: new-item c:\composer -itemtype directory
