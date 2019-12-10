@@ -1,0 +1,127 @@
+id: 'sqlsrv' 
+deployers:
+  app: 
+    type: 'app'
+  iis:
+    type: 'iis'
+    pools:
+      default:
+        Enable32BitAppOnWin64: true
+        AutoStart: true
+        ManagedPipelineMode: Integrated
+        StartMode: AlwaysRunning
+        ManagedRuntimeVersion: ''
+    mounts:
+      root: { root: true, path: '/web' }
+    bindings:
+      public: { hostname: 'sqlsrv.drupal.org', port: 80, interface: 'local', addtohosts: true }
+  php:
+    type: 'php'
+    runtime:
+      - {type: 'dl', uri: 'http://windows.php.net/downloads/releases/archives/php-7.1.30-nts-Win32-VC14-x64.zip', maps: {'*' : 'php/'}}
+      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/xdebug/2.5.3/php_xdebug-2.5.3-7.1-nts-vc14-x64.zip', maps: {'php_xdebug.dll':'php/ext/php_xdebug.dll'}}
+      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/igbinary/2.0.1/php_igbinary-2.0.1-7.1-nts-vc14-x64.zip', maps: {'php_igbinary.dll': 'php/ext/php_igbinary.dll'}}
+      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/couchbase/2.3.2/php_couchbase-2.3.2-7.1-nts-vc14-x64.zip', maps: {'php_couchbase.dll':'php/ext/php_couchbase.dll', 'libcouchbase.dll':'php/libcouchbase.dll'}}
+      - {type: 'dl', uri: 'https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.6.1/php_pdo_sqlsrv-5.6.1-7.1-nts-vc14-x64.zip', maps: {'php_pdo_sqlsrv.dll': 'php/ext/php_pdo_sqlsrv.dll'}}
+      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.1-nts-vc14-x64.zip', maps: {'php_wincache.dll': 'php/ext/php_wincache.dll'}}
+ # CERTIFICATES
+      - {type: 'dl', uri: 'http://curl.haxx.se/ca/cacert.pem', maps: {'cacert.pem': '/cacert.pem'}}
+      - {type: 'file', 'action':'copy', 'source':'php/php.ini-production', 'destination':'php/php.ini'}
+      - {type: 'ini', 'key':curl.cainfo, 'value':'%RUNTIME%/cacert.pem'}
+      - {type: 'ini', 'key':openssl.cafile, 'value':'%RUNTIME%/cacert.pem'}
+ # EXTENSION DIR
+      - {type: 'ini', 'key':extension_dir, 'value':'%RUNTIME%/php/ext'}
+ # EXTENSION SETTINGS
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_intl.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_bz2.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_curl.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_enchant.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_exif.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_fileinfo.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_gettext.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_gd2.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_mbstring.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_openssl.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_soap.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_xmlrpc.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_wincache.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_pdo_sqlsrv.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_igbinary.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_couchbase.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_com_dotnet.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_openssl.dll}
+      - {type: 'ini', multivalue: true, 'key':zend_extension, 'value':php_opcache.dll}
+      - {type: 'ini', 'key':disable_functions, 'value':'passthru,show_source'}
+ # SQLSERVER
+      - {type: 'ini', 'key':pdo_sqlsrv.client_buffer_max_kb_size, 'value':24480}
+ # XDEBUG
+      - {type: 'ini', 'key':'xdebug.remote_enable', 'value':'on'} 
+      - {type: 'ini', 'key':'xdebug.remote_handler', 'value':'dbgp'} 
+      - {type: 'ini', 'key':'xdebug.remote_host', 'value':'127.0.0.1'} 
+      - {type: 'ini', 'key':'xdebug.remote_connect_back', 'value':'0'} 
+      - {type: 'ini', 'key':'xdebug.remote_port', 'value':'9000'} 
+      - {type: 'ini', 'key':'xdebug.remote_mode', 'value':'req'} 
+      - {type: 'ini', 'key':'xdebug.remote_autostart', 'value':'0'} 
+      - {type: 'ini', 'key':'xdebug.idekey', 'value':'php-vs'}
+      - {type: 'ini', 'key':'xdebug.profiler_output_dir', 'value':'%LOG%/xdebug_profile', ensureDir: 'dir'}
+      - {type: 'ini', 'key':'xdebug.trace_output_dir', 'value':'%LOG%/xdebug_trace', ensureDir: 'dir'}
+      - {type: 'ini', 'key':'xdebug.remote_log', 'value':'%LOG%/remote_%DEPLOYMENTID%.log', ensureDir: 'file'}
+      - {type: 'ini', 'key':'xdebug.trace_output_name', 'value':'trace.%u'}
+      - {type: 'ini', 'key':'xdebug.profiler_output_name', 'value':'profile.%u'}      
+ # RUNTIME DIRECTORIES
+      - {type: 'ini', 'key':error_log, 'value':'%LOG%/php_error_%DEPLOYMENTID%.log', ensureDir: 'file'}
+      - {type: 'ini', 'key':upload_tmp_dir, 'value':'%TEMP%/upload_temp_dir', ensureDir: 'dir'}
+      - {type: 'ini', 'key':session.save_path, 'value':'%TEMP%/session_save_path/', ensureDir: 'file'}
+      - {type: 'ini', 'key':date.timezone, 'value':'Europe/Madrid'} 
+ # WINCACHE...
+      - {type: 'ini', 'key':wincache.fcenabled, 'value': 0}
+      - {type: 'ini', 'key':wincache.ucenabled, 'value': 1}
+      - {type: 'ini', 'key':wincache.fcachesize , 'value': 8}
+      - {type: 'ini', 'key':wincache.maxfilesize, 'value': 3000}
+      - {type: 'ini', 'key':wincache.ucachesize , 'value': 128}
+      - {type: 'ini', 'key':wincache.scachesize , 'value': 5}
+      - {type: 'ini', 'key':wincache.reroute_enabled , 'value': 0}
+      - {type: 'ini', 'key':wincache.filemapdir , 'value':'%RUNTIME%/wincache_filemap', ensureDir: 'dir'}
+      - {type: 'ini', 'key':wincache.enablecli , 'value':'On'}
+# GENERIC
+      - {type: 'ini','key':fastcgi.impersonate , 'value': 1}
+      - {type: 'ini','key':cgi.fix_pathinfo , 'value': 1}
+      - {type: 'ini','key':cgi.force_redirect , 'value': 0}
+      - {type: 'ini','key':fastcgi.logging , 'value': 0}
+      - {type: 'ini','key':realpath_cache_size , 'value': '256K'}
+      - {type: 'ini','key':realpath_cache_ttl , 'value': 3600}
+      - {type: 'ini','key':max_input_vars , 'value': 8000}
+      - {type: 'ini','key':memory_limit , 'value': 2048M}
+      - {type: 'ini','key':max_input_vars , 'value': 8000}
+      - {type: 'ini','key':max_execution_time , 'value': 600}
+      - {type: 'ini','key':upload_max_filesize , 'value': 32M}
+      - {type: 'ini','key':post_max_size , 'value': 32M}
+# OPCACHE
+      - {type: 'ini','key':opcache.enable , 'value': 1}
+      - {type: 'ini','key':opcache.memory_consumption , 'value': 256}
+      - {type: 'ini','key':opcache.max_accelerated_files , 'value': 25000}
+      - {type: 'ini','key':opcache.revalidate_freq , 'value': 2}
+      - {type: 'ini','key':opcache.interned_strings_buffer , 'value': 16}
+      - {type: 'ini','key':opcache.validate_timestamps , 'value': 1}
+      - {type: 'ini','key':opcache.enable_cli , 'value': 1}
+      - {type: 'ini','key':opcache.file_cache_only , 'value': 0}
+      - {type: 'ini','key':opcache.file_cache , 'value':'%RUNTIME%/opcache_filecache', ensureDir: 'dir'}
+services:
+  contents:
+    type: 'disk'
+    mounts:
+      files:
+        path: 'files'
+        mountpath: 'web/sites/default/files'
+      private:
+        path: 'private'
+      temp:
+        path: 'temporary'
+#  default:
+#    type: 'sqlsrv'
+#  couchbase:
+#    type: 'couchbase'
+  cron:
+    type: 'scheduler'
+    command: '& ".\drupal" "cron:execute"'
+    frequency: 5
