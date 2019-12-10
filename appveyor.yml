@@ -1,3 +1,4 @@
+# https://www.drupalonwindows.com/en/blog/continuous-integration-and-testing-drupal-appveyor
 version: 1.0.{build}
 skip_tags: true
 init:
@@ -24,7 +25,7 @@ install:
   - cmd: cd c:\tools\php
   - cmd: copy php.ini-production php.ini
   - ps: Add-Content php.ini "date.timezone=UTC"
-  - ps: Add-Content php.ini "extension_dir=c:/tools/php/ext"
+  - ps: Add-Content php.ini "extension_dir=c:\tools\php\ext"
   - ps: Add-Content php.ini "extension=php_openssl.dll"
   - ps: Add-Content php.ini "extension=php_wincache.dll"
   - ps: Add-Content php.ini "extension=php_pdo_sqlsrv.dll"
@@ -68,14 +69,14 @@ install:
   - cmd: composer require drupal/sqlsrv:~1.0
   - cmd: xcopy /S /I /E %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
   - ps: "'@php %cd%\\vendor\\drupal\\console\\bin\\drupal ' + $([char]37) + '*' | Out-File %cd%/web/drupal.bat -Encoding ASCII"
-  - ps: cd /d C:\projects\drupal-project\web
-  - ps: drupal about
-  - ps: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2014" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
-  - ps: drupal about
-  - ps: cd /d C:\projects\drupal-project
-  - ps: cd /d C:\projects\drupal-project\web
-  - ps: drupal module:install simpletest
-  - ps: choco install -y urlrewrite
+  - cmd: cd /d C:\projects\drupal-project\web
+  - cmd: drupal about
+  - cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2014" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+  - cmd: drupal about
+  - cmd: cd /d C:\projects\drupal-project
+  - cmd: cd /d C:\projects\drupal-project\web
+  - cmd: drupal module:install simpletest
+  - cmd: choco install -y urlrewrite
   - ps: New-WebSite -Name 'MyWebsite' -PhysicalPath 'c:\projects\drupal-project\web' -Force
   - ps: echo 127.0.0.1 www.mysite.com >> %WINDIR%\System32\Drivers\Etc\Hosts
   - ps: Import-Module WebAdministration; Set-ItemProperty 'IIS:\Sites\MyWebsite' -name Bindings -value @{protocol='http';bindingInformation='*:80:www.mysite.com'}
