@@ -41,7 +41,7 @@ install:
   - ps: Add-Content C:\tools\php74\php.ini "curl.cainfo=C:\tools\php74\cacert.pem `n"
   - ps: Add-Content C:\tools\php74\php.ini "openssl.cafile=C:\tools\php74\cacert.pem `n"
   - cmd: cd /d C:\composer
-  - cmd: choco install composer --version 4.10.0 -y --no-progress & exit 0
+  - cmd: choco install composer --version 4.10.0 --notsilent & exit 0
   - ps: Get-Content C:\ProgramData\chocolatey\logs\chocolatey.log
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
