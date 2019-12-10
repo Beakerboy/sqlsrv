@@ -15,7 +15,7 @@ install:
   - ps: (Get-Item c:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo
   - cmd: rmdir c:\tmp /s /q
   - ps: new-item c:\tmp -itemtype directory
-  - ps: (New-Object Net.WebClient).DownloadFile('https://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.1-nts-vc14-x64.zip','c:\tmp\wincache.zip')
+  - ps: $cli=New-Object Net.WebClient;$cli.Headers['User-Agent'] = 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)';$cli.DownloadFile('https://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.1-nts-vc14-x64.zip','c:\tmp\wincache.zip')
   - ps: Get-Content c:\tmp\wincache.zip
   - ps: Expand-Archive -Path c:\tmp\wincache.zip -DestinationPath c:\tmp
   - cmd: dir c:\tmp
