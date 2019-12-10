@@ -10,19 +10,29 @@ install:
   - ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual
   - ps: new-item c:\tools\php\ext -itemtype directory
   - ps: new-item c:\tmp -itemtype directory
+  # Download Microsoft Drivers for PHP for SQL Server
   - ps: $cli=New-Object Net.WebClient;$cli.Headers['User-Agent'] = 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)';$cli.DownloadFile('https://github.com/microsoft/msphpsql/releases/download/v5.6.0/Windows-7.1.zip','c:\tmp\sqlsrv.zip')
+  # Unzip The Drivers
   - ps: Expand-Archive -LiteralPath c:\tmp\sqlsrv.zip -DestinationPath c:\tmp\sqlsrv
+  # Download Wincache
   - ps: $cli=New-Object Net.WebClient;$cli.Headers['User-Agent'] = 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)';$cli.DownloadFile('https://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.1-nts-vc14-x64.zip','c:\tmp\wincache.zip')
+  # Unzip Wincache
   - ps: Expand-Archive -Path c:\tmp\wincache.zip -DestinationPath c:\tmp\wincache
+  # Configure and start the Windows Update Managaer
   - cmd: sc config wuauserv start=auto
   - cmd: net start wuauserv
+  # Download PHP
   - ps: $cli=New-Object Net.WebClient;$cli.Headers['User-Agent'] = 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)';$cli.DownloadFile('https://windows.php.net/downloads/releases/php-7.1.33-Win32-VC14-x64.zip','c:\tmp\php.zip')
   - ps: Expand-Archive -Path c:\tmp\php.zip -DestinationPath c:\tools\php
+  # Copy wincache and Database extensions to php extension directory
   - cmd: copy /Y c:\tmp\wincache\php_wincache.dll c:\tools\php\ext\
   - cmd: copy /Y c:\tmp\sqlsrv\Windows-7.1\x64\php_pdo_sqlsrv_71_nts.dll c:\tools\php\ext\php_pdo_sqlsrv.dll
+  # Prove that file is there
   - ps: (Get-Item c:\tools\php\ext\php_pdo_sqlsrv.dll).VersionInfo
+  # Make a copy of the production php.ini file to edit.
   - cmd: cd c:\tools\php
   - cmd: copy php.ini-production php.ini
+  # Add custom changes to php.ini
   - ps: Add-Content php.ini "date.timezone=UTC"
   - ps: Add-Content php.ini "extension_dir=C:\tools\php\ext\"
   - ps: Add-Content php.ini "extension=php_openssl.dll"
@@ -50,23 +60,29 @@ install:
   - cmd: echo Setup certificate store
   - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\tmp\cacert.pem')
   - ps: Add-Content php.ini "curl.cainfo=C:\tmp\cacert.pem"
+  # Install openssl 
   - cmd: cinst -y -r OpenSSL.Light
   - cmd: SET PATH=C:\Program Files\OpenSSL;%PATH%
+  # print php.ini to screen
   - ps: Get-Content c:\tools\php\php.ini
   - cmd: SET PATH=C:\tools\php;%PATH%
   - cmd: SET PATH=C:\tools\php\ext;%PATH%
   - ps: ($env:Path)
   - ps: new-item c:\composer -itemtype directory
   - cmd: cd /d C:\composer
+  # Prove file is there
   - ps: (Get-Item c:\tools\php\ext\php_wincache.dll).VersionInfo
 #  - cmd: dir /q C:\tools\php\ext
 #  - cmd: php -i
+# Print permissions of all php extensions
   - cmd: cd C:\tools\php\ext
   - ps: Dir | Get-Acl
+  # Install composer
   - cmd: php -r "readfile('http://getcomposer.org/installer');" | php
   - ps: (Get-Item C:\composer\composer.phar).length
   - ps: "'@php C:\\composer\\composer.phar ' + $([char]37) + '*' | Out-File C:\\composer\\composer.bat -Encoding ASCII"
   - cmd: SET PATH=C:\composer;%PATH%
+  # Install Drupal
   - cmd: cd /d C:\projects\
   - cmd: composer create-project -n drupal-composer/drupal-project:8.x-dev
   - cmd: cd /d C:\projects\drupal-project
