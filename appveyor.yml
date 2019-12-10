@@ -91,6 +91,6 @@ build_script:
 test_script:
   - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir c:\testresults\
-  - cmd: echo Tests not run because they need to be updated as they are using deprecated implementations
-  # - cmd: php web/core/scripts/run-tests.sh --php php --verbose --url "http://sqlsrv.drupal.org/" --xml c:\testresults\ "Common" --class Drupal\sqlsrv\Tests\SchemaTest
-  # - cmd: php web/core/scripts/run-tests.sh --php php --verbose --url "http://sqlsrv.drupal.org/" --xml c:\testresults\ "Common" --class Drupal\sqlsrv\Tests\SelectQueryTest
+#  - cmd: echo Tests not run because they need to be updated as they are using deprecated implementations
+  - cmd: php web/core/scripts/run-tests.sh --php php --verbose --url "http://sqlsrv.drupal.org/" --xml c:\testresults\ "Common" --class Drupal\sqlsrv\Tests\SchemaTest
+  - cmd: php web/core/scripts/run-tests.sh --php php --verbose --url "http://sqlsrv.drupal.org/" --xml c:\testresults\ "Common" --class Drupal\sqlsrv\Tests\SelectQueryTest
