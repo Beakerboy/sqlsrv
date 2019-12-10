@@ -24,7 +24,7 @@ install:
   - cmd: cd c:\tools\php
   - cmd: copy php.ini-production php.ini
   - ps: Add-Content php.ini "date.timezone=UTC"
-  - ps: Add-Content php.ini "extension_dir=C:\tools\php\ext"
+  - ps: Add-Content php.ini "extension_dir=ext"
   - ps: Add-Content php.ini "extension=php_openssl.dll"
   - ps: Add-Content php.ini "extension=php_wincache.dll"
   - ps: Add-Content php.ini "extension=php_pdo_sqlsrv.dll"
