@@ -28,7 +28,7 @@ install:
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
   - cmd: sc config wuauserv start= auto
   - cmd: net start wuauserv
-  - ps: (New-Object Net.WebClient).DownloadFile('http://curl.haxx.se/ca/cacert.pem', 'C:\tools\php73\cacert.pem')
+  - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php73\cacert.pem')
   - ps: new-item c:\composer -itemtype directory
   - ps: $Env:Path = "C:\tools\php73;" + $Env:Path;
   - ps: Add-Content C:\tools\php73\php.ini "extension_dir=ext `n"
