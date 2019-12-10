@@ -21,10 +21,10 @@ install:
   - ps: (Get-Item c:\tools\php\ext\php_wincache.dll).VersionInfo
 #  - cmd: cinst -y -r OpenSSL.Light
 #  - ps: SET PATH=C:\Program Files\OpenSSL;%PATH%
-  - ps: sc config wuauserv start= auto
-  - ps: net start wuauserv
-  - ps: cinst -y --allow-empty-checksums php -version 7.0.9
-  - ps: cd c:\tools\php
+  - cmd: sc config wuauserv start=auto
+  - cmd: net start wuauserv
+  - cmd: cinst -y --allow-empty-checksums php -version 7.0.9
+  - cmd: cd c:\tools\php
   - ps: Add-Content php.ini-production "'ndate.timezone=\"UTC\""
   - ps: Add-Content php.ini-production "'nextension_dir=ext"
 #  - ps: Add-Content php.ini-production "'nextension=php_openssl.dll"
