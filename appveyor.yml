@@ -54,6 +54,7 @@ install:
   - ps: Add-Content php.ini "curl.cainfo=C:\\tmp\\cacert.pem"
   - cmd: cinst -y -r OpenSSL.Light
   - cmd: SET PATH=C:\Program Files\OpenSSL;%PATH%
+  - ps: Get-Content c:\tools\php\php.ini
   - cmd: SET PATH=C:\tools\php;%PATH%
   - ps: ($env:Path)
   - ps: new-item c:\composer -itemtype directory
