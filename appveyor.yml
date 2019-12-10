@@ -49,7 +49,7 @@ install:
   - ps: Add-Content php.ini "pdo_sqlsrv.client_buffer_max_kb_size=24480"
   - cmd: echo Setup certificate store
   - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem','C:\tmp\cacert.pem')
-  - ps: Add-Content php.ini "curl.cainfo=C:/tmp/cacert.pem"
+  - ps: Add-Content php.ini "curl.cainfo=C:\tmp\cacert.pem"
   - cmd: cinst -y -r OpenSSL.Light
   - cmd: SET PATH=C:\Program Files\OpenSSL;%PATH%
   - ps: Get-Content c:\tools\php\php.ini
