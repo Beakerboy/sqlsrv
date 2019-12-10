@@ -3,7 +3,17 @@
     "description": "Driver for SQL Server and SQL Azure",
     "type": "drupal-module",
     "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "David Garcia",
+            "role": "Lead Developer"
+        }
+    ],
     "require": {
-        "php" : "^7.0"
+        "php" : "^7.0",
+        "drupal/core": "*"
+    },
+    "require-dev": {
+        "drupal-composer/drupal-project": "*"
     }
 }
