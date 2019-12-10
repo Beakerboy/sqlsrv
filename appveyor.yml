@@ -69,7 +69,7 @@ install:
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   - cmd: composer require drupal/sqlsrv:~1.0
   - cmd: xcopy /S /I /E %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
-  - ps: "'@php %cd%\\vendor\\drupal\\console\\bin\\drupal ' + $([char]37) + '*' | Out-File %cd%/web/drupal.bat -Encoding ASCII"
+  - ps: "'@php C:\\projects\\drupal-project\\vendor\\drupal\\console\\bin\\drupal ' + $([char]37) + '*' | Out-File C:\\projects\\drupal-project\\web\\drupal.bat -Encoding ASCII"
   - cmd: cd /d C:\projects\drupal-project\web
   - cmd: drupal about
   - cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2014" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
