@@ -6,3 +6,17 @@ deployers:
       - {type: 'ini', multivalue: true, 'key':zend_extension, 'value':php_xdebug.dll}
       - {type: 'ini','key':opcache.revalidate_freq , 'value': 5}
       - {type: 'ini','key':opcache.validate_timestamps , 'value': On}
+      # XDEBUG
+      - {type: 'ini', 'key':'xdebug.remote_enable', 'value':'on'} 
+      - {type: 'ini', 'key':'xdebug.remote_handler', 'value':'dbgp'} 
+      - {type: 'ini', 'key':'xdebug.remote_host', 'value':'127.0.0.1'} 
+      - {type: 'ini', 'key':'xdebug.remote_connect_back', 'value':'0'} 
+      - {type: 'ini', 'key':'xdebug.remote_port', 'value':'9000'} 
+      - {type: 'ini', 'key':'xdebug.remote_mode', 'value':'req'} 
+      - {type: 'ini', 'key':'xdebug.remote_autostart', 'value':'0'} 
+      - {type: 'ini', 'key':'xdebug.idekey', 'value':'php-vs'}
+      - {type: 'ini', 'key':'xdebug.profiler_output_dir', 'value':'%LOG%/xdebug_profile', ensureDir: 'dir'}
+      - {type: 'ini', 'key':'xdebug.trace_output_dir', 'value':'%LOG%/xdebug_trace', ensureDir: 'dir'}
+      - {type: 'ini', 'key':'xdebug.remote_log', 'value':'%LOG%/remote_%DEPLOYMENTID%.log', ensureDir: 'file'}
+      - {type: 'ini', 'key':'xdebug.trace_output_name', 'value':'trace.%u'}
+      - {type: 'ini', 'key':'xdebug.profiler_output_name', 'value':'profile.%u'}
