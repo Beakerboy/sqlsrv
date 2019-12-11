@@ -106,5 +106,5 @@ test_script:
   - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir c:\testresults\
   - cmd: echo Tests not run because they need to be updated as they are using deprecated implementations
-after_success:
+build_success:
   - cmd: php %APPVEYOR_BUILD_FOLDER%/vendor/bin/php-coveralls -v
