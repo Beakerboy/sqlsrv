@@ -95,11 +95,16 @@ install:
 build_script:
   - cmd: echo "No build"
 test_script:
+  - cmd: mkdir c:\build
+  - cmd: mkdir c:\build\logs
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - cmd: phpunit --configuration tests/phpunit.xml --coverage-clover clover.xml
+  - cmd: composer require php-coveralls/php-coveralls
+  - cmd: phpunit --configuration tests/phpunit.xml --coverage-clover build\logs\clover.xml
   - ps: Get-Content clover.xml
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
   - cmd: phpcs --standard=Drupal . 
   - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir c:\testresults\
   - cmd: echo Tests not run because they need to be updated as they are using deprecated implementations
+after_success:
+  - cmd php vendor/bin/php-coveralls -v
