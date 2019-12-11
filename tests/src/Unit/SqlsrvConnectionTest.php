@@ -91,7 +91,9 @@ class SqlsrvConnectionTest extends UnitTestCase {
    * @dataProvider providerEscapeTables
    */
   public function testEscapeTable($expected, $name) {
-    $pgsql_connection = new Connection($this->mockPdo, []);
+    // The Connection class should be able to handle missing keys
+    $options['prefix']['default'] = '';
+    $pgsql_connection = new Connection($this->mockPdo, $options);
 
     $this->assertEquals($expected, $pgsql_connection->escapeTable($name));
   }
@@ -101,7 +103,9 @@ class SqlsrvConnectionTest extends UnitTestCase {
    * @dataProvider providerEscapeAlias
    */
   public function testEscapeAlias($expected, $name) {
-    $pgsql_connection = new Connection($this->mockPdo, []);
+    // The Connection class should be able to handle missing keys
+    $options['prefix']['default'] = '';
+    $pgsql_connection = new Connection($this->mockPdo, $options);
 
     $this->assertEquals($expected, $pgsql_connection->escapeAlias($name));
   }
@@ -111,7 +115,9 @@ class SqlsrvConnectionTest extends UnitTestCase {
    * @dataProvider providerEscapeFields
    */
   public function testEscapeField($expected, $name) {
-    $pgsql_connection = new Connection($this->mockPdo, []);
+    // The Connection class should be able to handle missing keys
+    $options['prefix']['default'] = '';
+    $pgsql_connection = new Connection($this->mockPdo, $options);
 
     $this->assertEquals($expected, $pgsql_connection->escapeField($name));
   }
