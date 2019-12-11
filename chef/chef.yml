@@ -32,6 +32,7 @@ deployers:
  # EXTENSION DIR
       - {type: 'ini', 'key':extension_dir, 'value':'%RUNTIME%/php/ext'}
  # EXTENSION SETTINGS
+      - {type: 'ini', multivalue: true, 'key':display_errors, 'value':On}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_intl.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_bz2.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_curl.dll}
