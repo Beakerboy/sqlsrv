@@ -3,14 +3,12 @@
 namespace Drupal\Tests\phpunit_example\Unit;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\Tests\Core\Database\Stub\StubConnection;
 use Drupal\Driver\Database\sqlsrv\Connection;
 
 /**
  * @coversDefaultClass \Drupal\Driver\Database\sqlsrv\Connection
  * @group Database
  */
-
 class SqlsrvConnectionTest extends UnitTestCase {
 
   /**
@@ -117,4 +115,5 @@ class SqlsrvConnectionTest extends UnitTestCase {
 
     $this->assertEquals($expected, $pgsql_connection->escapeField($name));
   }
+
 }
