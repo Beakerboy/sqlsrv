@@ -97,9 +97,10 @@ build_script:
 before_test:
   - cmd: mkdir c:\build
   - cmd: mkdir c:\build\logs
-  - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: cd C:\projects\drupal-project
   - cmd: composer require php-coveralls/php-coveralls
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
 test_script:
   - cmd: phpunit --configuration tests/phpunit.xml --coverage-clover build\logs\clover.xml
   - ps: Get-Content clover.xml
