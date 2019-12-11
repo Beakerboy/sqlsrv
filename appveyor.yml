@@ -1,4 +1,4 @@
-# need to not hardcode php74
+# need to not hardcode php73
 skip_tags: true
 init:
   - ps: ''
@@ -27,11 +27,13 @@ install:
       (new-object -com shell.application).namespace($DESTINATION).CopyHere((new-object -com shell.application).namespace($ZipPath).Items(),16)
       Remove-Item $ZipPath
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
+  # Start Windows Update service
   - cmd: sc config wuauserv start= auto
   - cmd: net start wuauserv
   - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php73\cacert.pem')
-  - ps: new-item c:\composer -itemtype directory
+  # Add php binary to PATH
   - ps: $Env:Path = "C:\tools\php73;" + $Env:Path;
+  # Edit the php.ini file
   - ps: Add-Content C:\tools\php73\php.ini "extension_dir=ext"
   - ps: Add-Content C:\tools\php73\php.ini "extension=php_openssl"
   - ps: Add-Content C:\tools\php73\php.ini "extension=php_mbstring"
@@ -39,6 +41,8 @@ install:
   - ps: Add-Content C:\tools\php73\php.ini "extension=php_gd2.dll"
   - ps: Add-Content C:\tools\php73\php.ini 'curl.cainfo="C:\tools\php74\cacert.pem"'
   - ps: Add-Content C:\tools\php73\php.ini 'openssl.cafile="C:\tools\php74\cacert.pem"'
+  # Create a directory for composer and install
+  - ps: new-item c:\composer -itemtype directory
   - cmd: cd /d C:\composer
   - cmd: choco install composer --version=4.10.0 -y --no-progress
   - ps: refreshenv
@@ -49,11 +53,13 @@ install:
       }
   - cmd: composer global require hirak/prestissimo
   - cmd: cd /d c:\projects
+  # Create a new drupal project
   - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
   - cmd: cd /d C:\projects\drupal-project
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
+  # Require this package
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
   # Replace the pulled module with the local files, only for this CI
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
@@ -82,8 +88,6 @@ install:
   - cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2017" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
   - cmd: cd /d C:\projects\drupal-project
   - ps: $Env:CWD = (Get-Location).path;
-  # - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/use_the_php_binary-2748883-15.patch',"$Env:CWD\patch.patch")
-  # - cmd: git apply patch.patch --directory=web
   - cmd: cd /d C:\projects\drupal-project\web
   - cmd: drupal module:install simpletest
   - cmd: drupal module:install sqlsrv
