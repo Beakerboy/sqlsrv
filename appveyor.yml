@@ -107,4 +107,4 @@ test_script:
   - cmd: mkdir c:\testresults\
   - cmd: echo Tests not run because they need to be updated as they are using deprecated implementations
 after_success:
-  - cmd php vendor/bin/php-coveralls -v
+  - cmd: php vendor/bin/php-coveralls -v
