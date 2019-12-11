@@ -2,17 +2,7 @@
 <phpunit bootstrap="bootstrap.php" colors="true">
   <testsuites>
     <testsuite name="unit">
-      <file>./tests/TestSuites/UnitTestSuite.php</file>
-    </testsuite>
-    <testsuite name="kernel">
-      <file>./tests/TestSuites/KernelTestSuite.php</file>
-    </testsuite>
-    <testsuite name="functional">
-      <file>./tests/TestSuites/FunctionalTestSuite.php</file>
-    </testsuite>
-    <testsuite name="nonfunctional">
-      <file>./tests/TestSuites/UnitTestSuite.php</file>
-      <file>./tests/TestSuites/KernelTestSuite.php</file>
+      <directory suffix="Test.php">./src/Unit</file>
     </testsuite>
   </testsuites>
 </phpunit>
