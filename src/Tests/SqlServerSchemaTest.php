@@ -30,26 +30,26 @@ class SqlServerSchemaTest extends WebTestBase {
    * Test adding / removing / readding a primary key to a table.
    */
   public function testPrimaryKeyHandling() {
-    $table_spec = array(
-      'fields' => array(
-        'id'  => array(
+    $table_spec = [
+      'fields' => [
+        'id'  => [
           'type' => 'int',
           'not null' => TRUE,
-        ),
-      ),
-    );
+        ],
+      ],
+    ];
 
     db_create_table('test_table', $table_spec);
     $this->assertTrue(db_table_exists('test_table'), t('Creating a table without a primary key works.'));
 
-    db_add_primary_key('test_table', array('id'));
+    db_add_primary_key('test_table', ['id']);
     $this->pass(t('Adding a primary key should work when the table has no data.'));
 
     // Try adding a row.
-    db_insert('test_table')->fields(array('id' => 1))->execute();
+    db_insert('test_table')->fields(['id' => 1])->execute();
     // The second row with the same value should conflict.
     try {
-      db_insert('test_table')->fields(array('id' => 1))->execute();
+      db_insert('test_table')->fields(['id' => 1])->execute();
       $this->fail(t('Duplicate values in the table should not be allowed when the primary key is there.'));
     }
     catch (DatabaseException $e) {}
@@ -58,11 +58,11 @@ class SqlServerSchemaTest extends WebTestBase {
     db_drop_primary_key('test_table');
     $this->pass(t('Removing a primary key should work.'));
 
-    db_insert('test_table')->fields(array('id' => 1))->execute();
+    db_insert('test_table')->fields(['id' => 1])->execute();
     $this->pass(t('Adding a duplicate row should work without the primary key.'));
 
     try {
-      db_add_primary_key('test_table', array('id'));
+      db_add_primary_key('test_table', ['id'[);
       $this->fail(t('Trying to add a primary key should fail with duplicate rows in the table.'));
     }
     catch (DatabaseException $e) {}
@@ -72,44 +72,44 @@ class SqlServerSchemaTest extends WebTestBase {
    * Test altering a primary key.
    */
   public function testPrimaryKeyAlter() {
-    $table_spec = array(
-      'fields' => array(
-        'id'  => array(
+    $table_spec = [
+      'fields' => [
+        'id'  => [
           'type' => 'int',
           'not null' => TRUE,
-        ),
-      ),
-      'primary key' => array('id'),
-    );
+        ],
+      ],
+      'primary key' => ['id'],
+    ];
 
     db_create_table('test_table', $table_spec);
 
     // Add a default value.
-    db_change_field('test_table', 'id', 'id', array(
+    db_change_field('test_table', 'id', 'id', [
       'type' => 'int',
       'not null' => TRUE,
       'default' => 1,
-    ));
+    ]);
   }
 
   /**
    * Test adding / modifying an unsigned column.
    */
   public function testUnsignedField() {
-    $table_spec = array(
-      'fields' => array(
-        'id'  => array(
+    $table_spec = [
+      'fields' => [
+        'id'  => [
           'type' => 'int',
           'not null' => TRUE,
           'unsigned' => TRUE,
-        ),
-      ),
-    );
+        ],
+      ],
+    ];
 
     db_create_table('test_table', $table_spec);
 
     try {
-      db_insert('test_table')->fields(array('id' => -1))->execute();
+      db_insert('test_table')->fields(['id' => -1])->execute();
       $failed = FALSE;
     }
     catch (DatabaseException $e) { 
@@ -129,10 +129,10 @@ class SqlServerSchemaTest extends WebTestBase {
     $this->assertFalse($failed, t('Inserting a positive value in an unsigned field succeeded.'));
 
     // Change the field to signed.
-    db_change_field('test_table', 'id', 'id', array(
+    db_change_field('test_table', 'id', 'id', [
       'type' => 'int',
       'not null' => TRUE,
-    ));
+    ]);
 
     $this->assertSignedField('test_table', 'id');
 
@@ -148,7 +148,7 @@ class SqlServerSchemaTest extends WebTestBase {
 
   protected function assertUnsignedField($table, $field_name) {
     try {
-      db_insert('test_table')->fields(array('id' => -1))->execute();
+      db_insert('test_table')->fields(['id' => -1])->execute();
       $success = TRUE;
     }
     catch (DatabaseException $e) { 
@@ -157,7 +157,7 @@ class SqlServerSchemaTest extends WebTestBase {
     $this->assertFalse($success, t('Inserting a negative value in an unsigned field failed.'));
 
     try {
-      db_insert('test_table')->fields(array('id' => 1))->execute();
+      db_insert('test_table')->fields(['id' => 1])->execute();
       $success = TRUE;
     }
     catch (DatabaseException $e) { 
@@ -170,7 +170,7 @@ class SqlServerSchemaTest extends WebTestBase {
 
   protected function assertSignedField($table, $field_name) {
     try {
-      db_insert('test_table')->fields(array('id' => -1))->execute();
+      db_insert('test_table')->fields(['id' => -1])->execute();
       $success = TRUE;
     }
     catch (DatabaseException $e) { 
@@ -194,28 +194,28 @@ class SqlServerSchemaTest extends WebTestBase {
    * Test db_add_field() and db_change_field() with indexes.
    */
   public function testAddChangeWithIndex() {
-    $table_spec = array(
-      'fields' => array(
-        'id'  => array(
+    $table_spec = [
+      'fields' => [
+        'id'  => [
           'type' => 'int',
           'not null' => TRUE,
-        ),
-      ),
-      'primary key' => array('id'),
-    );
+        ],
+      ],
+      'primary key' => ['id'],
+    ];
 
     db_create_table('test_table', $table_spec);
 
     // Add a default value.
-    db_add_field('test_table', 'test', array(
+    db_add_field('test_table', 'test', [
       'type' => 'int',
       'not null' => TRUE,
       'default' => 1,
-    ), array(
-      'indexes' => array(
-        'id_test' => array('id, test'),
-      ),
-    ));
+    ], [
+      'indexes' => [
+        'id_test' => ['id, test'],
+      ],
+    ]);
 
     $this->assertTrue(db_index_exists('test_table', 'id_test'), t('The index has been created by db_add_field().'));
 
@@ -223,15 +223,15 @@ class SqlServerSchemaTest extends WebTestBase {
     db_drop_index('test_table', 'id_test');
     $this->assertFalse(db_index_exists('test_table', 'id_test'), t('The index has been dropped.'));
 
-    db_change_field('test_table', 'test', 'test', array(
+    db_change_field('test_table', 'test', 'test', [
       'type' => 'int',
       'not null' => TRUE,
       'default' => 1,
-    ), array(
-      'indexes' => array(
-        'id_test' => array('id, test'),
-      ),
-    ));
+    ], [
+      'indexes' => [
+        'id_test' => ['id, test'],
+      ],
+    ]);
 
     $this->assertTrue(db_index_exists('test_table', 'id_test'), t('The index has been recreated by db_change_field().'));
   }
@@ -240,47 +240,47 @@ class SqlServerSchemaTest extends WebTestBase {
    * Test db_add_field() and db_change_field() with binary spec.
    */
   public function testAddChangeWithBinary() {
-    $table_spec = array(
-      'fields' => array(
-        'id'  => array(
+    $table_spec = [
+      'fields' => [
+        'id'  => [
           'type' => 'serial',
           'not null' => TRUE,
-        ),
-        'name' => array(
+        ],
+        'name' => [
           'type' => 'varchar',
           'length' => 255,
           'binary' => false
-        ),
-      ),
-      'primary key' => array('id'),
-    );
+        ],
+      ],
+      'primary key' => ['id'],
+    ];
 
     db_create_table('test_table_binary', $table_spec);
     
     // Insert a value in name
     db_insert('test_table_binary')
-      ->fields(array(
+      ->fields([
         'name' => 'Sandra',
-      ))->execute();
+      ])->execute();
     
     // Insert a value in name
     db_insert('test_table_binary')
-      ->fields(array(
+      ->fields([
         'name' => 'sandra',
-      ))->execute();
+      ])->execute();
     
     // By default, datase collation
     // should be case insensitive, returning both rows.
-    $result = db_query('SELECT COUNT(*) FROM test_table_binary WHERE name = :name', array(':name' => 'SANDRA'))->fetchField();
+    $result = db_query('SELECT COUNT(*) FROM test_table_binary WHERE name = :name', [':name' => 'SANDRA'])->fetchField();
     $this->assertEqual($result, 2, 'Returned the correct number of total rows.');
     
     // Now let's change the field
     // to case sensistive
-    db_change_field('test_table_binary', 'name', 'name', array(
+    db_change_field('test_table_binary', 'name', 'name', [
           'type' => 'varchar',
           'length' => 255,
           'binary' => true
-        ));
+        ]);
     
     // With case sensitivity, no results.
     $result = db_query('SELECT COUNT(*) FROM test_table_binary WHERE name = :name', array(':name' => 'SANDRA'))->fetchField();
@@ -295,20 +295,20 @@ class SqlServerSchemaTest extends WebTestBase {
    * Test numeric field precision.
    */
   public function testNumericFieldPrecision() {
-    $table_spec = array(
-      'fields' => array(
-        'id'  => array(
+    $table_spec = [
+      'fields' => [
+        'id'  => [
           'type' => 'serial',
           'not null' => TRUE,
-        ),
-        'name' => array(
+        ],
+        'name' => [
           'type' => 'numeric',
           'precision' => 400,
           'scale' => 2
-        ),
-      ),
-      'primary key' => array('id'),
-    );
+        ],
+      ],
+      'primary key' => ['id'],
+    ];
 
     $success = FALSE;
     try {
@@ -321,4 +321,5 @@ class SqlServerSchemaTest extends WebTestBase {
 
     $this->assertTrue($success, t('Able to create a numeric field with an out of bounds precision.'));
   }
+
 }
