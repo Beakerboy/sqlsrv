@@ -89,6 +89,8 @@ install:
 build_script:
   - cmd: echo "No build"
 test_script:
+  - cmd: cd c:\projects
+  - cmd: dir /s /b
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: C:\projects\drupal-project\web\vendor\bin\phpcs --standard=Drupal . 
   - cmd: cd /d C:\projects\drupal-project
