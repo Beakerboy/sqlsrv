@@ -89,6 +89,8 @@ install:
 build_script:
   - cmd: echo "No build"
 test_script:
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: phpcs --standard=Drupal . 
   - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir c:\testresults\
   - cmd: echo Tests not run because they need to be updated as they are using deprecated implementations
