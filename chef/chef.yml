@@ -18,7 +18,7 @@ deployers:
   php:
     type: 'php'
     runtime:
-      - {type: 'dl', uri: 'http://windows.php.net/downloads/releases/archives/php-7.1.30-nts-Win32-VC14-x64.zip', maps: {'*' : 'php/'}}
+      - {type: 'dl', uri: 'http://windows.php.net/downloads/releases/archives/php-7.3-12-nts-Win32-VC14-x64.zip', maps: {'*' : 'php/'}}
       - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/xdebug/2.5.3/php_xdebug-2.5.3-7.1-nts-vc14-x64.zip', maps: {'php_xdebug.dll':'php/ext/php_xdebug.dll'}}
       - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/igbinary/2.0.1/php_igbinary-2.0.1-7.1-nts-vc14-x64.zip', maps: {'php_igbinary.dll': 'php/ext/php_igbinary.dll'}}
       - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/couchbase/2.3.2/php_couchbase-2.3.2-7.1-nts-vc14-x64.zip', maps: {'php_couchbase.dll':'php/ext/php_couchbase.dll', 'libcouchbase.dll':'php/libcouchbase.dll'}}
