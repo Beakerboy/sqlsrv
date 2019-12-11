@@ -1,4 +1,3 @@
-# need to not hardcode php73
 skip_tags: true
 init:
   - ps: ''
@@ -15,7 +14,7 @@ install:
   - ps: Start-Service 'MSSQL$SQL2017' | out-null
   - ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual | out-null
   - ps: Start-Service W3SVC | out-null
-  - ps: choco install php --version=7.3.12 -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
+  - ps: choco install php --version=7.3.12 --package-parameters='"/InstallDir:C:\toold\php"'-y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\TestLogs\choco_install_urlrewrite.txt
   - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\TestLogs\choco_install_openssl.txt
   - ps: | 
@@ -30,17 +29,17 @@ install:
   # Start Windows Update service
   - cmd: sc config wuauserv start= auto
   - cmd: net start wuauserv
-  - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php73\cacert.pem')
+  - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php\cacert.pem')
   # Add php binary to PATH
-  - ps: $Env:Path = "C:\tools\php73;" + $Env:Path;
+  - ps: $Env:Path = "C:\tools\php;" + $Env:Path;
   # Edit the php.ini file
-  - ps: Add-Content C:\tools\php73\php.ini "extension_dir=ext"
-  - ps: Add-Content C:\tools\php73\php.ini "extension=php_openssl"
-  - ps: Add-Content C:\tools\php73\php.ini "extension=php_mbstring"
-  - ps: Add-Content C:\tools\php73\php.ini "extension=php_curl"
-  - ps: Add-Content C:\tools\php73\php.ini "extension=php_gd2.dll"
-  - ps: Add-Content C:\tools\php73\php.ini 'curl.cainfo="C:\tools\php74\cacert.pem"'
-  - ps: Add-Content C:\tools\php73\php.ini 'openssl.cafile="C:\tools\php74\cacert.pem"'
+  - ps: Add-Content C:\tools\php\php.ini "extension_dir=ext"
+  - ps: Add-Content C:\tools\php\php.ini "extension=php_openssl"
+  - ps: Add-Content C:\tools\php\php.ini "extension=php_mbstring"
+  - ps: Add-Content C:\tools\php\php.ini "extension=php_curl"
+  - ps: Add-Content C:\tools\php\php.ini "extension=php_gd2.dll"
+  - ps: Add-Content C:\tools\php\php.ini 'curl.cainfo="C:\tools\php74\cacert.pem"'
+  - ps: Add-Content C:\tools\php\php.ini 'openssl.cafile="C:\tools\php74\cacert.pem"'
   # Create a directory for composer and install
   - ps: new-item c:\composer -itemtype directory
   - cmd: cd /d C:\composer
