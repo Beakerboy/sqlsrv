@@ -96,6 +96,8 @@ build_script:
   - cmd: echo "No build"
 test_script:
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: phpunit --configuration tests/phpunit.xml --coverage-clover clover.xml
+  - ps: Get-Content clover.xml
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
   - cmd: phpcs --standard=Drupal . 
   - cmd: cd /d C:\projects\drupal-project
