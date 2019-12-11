@@ -60,7 +60,7 @@ class SqlServerSchemaTest extends WebTestBase {
     $this->pass(t('Adding a duplicate row should work without the primary key.'));
 
     try {
-      db_add_primary_key('test_table', ['id'[);
+      db_add_primary_key('test_table', ['id']);
       $this->fail(t('Trying to add a primary key should fail with duplicate rows in the table.'));
     }
     catch (DatabaseException $e) {
