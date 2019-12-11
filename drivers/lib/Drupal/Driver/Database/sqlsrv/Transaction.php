@@ -1,38 +1,28 @@
 <?php
 
-/**
- * @file
- * Definition of Drupal\Driver\Database\sqlsrv\Transaction
- */
-
 namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Transaction as DatabaseTransaction;
-use Drupal\Core\Database\Connection as DatabaseConnection;
-use Drupal\Core\Database\TransactionCommitFailedException as DatabaseTransactionCommitFailedException;
 use Drupal\Core\Database\TransactionExplicitCommitNotAllowedException as DatabaseTransactionExplicitCommitNotAllowedException;
 
-use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
-use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
 use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
 
-use PDO as PDO;
-use Exception as Exception;
-use PDOStatement as PDOStatement;
-
+/**
+ *
+ */
 class Transaction extends DatabaseTransaction {
 
   /**
    * A boolean value to indicate whether this transaction has been commited.
    *
-   * @var Boolean
+   * @var bool
    */
   protected $commited = FALSE;
 
   /**
    * A boolean to indicate if the transaction scope should behave sanely.
    *
-   * @var DatabaseTransactionSettings
+   * @var \Drupal\Core\Database\TransactionSettings
    */
   protected $settings = FALSE;
 
@@ -43,7 +33,7 @@ class Transaction extends DatabaseTransaction {
    *
    * @param string $name
    *
-   * @param DatabaseTransactionSettings $settings
+   * @param \Drupal\Core\Database\TransactionSettings $settings
    */
   public function __construct(Connection $connection, $name = NULL, DatabaseTransactionSettings $settings = NULL) {
 
@@ -98,7 +88,7 @@ class Transaction extends DatabaseTransaction {
   /**
    * Commits the transaction. Only available for SANE transactions.
    *
-   * @throws DatabaseTransactionExplicitCommitNotAllowedException
+   * @throws \Drupal\Core\Database\TransactionExplicitCommitNotAllowedException
    */
   public function commit() {
 
@@ -138,4 +128,5 @@ class Transaction extends DatabaseTransaction {
 
     $this->connection->rollback($this->name);
   }
+
 }

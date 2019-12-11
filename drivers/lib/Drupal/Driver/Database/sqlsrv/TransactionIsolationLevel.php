@@ -13,4 +13,5 @@ class TransactionIsolationLevel extends Enum {
   const Serializable = 'SERIALIZABLE';
   const Chaos = 'CHAOS';
   const Ignore = 'IGNORE';
+
 }

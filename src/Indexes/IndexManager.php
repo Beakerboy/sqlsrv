@@ -10,16 +10,16 @@ use Drupal\Driver\Database\sqlsrv\Connection;
 class IndexManager {
 
   /**
-   * Summary of $connection
-   * 
-   * @var Connection
+   * Summary of $connection.
+   *
+   * @var \Drupal\Driver\Database\sqlsrv\Connection
    */
   private $connection;
 
   /**
    * Creates an instance of DefaultIndexes with a all defined indexes.
-   * 
-   * @param Connection $connection 
+   *
+   * @param \Drupal\Driver\Database\sqlsrv\Connection $connection
    */
   public function __construct(Connection $connection) {
     $this->connection = $connection;
@@ -27,16 +27,16 @@ class IndexManager {
 
   /**
    * Deploy all missing indexes.
-   * 
-   * @throws \Exception 
-   * 
+   *
+   * @throws \Exception
+   *
    * @return void
    */
   public function DeployNew() {
 
-    // Scan the Implementations folder
+    // Scan the Implementations folder.
     $dir = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Implementations';
-    $files = file_scan_directory($dir ,'/.*\.sql$/');
+    $files = file_scan_directory($dir, '/.*\.sql$/');
 
     foreach ($files as $file) {
 

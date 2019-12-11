@@ -1,12 +1,10 @@
 <?php
 
-/**
- * @file
- * fastcacheitem Class.
- */
-
 namespace Drupal\Driver\Database\sqlsrv;
 
+/**
+ *
+ */
 class FastCacheItem {
 
   public $persist = FALSE;
@@ -24,7 +22,7 @@ class FastCacheItem {
       $this->data = $cache->data;
     }
     else {
-      $this->data = array();
+      $this->data = [];
     }
     $this->bin = $binary;
   }
@@ -61,7 +59,8 @@ class FastCacheItem {
    * Retrieve a value from cache.
    *
    * @param mixed $key
-   * @return bool|\stdClass
+   *
+   * @return bool|object
    */
   public function data_get($key) {
     if (isset($this->data[$key])) {
@@ -75,11 +74,11 @@ class FastCacheItem {
    *
    * @param string $key
    *   If set, the cache ID or an array of cache IDs. Otherwise, all cache entries that
-   **  can expire are deleted. The $wildcard argument will be ignored if set to NULL.
+   *   *  can expire are deleted. The $wildcard argument will be ignored if set to NULL.
    * @param bool $wildcard
-   *  If TRUE, the $cid argument must contain a string value and cache
-   *  IDs starting with $cid are deleted in addition to the exact cache
-   *  ID specified by $cid. If $wildcard is TRUE and $cid is '*', the entire cache is emptied.
+   *   If TRUE, the $cid argument must contain a string value and cache
+   *   IDs starting with $cid are deleted in addition to the exact cache
+   *   ID specified by $cid. If $wildcard is TRUE and $cid is '*', the entire cache is emptied.
    */
   public function clear($key, $wildcard = FALSE) {
     if (!isset($key)) {
@@ -87,7 +86,7 @@ class FastCacheItem {
         return;
       }
       else {
-        $this->data = array();
+        $this->data = [];
       }
     }
     elseif (isset($key) && $wildcard === FALSE) {
@@ -97,7 +96,7 @@ class FastCacheItem {
       if ($key == '*') {
         // Completely reset this binary.
         unset($this->data);
-        $this->data = array();
+        $this->data = [];
       }
       else {
         // Only reset items that start with $key.
@@ -110,4 +109,5 @@ class FastCacheItem {
     }
     $this->persist = TRUE;
   }
+
 }

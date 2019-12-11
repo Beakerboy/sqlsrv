@@ -3,7 +3,6 @@
 namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Database;
-use Drupal\Driver\Database\sqlsrv\DriverSettings;
 
 /**
  * Defines a behaviour scope for the database
@@ -16,14 +15,14 @@ class Context {
    *
    * @var Connection
    */
-  var $connection;
+  public $connection;
 
   /**
    * Settings before establishing this context.
    *
-   * @var DriverSettings
+   * @var \Drupal\Driver\Database\sqlsrv\DriverSettings
    */
-  var $settings = NULL;
+  public $settings = NULL;
 
   /**
    * Define the behaviour of the database driver during the scope of the
@@ -31,22 +30,21 @@ class Context {
    *
    * @param Connection $connection
    *
-   *  Instance of the connection to be configured. Leave null to use the
-   *  current default connection.
+   *   Instance of the connection to be configured. Leave null to use the
+   *   current default connection.
    *
    * @param mixed $bypass_queries
    *
-   *  Do not preprocess the query before execution.
+   *   Do not preprocess the query before execution.
    *
    * @param mixed $direct_query
    *
-   *  Prepare statements with SQLSRV_ATTR_DIRECT_QUERY = TRUE.
+   *   Prepare statements with SQLSRV_ATTR_DIRECT_QUERY = TRUE.
    *
    * @param mixed $statement_caching
    *
-   *  Enable prepared statement caching. Cached statements are reused even
-   *  after the context has expired.
-   *
+   *   Enable prepared statement caching. Cached statements are reused even
+   *   after the context has expired.
    */
   public function __construct(Connection $connection = NULL,
         $bypass_queries = NULL,
@@ -76,8 +74,12 @@ class Context {
     $this->connection->driver_settings = $settings;
   }
 
+  /**
+   *
+   */
   public function __destruct() {
     // Restore previous driver configuration.
     $this->connection->driver_settings = $this->settings;
   }
+
 }

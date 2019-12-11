@@ -5,18 +5,17 @@ namespace Drupal\Driver\Database\sqlsrv;
 use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
 use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
 
-use Drupal\Core\Database\Database;
-
 /**
  * Behaviour settings for a transaction.
  */
 class TransactionSettings {
 
   /**
-   * Summary of __construct
+   * Summary of __construct.
+   *
    * @param mixed $Sane
-   * @param DatabaseTransactionScopeOption $ScopeOption
-   * @param DatabaseTransactionIsolationLevel $IsolationLevel
+   * @param \Drupal\Driver\Database\sqlsrv\TransactionScopeOption $ScopeOption
+   * @param \Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel $IsolationLevel
    */
   public function __construct($Sane = FALSE,
       DatabaseTransactionScopeOption $ScopeOption = NULL,
@@ -32,17 +31,24 @@ class TransactionSettings {
     $this->_ScopeOption = $ScopeOption;
   }
 
-  // @var DatabaseTransactionIsolationLevel
+  /**
+   * @var \Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel
+   */
   private $_IsolationLevel;
 
-  // @var DatabaseTransactionScopeOption
+  /**
+   * @var \Drupal\Driver\Database\sqlsrv\TransactionScopeOption
+   */
   private $_ScopeOption;
 
-  // @var Boolean
+  /**
+   * @var bool
+   */
   private $_Sane;
 
   /**
-   * Summary of Get_IsolationLevel
+   * Summary of Get_IsolationLevel.
+   *
    * @return mixed
    */
   public function Get_IsolationLevel() {
@@ -50,7 +56,8 @@ class TransactionSettings {
   }
 
   /**
-   * Summary of Get_ScopeOption
+   * Summary of Get_ScopeOption.
+   *
    * @return mixed
    */
   public function Get_ScopeOption() {
@@ -58,7 +65,8 @@ class TransactionSettings {
   }
 
   /**
-   * Summary of Get_Sane
+   * Summary of Get_Sane.
+   *
    * @return mixed
    */
   public function Get_Sane() {
@@ -103,4 +111,5 @@ class TransactionSettings {
                 DatabaseTransactionScopeOption::Required(),
                 DatabaseTransactionIsolationLevel::ReadCommitted());
   }
+
 }

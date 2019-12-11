@@ -15,9 +15,10 @@ class Index {
 
   /**
    * Create an instance of Index.
-   * 
-   * @param mixed $uri 
-   * @throws \Exception 
+   *
+   * @param mixed $uri
+   *
+   * @throws \Exception
    */
   public function __construct($uri) {
 
@@ -36,7 +37,7 @@ class Index {
 
   /**
    * Table name.
-   * 
+   *
    * @return string
    */
   public function GetTable() {
@@ -45,7 +46,7 @@ class Index {
 
   /**
    * Index name.
-   * 
+   *
    * @return string
    */
   public function GetName() {
@@ -54,10 +55,11 @@ class Index {
 
   /**
    * Get the SQL statement to create this index.
-   * 
+   *
    * @return string
    */
   public function GetCode() {
     return $this->code;
   }
+
 }

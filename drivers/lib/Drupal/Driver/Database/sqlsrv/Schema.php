@@ -1,41 +1,26 @@
 <?php
 
-/**
- * @file
- * Definition of Drupal\Driver\Database\sqlsrv\Schema
- */
-
 namespace Drupal\Driver\Database\sqlsrv;
 
-use Drupal\Core\Database\Database;
-use Drupal\Core\Database\DatabaseExceptionWrapper;
-use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\SchemaObjectExistsException;
-use Drupal\Core\Database\SchemaObjectDoesNotExistException;
 use Drupal\Core\Database\Schema as DatabaseSchema;
 
 use Drupal\Component\Utility\Unicode;
 
 use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
 
-use Drupal\Core\Database\SchemaException as DatabaseSchemaException;
 use Drupal\Core\Database\SchemaObjectDoesNotExistException as DatabaseSchemaObjectDoesNotExistException;
 use Drupal\Core\Database\SchemaObjectExistsException as DatabaseSchemaObjectExistsException;
 
-use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
-use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
 use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
 
-use PDO as PDO;
 use Exception as Exception;
 use PDOException as PDOException;
-use PDOStatement as PDOStatement;
 
 /**
  * @addtogroup schemaapi
  * @{
  */
-
 class Schema extends DatabaseSchema {
 
   /**
@@ -71,11 +56,13 @@ class Schema extends DatabaseSchema {
   // IMPORTANT: They both start with "__" because the
   // statement class will remove those columns from the final
   // result set.
-  // This should be constants, but we are using variable to ease
-  // their use in inline strings.
-  var $COMPUTED_PK_COLUMN_NAME = '__pkc';
-  var $COMPUTED_PK_COLUMN_INDEX = '__ix_pkc';
-  var $TECHNICAL_PK_COLUMN_NAME = '__pk';
+  // This should be constants, but we are using variable to ease.
+  /**
+   * Their use in inline strings.
+   */
+  public $COMPUTED_PK_COLUMN_NAME = '__pkc';
+  public $COMPUTED_PK_COLUMN_INDEX = '__ix_pkc';
+  public $TECHNICAL_PK_COLUMN_NAME = '__pk';
 
   /**
    * Returns a list of functions that are not
@@ -85,7 +72,7 @@ class Schema extends DatabaseSchema {
    * such as MySQL.
    */
   public function DrupalSpecificFunctions() {
-    $functions = array(
+    $functions = [
       'SUBSTRING',
       'SUBSTRING_INDEX',
       'GREATEST',
@@ -94,12 +81,12 @@ class Schema extends DatabaseSchema {
       'GROUP_CONCAT',
       'CONCAT',
       'IF',
-      'CONNECTION_ID'
-    );
+      'CONNECTION_ID',
+    ];
     // Since SQL Server 2012 (11), there
-    // is a native CONCAT implementation
+    // is a native CONCAT implementation.
     if ($this->EngineVersionNumber() >= 11) {
-      $functions = array_diff($functions, array('CONCAT'));
+      $functions = array_diff($functions, ['CONCAT']);
     }
     return $functions;
   }
@@ -109,7 +96,7 @@ class Schema extends DatabaseSchema {
    */
   public function GetDefaultSchema() {
     $result = $this->connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
-    $this->defaultSchema =  $result;
+    $this->defaultSchema = $result;
     return $this->defaultSchema;
   }
 
@@ -135,7 +122,7 @@ class Schema extends DatabaseSchema {
   public function queryColumnInformation($table, $refresh = FALSE) {
 
     if (empty($table) || !$this->tableExists($table)) {
-      return array();
+      return [];
     }
 
     $table_info = $this->getPrefixInfo($table);
@@ -146,7 +133,7 @@ class Schema extends DatabaseSchema {
       throw new Exception('Temporary table introspection is not supported.');
     }
 
-    $info = array();
+    $info = [];
 
     // Don't use {} around information_schema.columns table.
     $result = $this->connection->query_direct("SELECT sysc.name, sysc.max_length, sysc.precision, sysc.collation_name,
@@ -159,7 +146,7 @@ class Schema extends DatabaseSchema {
                     LEFT JOIN sys.syscomments sm ON sm.id = sysc2.cdefault
                     WHERE sysc.object_id = OBJECT_ID(:table)
                     ",
-                  array(':table' => $table_info['schema'] . '.' . $table_info['table']));
+                  [':table' => $table_info['schema'] . '.' . $table_info['table']]);
 
     foreach ($result as $column) {
       if ($column->type == 'varbinary') {
@@ -176,28 +163,30 @@ class Schema extends DatabaseSchema {
     // If we have computed columns, it is important to know what other columns they depend on!
     $column_names = array_keys($info['columns']);
     $column_regex = implode('|', $column_names);
-    foreach($info['columns'] as &$column) {
-      $dependencies = array();
+    foreach ($info['columns'] as &$column) {
+      $dependencies = [];
       if (!empty($column['definition'])) {
-        $matches = array();
+        $matches = [];
         if (preg_match_all("/\[[{$column_regex}\]]*\]/", $column['definition'], $matches) > 0) {
-          $dependencies = array_map(function($m) { return trim($m, "[]"); }, array_shift($matches));
+          $dependencies = array_map(function ($m) {
+            return trim($m, "[]");
+          }, array_shift($matches));
         }
       }
       $column['dependencies'] = array_flip($dependencies);
     }
 
     // Don't use {} around system tables.
-    $result = $this->connection->query_direct('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', array(':table' => $table_info['schema'] . '.' . $table_info['table']));
+    $result = $this->connection->query_direct('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', [':table' => $table_info['schema'] . '.' . $table_info['table']]);
     unset($column);
-    $info['identities'] = array();
+    $info['identities'] = [];
     $info['identity'] = NULL;
     foreach ($result as $column) {
       $info['identities'][$column->name] = $column->name;
       $info['identity'] = $column->name;
     }
 
-    // Now introspect information about indexes
+    // Now introspect information about indexes.
     $result = $this->connection->query_direct("select tab.[name]  as [table_name],
          idx.[name]  as [index_name],
          allc.[name] as [column_name],
@@ -224,7 +213,7 @@ class Schema extends DatabaseSchema {
     WHERE tab.object_id = OBJECT_ID(:table)
     ORDER BY tab.[name], idx.[index_id], idxc.[index_column_id]
                     ",
-                  array(':table' => $table_info['schema'] . '.' . $table_info['table']));
+                  [':table' => $table_info['schema'] . '.' . $table_info['table']]);
 
     foreach ($result as $index_column) {
       if (!isset($info['indexes'][$index_column->index_name])) {
@@ -241,11 +230,11 @@ class Schema extends DatabaseSchema {
         }
       }
       $index = &$info['indexes'][$index_column->index_name];
-      $index['columns'][$index_column->key_ordinal] = array(
-           'name' => $index_column->column_name,
-           'is_descending_key' => $index_column->is_descending_key,
-           'key_ordinal' => $index_column->key_ordinal,
-         );
+      $index['columns'][$index_column->key_ordinal] = [
+        'name' => $index_column->column_name,
+        'is_descending_key' => $index_column->is_descending_key,
+        'key_ordinal' => $index_column->key_ordinal,
+      ];
       // Every columns keeps track of what indexes it is part of.
       $info['columns'][$index_column->column_name]['indexes'][] = $index_column->index_name;
       if (isset($info['columns_clean'][$index_column->column_name])) {
@@ -257,11 +246,11 @@ class Schema extends DatabaseSchema {
   }
 
   /**
-   * {@Inheritdoc}
+   * {@Inheritdoc}.
    */
   public function createTable($name, $table) {
     if ($this->tableExists($name, FALSE)) {
-      throw new SchemaObjectExistsException(t('Table %name already exists.', array('%name' => $name)));
+      throw new SchemaObjectExistsException(t('Table %name already exists.', ['%name' => $name]));
     }
 
     // Build the table and its unique keys in a transaction, and fail the whole
@@ -273,14 +262,14 @@ class Schema extends DatabaseSchema {
     // Create the table with a default technical primary key.
     // $this->createTableSql already prefixes the table name, and we must inhibit prefixing at the query level
     // because field default _context_menu_block_active_values definitions can contain string literals with braces.
-    $this->connection->query_direct($this->createTableSql($name, $table), array(), array('prefix_tables' => FALSE));
+    $this->connection->query_direct($this->createTableSql($name, $table), [], ['prefix_tables' => FALSE]);
 
     // If the spec had a primary key, set it now after all fields have been created.
     // We are creating the keys after creating the table so that createPrimaryKey
     // is able to introspect column definition from the database to calculate index sizes
     // This adds quite quite some overhead, but is only noticeable during table creation.
     if (isset($table['primary key']) && is_array($table['primary key'])) {
-      $this->createPrimaryKey($name,  $table['primary key']);
+      $this->createPrimaryKey($name, $table['primary key']);
     }
     // Otherwise use a technical primary key.
     else {
@@ -316,13 +305,14 @@ class Schema extends DatabaseSchema {
 
   /**
    * Remove comments from an SQL statement.
+   *
    * @see http://stackoverflow.com/questions/9690448/regular-expression-to-remove-comments-from-sql-statement
    *
    * @param mixed $sql
-   *  SQL statement to remove the comments from.
+   *   SQL statement to remove the comments from.
    *
    * @param mixed $comments
-   *  Comments removed from the statement
+   *   Comments removed from the statement.
    *
    * @return string
    */
@@ -348,7 +338,7 @@ class Schema extends DatabaseSchema {
     $uncommentedSQL = trim(preg_replace($sqlComments, '$1', $sql));
     if (is_array($comments)) {
       preg_match_all($sqlComments, $sql, $comments);
-      $comments = array_filter($comments[ 3 ]);
+      $comments = array_filter($comments[3]);
     }
     return $uncommentedSQL;
   }
@@ -358,6 +348,7 @@ class Schema extends DatabaseSchema {
    *
    * @param $table
    *   Name of the table.
+   *
    * @return
    *   True if the table exists, false otherwise.
    */
@@ -380,21 +371,21 @@ class Schema extends DatabaseSchema {
   }
 
   /**
-   * Returns an array of current connection user options
+   * Returns an array of current connection user options.
    *
-   * textsize	2147483647
-   * language	us_english
-   * dateformat	mdy
-   * datefirst	7
-   * lock_timeout	-1
-   * quoted_identifier	SET
-   * arithabort	SET
-   * ansi_null_dflt_on	SET
-   * ansi_warnings	SET
-   * ansi_padding	SET
-   * ansi_nulls	SET
-   * concat_null_yields_null	SET
-   * isolation level	read committed
+   * Textsize    2147483647
+   * language    us_english
+   * dateformat    mdy
+   * datefirst    7
+   * lock_timeout    -1
+   * quoted_identifier    SET
+   * arithabort    SET
+   * ansi_null_dflt_on    SET
+   * ansi_warnings    SET
+   * ansi_padding    SET
+   * ansi_nulls    SET
+   * concat_null_yields_null    SET
+   * isolation level    read committed.
    *
    * @return mixed
    */
@@ -408,7 +399,7 @@ class Schema extends DatabaseSchema {
    */
   public function EngineVersion() {
     $version = $this->connection
-    ->query_direct(<<< EOF
+      ->query_direct(<<< EOF
     SELECT CONVERT (varchar,SERVERPROPERTY('productversion')) AS VERSION,
     CONVERT (varchar,SERVERPROPERTY('productlevel')) AS LEVEL,
     CONVERT (varchar,SERVERPROPERTY('edition')) AS EDITION
@@ -431,6 +422,7 @@ EOF
    *
    * @param $function
    *   Name of the function.
+   *
    * @return
    *   True if the function exists, false otherwise.
    */
@@ -439,7 +431,7 @@ EOF
     // IF = Inline Table Function
     // TF = Table Function
     // FS | AF = Assembly (CLR) Scalar Function
-    // FT | AT = Assembly (CLR) Table Valued Function
+    // FT | AT = Assembly (CLR) Table Valued Function.
     return $this->connection
       ->query_direct("SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('" . $function . "') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT', N'AF')")
       ->fetchField() !== FALSE;
@@ -451,15 +443,15 @@ EOF
    */
   public function CLREnabled() {
     return $this->connection
-        ->query_direct("SELECT CONVERT(int, [value]) as [enabled] FROM sys.configurations WHERE name = 'clr enabled'")
-        ->fetchField() !== 1;
+      ->query_direct("SELECT CONVERT(int, [value]) as [enabled] FROM sys.configurations WHERE name = 'clr enabled'")
+      ->fetchField() !== 1;
   }
 
   /**
    * Check if a column is of variable length.
    */
   private function isVariableLengthType($type) {
-    $types = array('nvarchar' => TRUE, 'ntext' => TRUE, 'varchar' => TRUE, 'varbinary' => TRUE, 'image' => TRUE);
+    $types = ['nvarchar' => TRUE, 'ntext' => TRUE, 'varchar' => TRUE, 'varbinary' => TRUE, 'image' => TRUE];
     return isset($types[$type]);
   }
 
@@ -471,7 +463,7 @@ EOF
    * @param mixed $table
    */
   private function loadFieldsSpec(array $fields, $table) {
-    $result = array();
+    $result = [];
     $info = $this->queryColumnInformation($table);
     foreach ($fields as $field) {
       $result[$field] = $info['columns'][$field];
@@ -481,6 +473,7 @@ EOF
 
   /**
    * Estimates the row size of a clustered index.
+   *
    * @see https://msdn.microsoft.com/en-us/library/ms178085.aspx
    */
   public function calculateClusteredIndexRowSizeBytes($table, $fields, $unique = TRUE) {
@@ -561,7 +554,7 @@ EOF
     // If that is going to be exceeded, use a computed column.
     $csv_fields = $this->createKeySql($fields);
     $size = $this->calculateClusteredIndexRowSizeBytes($table, $this->createKeySql($fields, TRUE));
-    $result = array();
+    $result = [];
     $index = FALSE;
     // Add support for nullable columns in a primary key.
     $nullable = FALSE;
@@ -597,7 +590,7 @@ EOF
    * computed column.
    */
   private function createTechnicalPrimaryKeyIndexSql($table) {
-    $result = array();
+    $result = [];
     $result[] = "{$this->TECHNICAL_PK_COLUMN_NAME} UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL";
     $result[] = "CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$this->TECHNICAL_PK_COLUMN_NAME})";
     return implode(' ', $result);
@@ -610,11 +603,12 @@ EOF
    *   The name of the table to create.
    * @param $table
    *   A Schema API table definition array.
+   *
    * @return
    *   The SQL statement to create the table.
    */
   protected function createTableSql($name, $table) {
-    $sql_fields = array();
+    $sql_fields = [];
     foreach ($table['fields'] as $field_name => $field) {
       $sql_fields[] = $this->createFieldSql($name, $field_name, $this->processField($field));
     }
@@ -635,14 +629,12 @@ EOF
    * Before passing a field out of a schema definition into this
    * function it has to be processed by _db_process_field().
    *
-   *
-   *
    * @param $table
-   *    The name of the table.
+   *   The name of the table.
    * @param $name
-   *    Name of the field.
+   *   Name of the field.
    * @param $spec
-   *    The field specification, as per the schema data structure format.
+   *   The field specification, as per the schema data structure format.
    */
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
     // Use a prefixed table.
@@ -651,24 +643,25 @@ EOF
     $sqlsrv_type = $spec['sqlsrv_type'];
     $sqlsrv_type_native = $spec['sqlsrv_type_native'];
 
-    $is_text = in_array($sqlsrv_type_native, array('char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext'));
-    $lengthable = in_array($sqlsrv_type_native, array('char', 'varchar', 'nchar', 'nvarchar'));
+    $is_text = in_array($sqlsrv_type_native, ['char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext']);
+    $lengthable = in_array($sqlsrv_type_native, ['char', 'varchar', 'nchar', 'nvarchar']);
 
     $sql = $this->connection->quoteIdentifier($name) . ' ';
 
     if (!empty($spec['length']) && $lengthable) {
       $sql .= $sqlsrv_type_native . '(' . $spec['length'] . ')';
     }
-    elseif (in_array($sqlsrv_type_native, array('numeric', 'decimal')) && isset($spec['precision']) && isset($spec['scale'])) {
+    elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
       // Maximum precision for SQL Server 2008 orn greater is 38.
       // For previous versions it's 28.
       if ($spec['precision'] > 38) {
-        // Logs an error
+        // Logs an error.
         \Drupal::logger('sqlsrv')->warning("Field '@field' in table '@table' has had it's precision dropped from @precision to 38",
-                array('@field' => $name,
-                      '@table' => $table,
-                      '@precision' => $spec['precision']
-                  )
+                [
+                  '@field' => $name,
+                  '@table' => $table,
+                  '@precision' => $spec['precision'],
+                ]
                 );
         $spec['precision'] = 38;
       }
@@ -724,11 +717,12 @@ EOF
    * to be used in a SQL Statement.
    *
    * @param array $fields
-   * @param boolean $as_array
+   * @param bool $as_array
+   *
    * @return array|string
    */
   protected function createKeySql($fields, $as_array = FALSE) {
-    $ret = array();
+    $ret = [];
     foreach ($fields as $field) {
       if (is_array($field)) {
         $ret[] = $field[0];
@@ -800,7 +794,7 @@ EOF
     if (!isset($field['size'])) {
       $field['size'] = 'normal';
     }
-    
+
     // Set the correct database-engine specific datatype.
     if (!isset($field['sqlsrv_type'])) {
       $map = $this->getFieldTypeMap();
@@ -821,11 +815,11 @@ EOF
    * This maps a generic data type in combination with its data size
    * to the engine-specific data type.
    */
-  function getFieldTypeMap() {
+  public function getFieldTypeMap() {
     // Put :normal last so it gets preserved by array_flip.  This makes
     // it much easier for modules (such as schema.module) to map
     // database types back into schema types.
-    return array(
+    return [
       'varchar:normal' => 'nvarchar',
       'char:normal' => 'nchar',
       'varchar_ascii:normal' => 'varchar(255)',
@@ -863,7 +857,7 @@ EOF
       'date:normal'     => 'date',
       'datetime:normal' => 'datetime2(0)',
       'time:normal'     => 'time(0)',
-    );
+    ];
   }
 
   /**
@@ -873,10 +867,10 @@ EOF
    */
   public function renameTable($table, $new_name) {
     if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot rename %table to %table_new: table %table doesn't exist.", array('%table' => $table, '%table_new' => $new_name)));
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot rename %table to %table_new: table %table doesn't exist.", ['%table' => $table, '%table_new' => $new_name]));
     }
     if ($this->tableExists($new_name, TRUE)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot rename %table to %table_new: table %table_new already exists.", array('%table' => $table, '%table_new' => $new_name)));
+      throw new DatabaseSchemaObjectExistsException(t("Cannot rename %table to %table_new: table %table_new already exists.", ['%table' => $table, '%table_new' => $new_name]));
     }
 
     $old_table_info = $this->getPrefixInfo($table);
@@ -887,22 +881,22 @@ EOF
       throw new PDOException(t('Cannot rename a table across schema.'));
     }
 
-    $this->connection->query_direct('EXEC sp_rename :old, :new', array(
+    $this->connection->query_direct('EXEC sp_rename :old, :new', [
       ':old' => $old_table_info['schema'] . '.' . $old_table_info['table'],
       ':new' => $new_table_info['table'],
-    ));
+    ]);
 
     // Constraint names are global in SQL Server, so we need to rename them
     // when renaming the table. For some strange reason, indexes are local to
     // a table.
-    $objects = $this->connection->query_direct('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', array(':table' => $new_table_info['schema'] . '.' . $new_table_info['table']));
+    $objects = $this->connection->query_direct('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', [':table' => $new_table_info['schema'] . '.' . $new_table_info['table']]);
     foreach ($objects as $object) {
       if (preg_match('/^' . preg_quote($old_table_info['table']) . '_(.*)$/', $object->name, $matches)) {
-        $this->connection->query_direct('EXEC sp_rename :old, :new, :type', array(
+        $this->connection->query_direct('EXEC sp_rename :old, :new, :type', [
           ':old' => $old_table_info['schema'] . '.' . $object->name,
           ':new' => $new_table_info['table'] . '_' . $matches[1],
           ':type' => 'OBJECT',
-        ));
+        ]);
       }
     }
   }
@@ -920,10 +914,13 @@ EOF
     return TRUE;
   }
 
+  /**
+   *
+   */
   public function fieldExists($table, $field) {
     return $this->connection
-        ->query("SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "' AND column_name = '"  . $field . "'")
-        ->fetchField() !== FALSE;
+      ->query("SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "' AND column_name = '" . $field . "'")
+      ->fetchField() !== FALSE;
   }
 
   /**
@@ -931,12 +928,12 @@ EOF
    *
    * @status complete
    */
-  public function addField($table, $field, $spec, $new_keys = array()) {
+  public function addField($table, $field, $spec, $new_keys = []) {
     if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", array('%field' => $field, '%table' => $table)));
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", ['%field' => $field, '%table' => $table]));
     }
     if ($this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", array('%field' => $field, '%table' => $table)));
+      throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", ['%field' => $field, '%table' => $table]));
     }
 
     /** @var Transaction $transaction */
@@ -962,12 +959,12 @@ EOF
     // to do so is a crappy str_replace.
     $query = "ALTER TABLE {$table_prefixed} ADD ";
     $query .= $this->createFieldSql($table, $field, $spec);
-    $this->connection->query_direct($query, array(), array('prefix_tables' => FALSE));
+    $this->connection->query_direct($query, [], ['prefix_tables' => FALSE]);
 
     // Load the initial data.
     if (isset($spec['initial'])) {
       $this->connection->update($table)
-        ->fields(array($field => $spec['initial']))
+        ->fields([$field => $spec['initial']])
         ->execute();
     }
 
@@ -1029,12 +1026,12 @@ EOF
    *
    * @status complete
    */
-  public function changeField($table, $field, $field_new, $spec, $new_keys = array()) {
+  public function changeField($table, $field, $field_new, $spec, $new_keys = []) {
     if (!$this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", array('%table' => $table, '%name' => $field)));
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", ['%table' => $table, '%name' => $field]));
     }
     if (($field != $field_new) && $this->fieldExists($table, $field_new)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", array('%table' => $table, '%name' => $field, '%name_new' => $field_new)));
+      throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", ['%table' => $table, '%name' => $field, '%name_new' => $field_new]));
     }
 
     // SQL Server supports transactional DDL, so we can just start a transaction
@@ -1052,28 +1049,27 @@ EOF
     //
     // What we are going to do in the SQL Server Driver is a best-effort try to preserve original keys if they do not conflict
     // with the new_keys parameter, and if the callee has done it's job (droping constraints/keys) then they will of course not be recreated.
-
     // Introspect the schema and save the current primary key if the column
     // we are modifying is part of it. Make sure the schema is FRESH.
     $primary_key_fields = $this->introspectPrimaryKeyFields($table);
     if (in_array($field, $primary_key_fields)) {
-      // Let's drop the PK
+      // Let's drop the PK.
       $this->cleanUpPrimaryKey($table);
     }
 
     // If there is a generated unique key for this field, we will need to
-    // add it back in when we are done
+    // add it back in when we are done.
     $unique_key = $this->uniqueKeyExists($table, $field);
 
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
     // Start by renaming the current column.
-    $this->connection->query_direct('EXEC sp_rename :old, :new, :type', array(
+    $this->connection->query_direct('EXEC sp_rename :old, :new, :type', [
       ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
       ':new' => $field . '_old',
       ':type' => 'COLUMN',
-    ));
+    ]);
 
     // If the new column does not allow nulls, we need to
     // create it first as nullable, then either migrate
@@ -1106,10 +1102,10 @@ EOF
 
     // Initialize new keys.
     if (!isset($new_keys)) {
-      $new_keys = array(
-        'unique keys' => array(),
-        'primary keys' => array()
-      );
+      $new_keys = [
+        'unique keys' => [],
+        'primary keys' => [],
+      ];
     }
 
     // Recreate the primary key if no new primary key
@@ -1154,16 +1150,15 @@ FROM sys.databases db
     LEFT JOIN (SELECT database_id, SUM(size) StreamSize FROM sys.master_files WHERE type = 2 GROUP BY database_id, type) mfstream ON mfstream.database_id = db.database_id
     LEFT JOIN (SELECT database_id, SUM(size) TextIndexSize FROM sys.master_files WHERE type = 4 GROUP BY database_id, type) mftext ON mftext.database_id = db.database_id
     WHERE DB_NAME(db.database_id) = :database
-EOF
-;
+EOF;
     // Database is defaulted from active connection.
     $options = $this->connection->getConnectionOptions();
     $database = $options['database'];
-    return $this->connection->query($sql, array(':database' => $database))->fetchObject();
+    return $this->connection->query($sql, [':database' => $database])->fetchObject();
   }
 
   /**
-   * Get database information from sys.databases
+   * Get database information from sys.databases.
    *
    * @return mixed
    */
@@ -1182,12 +1177,11 @@ EOF
         , db.collation_name
     from sys.databases db
     WHERE DB_NAME(db.database_id) = :database
-EOF
-;
+EOF;
     // Database is defaulted from active connection.
     $options = $this->connection->getConnectionOptions();
     $database = $options['database'];
-    $result = $this->connection->query_direct($sql, array(':database' => $database))->fetchObject();
+    $result = $this->connection->query_direct($sql, [':database' => $database])->fetchObject();
     return $result;
   }
 
@@ -1225,9 +1219,8 @@ EOF
         WHERE TABLE_SCHEMA = ':schema'
         AND TABLE_NAME = ':table'
         AND COLUMN_NAME = ':column'
-EOF
-;
-    $params = array();
+EOF;
+    $params = [];
     $params[':schema'] = $this->defaultSchema;
     $params[':table'] = $table;
     $params[':column'] = $column;
@@ -1236,7 +1229,7 @@ EOF
   }
 
   /**
-   * Get the list of fields participating in the Primary Key
+   * Get the list of fields participating in the Primary Key.
    *
    * @param string $table
    * @param string $field
@@ -1249,15 +1242,15 @@ EOF
     // use that to see if we have a primary key
     // before iterating.
     if (!isset($data['primary_key_index']) || !isset($data['indexes'][$data['primary_key_index']])) {
-      return array();
+      return [];
     }
-    $result = array();
+    $result = [];
     $index = $data['indexes'][$data['primary_key_index']];
     foreach ($index['columns'] as $column) {
       if ($column['name'] != $this->COMPUTED_PK_COLUMN_NAME) {
         $result[$column['name']] = $column['name'];
       }
-      // Get full column definition
+      // Get full column definition.
       $c = $data['columns'][$column['name']];
       // If this column depends on other columns
       // the other columns are also part of the index!
@@ -1312,28 +1305,28 @@ EOF
    */
   protected function dropFieldRelatedObjects($table, $field) {
     // Fetch the list of indexes referencing this column.
-    $indexes = $this->connection->query('SELECT DISTINCT i.name FROM sys.columns c INNER JOIN sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id INNER JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id WHERE i.is_primary_key = 0 AND i.is_unique_constraint = 0 AND c.object_id = OBJECT_ID(:table) AND c.name = :name', array(
+    $indexes = $this->connection->query('SELECT DISTINCT i.name FROM sys.columns c INNER JOIN sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id INNER JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id WHERE i.is_primary_key = 0 AND i.is_unique_constraint = 0 AND c.object_id = OBJECT_ID(:table) AND c.name = :name', [
       ':table' => $this->connection->prefixTables('{' . $table . '}'),
       ':name' => $field,
-    ));
+    ]);
     foreach ($indexes as $index) {
       $this->connection->query('DROP INDEX [' . $index->name . '] ON [{' . $table . '}]');
     }
 
     // Fetch the list of check constraints referencing this column.
-    $constraints = $this->connection->query('SELECT DISTINCT cc.name FROM sys.columns c INNER JOIN sys.check_constraints cc ON cc.parent_object_id = c.object_id AND cc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', array(
+    $constraints = $this->connection->query('SELECT DISTINCT cc.name FROM sys.columns c INNER JOIN sys.check_constraints cc ON cc.parent_object_id = c.object_id AND cc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', [
       ':table' => $this->connection->prefixTables('{' . $table . '}'),
       ':name' => $field,
-    ));
+    ]);
     foreach ($constraints as $constraint) {
       $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $constraint->name . ']');
     }
 
     // Fetch the list of default constraints referencing this column.
-    $constraints = $this->connection->query('SELECT DISTINCT dc.name FROM sys.columns c INNER JOIN sys.default_constraints dc ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', array(
+    $constraints = $this->connection->query('SELECT DISTINCT dc.name FROM sys.columns c INNER JOIN sys.default_constraints dc ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', [
       ':table' => $this->connection->prefixTables('{' . $table . '}'),
       ':name' => $field,
-    ));
+    ]);
     foreach ($constraints as $constraint) {
       $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $constraint->name . ']');
     }
@@ -1357,7 +1350,7 @@ EOF
    */
   public function fieldSetDefault($table, $field, $default) {
     if (!$this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot set default value of field %table.%field: field doesn't exist.", array('%table' => $table, '%field' => $field)));
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot set default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
     }
 
     if ($default === NULL) {
@@ -1368,7 +1361,11 @@ EOF
     }
 
     // Try to remove any existing default first.
-    try { $this->fieldSetNoDefault($table, $field); } catch (Exception $e) {}
+    try {
+      $this->fieldSetNoDefault($table, $field);
+    }
+    catch (Exception $e) {
+    }
 
     // Create the new default.
     $this->connection->query('ALTER TABLE [{' . $table . '}] ADD CONSTRAINT {' . $table . '}_' . $field . '_df DEFAULT ' . $default . ' FOR [' . $field . ']');
@@ -1381,7 +1378,7 @@ EOF
    */
   public function fieldSetNoDefault($table, $field) {
     if (!$this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot remove default value of field %table.%field: field doesn't exist.", array('%table' => $table, '%field' => $field)));
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot remove default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
     }
 
     $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT {' . $table . '}_' . $field . '_df');
@@ -1394,7 +1391,7 @@ EOF
    */
   public function addPrimaryKey($table, $fields) {
     if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add primary key to table %table: table doesn't exist.", array('%table' => $table)));
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add primary key to table %table: table doesn't exist.", ['%table' => $table]));
     }
 
     if ($primary_key_name = $this->primaryKeyName($table)) {
@@ -1404,7 +1401,7 @@ EOF
         $this->cleanUpTechnicalPrimaryColumn($table);
       }
       else {
-        throw new DatabaseSchemaObjectExistsException(t("Cannot add primary key to table %table: primary key already exists.", array('%table' => $table)));
+        throw new DatabaseSchemaObjectExistsException(t("Cannot add primary key to table %table: primary key already exists.", ['%table' => $table]));
       }
     }
 
@@ -1440,10 +1437,10 @@ EOF
    */
   protected function primaryKeyName($table) {
     $table = $this->connection->prefixTables('{' . $table . '}');
-    return $this->connection->query('SELECT name FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID(:table) AND type = :type', array(
+    return $this->connection->query('SELECT name FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID(:table) AND type = :type', [
       ':table' => $table,
       ':type' => 'PK',
-    ))->fetchField();
+    ])->fetchField();
   }
 
   /**
@@ -1464,6 +1461,7 @@ EOF
 
   /**
    * Drop the primary key constraint.
+   *
    * @param mixed $table
    */
   protected function cleanUpPrimaryKey($table) {
@@ -1478,7 +1476,7 @@ EOF
       $this->dropIndex($table, $this->COMPUTED_PK_COLUMN_INDEX);
       $this->dropField($table, $this->COMPUTED_PK_COLUMN_NAME);
     }
-    // Try to get rid of the TPC
+    // Try to get rid of the TPC.
     $this->cleanUpTechnicalPrimaryColumn($table);
   }
 
@@ -1493,7 +1491,7 @@ EOF
   protected function cleanUpTechnicalPrimaryColumn($table) {
     // Get the number of remaining unique indexes on the table, that
     // are not primary keys and prune the technical primary column if possible.
-    $unique_indexes = $this->connection->query('SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1 AND is_primary_key = 0', array(':table' => $this->connection->prefixTables('{' . $table . '}')))->fetchField();
+    $unique_indexes = $this->connection->query('SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1 AND is_primary_key = 0', [':table' => $this->connection->prefixTables('{' . $table . '}')])->fetchField();
     $primary_key_is_technical = $this->isTechnicalPrimaryKey($this->primaryKeyName($table));
     if (!$unique_indexes && !$primary_key_is_technical) {
       $this->dropField($table, $this->TECHNICAL_PK_COLUMN_NAME);
@@ -1507,16 +1505,16 @@ EOF
    */
   public function addUniqueKey($table, $name, $fields) {
     if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add unique key %name to table %table: table doesn't exist.", array('%table' => $table, '%name' => $name)));
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add unique key %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
     }
     if ($this->uniqueKeyExists($table, $name)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot add unique key %name to table %table: unique key already exists.", array('%table' => $table, '%name' => $name)));
+      throw new DatabaseSchemaObjectExistsException(t("Cannot add unique key %name to table %table: unique key already exists.", ['%table' => $table, '%name' => $name]));
     }
 
     $this->createTechnicalPrimaryColumn($table);
 
     // Then, build a expression based on the columns.
-    $column_expression = array();
+    $column_expression = [];
     foreach ($fields as $field) {
       if (is_array($field)) {
         $column_expression[] = 'SUBSTRING(CAST(' . $field[0] . ' AS varbinary(max)),1,' . $field[1] . ')';
@@ -1559,10 +1557,10 @@ EOF
    */
   protected function uniqueKeyExists($table, $name) {
     $table = $this->connection->prefixTables('{' . $table . '}');
-    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', array(
+    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
       ':table' => $table,
       ':name' => $name . '_unique',
-    ))->fetchField();
+    ])->fetchField();
   }
 
   /**
@@ -1570,12 +1568,12 @@ EOF
    *
    * @status tested
    */
-  public function addIndex($table, $name, $fields, array $spec = array()) {
+  public function addIndex($table, $name, $fields, array $spec = []) {
     if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", array('%table' => $table, '%name' => $name)));
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
     }
     if ($this->indexExists($table, $name)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot add index %name to table %table: index already exists.", array('%table' => $table, '%name' => $name)));
+      throw new DatabaseSchemaObjectExistsException(t("Cannot add index %name to table %table: index already exists.", ['%table' => $table, '%name' => $name]));
     }
 
     $xml_field = NULL;
@@ -1625,10 +1623,10 @@ EOF
    */
   public function indexExists($table, $name) {
     $table = $this->connection->prefixTables('{' . $table . '}');
-    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', array(
+    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
       ':table' => $table,
-      ':name' => $name . '_idx'
-    ))->fetchField();
+      ':name' => $name . '_idx',
+    ])->fetchField();
   }
 
   /**
@@ -1649,25 +1647,29 @@ EOF
     return FALSE;
   }
 
+  /**
+   *
+   */
   public function copyTable($name, $table) {
     throw new \Error("Method not implemented.");
   }
 
-  #region Index
+  // Region Index.
 
   /**
    * Verify if a in index exists in the database.
    *
    * @param mixed $table
    * @param mixed $name
+   *
    * @return bool
    */
   public function _ExistsIndex($table, $index) {
     $table = $this->connection->prefixTables('{' . $table . '}');
-    return (bool) $this->connection->query_direct('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', array(
+    return (bool) $this->connection->query_direct('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
       ':table' => $table,
-      ':name' => $index
-    ))->fetchField();
+      ':name' => $index,
+    ])->fetchField();
   }
 
   /**
@@ -1675,6 +1677,7 @@ EOF
    *
    * @param mixed $table
    * @param mixed $index
+   *
    * @return void
    */
   public function _DropIndex($table, $index) {
@@ -1684,16 +1687,15 @@ EOF
     }
     $table = $this->connection->prefixTables('{' . $table . '}');
     $this->connection->query_direct('DROP INDEX :index ON :table',
-      array(
+      [
         ':index' => $index,
         ':table' => $table,
-      )
+      ]
     );
   }
 
-  #endregion
-
-  #region Comment Related Functions (D8 only)
+  // Endregion
+  // Region Comment Related Functions (D8 only)
 
   /**
    * Return the SQL statement to create or update a description.
@@ -1703,7 +1705,7 @@ EOF
     // leading to SQL Exception if calling sp_addextendedproperty twice on same object.
     static $columns;
     if (!isset($columns)) {
-      $columns = array();
+      $columns = [];
     }
 
     $schema = $this->defaultSchema;
@@ -1712,10 +1714,11 @@ EOF
     $name = 'MS_Description';
 
     // Determine if a value exists for this database object.
-    $key = $this->defaultSchema . '.' .  $table . '.' . $column;
-    if(isset($columns[$key])) {
+    $key = $this->defaultSchema . '.' . $table . '.' . $column;
+    if (isset($columns[$key])) {
       $result = $columns[$key];
-    } else {
+    }
+    else {
       $result = $this->getComment($table, $column);
     }
     $columns[$key] = $value;
@@ -1737,11 +1740,11 @@ EOF
         $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value=" . $value . "";
       }
       if (isset($schema)) {
-        $sql .= ",@level0type = N'Schema', @level0name = '". $schema ."'";
+        $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
         if (isset($table)) {
-          $sql .= ",@level1type = N'Table', @level1name = '". $table ."'";
+          $sql .= ",@level1type = N'Table', @level1name = '" . $table . "'";
           if ($column !== NULL) {
-            $sql .= ",@level2type = N'Column', @level2name = '". $column ."'";
+            $sql .= ",@level2type = N'Column', @level2name = '" . $column . "'";
           }
         }
       }
@@ -1750,6 +1753,9 @@ EOF
     return $sql;
   }
 
+  /**
+   *
+   */
   public function prepareComment($comment, $length = NULL) {
     // Truncate comment to maximum comment length.
     if (isset($length)) {
@@ -1775,8 +1781,7 @@ EOF
     return $comment;
   }
 
-  #endregion
-
+  // Endregion.
 }
 
 /**

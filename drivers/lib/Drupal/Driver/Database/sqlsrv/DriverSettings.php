@@ -2,9 +2,9 @@
 
 namespace Drupal\Driver\Database\sqlsrv;
 
-use \Drupal\Core\Site\Settings;
+use Drupal\Core\Site\Settings;
 
-use \PDO as PDO;
+use PDO as PDO;
 
 /**
  * Global settings for the driver.
@@ -36,18 +36,18 @@ class DriverSettings {
    *
    * @var array
    */
-  private static $default_driver_settings = array(
-        'default_isolation_level' => FALSE,
-        'default_direct_queries' => FALSE,
-        'default_statement_caching' => FALSE,
-        'use_native_upsert' => FALSE,
-        'use_native_merge' => FALSE,
-        'statement_caching_mode' => 'disabled',
-        'append_stack_comments' => FALSE,
-        'default_bypass_query_preprocess' => FALSE,
-        'enable_transactions' => TRUE,
-        'monitor_driver_status' => TRUE,
-      );
+  private static $default_driver_settings = [
+    'default_isolation_level' => FALSE,
+    'default_direct_queries' => FALSE,
+    'default_statement_caching' => FALSE,
+    'use_native_upsert' => FALSE,
+    'use_native_merge' => FALSE,
+    'statement_caching_mode' => 'disabled',
+    'append_stack_comments' => FALSE,
+    'default_bypass_query_preprocess' => FALSE,
+    'enable_transactions' => TRUE,
+    'monitor_driver_status' => TRUE,
+  ];
 
   /**
    * Checks for a valid setting in the list of allowed values.
@@ -69,7 +69,7 @@ class DriverSettings {
    * @return DriverSettings
    */
   public static function instanceFromSettings() {
-    $configuration = Settings::get('mssql_configuration', array());
+    $configuration = Settings::get('mssql_configuration', []);
     $configuration = array_merge(static::$default_driver_settings, $configuration);
     return new DriverSettings($configuration);
   }
@@ -90,24 +90,24 @@ class DriverSettings {
    */
   private function __construct($configuration) {
 
-    $this->_defaultIsolationLevel = $this->CheckValid('default_isolation_level', $configuration['default_isolation_level'], array(
-        FALSE,
-        PDO::SQLSRV_TXN_READ_UNCOMMITTED,
-        PDO::SQLSRV_TXN_READ_COMMITTED,
-        PDO::SQLSRV_TXN_REPEATABLE_READ,
-        PDO::SQLSRV_TXN_SNAPSHOT,
-        PDO::SQLSRV_TXN_SERIALIZABLE,
-      ));
+    $this->_defaultIsolationLevel = $this->CheckValid('default_isolation_level', $configuration['default_isolation_level'], [
+      FALSE,
+      PDO::SQLSRV_TXN_READ_UNCOMMITTED,
+      PDO::SQLSRV_TXN_READ_COMMITTED,
+      PDO::SQLSRV_TXN_REPEATABLE_READ,
+      PDO::SQLSRV_TXN_SNAPSHOT,
+      PDO::SQLSRV_TXN_SERIALIZABLE,
+    ]);
 
-    $this->_defaultDirectQueries = $this->CheckValid('default_direct_queries', $configuration['default_direct_queries'], array(TRUE, FALSE));
-    $this->_defaultStatementCaching = $this->CheckValid('default_statement_caching', $configuration['default_statement_caching'], array(TRUE, FALSE));
-    $this->_defaultBypassQueryPreprocess = $this->CheckValid('default_bypass_query_preprocess', $configuration['default_bypass_query_preprocess'], array(TRUE, FALSE));
-    $this->_useNativeUpsert = $this->CheckValid('use_native_upsert', $configuration['use_native_upsert'], array(TRUE, FALSE));
-    $this->_useNativeMerge =$this->CheckValid('use_native_merge', $configuration['use_native_merge'], array(TRUE, FALSE));
-    $this->_statementCachingMode =$this->CheckValid('statement_caching_mode', $configuration['statement_caching_mode'], array('disabled', 'on-demand', 'always'));
-    $this->_appendStackComments =$this->CheckValid('append_stack_comments', $configuration['append_stack_comments'], array(TRUE, FALSE));
-    $this->_enableTransactions =$this->CheckValid('enable_transactions', $configuration['enable_transactions'], array(TRUE, FALSE));
-    $this->_monitorDriverStatus =$this->CheckValid('monitor_driver_status', $configuration['monitor_driver_status'], array(TRUE, FALSE));
+    $this->_defaultDirectQueries = $this->CheckValid('default_direct_queries', $configuration['default_direct_queries'], [TRUE, FALSE]);
+    $this->_defaultStatementCaching = $this->CheckValid('default_statement_caching', $configuration['default_statement_caching'], [TRUE, FALSE]);
+    $this->_defaultBypassQueryPreprocess = $this->CheckValid('default_bypass_query_preprocess', $configuration['default_bypass_query_preprocess'], [TRUE, FALSE]);
+    $this->_useNativeUpsert = $this->CheckValid('use_native_upsert', $configuration['use_native_upsert'], [TRUE, FALSE]);
+    $this->_useNativeMerge = $this->CheckValid('use_native_merge', $configuration['use_native_merge'], [TRUE, FALSE]);
+    $this->_statementCachingMode = $this->CheckValid('statement_caching_mode', $configuration['statement_caching_mode'], ['disabled', 'on-demand', 'always']);
+    $this->_appendStackComments = $this->CheckValid('append_stack_comments', $configuration['append_stack_comments'], [TRUE, FALSE]);
+    $this->_enableTransactions = $this->CheckValid('enable_transactions', $configuration['enable_transactions'], [TRUE, FALSE]);
+    $this->_monitorDriverStatus = $this->CheckValid('monitor_driver_status', $configuration['monitor_driver_status'], [TRUE, FALSE]);
   }
 
   /**
@@ -116,19 +116,22 @@ class DriverSettings {
    * @return array
    */
   public function exportConfiguration() {
-    return array(
-        'default_isolation_level' => $this->GetDefaultIsolationLevel(),
-        'default_direct_queries' => $this->GetDefaultDirectQueries(),
-        'use_native_upsert' => $this->GetUseNativeUpsert(),
-        'use_native_merge' => $this->GetUseNativeMerge(),
-        'statement_caching_mode' => $this->GetStatementCachingMode(),
-        'append_stack_comments' => $this->GetAppendCallstackComment(),
-        'default_bypass_query_preprocess' => $this->GetDeafultBypassQueryPreprocess(),
-        'default_statement_caching' => $this->GetDeafultStatementCaching(),
-        'monitorDriverStatus' => $this->GetMonitorDriverStatus(),
-      );
+    return [
+      'default_isolation_level' => $this->GetDefaultIsolationLevel(),
+      'default_direct_queries' => $this->GetDefaultDirectQueries(),
+      'use_native_upsert' => $this->GetUseNativeUpsert(),
+      'use_native_merge' => $this->GetUseNativeMerge(),
+      'statement_caching_mode' => $this->GetStatementCachingMode(),
+      'append_stack_comments' => $this->GetAppendCallstackComment(),
+      'default_bypass_query_preprocess' => $this->GetDeafultBypassQueryPreprocess(),
+      'default_statement_caching' => $this->GetDeafultStatementCaching(),
+      'monitorDriverStatus' => $this->GetMonitorDriverStatus(),
+    ];
   }
 
+  /**
+   *
+   */
   public function GetMonitorDriverStatus() {
     return $this->_monitorDriverStatus;
   }
@@ -197,7 +200,7 @@ class DriverSettings {
   /**
    * Wether to user or not the native merge implementaiton.
    */
-  public function GetUseNativeMerge()  {
+  public function GetUseNativeMerge() {
     return $this->_useNativeMerge;
   }
 
@@ -215,9 +218,9 @@ class DriverSettings {
    * 'disabled' => Never use statement caching.
    * 'on-demand' => Only use statement caching when implicitly set in a Context.
    * 'always' => Always use statement caching.
-   *
    */
   public function GetStatementCachingMode() {
     return $this->_statementCachingMode;
   }
+
 }
