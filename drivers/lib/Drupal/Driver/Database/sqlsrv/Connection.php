@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Definition of Drupal\Driver\Database\sqlsrv\Connection
- */
-
 namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Database;
@@ -37,6 +32,10 @@ use Exception as Exception;
 /**
  * @addtogroup database
  * @{
+ */
+
+/**
+ * Sqlsvr implementation of \Drupal\Core\Database\Connection.
  *
  * Temporary tables: temporary table support is done by means of global temporary tables (#)
  * to avoid the use of DIRECT QUERIES. You can enable and disable the use of direct queries
@@ -781,7 +780,7 @@ class Connection extends DatabaseConnection {
     return $result;
   }
 
-  #region Transactions
+  // Transactions
 
   /**
    * Overriden to allow transaction settings.
@@ -852,7 +851,7 @@ class Connection extends DatabaseConnection {
    * Summary of pushTransaction
    * @param string $name
    * @param DatabaseTransactionSettings $settings
-   * @throws DatabaseTransactionNameNonUniqueException
+   * @throws \Drupal\Core\Database\TransactionNameNonUniqueException
    * @return void
    */
   public function pushTransaction($name, $settings = NULL) {
@@ -915,8 +914,8 @@ class Connection extends DatabaseConnection {
    * @param $name
    *   The name of the savepoint
    *
-   * @throws DatabaseTransactionNoActiveException
-   * @throws DatabaseTransactionCommitFailedException
+   * @throws \Drupal\Core\Database\TransactionNoActiveException
+   * @throws \Drupal\Core\Database\TransactionCommitFailedException
    *
    * @see DatabaseTransaction
    */
@@ -951,15 +950,15 @@ class Connection extends DatabaseConnection {
       unset($this->transactionLayers[$name]);
       if (empty($this->transactionLayers)) {
         try {
-          // PDO::commit() can either return FALSE or throw an exception itself
+          // PDO::commit() can either return FALSE or throw an exception itself.
           if (!$this->connection->commit()) {
             throw new DatabaseTransactionCommitFailedException();
           }
         }
         finally {
-          // Restore original transaction isolation level
+          // Restore original transaction isolation level.
           if ($level = $this->driver_settings->GetDefaultTransactionIsolationLevelInStatement()) {
-            if($state['settings']->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) {
+            if ($state['settings']->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) {
               if ($level != $state['settings']->Get_IsolationLevel()->__toString()) {
                 $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
               }
@@ -973,7 +972,7 @@ class Connection extends DatabaseConnection {
     }
   }
 
-  #endregion
+  // End Transactions
 
   /**
    * Overrides \Drupal\Core\Database\Connection::createDatabase().
@@ -995,6 +994,7 @@ class Connection extends DatabaseConnection {
       throw new DatabaseNotFoundException($e->getMessage());
     }
   }
+
 }
 
 /**
