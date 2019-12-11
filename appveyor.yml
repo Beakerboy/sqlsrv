@@ -50,6 +50,8 @@ install:
   - cmd: composer global require hirak/prestissimo
   - cmd: cd /d c:\projects
   - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
+  # Add composer installed binaries to PATH
+  - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
   - cmd: cd /d C:\projects\drupal-project
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
@@ -90,7 +92,8 @@ build_script:
   - cmd: echo "No build"
 test_script:
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - cmd: C:\projects\drupal-project\vendor\bin\phpcs --standard=Drupal . 
+  - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
+  - cmd: phpcs --standard=Drupal . 
   - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir c:\testresults\
   - cmd: echo Tests not run because they need to be updated as they are using deprecated implementations
