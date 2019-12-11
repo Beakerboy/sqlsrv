@@ -101,7 +101,8 @@ before_test:
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
 test_script:
-  - cmd: phpunit --configuration tests/phpunit.xml --coverage-clover C:\build\logs\clover.xml
+  - cmd: phpunit --configuration tests/phpunit.xml
+#  - cmd: phpunit --configuration tests/phpunit.xml --coverage-clover C:\build\logs\clover.xml
   - cmd: php --ini
   #- ps: Get-Content C:\build\logs\clover.xml
   - cmd: phpcs --standard=Drupal .
