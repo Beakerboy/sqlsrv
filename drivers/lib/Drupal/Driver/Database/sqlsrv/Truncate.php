@@ -5,7 +5,9 @@ namespace Drupal\Driver\Database\sqlsrv;
 use Drupal\Core\Database\Query\Truncate as QueryTruncate;
 
 /**
+ * General class for an abstracted TRUNCATE operation.
  *
+ * Can the execute function be removed? It's identical to the parent.
  */
 class Truncate extends QueryTruncate {
 
