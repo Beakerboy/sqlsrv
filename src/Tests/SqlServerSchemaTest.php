@@ -13,7 +13,7 @@ use Drupal\Core\Database\DatabaseException;
 class SqlServerSchemaTest extends WebTestBase {
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function getInfo() {
     return [
@@ -146,7 +146,7 @@ class SqlServerSchemaTest extends WebTestBase {
   }
 
   /**
-   *
+   * Test that only positive numbers can be inserted into a signed field.
    */
   protected function assertUnsignedField($table, $field_name) {
     try {
@@ -171,7 +171,8 @@ class SqlServerSchemaTest extends WebTestBase {
   }
 
   /**
-   *
+   * Test that both positive and negative numbers can be inserted into a signed
+   * field.
    */
   protected function assertSignedField($table, $field_name) {
     try {
