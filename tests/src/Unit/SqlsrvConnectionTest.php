@@ -11,7 +11,7 @@ use Drupal\Driver\Database\sqlsrv\Connection;
  * @group Database
  */
 
-class ConnectionTest extends UnitTestCase {
+class SqlsrvConnectionTest extends UnitTestCase {
 
   /**
    * Mock PDO object for use in tests.
