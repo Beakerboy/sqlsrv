@@ -51,6 +51,7 @@ install:
   - cmd: cd /d c:\projects
   - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
   - cmd: cd /d C:\projects\drupal-project
+  - cmd: dir /s /b
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
   # Replace the pulled module with the local files, only for this CI
@@ -89,8 +90,6 @@ install:
 build_script:
   - cmd: echo "No build"
 test_script:
-  - cmd: cd c:\projects
-  - cmd: dir /s /b
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: C:\projects\drupal-project\web\vendor\bin\phpcs --standard=Drupal . 
   - cmd: cd /d C:\projects\drupal-project
