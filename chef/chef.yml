@@ -18,12 +18,12 @@ deployers:
   php:
     type: 'php'
     runtime:
-      - {type: 'dl', uri: 'http://windows.php.net/downloads/releases/archives/php-7.3-12-nts-Win32-VC14-x64.zip', maps: {'*' : 'php/'}}
-      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/xdebug/2.5.3/php_xdebug-2.5.3-7.1-nts-vc14-x64.zip', maps: {'php_xdebug.dll':'php/ext/php_xdebug.dll'}}
-      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/igbinary/2.0.1/php_igbinary-2.0.1-7.1-nts-vc14-x64.zip', maps: {'php_igbinary.dll': 'php/ext/php_igbinary.dll'}}
-      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/couchbase/2.3.2/php_couchbase-2.3.2-7.1-nts-vc14-x64.zip', maps: {'php_couchbase.dll':'php/ext/php_couchbase.dll', 'libcouchbase.dll':'php/libcouchbase.dll'}}
-      - {type: 'dl', uri: 'https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.6.1/php_pdo_sqlsrv-5.6.1-7.1-nts-vc14-x64.zip', maps: {'php_pdo_sqlsrv.dll': 'php/ext/php_pdo_sqlsrv.dll'}}
-      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.1-nts-vc14-x64.zip', maps: {'php_wincache.dll': 'php/ext/php_wincache.dll'}}
+      - {type: 'dl', uri: 'http://windows.php.net/downloads/releases/archives/php-7.2.24-nts-Win32-VC15-x64.zip', maps: {'*' : 'php/'}}
+      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/xdebug/2.8.0/php_xdebug-2.8.0-7.2-nts-vc15-x64.zip', maps: {'php_xdebug.dll':'php/ext/php_xdebug.dll'}}
+      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/igbinary/2.0.8/php_igbinary-2.0.8-7.2-nts-vc15-x64.zip', maps: {'php_igbinary.dll': 'php/ext/php_igbinary.dll'}}
+  #    - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/couchbase/2.3.2/php_couchbase-2.3.2-7.1-nts-vc15-x64.zip', maps: {'php_couchbase.dll':'php/ext/php_couchbase.dll', 'libcouchbase.dll':'php/libcouchbase.dll'}}
+      - {type: 'dl', uri: 'https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.6.1/php_pdo_sqlsrv-5.6.1-7.2-nts-vc15-x64.zip', maps: {'php_pdo_sqlsrv.dll': 'php/ext/php_pdo_sqlsrv.dll'}}
+      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.2-nts-vc15-x86.zip', maps: {'php_wincache.dll': 'php/ext/php_wincache.dll'}}
  # CERTIFICATES
       - {type: 'dl', uri: 'http://curl.haxx.se/ca/cacert.pem', maps: {'cacert.pem': '/cacert.pem'}}
       - {type: 'file', 'action':'copy', 'source':'php/php.ini-production', 'destination':'php/php.ini'}
