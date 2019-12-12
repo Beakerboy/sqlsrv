@@ -55,9 +55,6 @@ class SqlsrvConnectionTest extends UnitTestCase {
     $this->mockPdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
   }
 
-  protected function tearDown() {
-    
-
   /**
    * Data provider for testEscapeTable.
    *
