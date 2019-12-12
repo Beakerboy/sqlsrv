@@ -101,10 +101,9 @@ before_test:
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
   - cmd: cd web
 test_script:
-  - cmd: phpunit -c core/phpunit.xml.dist modules/contrib/sqlsrv
-#  - cmd: phpunit --configuration tests/phpunit.xml --coverage-clover C:\build\logs\clover.xml
-  - cmd: php --ini
+  - cmd: phpunit -c core/phpunit.xml.dist modules/contrib/sqlsrv --coverage-clover C:\build\logs\clover.xml
   #- ps: Get-Content C:\build\logs\clover.xml
-  - cmd: phpcs --standard=Drupal .
+  #- cmd: cd %APPVEYOR_BUILD_FOLDER%
+  #- cmd: phpcs --standard=Drupal .
 after_test:
-  - cmd: php %APPVEYOR_BUILD_FOLDER%/vendor/bin/php-coveralls -v
+  - cmd: php C:\projects\drupal-project\vendor\bin\php-coveralls -v
