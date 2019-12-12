@@ -31,7 +31,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
    * The core test suite uses an empty array. This module requires at least a value in
    * $option['prefix']['default']
    */
-  protected $options
+  protected $options;
 
   /**
    * {@inheritdoc}
