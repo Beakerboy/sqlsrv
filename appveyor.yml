@@ -106,6 +106,6 @@ test_script:
   #- cmd: phpunit -c core/phpunit.xml.dist modules/contrib/sqlsrv --coverage-clover C:\build\logs\clover.xml
   #- ps: Get-Content C:\build\logs\clover.xml
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - cmd: phpcs --standard=Drupal .
+  #- cmd: phpcs --standard=Drupal .
 after_test:
   #- cmd: php C:\projects\drupal-project\vendor\bin\php-coveralls -v
