@@ -9,7 +9,8 @@ use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSett
 /**
  * Implements the Upsert query for the MSSQL database driver.
  *
- * TODO: This class has been replaced by UpsertNative. Keeping this here for a while though..
+ * TODO: This class has been replaced by UpsertNative.
+ * Keeping this here for a while though..
  */
 class Upsert extends QueryUpsert {
 
@@ -77,7 +78,8 @@ class Upsert extends QueryUpsert {
     // Fifth, insert the remaining rows. This results in the following query:
     //
     // INSERT INTO table_name
-    // SELECT temp_table.primary_key, temp_table.column1 [, temp_table.column2 ...]
+    // SELECT
+    //   temp_table.primary_key, temp_table.column1 [, temp_table.column2 ...]
     // FROM temp_table
     // LEFT OUTER JOIN table_name ON (table_name.id = temp_table.id)
     // WHERE table_name.id IS NULL;.
