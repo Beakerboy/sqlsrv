@@ -106,4 +106,4 @@ test_script:
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   #- cmd: phpcs --standard=Drupal .
 after_test:
-  #- cmd: php C:\projects\drupal-project\vendor\bin\php-coveralls -v
+  - cmd: C:\projects\drupal-project\vendor\bin\php-coveralls -v
