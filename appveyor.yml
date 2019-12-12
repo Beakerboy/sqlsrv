@@ -84,8 +84,8 @@ install:
       If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpinstall') {
         $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       }
-   - cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2017" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
-   - cmd: cd /d C:\projects\drupal-project
+  - cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2017" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+  - cmd: cd /d C:\projects\drupal-project
   - ps: $Env:CWD = (Get-Location).path;
   - cmd: cd /d C:\projects\drupal-project\web
   - cmd: drupal module:install simpletest
@@ -98,6 +98,7 @@ before_test:
   - cmd: mkdir c:\build\logs
   - cmd: cd C:\projects\drupal-project
   - cmd: composer require php-coveralls/php-coveralls
+  # Associate Drupal coding standard into phpcs
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
   - cmd: cd web
 test_script:
