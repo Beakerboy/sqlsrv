@@ -103,7 +103,6 @@ before_test:
   - cmd: cd web
 test_script:
   - cmd: phpunit -c core/phpunit.xml.dist modules/contrib/sqlsrv --coverage-clover C:\build\logs\clover.xml
-  - ps: Get-Content C:\build\logs\clover.xml
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   #- cmd: phpcs --standard=Drupal .
 after_test:
