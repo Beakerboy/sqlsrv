@@ -40,7 +40,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
     parent::setUp();
     $this->mockSchema = $this->getMockBuilder('Drupal\Driver\Database\sqlsrv\Schema')
       ->setMethods(['getDefaultSchema', '__construct'])
-      ->setConstructorArgs(NULL)
+      ->setConstructorArgs([NULL])
       ->disableOriginalConstructor()
       ->getMock();
     $this->mockSchema->method('getDefaultSchema')->willReturn('dbo');
