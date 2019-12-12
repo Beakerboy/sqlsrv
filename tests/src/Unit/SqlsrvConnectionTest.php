@@ -23,6 +23,9 @@ class SqlsrvConnectionTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
+    $this->mockSchema = $this->getMockBuilder('Drupal\Driver\Database\sqlsrv\Schema')->setMethods(['getDefaultSchema'=>'dbo'])->getMock();
+    $this->options['prefix']['default'] = '';
+    $this->options['namespace'] = getNamespace($this->mockSchema)
     $this->mockPdo = $this->getMockBuilder('Drupal\Tests\Core\Database\Stub\StubPDO')->setMethods(null)->getMock();
   }
 
@@ -104,8 +107,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
    */
   public function testEscapeAlias($expected, $name) {
     // The Connection class should be able to handle missing keys
-    $options['prefix']['default'] = '';
-    $sqlsvr_connection = new Connection($this->mockPdo, $options);
+    $sqlsvr_connection = new Connection($this->mockPdo, $this->options);
     $this->assertInstanceOf(Connection::class, $sqlsvr_connection);
     //$this->assertEquals($expected, $sqlsvr_connection->escapeAlias($name));
   }
