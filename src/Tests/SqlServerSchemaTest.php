@@ -171,6 +171,8 @@ class SqlServerSchemaTest extends WebTestBase {
   }
 
   /**
+   * Test signed filed operated correctly
+   *
    * Test that both positive and negative numbers can be inserted into a signed
    * field.
    */
