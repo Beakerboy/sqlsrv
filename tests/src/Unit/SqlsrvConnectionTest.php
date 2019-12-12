@@ -45,14 +45,18 @@ class SqlsrvConnectionTest extends UnitTestCase {
       ->disableOriginalConstructor()
       ->getMock();
     $this->mockSchema->method('getDefaultSchema')->willReturn('dbo');
-    class_alias('MockSchema', 'Drupal\Driver\Database\mock\Schema');
-    // $class = get_class($this->mockSchema);
-    // $namespace = substr($class, 0, strrpos($class, '\\'));
+    if (!class_exists('Drupal\Driver\Database\mock\Schema')) {
+      class_alias('MockSchema', 'Drupal\Driver\Database\mock\Schema');
+    }
+
     $this->options['namespace'] = 'Drupal\Driver\Database\mock';
     $this->options['prefix']['default'] = '';
 
     $this->mockPdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
   }
+
+  protected function tearDown() {
+    
 
   /**
    * Data provider for testEscapeTable.
