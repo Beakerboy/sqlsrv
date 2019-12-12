@@ -8,7 +8,7 @@ use Drupal\Core\Database\TransactionExplicitCommitNotAllowedException as Databas
 use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
 
 /**
- *
+ * Sqlsvr implementation of \Drupal\Core\Database\Transaction.
  */
 class Transaction extends DatabaseTransaction {
 
@@ -29,11 +29,11 @@ class Transaction extends DatabaseTransaction {
   /**
    * Overriden to add settings.
    *
-   * @param Connection $connection
+   * @param Connection $connection database connection
    *
-   * @param string $name
+   * @param string $name savepoint name
    *
-   * @param \Drupal\Core\Database\TransactionSettings $settings
+   * @param DatabaseTransactionSettings $settings datatbase transaction settings
    */
   public function __construct(Connection $connection, $name = NULL, DatabaseTransactionSettings $settings = NULL) {
 
