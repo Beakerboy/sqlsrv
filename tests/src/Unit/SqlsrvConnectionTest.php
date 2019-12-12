@@ -19,11 +19,27 @@ class SqlsrvConnectionTest extends UnitTestCase {
   protected $mockPdo;
 
   /**
+   * Mock Schema object for use in tests.
+   *
+   * @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\Driver\Database\sqlsrv\Schema
+   */
+  protected $mockSchema;
+
+  /**
+   * @var array database connection options
+   *
+   * The core test suite uses an empty array. This module requires at least a value in
+   * $option['prefix']['default']
+   */
+  protected $options
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
     $this->mockSchema = $this->getMockBuilder('Drupal\Driver\Database\sqlsrv\Schema')->setMethods(['getDefaultSchema'=>'dbo'])->getMock();
+ 
     $this->options['prefix']['default'] = '';
     $this->options['namespace'] = getNamespace($this->mockSchema)
     $this->mockPdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
@@ -94,9 +110,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
    * @dataProvider providerEscapeTables
    */
   public function testEscapeTable($expected, $name) {
-    // The Connection class should be able to handle missing keys
-    $options['prefix']['default'] = '';
-    $pgsql_connection = new Connection($this->mockPdo, $options);
+    $pgsql_connection = new Connection($this->mockPdo, $this->options);
 
     $this->assertEquals($expected, $pgsql_connection->escapeTable($name));
   }
@@ -106,10 +120,9 @@ class SqlsrvConnectionTest extends UnitTestCase {
    * @dataProvider providerEscapeAlias
    */
   public function testEscapeAlias($expected, $name) {
-    // The Connection class should be able to handle missing keys
     $sqlsvr_connection = new Connection($this->mockPdo, $this->options);
-    $this->assertInstanceOf(Connection::class, $sqlsvr_connection);
-    //$this->assertEquals($expected, $sqlsvr_connection->escapeAlias($name));
+
+    $this->assertEquals($expected, $sqlsvr_connection->escapeAlias($name));
   }
 
   /**
@@ -117,11 +130,9 @@ class SqlsrvConnectionTest extends UnitTestCase {
    * @dataProvider providerEscapeFields
    */
   public function testEscapeField($expected, $name) {
-    // The Connection class should be able to handle missing keys
-    $options['prefix']['default'] = '';
-    $sqlsvr_connection = new Connection($this->mockPdo, $options);
-    $this->assertTrue(true);
-    //$this->assertEquals($expected, $sqlsvr_connection->escapeField($name));
+    $sqlsvr_connection = new Connection($this->mockPdo, $this->options);
+
+    $this->assertEquals($expected, $sqlsvr_connection->escapeField($name));
   }
 
 }
