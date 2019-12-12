@@ -23,7 +23,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->mockPdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
+    $this->mockPdo = $this->getMockBuilder('Drupal\Tests\Core\Database\Stub\StubPDO')->setMethods(null)->getMock();
   }
 
   /**
