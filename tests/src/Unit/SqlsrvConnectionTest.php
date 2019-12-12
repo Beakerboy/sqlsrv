@@ -78,23 +78,6 @@ class SqlsrvConnectionTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for testEscapeAlias.
-   *
-   * @return array
-   *   Array of arrays with the following elements:
-   *   - Expected escaped string.
-   *   - String to escape.
-   */
-  public function providerEscapeAlias() {
-    return [
-      ['nocase', 'nocase'],
- //     ['"camelCase"', '"camelCase"'],
-//      ['"camelCase"', 'camelCase'],
-//      ['"camelCase"', 'camel.Case'],
-    ];
-  }
-
-  /**
    * Data provider for testEscapeField.
    *
    * @return array
@@ -128,16 +111,6 @@ class SqlsrvConnectionTest extends UnitTestCase {
     $pgsql_connection = new Connection($this->mockPdo, $this->options);
 
     $this->assertEquals($expected, $pgsql_connection->escapeTable($name));
-  }
-
-  /**
-   * @covers ::escapeAlias
-   * @dataProvider providerEscapeAlias
-   */
-  public function testEscapeAlias($expected, $name) {
-    $sqlsvr_connection = new Connection($this->mockPdo, $this->options);
-
-    $this->assertEquals($expected, $sqlsvr_connection->escapeAlias($name));
   }
 
   /**
