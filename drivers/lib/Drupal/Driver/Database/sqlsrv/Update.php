@@ -7,12 +7,12 @@ use Drupal\Core\Database\Query\Update as QueryUpdate;
 use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
 
 /**
- *
+ * Sqlsvr implementation of \Drupal\Core\Database\Query\Update.
  */
 class Update extends QueryUpdate {
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function execute() {
 
@@ -52,7 +52,7 @@ class Update extends QueryUpdate {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function __toString() {
     // Create a sanitized comment string to prepend to the query.
