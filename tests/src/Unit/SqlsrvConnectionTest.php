@@ -42,7 +42,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
     $this->mockSchema->method('getDefaultSchema')->willReturn('dbo');
     $this->options['prefix']['default'] = '';
     $class = get_class($this->mockSchema);
-    $namespace = substr($class, 0, strrpos($class, '\'));
+    $namespace = substr($class, 0, strrpos($class, '\\'));
     $this->options['namespace'] = $namespace;
     $this->mockPdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
   }
