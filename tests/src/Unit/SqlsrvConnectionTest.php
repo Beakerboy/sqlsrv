@@ -25,11 +25,14 @@ class SqlsrvConnectionTest extends UnitTestCase {
    */
   protected $mockSchema;
 
-  /**
-   * @var array database connection options
+  /** 
+   * Database connection options
    *
-   * The core test suite uses an empty array. This module requires at least a value in
+   * The core test suite uses an empty array.
+   * This module requires at least a value in:
    * $option['prefix']['default']
+   *
+   * @var array
    */
   protected $options;
 
@@ -66,14 +69,14 @@ class SqlsrvConnectionTest extends UnitTestCase {
   public function providerEscapeTables() {
     return [
       ['nocase', 'nocase'],
- //     ['"camelCase"', 'camelCase'],
- //     ['"camelCase"', '"camelCase"'],
- //     ['"camelCase"', 'camel/Case'],
-      // Sometimes, table names are following the pattern database.schema.table.
- //     ['"camelCase".nocase.nocase', 'camelCase.nocase.nocase'],
- //     ['nocase."camelCase".nocase', 'nocase.camelCase.nocase'],
- //     ['nocase.nocase."camelCase"', 'nocase.nocase.camelCase'],
-//      ['"camelCase"."camelCase"."camelCase"', 'camelCase.camelCase.camelCase'],
+      // ['"camelCase"', 'camelCase'],.
+      // ['"camelCase"', '"camelCase"'],.
+      // ['"camelCase"', 'camel/Case'],.
+      // Sometimes, table names are following the pattern database.schema.table..
+      // ['"camelCase".nocase.nocase', 'camelCase.nocase.nocase'],.
+      // ['nocase."camelCase".nocase', 'nocase.camelCase.nocase'],.
+      // ['nocase.nocase."camelCase"', 'nocase.nocase.camelCase'],.
+      // ['"camelCase"."camelCase"."camelCase"', 'camelCase.camelCase.camelCase'],.
     ];
   }
 
@@ -94,12 +97,11 @@ class SqlsrvConnectionTest extends UnitTestCase {
       ['[entity_test].[isDefaultRevision]', '"entity_test"."isDefaultRevision"'],
       ['[entityTest].[isDefaultRevision]', '"entityTest"."isDefaultRevision"'],
       ['[entityTest].[isDefaultRevision]', 'entityTest.isDefaultRevision'],
-      
+
       // This one might be a regression.
-      // Given: 'entity_test.is.Default.Revision'
-      // pgsql returns: 'entity_test."isDefaultRevision"'
-      //sqlsrv returns: '[entity_test].[is].[Default].[Revision]'
-      
+      // Given: 'entity_test.is.Default.Revision'.
+      // pgsql returns: 'entity_test."isDefaultRevision"'.
+      // sqlsrv returns: '[entity_test].[is].[Default].[Revision]'.
     ];
   }
 
