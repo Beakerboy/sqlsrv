@@ -58,8 +58,9 @@ install:
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
   - cmd: cd /d C:\projects\drupal-project
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
-  # Require this package
+  # Install other composer packagespackage
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
+  - cmd: composer require php-coveralls/php-coveralls
   # Replace the pulled module with the local files, only for this CI
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
   # Copy driver
@@ -97,13 +98,13 @@ before_test:
   - cmd: mkdir c:\build
   - cmd: mkdir c:\build\logs
   - cmd: cd C:\projects\drupal-project
-  - cmd: composer require php-coveralls/php-coveralls
   # Associate Drupal coding standard into phpcs
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
   - cmd: cd web
 test_script:
-  - cmd: phpunit -c core/phpunit.xml.dist modules/contrib/sqlsrv --coverage-clover C:\build\logs\clover.xml
-  - ps: Get-Content C:\build\logs\clover.xml
+  - cmd: phpunit -c core/phpunit.xml.dist modules/contrib/sqlsrv
+  # --coverage-clover C:\build\logs\clover.xml
+  #- ps: Get-Content C:\build\logs\clover.xml
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   #- cmd: phpcs --standard=Drupal .
 after_test:
