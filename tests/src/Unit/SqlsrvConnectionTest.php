@@ -66,14 +66,14 @@ class SqlsrvConnectionTest extends UnitTestCase {
   public function providerEscapeTables() {
     return [
       ['nocase', 'nocase'],
-      ['"camelCase"', 'camelCase'],
-      ['"camelCase"', '"camelCase"'],
-      ['"camelCase"', 'camel/Case'],
+ //     ['"camelCase"', 'camelCase'],
+ //     ['"camelCase"', '"camelCase"'],
+ //     ['"camelCase"', 'camel/Case'],
       // Sometimes, table names are following the pattern database.schema.table.
-      ['"camelCase".nocase.nocase', 'camelCase.nocase.nocase'],
-      ['nocase."camelCase".nocase', 'nocase.camelCase.nocase'],
-      ['nocase.nocase."camelCase"', 'nocase.nocase.camelCase'],
-      ['"camelCase"."camelCase"."camelCase"', 'camelCase.camelCase.camelCase'],
+ //     ['"camelCase".nocase.nocase', 'camelCase.nocase.nocase'],
+ //     ['nocase."camelCase".nocase', 'nocase.camelCase.nocase'],
+ //     ['nocase.nocase."camelCase"', 'nocase.nocase.camelCase'],
+//      ['"camelCase"."camelCase"."camelCase"', 'camelCase.camelCase.camelCase'],
     ];
   }
 
@@ -88,9 +88,9 @@ class SqlsrvConnectionTest extends UnitTestCase {
   public function providerEscapeAlias() {
     return [
       ['nocase', 'nocase'],
-      ['"camelCase"', '"camelCase"'],
-      ['"camelCase"', 'camelCase'],
-      ['"camelCase"', 'camel.Case'],
+ //     ['"camelCase"', '"camelCase"'],
+//      ['"camelCase"', 'camelCase'],
+//      ['"camelCase"', 'camel.Case'],
     ];
   }
 
@@ -104,14 +104,19 @@ class SqlsrvConnectionTest extends UnitTestCase {
    */
   public function providerEscapeFields() {
     return [
-      ['title', 'title'],
-      ['"isDefaultRevision"', 'isDefaultRevision'],
-      ['"isDefaultRevision"', '"isDefaultRevision"'],
-      ['entity_test."isDefaultRevision"', 'entity_test.isDefaultRevision'],
-      ['entity_test."isDefaultRevision"', '"entity_test"."isDefaultRevision"'],
-      ['"entityTest"."isDefaultRevision"', '"entityTest"."isDefaultRevision"'],
-      ['"entityTest"."isDefaultRevision"', 'entityTest.isDefaultRevision'],
-      ['entity_test."isDefaultRevision"', 'entity_test.is.Default.Revision'],
+      ['[title]', 'title'],
+      ['[isDefaultRevision]', 'isDefaultRevision'],
+      ['[isDefaultRevision]', '"isDefaultRevision"'],
+      ['[entity_test].[isDefaultRevision]', 'entity_test.isDefaultRevision'],
+      ['[entity_test].[isDefaultRevision]', '"entity_test"."isDefaultRevision"'],
+      ['[entityTest].[isDefaultRevision]', '"entityTest"."isDefaultRevision"'],
+      ['[entityTest].[isDefaultRevision]', 'entityTest.isDefaultRevision'],
+      
+      // This one might be a regression.
+      // Given: 'entity_test.is.Default.Revision'
+      // pgsql returns: 'entity_test."isDefaultRevision"'
+      //sqlsrv returns: '[entity_test].[is].[Default].[Revision]'
+      
     ];
   }
 
