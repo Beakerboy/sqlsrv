@@ -38,12 +38,16 @@ class SqlsrvConnectionTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->mockSchema = $this->getMockBuilder('Drupal\Driver\Database\sqlsrv\Schema')->setMethods(['getDefaultSchema'])->getMock();
+    $this->mockSchema = $this->getMockBuilder('Drupal\Driver\Database\sqlsrv\Schema')
+      ->setMethods(['getDefaultSchema', '__construct'])
+      ->setConstructorArgs(NULL)
+      ->disableOriginalConstructor()
+      ->getMock();
     $this->mockSchema->method('getDefaultSchema')->willReturn('dbo');
-    $this->options['prefix']['default'] = '';
     $class = get_class($this->mockSchema);
     $namespace = substr($class, 0, strrpos($class, '\\'));
     $this->options['namespace'] = $namespace;
+    $this->options['prefix']['default'] = '';
     $this->mockPdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
   }
 
