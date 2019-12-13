@@ -13,7 +13,7 @@
     "psr-4": { "Drupal\\Driver\\Database\\sqlsrv\\": "src/" }
   },
   "autoload-dev": {
-    "psr-4": { "Drupal\\Tests\\sqlsvr": "tests/src/" }
+    "psr-4": { "Drupal\\Tests\\sqlsvr\\": "tests/src/" }
   },
   "require": {
     "php" : "^7.0",
