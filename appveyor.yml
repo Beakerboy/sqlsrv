@@ -96,14 +96,11 @@ build_script:
   - cmd: echo "No build"
 before_test:
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - cmd: rd /s /q C:\projects\drupal-project\web\modules\contrib\sqlsrv
-  - cmd: rd /s /q C:\projects\drupal-project\web\drivers\lib\Drupal\Driver\Database\sqlsrv
+  - cmd: composer install
   # Associate Drupal coding standard into phpcs
   #- cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
-  - cmd: composer config repositories.drupal path C:\projects\drupal-project
-  - cmd: composer require drupal-composer/drupal-project:8.x-dev
 test_script:
-  - cmd: phpunit -c tests/phpunit.xml --coverage-clover .\build\logs\clover.xml
+  - cmd: phpunit -c tests\phpunit.xml --coverage-clover .\build\logs\clover.xml
   #- cmd: phpcs --standard=Drupal .
 after_test:
   - cmd: C:\projects\drupal-project\vendor\bin\php-coveralls -v
