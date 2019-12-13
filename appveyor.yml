@@ -62,11 +62,11 @@ install:
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   # Install other composer packagespackage
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
-  - cmd: composer require php-coveralls/php-coveralls
   # Replace the pulled module with the local files, only for this CI
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
+  - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
   # Copy driver
-  - cmd: xcopy /S /I /E /Y %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\src %cd%\web\modules\contrib\sqlsrv\src
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\web\drivers
   - ps: |
       $cwd = (Get-Location).Path;
       "php $cwd\vendor\drupal\console\bin\drupal " + $([char]37) + "*" | Out-File $cwd/web/drupal.bat -Encoding ASCII
