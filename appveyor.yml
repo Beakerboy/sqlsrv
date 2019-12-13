@@ -50,7 +50,9 @@ install:
       If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpcomposer') {
         $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       }
-  - cmd: composer global require hirak/prestissimo
+  - cmd: composer global require hirak/prestissimo --no-progress
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: composer install
   - cmd: cd /d c:\projects
   # Create a new drupal project
   - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
@@ -60,11 +62,12 @@ install:
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   # Install other composer packagespackage
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
-  - cmd: composer require php-coveralls/php-coveralls
   # Replace the pulled module with the local files, only for this CI
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
+  - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
   # Copy driver
-  - cmd: xcopy /S /I /E /Y %cd%\web\modules\contrib\sqlsrv\drivers %cd%\web\drivers
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\src %cd%\web\modules\contrib\sqlsrv\src
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests %cd%\web\modules\contrib\sqlsrv\tests
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\web\drivers
   - ps: |
       $cwd = (Get-Location).Path;
       "php $cwd\vendor\drupal\console\bin\drupal " + $([char]37) + "*" | Out-File $cwd/web/drupal.bat -Encoding ASCII
@@ -85,27 +88,22 @@ install:
       If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpinstall') {
         $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       }
-  - cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2017" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
-  - cmd: cd /d C:\projects\drupal-project
-  - ps: $Env:CWD = (Get-Location).path;
-  - cmd: cd /d C:\projects\drupal-project\web
-  - cmd: drupal module:install simpletest
-  - cmd: drupal module:install sqlsrv
-  - ps: wget "http://sqlsrv.drupal.org/"
+  #- cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2017" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+  #- cmd: cd /d C:\projects\drupal-project
+  #- ps: $Env:CWD = (Get-Location).path;
+  #- cmd: cd /d C:\projects\drupal-project\web
+  #- cmd: drupal module:install simpletest
+  #- cmd: drupal module:install sqlsrv
+  #- ps: wget "http://sqlsrv.drupal.org/"
 build_script:
   - cmd: echo "No build"
 before_test:
-  - cmd: mkdir c:\build
-  - cmd: mkdir c:\build\logs
-  - cmd: cd C:\projects\drupal-project
-  # Associate Drupal coding standard into phpcs
-  - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
-  - cmd: cd web
-test_script:
-  - cmd: phpunit -c core/phpunit.xml.dist modules/contrib/sqlsrv
-  # --coverage-clover C:\build\logs\clover.xml
-  #- ps: Get-Content C:\build\logs\clover.xml
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: mkdir .\build\logs
+  # Associate Drupal coding standard into phpcs
+  #- cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
+test_script:
+  - cmd: vendor\bin\phpunit -c tests\phpunit.xml --coverage-clover .\build\logs\clover.xml
   #- cmd: phpcs --standard=Drupal .
 after_test:
-  #- cmd: php C:\projects\drupal-project\vendor\bin\php-coveralls -v
+  - cmd: vendor\bin\php-coveralls -v
