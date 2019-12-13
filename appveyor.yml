@@ -50,7 +50,7 @@ install:
       If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpcomposer') {
         $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       }
-  - cmd: composer global require hirak/prestissimo
+  - cmd: composer global require hirak/prestissimo --no-progress
   - cmd: cd /d c:\projects
   # Create a new drupal project
   - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
@@ -95,14 +95,15 @@ install:
 build_script:
   - cmd: echo "No build"
 before_test:
-  - cmd: mkdir c:\build
-  - cmd: mkdir c:\build\logs
-  - cmd: cd C:\projects\drupal-project
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: rd /s /q C:\projects\drupal-project\web\modules\contrib\sqlsrv
+  - cmd: rd /s /q C:\projects\drupal-project\web\drivers\lib\Drupal\Driver\Database\sqlsvr
   # Associate Drupal coding standard into phpcs
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
-  - cmd: cd web
+  - cmd: composer config repositories.drupal path C:\projects\drupal-project
+  - cmd: composer require drupal-composer/drupal-project:8.x-dev
 test_script:
-  - cmd: phpunit -c core/phpunit.xml.dist modules/contrib/sqlsrv --coverage-clover .\build\logs\clover.xml
+  - cmd: phpunit -c tests/phpunit.xml --coverage-clover .\build\logs\clover.xml
   #- cmd: phpcs --standard=Drupal .
 after_test:
   - cmd: C:\projects\drupal-project\vendor\bin\php-coveralls -v
