@@ -66,6 +66,7 @@ install:
   - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
   # Copy driver
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\src %cd%\web\modules\contrib\sqlsrv\src
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests %cd%\web\modules\contrib\sqlsrv\tests
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\web\drivers
   - ps: |
       $cwd = (Get-Location).Path;
