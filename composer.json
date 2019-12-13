@@ -10,10 +10,10 @@
     }
   ],
   "autoload": {
-    "psr-4": { "Drupal\\Driver\\Database\\sqlsrv\\": "drivers/lib/Drupal/Driver/Database/sqlsvr" }
+    "psr-4": { "Drupal\\Driver\\Database\\sqlsrv\\": "drivers/lib/Drupal/Driver/Database/sqlsrv" }
   },
   "autoload-dev": {
-    "psr-4": { "Drupal\\Tests\\sqlsvr\\": "tests/src/" }
+    "psr-4": { "Drupal\\Tests\\sqlsrv\\": "tests/src/" }
   },
   "require": {
     "php" : "^7.0",
