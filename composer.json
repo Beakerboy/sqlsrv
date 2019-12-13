@@ -1,21 +1,27 @@
 {
-    "name": "drupal/sqlsrv",
-    "description": "Driver for SQL Server and SQL Azure",
-    "type": "drupal-module",
-    "minimum-stability": "stable",
-    "authors": [
-        {
-            "name": "David Garcia",
-            "role": "Lead Developer"
-        }
-    ],
-    "require": {
-        "php" : "^7.0",
-        "drupal/core" : "^8.6"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "*",
-        "phpstan/phpstan": "*",
-        "php-coveralls/php-coveralls": "*"
+  "name": "drupal/sqlsrv",
+  "description": "Driver for SQL Server and SQL Azure",
+  "type": "drupal-module",
+  "minimum-stability": "stable",
+  "authors": [
+    {
+      "name": "David Garcia",
+      "role": "Lead Developer"
     }
+  ],
+  "autoload": {
+    "psr-4": { "Drupal\\Driver\\Database\\sqlsrv\\": "src/" }
+  },
+  "autoload-dev": {
+    "psr-4": { "Drupal\\Tests\\sqlsvr": "tests/src/" }
+  },
+  "require": {
+    "php" : "^7.0",
+    "drupal/core" : "^8.6"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "*",
+    "phpstan/phpstan": "*",
+    "php-coveralls/php-coveralls": "*"
+  }
 }
