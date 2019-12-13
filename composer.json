@@ -11,6 +11,6 @@
     ],
     "require": {
         "php" : "^7.0",
-        "drupal/core" : ^"8.6"
+        "drupal/core" : "^8.6"
     }
 }
