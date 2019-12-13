@@ -51,6 +51,8 @@ install:
         $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       }
   - cmd: composer global require hirak/prestissimo --no-progress
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: composer install
   - cmd: cd /d c:\projects
   # Create a new drupal project
   - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
@@ -95,8 +97,6 @@ install:
 build_script:
   - cmd: echo "No build"
 before_test:
-  - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - cmd: composer install
   # Associate Drupal coding standard into phpcs
   #- cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
 test_script:
