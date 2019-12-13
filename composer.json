@@ -12,5 +12,10 @@
     "require": {
         "php" : "^7.0",
         "drupal/core" : "^8.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "*",
+        "phpstan/phpstan": "*",
+        "php-coveralls/php-coveralls": "*"
     }
 }
