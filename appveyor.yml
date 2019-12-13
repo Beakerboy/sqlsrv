@@ -53,40 +53,40 @@ install:
   - cmd: composer global require hirak/prestissimo --no-progress
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: composer install
-  - cmd: cd /d c:\projects
+  #- cmd: cd /d c:\projects
   # Create a new drupal project
-  - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
+  #- cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
   # Add composer installed binaries to PATH
-  - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
-  - cmd: cd /d C:\projects\drupal-project
-  - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
+  #- cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
+  #- cmd: cd /d C:\projects\drupal-project
+  #- cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   # Install other composer packagespackage
-  - cmd: composer require drupal/sqlsrv:dev-1.x@dev
+  #- cmd: composer require drupal/sqlsrv:dev-1.x@dev
   # Replace the pulled module with the local files, only for this CI
-  - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
+  #- cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
   # Copy driver
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\src %cd%\web\modules\contrib\sqlsrv\src
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\web\drivers
-  - ps: |
-      $cwd = (Get-Location).Path;
-      "php $cwd\vendor\drupal\console\bin\drupal " + $([char]37) + "*" | Out-File $cwd/web/drupal.bat -Encoding ASCII
-  - cmd: cd /d C:\projects\drupal-project\web
-  - cmd: xcopy "%APPVEYOR_BUILD_FOLDER%\chef" "C:\projects\drupal-project\chef" /r /s /i
-  - ps: Invoke-ChefSelfInstall -Path "c:\chef"
-  - ps: Invoke-ChefAppDeployPath "C:\projects\drupal-project" drupal -Install
-  - ps: $site = Invoke-ChefAppGetDeployment drupal
-  - ps: $Env:DATABASENAME = $site.DeploymentActive.GetRuntimeSetting("services.default.database", "");
-  - ps: $Env:DATABASEPASSWORD = $site.DeploymentActive.GetRuntimeSetting("services.default.password", "");
-  - ps: $Env:DATABASEUSER = $site.DeploymentActive.GetRuntimeSetting("services.default.username", "");
-  - ps: $Env:DATABASEHOST = $site.DeploymentActive.GetRuntimeSetting("services.default.host", "");
-  - ps: $Env:SITERUNTIMEPATH = $site.DeploymentActive.runtimePath;
+  #- cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\src %cd%\web\modules\contrib\sqlsrv\src
+  #- cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\web\drivers
+  #- ps: |
+  #    $cwd = (Get-Location).Path;
+  #    "php $cwd\vendor\drupal\console\bin\drupal " + $([char]37) + "*" | Out-File $cwd/web/drupal.bat -Encoding ASCII
+  #- cmd: cd /d C:\projects\drupal-project\web
+  #- cmd: xcopy "%APPVEYOR_BUILD_FOLDER%\chef" "C:\projects\drupal-project\chef" /r /s /i
+  #- ps: Invoke-ChefSelfInstall -Path "c:\chef"
+  #- ps: Invoke-ChefAppDeployPath "C:\projects\drupal-project" drupal -Install
+  #- ps: $site = Invoke-ChefAppGetDeployment drupal
+  #- ps: $Env:DATABASENAME = $site.DeploymentActive.GetRuntimeSetting("services.default.database", "");
+  #- ps: $Env:DATABASEPASSWORD = $site.DeploymentActive.GetRuntimeSetting("services.default.password", "");
+  #- ps: $Env:DATABASEUSER = $site.DeploymentActive.GetRuntimeSetting("services.default.username", "");
+  #- ps: $Env:DATABASEHOST = $site.DeploymentActive.GetRuntimeSetting("services.default.host", "");
+  #- ps: $Env:SITERUNTIMEPATH = $site.DeploymentActive.runtimePath;
   # Make the site's PHP environment the default PHP environment
-  - cmd: set path=%SITERUNTIMEPATH%\php;%path%
-  - cmd: drupal about
-  - ps: |
-      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpinstall') {
-        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-      }
+  #- cmd: set path=%SITERUNTIMEPATH%\php;%path%
+  #- cmd: drupal about
+  #- ps: |
+  #    If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpinstall') {
+  #      $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+  #    }
   #- cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2017" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
   #- cmd: cd /d C:\projects\drupal-project
   #- ps: $Env:CWD = (Get-Location).path;
