@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\phpunit_example\Unit;
+namespace Drupal\Tests\sqlsvr\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\Driver\Database\sqlsrv\Connection;
