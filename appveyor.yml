@@ -100,7 +100,7 @@ before_test:
   # Associate Drupal coding standard into phpcs
   #- cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
 test_script:
-  - cmd: phpunit -c tests\phpunit.xml --coverage-clover .\build\logs\clover.xml
+  - cmd: vendor/bin/phpunit -c tests\phpunit.xml --coverage-clover .\build\logs\clover.xml
   #- cmd: phpcs --standard=Drupal .
 after_test:
   - cmd: C:\projects\drupal-project\vendor\bin\php-coveralls -v
