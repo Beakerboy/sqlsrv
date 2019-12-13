@@ -3,6 +3,7 @@
 /**
  * Bootstrap File
  */
-if (file_exists(__DIR__ . 'C:\projects\drupal-project\web\autoload.php')) {
-  require_once __DIR__ . 'C:\projects\drupal-project\web\autoload.php' ;
-}
+
+$loader = require __DIR__ . '/../vendor/autoload.php' ;
+$loader->add('Drupal\\Tests', __DIR__ . '/../vendor/drupal/core/tests');
+$loader->add('Drupal\\TestTools', __DIR__ . '/../vendor/drupal/core/tests');
