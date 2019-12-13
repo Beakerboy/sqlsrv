@@ -56,11 +56,11 @@ install:
   - cmd: cd /d c:\projects
   # Create a new drupal project
   - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
-   Add composer installed binaries to PATH
+  # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
   - cmd: cd /d C:\projects\drupal-project
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
-   Install other composer packagespackage
+  # Install other composer packagespackage
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
    Replace the pulled module with the local files, only for this CI
   - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
@@ -80,7 +80,7 @@ install:
   - ps: $Env:DATABASEUSER = $site.DeploymentActive.GetRuntimeSetting("services.default.username", "");
   - ps: $Env:DATABASEHOST = $site.DeploymentActive.GetRuntimeSetting("services.default.host", "");
   - ps: $Env:SITERUNTIMEPATH = $site.DeploymentActive.runtimePath;
-   Make the site's PHP environment the default PHP environment
+  # Make the site's PHP environment the default PHP environment
   - cmd: set path=%SITERUNTIMEPATH%\php;%path%
   - cmd: drupal about
   - ps: |
