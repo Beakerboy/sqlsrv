@@ -97,6 +97,8 @@ install:
 build_script:
   - cmd: echo "No build"
 before_test:
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: mkdir .\build\logs
   # Associate Drupal coding standard into phpcs
   #- cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
 test_script:
