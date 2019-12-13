@@ -10,7 +10,7 @@
     }
   ],
   "autoload": {
-    "psr-4": { "Drupal\\Driver\\Database\\sqlsrv\\": "drivers/lib" }
+    "psr-4": { "Drupal\\Driver\\Database\\sqlsrv\\": "drivers/lib/Drupal/Driver/Database/sqlsvr" }
   },
   "autoload-dev": {
     "psr-4": { "Drupal\\Tests\\sqlsvr\\": "tests/src/" }
