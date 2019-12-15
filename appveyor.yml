@@ -109,8 +109,8 @@ test_script:
   #- cmd: phpcs --standard=Drupal .
 after_test:
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drupal\-project\\web\\modules\\contrib', '') | Set-Content build\logs\clover.xml
   - ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drupal\-project\\web', 'sqlsrv') | Set-Content build\logs\clover.xml
-  - ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'modules\\contrib\\sqlsrv', '') | Set-Content build\logs\clover.xml
   - ps: ((Get-Content build\logs\clover.xml -Raw) -replace '\\','/') | Set-Content build\logs\clover.xml
   - ps: Get-Content build\logs\clover.xml
   - cmd: php-coveralls -v
