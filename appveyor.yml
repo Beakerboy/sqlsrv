@@ -105,7 +105,7 @@ before_test:
 test_script:
   - cmd: vendor\bin\phpunit -c tests\phpunit.xml --coverage-clover .\build\logs\clover.xml
   - cmd: cd /d C:\projects\drupal-project\web
-  - cmd: vendor\bin\phpunit -c core\phpunit.xml.dist modules\contrib\sqlsrv
+  - cmd: phpunit -c core\phpunit.xml.dist modules\contrib\sqlsrv
   #- cmd: phpcs --standard=Drupal .
 after_test:
   - cmd: vendor\bin\php-coveralls -v
