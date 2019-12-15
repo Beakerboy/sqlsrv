@@ -112,5 +112,5 @@ after_test:
   - ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drupal\-project\\web\\modules\\contrib', '') | Set-Content build\logs\clover.xml
   - ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drupal\-project\\web', 'sqlsrv') | Set-Content build\logs\clover.xml
   #- ps: ((Get-Content build\logs\clover.xml -Raw) -replace '\\','/') | Set-Content build\logs\clover.xml
-  - ps: Get-Content build\logs\clover.xml
+  #- ps: Get-Content build\logs\clover.xml
   - cmd: php-coveralls -v
