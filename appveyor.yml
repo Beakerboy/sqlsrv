@@ -114,3 +114,4 @@ after_test:
   #- ps: ((Get-Content build\logs\clover.xml -Raw) -replace '\\','/') | Set-Content build\logs\clover.xml
   #- ps: Get-Content build\logs\clover.xml
   - cmd: php-coveralls -v
+  - ps: Get-Contents C:\projects\sqlsrv\build\logs\coveralls-upload.json
