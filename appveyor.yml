@@ -109,4 +109,5 @@ test_script:
   #- cmd: phpcs --standard=Drupal .
 after_test:
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - cmd: php-coveralls -v
+  - ps: Get-Content build\logs\clover.xml
+  #- cmd: php-coveralls -v
