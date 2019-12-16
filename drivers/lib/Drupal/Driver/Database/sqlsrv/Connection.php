@@ -333,7 +333,12 @@ class Connection extends DatabaseConnection {
     # Everything that follows a boundary that is not : or _.
     \b(?<![:\[_])(?:
       # Any reserved words, followed by a boundary that is not an opening parenthesis.
-      (action|admin|alias|any|are|array|at|begin|boolean|class|commit|contains|current|data|date|day|depth|domain|external|file|full|function|get|go|host|input|language|last|less|local|map|min|module|new|no|object|old|open|operation|parameter|parameters|path|plan|prefix|proc|public|ref|result|returns|role|row|rule|save|search|second|section|session|size|state|statistics|temporary|than|time|timestamp|tran|translate|translation|trim|user|value|variable|view|without)
+      (action|admin|alias|any|are|array|at|begin|boolean|class|commit|contains|current|
+      data|date|day|depth|domain|external|file|full|function|get|go|host|input|language|
+      last|less|local|map|min|module|new|no|object|old|open|operation|parameter|parameters|
+      path|plan|prefix|proc|public|ref|result|returns|role|row|rule|save|search|second|
+      section|session|size|state|statistics|temporary|than|time|timestamp|tran|translate|
+      translation|trim|user|value|variable|view|without)
       (?!\()
       |
       # Or a normal word.
