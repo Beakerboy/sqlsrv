@@ -133,4 +133,13 @@ class SqlsrvConnectionTest extends UnitTestCase {
 
     $this->assertEquals('sqlsrv', $sqlsvr_connection->driver());
   }
+
+  /**
+   * Test that the connection returns the correct database type string.
+   */
+  public function testDatabaseType() {
+    $sqlsvr_connection = new Connection($this->mockPdo, $this->options);
+
+    $this->assertEquals('sqlsrv', $sqlsvr_connection->databaseType());
+  }
 }
