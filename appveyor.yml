@@ -59,6 +59,7 @@ install:
   - cmd: cd /d C:\projects\drupal-project
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   # Install other composer packages
+  - cmd: composer config repositories.php-coveralls https://github.com/Beakerboy/php-coveralls.git
   - cmd: composer require php-coveralls/php-coveralls
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
   # Replace the pulled module with the local files, only for this CI
@@ -113,8 +114,8 @@ after_test:
   - ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drupal\-project\\web', 'sqlsrv') | Set-Content build\logs\clover.xml
   #- ps: ((Get-Content build\logs\clover.xml -Raw) -replace '\\','/') | Set-Content build\logs\clover.xml
   #- ps: Get-Content build\logs\clover.xml
-  - cmd: php-coveralls -v --dry-run
-  - ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drivers\\\\lib\\\\Drupal\\\\Driver\\\\Database\\\\sqlsrv\\\\', 'drivers/lib/Drupal/Driver/Database/') | Set-Content build\logs\coveralls-upload.json
-  - ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'src\\\\Indexes\\\\', 'src/Indexes/') | Set-Content build\logs\coveralls-upload.json
   - cmd: php-coveralls -v
+  #- ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drivers\\\\lib\\\\Drupal\\\\Driver\\\\Database\\\\sqlsrv\\\\', 'drivers/lib/Drupal/Driver/Database/') | Set-Content build\logs\coveralls-upload.json
+  #- ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'src\\\\Indexes\\\\', 'src/Indexes/') | Set-Content build\logs\coveralls-upload.json
+  #- cmd: php-coveralls -v
   - ps: Get-Content C:\projects\sqlsrv\build\logs\coveralls-upload.json
