@@ -98,6 +98,7 @@ install:
 build_script:
   - cmd: echo "No build"
 before_test:
+  - ps: $env:APPVEYOR_REPO_COMMIT = %APPVEYOR_REPO_COMMIT%.Substring(1)
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: cp tests\phpunit.xml.dist C:\projects\drupal-project\web\core\phpunit.xml
   - cmd: mkdir .\build\logs
