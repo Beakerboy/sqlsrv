@@ -33,7 +33,7 @@ class Schema extends DatabaseSchema {
   /**
    * Default schema for SQL Server databases.
    */
-  public $defaultSchema = 'dbo';
+  protected $defaultSchema;
 
   /**
    * Maximum length of a comment in SQL Server.
@@ -94,9 +94,11 @@ class Schema extends DatabaseSchema {
   /**
    * Return active default Schema.
    */
-  public function GetDefaultSchema() {
-    $result = $this->connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
-    $this->defaultSchema = $result;
+  public function getDefaultSchema() {
+    if (!isset($this->defaultSchema)) {
+      $result = $this->connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
+      $this->defaultSchema = $result;
+    }
     return $this->defaultSchema;
   }
 
@@ -1221,7 +1223,7 @@ EOF;
         AND COLUMN_NAME = ':column'
 EOF;
     $params = [];
-    $params[':schema'] = $this->defaultSchema;
+    $params[':schema'] = $this->getDefaultSchema();
     $params[':table'] = $table;
     $params[':column'] = $column;
     $result = $this->connection->query_direct($sql, $params)->fetchObject();
@@ -1708,13 +1710,13 @@ EOF;
       $columns = [];
     }
 
-    $schema = $this->defaultSchema;
+    $schema = $this->getDefaultSchema();
     $table_info = $this->getPrefixInfo($table);
     $table = $table_info['table'];
     $name = 'MS_Description';
 
     // Determine if a value exists for this database object.
-    $key = $this->defaultSchema . '.' . $table . '.' . $column;
+    $key = $this->getDefaultSchema() . '.' . $table . '.' . $column;
     if (isset($columns[$key])) {
       $result = $columns[$key];
     }
@@ -1769,7 +1771,7 @@ EOF;
    * Retrieve a table or column comment.
    */
   public function getComment($table, $column = NULL) {
-    $schema = $this->defaultSchema;
+    $schema = $this->getDefaultSchema();
     $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','" . $schema . "','Table','" . $table . "',";
     if (isset($column)) {
       $sql .= "'Column','" . $column . "')";
