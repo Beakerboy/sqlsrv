@@ -60,7 +60,7 @@ install:
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   # Install other composer packages
   - cmd: composer config repositories.php-coveralls git https://github.com/Beakerboy/php-coveralls.git
-  - cmd: composer require php-coveralls/php-coveralls dev-2.2
+  - cmd: composer require php-coveralls/php-coveralls dev-master
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
   # Replace the pulled module with the local files, only for this CI
   - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
