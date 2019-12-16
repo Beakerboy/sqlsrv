@@ -125,4 +125,12 @@ class SqlsrvConnectionTest extends UnitTestCase {
     $this->assertEquals($expected, $sqlsvr_connection->escapeField($name));
   }
 
+  /**
+   * Test that the connection returns the correct driver string.
+   */
+  public function testDriverString() {
+    $sqlsvr_connection = new Connection($this->mockPdo, $this->options);
+
+    $this->assertEquals('sqlsrv', $sqlsvr_connection->driver());
+  }
 }
