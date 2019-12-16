@@ -106,7 +106,7 @@ before_test:
 test_script:
   - cmd: cd C:\projects\drupal-project\web
   - cmd: mkdir .\build\logs
-  - cmd: phpunit -c core\phpunit.xml core\tests\Drupal\KernelTests\Core\Database\InsertTest.php --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
+  - cmd: phpunit -c core\phpunit.xml modules\contrib\sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
   #- cmd: phpcs --standard=Drupal .
 after_test:
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
