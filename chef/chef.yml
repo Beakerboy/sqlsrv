@@ -51,7 +51,7 @@ deployers:
 #      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_couchbase.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_com_dotnet.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_openssl.dll}
-      - {type: 'ini', multivalue: true, 'key':zend_extension, 'value':php_xdebug.dll}
+      #- {type: 'ini', multivalue: true, 'key':zend_extension, 'value':php_xdebug.dll}
       - {type: 'ini', multivalue: true, 'key':zend_extension, 'value':php_opcache.dll}
       - {type: 'ini', 'key':disable_functions, 'value':'passthru,show_source'}
  # SQLSERVER
