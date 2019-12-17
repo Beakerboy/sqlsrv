@@ -112,6 +112,7 @@ test_script:
   # --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: phpcs --standard=Drupal .
+  - cms: phpstan analyze drivers --level 7
 after_test:
   #- cmd: cd %APPVEYOR_BUILD_FOLDER%
   # Change file path locations from prod to src in the clover results.
