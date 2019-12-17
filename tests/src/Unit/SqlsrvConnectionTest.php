@@ -26,7 +26,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
   protected $mockSchema;
 
   /** 
-   * Database connection options
+   * Database connection options.
    *
    * The core test suite uses an empty array.
    * This module requires at least a value in:
@@ -72,11 +72,14 @@ class SqlsrvConnectionTest extends UnitTestCase {
       // ['"camelCase"', 'camelCase'],.
       // ['"camelCase"', '"camelCase"'],.
       // ['"camelCase"', 'camel/Case'],.
-      // Sometimes, table names are following the pattern database.schema.table..
+      // Sometimes, table names are following the pattern database.schema.table.
       // ['"camelCase".nocase.nocase', 'camelCase.nocase.nocase'],.
       // ['nocase."camelCase".nocase', 'nocase.camelCase.nocase'],.
       // ['nocase.nocase."camelCase"', 'nocase.nocase.camelCase'],.
-      // ['"camelCase"."camelCase"."camelCase"', 'camelCase.camelCase.camelCase'],.
+      // [
+      // '"camelCase"."camelCase"."camelCase"',
+      // 'camelCase.camelCase.camelCase',
+      // ],
     ];
   }
 
@@ -142,4 +145,5 @@ class SqlsrvConnectionTest extends UnitTestCase {
 
     $this->assertEquals('sqlsrv', $sqlsvr_connection->databaseType());
   }
+
 }
