@@ -41,6 +41,15 @@
     <testsuite name="database">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
     </testsuite>
+    <testsuite name="passing_database">
+      <file>tests/Drupal/KernelTests/Core/Database/AlterTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/DatabaseExceptionWrapperTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/DeleteTruncateTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/InsertDefaultsTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/InsertLobTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/InvalidDataTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/LargeQueryTest.php</file>
+    </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
     </testsuite>
