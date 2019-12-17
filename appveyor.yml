@@ -98,7 +98,7 @@ install:
 build_script:
   - cmd: echo "No build"
 before_test:
-  - ps: Add-Content C:\tools\php\php.ini "zend_extension=php_xdebug.dll"
+  - ps: Add-Content $env:SITERUNTIMEPATH\php\php.ini "zend_extension=php_xdebug.dll"
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: cp tests\phpunit.xml.dist C:\projects\drupal-project\web\core\phpunit.xml
   - cmd: mkdir .\build\logs
