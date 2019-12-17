@@ -110,7 +110,8 @@ test_script:
   - cmd: mkdir .\build\logs
   - cmd: phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv
   # --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
-  #- cmd: phpcs --standard=Drupal .
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: phpcs --standard=Drupal .
 after_test:
   #- cmd: cd %APPVEYOR_BUILD_FOLDER%
   # Change file path locations from prod to src in the clover results.
