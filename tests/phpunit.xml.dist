@@ -38,20 +38,20 @@
     <env name="MINK_DRIVER_ARGS_WEBDRIVER" value=''/>
   </php>
   <testsuites>
-    <testsuite name="unit">
-      <file>./tests/TestSuites/UnitTestSuite.php</file>
+    <testsuite name="database">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
     </testsuite>
-    <testsuite name="kernel">
-      <file>./tests/TestSuites/KernelTestSuite.php</file>
+    <testsuite name="passing_database">
+      <file>tests/Drupal/KernelTests/Core/Database/AlterTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/DatabaseExceptionWrapperTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/DeleteTruncateTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/InsertDefaultsTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/InsertLobTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/InvalidDataTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/LargeQueryTest.php</file>
     </testsuite>
-    <testsuite name="functional">
-      <file>./tests/TestSuites/FunctionalTestSuite.php</file>
-    </testsuite>
-    <testsuite name="functional-javascript">
-      <file>./tests/TestSuites/FunctionalJavascriptTestSuite.php</file>
-    </testsuite>
-    <testsuite name="build">
-      <file>./tests/TestSuites/BuildTestSuite.php</file>
+    <testsuite name="sqlsrv">
+      <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
     </testsuite>
   </testsuites>
   <listeners>
