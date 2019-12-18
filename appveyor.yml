@@ -112,7 +112,7 @@ test_script:
   - cmd: cd C:\projects\drupal-project\web
   - cmd: phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - cmd: del /S .\vendor\*
+  - cmd: del /S /Q .\vendor\*
   - cmd: phpcs --standard=Drupal .
   - cms: phpstan analyze drivers --level 7
 after_test:
