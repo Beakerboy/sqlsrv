@@ -25,7 +25,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
    */
   protected $mockSchema;
 
-  /** 
+  /**
    * Database connection options.
    *
    * The core test suite uses an empty array.
