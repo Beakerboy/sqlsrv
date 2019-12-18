@@ -32,14 +32,14 @@ install:
   - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php\cacert.pem')
   # Add php binary to PATH
   - ps: $Env:Path = "C:\tools\php;" + $Env:Path;
-  # Edit the php.ini file
+  # Edit the php.ini file - Should we have a php.ini.dist file somewhere that we just `cat` into the exiting file?
   - ps: Add-Content C:\tools\php\php.ini "extension_dir=ext"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_openssl"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_mbstring"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_curl"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_gd2.dll"
-  - ps: Add-Content C:\tools\php\php.ini 'curl.cainfo="C:\tools\php74\cacert.pem"'
-  - ps: Add-Content C:\tools\php\php.ini 'openssl.cafile="C:\tools\php74\cacert.pem"'
+  - ps: Add-Content C:\tools\php\php.ini 'curl.cainfo="C:\tools\php\cacert.pem"'
+  - ps: Add-Content C:\tools\php\php.ini 'openssl.cafile="C:\tools\php\cacert.pem"'
   # Create a directory for composer and install
   - ps: new-item c:\composer -itemtype directory
   - cmd: cd /d C:\composer
@@ -87,31 +87,29 @@ install:
         $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       }
   - cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2017" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
-  - cmd: cd /d C:\projects\drupal-project
   - ps: $Env:CWD = (Get-Location).path;
-  - cmd: cd /d C:\projects\drupal-project\web
-  - cmd: drupal module:install simpletest
-  - cmd: drupal module:install sqlsrv
   - ps: wget "http://sqlsrv.drupal.org/"
 build_script:
   - cmd: echo "No build"
 before_test:
-  - cmd: cd /d C:\projects\drupal-project
+  - cmd: cd C:\projects\drupal-project
+  # Enable pcov extension
   - ps: Add-Content $env:SITERUNTIMEPATH\php\php.ini "pcov.enabled = 1"
   # Install composer packages for dev
   - cmd: composer require pcov/clobber --dev
   - cmd: composer config repositories.php-coveralls git https://github.com/Beakerboy/php-coveralls.git
   - cmd: composer require beakerboy/php-coveralls dev-bugfix
+  # Clobber existing vendor phpunit files.  Needed for phpunit 7.x
   - cmd: pcov clobber
+  # Move custom test script to core
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: cp tests\phpunit.xml.dist C:\projects\drupal-project\web\core\phpunit.xml
   - cmd: mkdir .\build\logs
   # Associate Drupal coding standard into phpcs
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
-test_script:
   - cmd: composer require pcov/clobber --dev
+test_script:
   - cmd: cd C:\projects\drupal-project\web
-  - cmd: mkdir %APPVEYOR_BUILD_FOLDER%\build\logs
   - cmd: phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
   #- cmd: phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
   #- cmd: phpcs --standard=Drupal .
