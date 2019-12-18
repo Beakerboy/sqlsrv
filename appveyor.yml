@@ -112,7 +112,7 @@ test_script:
   - cmd: composer require pcov/clobber --dev
   - cmd: cd C:\projects\drupal-project\web
   - cmd: mkdir .\build\logs
-  - cmd: php -dpcov.enabled=1 -dpcov.directory=. -dpcov.exclude="~vendor~" phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
+  - cmd: php -dpcov.directory=drivers -dpcov.exclude="~vendor~|~core~|~modules~" vendor\bin\phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
   #- cmd: phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
   #- cmd: phpcs --standard=Drupal .
 after_test:
