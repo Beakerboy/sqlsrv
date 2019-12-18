@@ -111,8 +111,9 @@ before_test:
 test_script:
   - cmd: cd C:\projects\drupal-project\web
   - cmd: phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
-  #- cmd: phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
-  #- cmd: phpcs --standard=Drupal .
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: phpcs --standard=Drupal .
+  - cms: phpstan analyze drivers --level 7
 after_test:
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   # Change file path locations from prod to src in the clover results.
