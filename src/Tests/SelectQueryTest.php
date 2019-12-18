@@ -13,7 +13,7 @@ use Drupal\Core\Database\Database;
 class SelectQueryTest extends WebTestBase {
 
   /**
-   *
+   * Get Test Info.
    */
   public static function getInfo() {
     return [
@@ -123,6 +123,8 @@ class SelectQueryTest extends WebTestBase {
   }
 
   /**
+   * Test for duplicate placeholders.
+   *
    * Although per official documentation you cannot send
    * duplicate placeholders in same query, this works in mySQL
    * and is present in some queries, even in core, wich have not
@@ -144,8 +146,7 @@ class SelectQueryTest extends WebTestBase {
   }
 
   /**
-   * Test for weird key names
-   * in array arguments.
+   * Test for weird key names in array arguments.
    */
   public function testBadKeysInArrayArguments() {
     $params[':nids'] = [
