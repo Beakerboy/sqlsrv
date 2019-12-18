@@ -60,8 +60,9 @@ install:
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   # Install other composer packages
   - cmd: composer config repositories.php-coveralls git https://github.com/Beakerboy/php-coveralls.git
-  #- cmd: composer require beakerboy/php-coveralls dev-bugfix
+  - cmd: composer require beakerboy/php-coveralls dev-bugfix
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
+  - cmd: composer require pcov/clobber --dev
   # Replace the pulled module with the local files, only for this CI
   - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
   # Copy driver
@@ -98,22 +99,22 @@ install:
 build_script:
   - cmd: echo "No build"
 before_test:
-  # Turn On Xdebug for code coverage
-  #- ps: Add-Content $env:SITERUNTIMEPATH\php\php.ini "zend_extension=php_xdebug.dll"
+  - cmd: pcov clobber
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: cp tests\phpunit.xml.dist C:\projects\drupal-project\web\core\phpunit.xml
   - cmd: mkdir .\build\logs
   # Associate Drupal coding standard into phpcs
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
 test_script:
+  - cmd: composer require pcov/clobber --dev
   - cmd: cd C:\projects\drupal-project\web
   - cmd: mkdir .\build\logs
-  - cmd: phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv
-  # --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
+  - cmd: php -dpcov.enabled=1 -dpcov.directory=. -dpcov.exclude="~vendor~" phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
+  #- cmd: phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
   #- cmd: phpcs --standard=Drupal .
 after_test:
-  #- cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
   # Change file path locations from prod to src in the clover results.
-  #- ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drupal\-project\\web\\modules\\contrib', '') | Set-Content build\logs\clover.xml
-  #- ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drupal\-project\\web', 'sqlsrv') | Set-Content build\logs\clover.xml
-  #- cmd: php-coveralls -v
+  - ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drupal\-project\\web\\modules\\contrib', '') | Set-Content build\logs\clover.xml
+  - ps: ((Get-Content build\logs\clover.xml -Raw) -replace 'drupal\-project\\web', 'sqlsrv') | Set-Content build\logs\clover.xml
+  - cmd: php-coveralls -v
