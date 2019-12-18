@@ -19,7 +19,7 @@ deployers:
     type: 'php'
     runtime:
       - {type: 'dl', uri: 'http://windows.php.net/downloads/releases/archives/php-7.2.24-nts-Win32-VC15-x64.zip', maps: {'*' : 'php/'}}
-      - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/xdebug/2.8.0/php_xdebug-2.8.0-7.2-nts-vc15-x64.zip', maps: {'php_xdebug.dll':'php/ext/php_xdebug.dll'}}
+      - {type: 'dl', uri: 'https://windows.php.net/downloads/pecl/releases/pcov/1.0.6/php_pcov-1.0.6-7.2-nts-vc15-x64.zip', maps: {'php_pcov.dll':'php/ext/php_pcov.dll'}}
       - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/igbinary/2.0.8/php_igbinary-2.0.8-7.2-nts-vc15-x64.zip', maps: {'php_igbinary.dll': 'php/ext/php_igbinary.dll'}}
       - {type: 'dl', uri: 'http://windows.php.net/downloads/pecl/releases/couchbase/2.5.0/php_couchbase-2.5.0-7.2-nts-vc15-x64.zip', maps: {'php_couchbase.dll':'php/ext/php_couchbase.dll', 'libcouchbase.dll':'php/libcouchbase.dll'}}
       - {type: 'dl', uri: 'https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.6.1/php_pdo_sqlsrv-5.6.1-7.2-nts-vc15-x64.zip', maps: {'php_pdo_sqlsrv.dll': 'php/ext/php_pdo_sqlsrv.dll'}}
@@ -48,28 +48,14 @@ deployers:
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_wincache.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_pdo_sqlsrv.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_igbinary.dll}
+      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_pcov.dll}
 #      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_couchbase.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_com_dotnet.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_openssl.dll}
-      #- {type: 'ini', multivalue: true, 'key':zend_extension, 'value':php_xdebug.dll}
       - {type: 'ini', multivalue: true, 'key':zend_extension, 'value':php_opcache.dll}
       - {type: 'ini', 'key':disable_functions, 'value':'passthru,show_source'}
  # SQLSERVER
       - {type: 'ini', 'key':pdo_sqlsrv.client_buffer_max_kb_size, 'value':24480}
- # XDEBUG
-      - {type: 'ini', 'key':'xdebug.remote_enable', 'value':'on'} 
-      - {type: 'ini', 'key':'xdebug.remote_handler', 'value':'dbgp'} 
-      - {type: 'ini', 'key':'xdebug.remote_host', 'value':'127.0.0.1'} 
-      - {type: 'ini', 'key':'xdebug.remote_connect_back', 'value':'0'} 
-      - {type: 'ini', 'key':'xdebug.remote_port', 'value':'9000'} 
-      - {type: 'ini', 'key':'xdebug.remote_mode', 'value':'req'} 
-      - {type: 'ini', 'key':'xdebug.remote_autostart', 'value':'0'} 
-      - {type: 'ini', 'key':'xdebug.idekey', 'value':'php-vs'}
-      - {type: 'ini', 'key':'xdebug.profiler_output_dir', 'value':'%LOG%/xdebug_profile', ensureDir: 'dir'}
-      - {type: 'ini', 'key':'xdebug.trace_output_dir', 'value':'%LOG%/xdebug_trace', ensureDir: 'dir'}
-      - {type: 'ini', 'key':'xdebug.remote_log', 'value':'%LOG%/remote_%DEPLOYMENTID%.log', ensureDir: 'file'}
-      - {type: 'ini', 'key':'xdebug.trace_output_name', 'value':'trace.%u'}
-      - {type: 'ini', 'key':'xdebug.profiler_output_name', 'value':'profile.%u'}      
  # RUNTIME DIRECTORIES
       - {type: 'ini', 'key':error_log, 'value':'%LOG%/php_error_%DEPLOYMENTID%.log', ensureDir: 'file'}
       - {type: 'ini', 'key':upload_tmp_dir, 'value':'%TEMP%/upload_temp_dir', ensureDir: 'dir'}
