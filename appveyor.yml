@@ -94,6 +94,7 @@ build_script:
 before_test:
   - cmd: cd C:\projects\drupal-project
   # Enable pcov extension
+  #- ps: Add-Content $env:SITERUNTIMEPATH\php\php.ini "extension=php_pcov.dll"
   #- ps: Add-Content $env:SITERUNTIMEPATH\php\php.ini "pcov.enabled = 1"
   # Install composer packages for dev
   #- cmd: composer require pcov/clobber --dev
