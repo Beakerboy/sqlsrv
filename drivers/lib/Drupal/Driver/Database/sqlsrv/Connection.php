@@ -741,7 +741,7 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function mapConditionOperator($operator) {
-    return isset(static::$postgresqlConditionOperatorMap[$operator]) ? static::$postgresqlConditionOperatorMap[$operator] : NULL;
+    return isset(static::$sqlsrvConditionOperatorMap[$operator]) ? static::$sqlsrvConditionOperatorMap[$operator] : NULL;
   }
 
   /**
