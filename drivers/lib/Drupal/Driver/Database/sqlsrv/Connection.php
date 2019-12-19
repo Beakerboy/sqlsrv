@@ -72,6 +72,20 @@ class Connection extends DatabaseConnection {
   const DATABASE_NOT_FOUND = 28000;
 
   /**
+   * A map of condition operators to sqlsrv operators.
+   *
+   * SQL Server doesn't need special escaping for the \ character in a string
+   * literal, because it uses '' to escape the single quote, not \'.
+   */
+  protected static $sqlsrvConditionOperatorMap = [
+    'LIKE' => [],
+    'NOT LIKE' => [],
+    'REGEXP' => ['operator' => 'LIKE'],
+    'NOT REGEXP' => ['operator' => 'NOT LIKE'],
+  ];
+
+
+  /**
    * Summary of $cache.
    *
    * @var FastCache
@@ -724,16 +738,10 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function mapConditionOperator($operator) {
-    // SQL Server doesn't need special escaping for the \ character in a string
-    // literal, because it uses '' to escape the single quote, not \'.
-    static $specials = [
-      'LIKE' => [],
-      'NOT LIKE' => [],
-    ];
-    return isset($specials[$operator]) ? $specials[$operator] : NULL;
+    return isset(static::$sqlsrvConditionOperatorMap[$operator]) ? static::$sqlsrvConditionOperatorMap[$operator] : NULL;
   }
 
   /**
