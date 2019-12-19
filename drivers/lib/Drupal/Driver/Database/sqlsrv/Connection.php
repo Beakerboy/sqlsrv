@@ -91,7 +91,7 @@ class Connection extends DatabaseConnection {
 
     // Needs to happen before parent construct.
     $this->statementClass = Statement::class;
-
+    $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, true);
     parent::__construct($connection, $connection_options);
 
     // This driver defaults to transaction support, except if explicitly passed FALSE.
