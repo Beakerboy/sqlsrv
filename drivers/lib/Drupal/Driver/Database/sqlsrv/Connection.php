@@ -488,6 +488,11 @@ class Connection extends DatabaseConnection {
       }
       else {
         $this->expandArguments($query, $args);
+        $query = rtrim($query, ";  \t\n\r\0\x0B");
+        if (strpos($query, ';') !== FALSE && empty($options['allow_delimiter_in_query'])) {
+          throw new \InvalidArgumentException('; is not supported in SQL strings. Use only one statement at a time.');
+        }
+
         $insecure = isset($options['insecure']) ? $options['insecure'] : FALSE;
         // Try to detect duplicate place holders, this check's performance
         // is not a good addition to the driver, but does a good job preventing
