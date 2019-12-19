@@ -596,6 +596,25 @@ EOF
     return implode(' ', $result);
   }
 
+   /**
+   * {@inheritdoc}
+   */
+  protected function findPrimaryKeyColumns($table) {
+    if (!$this->tableExists($table)) {
+      return FALSE;
+    }
+    $query = "SELECT column_name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC "
+      . "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KU "
+      . "ON TC.CONSTRAINT_TYPE = 'PRIMARY KEY' AND "
+      . "TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND "
+      . "KU.table_name={" . $table . "} ORDER BY KU.ORDINAL_POSITION";
+    $values = [
+      ':table' => $table,
+      ];
+    $result = $this->connection->query($query)->fetchAllAssoc('column_name');
+    return array_keys($result);
+  }
+
   /**
    * Generate SQL to create a new table from a Drupal schema definition.
    *
