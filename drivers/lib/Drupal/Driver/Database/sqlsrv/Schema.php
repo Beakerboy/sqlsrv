@@ -270,10 +270,11 @@ class Schema extends DatabaseSchema {
     // We are creating the keys after creating the table so that createPrimaryKey
     // is able to introspect column definition from the database to calculate index sizes
     // This adds quite quite some overhead, but is only noticeable during table creation.
-    if (isset($table['primary key']) && is_array($table['primary key'])) {
+    if (!empty($table['primary key']) && is_array($table['primary key'])) {
       $this->createPrimaryKey($name, $table['primary key']);
     }
     // Otherwise use a technical primary key.
+    // Do we really want to do this? Other drivers do not.
     else {
       $this->createTechnicalPrimaryColumn($name);
     }
