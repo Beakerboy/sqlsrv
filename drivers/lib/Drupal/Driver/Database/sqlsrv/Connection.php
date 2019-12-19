@@ -100,10 +100,6 @@ class Connection extends DatabaseConnection {
 
     // Store connection options for future reference.
     $this->connectionOptions = &$connection_options;
-
-    // Fetch the name of the user-bound schema. It is the schema that SQL Server
-    // will use for non-qualified tables.
-    $this->schema()->defaultSchema = $this->schema()->GetDefaultSchema();
   }
 
   /**
