@@ -48,7 +48,7 @@ deployers:
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_wincache.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_pdo_sqlsrv.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_igbinary.dll}
-      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_pcov.dll}
+#      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_pcov.dll}
 #      - {type: 'ini', multivalue: true, 'key':extension, 'value':php_couchbase.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_com_dotnet.dll}
       - {type: 'ini', multivalue: true, 'key':extension, 'value':php_openssl.dll}
