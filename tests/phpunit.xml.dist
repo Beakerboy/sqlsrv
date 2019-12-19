@@ -43,10 +43,12 @@
     </testsuite>
     <testsuite name="passing_database">
       <file>tests/Drupal/KernelTests/Core/Database/AlterTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/CaseSensitivityTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/DatabaseExceptionWrapperTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/DeleteTruncateTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/InsertDefaultsTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/InsertLobTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/InsertTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/InvalidDataTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/LargeQueryTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/MergeTest.php</file>
@@ -65,11 +67,9 @@
     </testsuite>
     <testsuite name="failing_database">
       <file>tests/Drupal/KernelTests/Core/Database/BasicSyntaxTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/CaseSensitivityTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/ConnectionTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/DatabaseLegacyTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/FetchTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/InsertTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/LoggingTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/QueryTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SchemaTest.php</file>
