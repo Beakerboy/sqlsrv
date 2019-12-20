@@ -283,7 +283,7 @@ class Select extends QuerySelect {
         $table_string = '(' . (string) $subquery . ')';
       }
       else {
-        $table_string = '{' . $this->connection->escapeTable($table['table']) . '}';
+        $table_string = $this->connection->escapeTable($table['table']);
       }
 
       // Don't use the AS keyword for table aliases, as some
