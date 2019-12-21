@@ -612,7 +612,8 @@ EOF
       . "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KU "
       . "ON TC.CONSTRAINT_TYPE = 'PRIMARY KEY' AND "
       . "TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND "
-      . "KU.table_name='{$table_prefixed}' ORDER BY KU.ORDINAL_POSITION";
+      . "KU.table_name='{$table_prefixed}' AND column_name != '__pk' AND column_name != '__pkc' "
+      . "ORDER BY KU.ORDINAL_POSITION";
     $result = $this->connection->query($query)->fetchAllAssoc('column_name');
     return array_keys($result);
   }
