@@ -416,7 +416,7 @@ class Schema extends DatabaseSchema {
           SELECT CONVERT (varchar,SERVERPROPERTY('productversion')) AS VERSION,
           CONVERT (varchar,SERVERPROPERTY('productlevel')) AS LEVEL,
           CONVERT (varchar,SERVERPROPERTY('edition')) AS EDITION
-  EOF
+EOF
         )->fetchAssoc();
     }
     return $this->engineVersion;
