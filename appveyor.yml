@@ -60,7 +60,7 @@ install:
   - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   # Install other composer packages for production
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
-  - cmd: composer require symfony/psr-http-message-bridge:dev-1.1
+  - cmd: composer require symfony/psr-http-message-bridge:1.1.x-dev
   # Replace the pulled module with the local files, only for this CI
   - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
   # Copy driver
