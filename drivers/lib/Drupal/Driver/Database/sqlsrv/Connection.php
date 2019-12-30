@@ -119,6 +119,17 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    */
+  public function getFullQualifiedTableName($table) {
+    $options = $this->getConnectionOptions();
+    $prefix = $this->tablePrefix($table);
+    $schema_name = $this->schema->getDefaultSchema();
+    return $options['database'] . '.' . $schema_name . '.' . $prefix . $table;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
   public static function open(array &$connection_options = []) {
 
     // Get driver settings.
