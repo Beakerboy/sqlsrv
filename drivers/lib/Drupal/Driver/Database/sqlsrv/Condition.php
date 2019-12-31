@@ -17,9 +17,7 @@ class Condition extends QueryCondition {
    */
   public function compile(DatabaseConnection $connection, PlaceholderInterface $queryPlaceholder) {
     // Find any REGEXP conditions and turn them into function calls
-    $conditions = &$this->conditions;
-
-    foreach ($conditions as &$condition) {
+    foreach ($this->conditions as &$condition) {
       if ($condition['operator'] == 'REGEXP') {
         //$condition['field'] = 'RegExCompiledMatch(' . $field;
         //$condition['operator'] = ',';
