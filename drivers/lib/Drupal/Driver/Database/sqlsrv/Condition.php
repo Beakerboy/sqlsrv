@@ -21,13 +21,13 @@ class Condition extends QueryCondition {
 
     foreach ($conditions as &$condition) {
       if ($condition['operator'] == 'REGEXP') {
-        $condition['field'] = 'RegExCompiledMatch(' . $field;
-        $condition['operator'] = ',';
-        $condition['value'] = $condition['value'] . ') = 1';
+        //$condition['field'] = 'RegExCompiledMatch(' . $field;
+        //$condition['operator'] = ',';
+        //$condition['value'] = $condition['value'] . ') = 1';
       } else if ($condition['operator'] == 'NOT REGEXP') {
-        $condition['field'] = 'RegExCompiledMatch(' . $field;
-        $condition['operator'] = ',';
-        $condition['value'] = $condition['value'] . ') = 0';
+        //$condition['field'] = 'RegExCompiledMatch(' . $field;
+        //$condition['operator'] = ',';
+        //$condition['value'] = $condition['value'] . ') = 0';
       } 
     }
     parent::compile($connection, $queryPlaceholder);
