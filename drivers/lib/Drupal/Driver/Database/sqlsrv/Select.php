@@ -3,7 +3,6 @@
 namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Connection as DatabaseConnection;
-use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\PlaceholderInterface as DatabasePlaceholderInterface;
 use Drupal\Core\Database\Query\SelectInterface as DatabaseSelectInterface;
 use Drupal\Core\Database\Query\Select as QuerySelect;
@@ -19,12 +18,9 @@ class Select extends QuerySelect {
    * {@inheritdoc}
    */
   public function __construct($table, $alias, Connection $connection, $options = []) {
-    $options['return'] = Database::RETURN_STATEMENT;
-    parent::__construct($connection, $options);
-    $conjunction = isset($options['conjunction']) ? $options['conjunction'] : 'AND';
+    parent::__construct($table, $alias, $options);
     $this->condition = new Condition($conjunction);
     $this->having = new Condition($conjunction);
-    $this->addJoin(NULL, $table, $alias);
   }
 
   /**
