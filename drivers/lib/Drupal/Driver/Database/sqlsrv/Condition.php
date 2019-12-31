@@ -15,7 +15,7 @@ class Condition extends QueryCondition {
   /**
    * {@inheritdoc}
    */
-  public function compile(Connection $connection, PlaceholderInterface $queryPlaceholder) {
+  public function compile(DatabaseConnection $connection, PlaceholderInterface $queryPlaceholder) {
     // Find any REGEXP conditions and turn them into function calls
     $conditions = &$this->conditions;
 
