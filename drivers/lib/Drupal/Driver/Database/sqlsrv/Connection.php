@@ -85,7 +85,7 @@ class Connection extends DatabaseConnection {
       'postfix' => ') = 1',
     ],
     'NOT REGEXP' => [
-      'prefix' => 'RegExp(',
+      'prefix' => 'RegExCompiledMatch(',
       'postfix' => ') = 0',
     ],
   ];
