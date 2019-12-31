@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 public partial class RegExCompiled
 {
   [SqlFunction(IsDeterministic = true, IsPrecise = true)]
-  public static bool RegExCompiledMatch(string pattern, string matchString)
+  public static int RegExCompiledMatch(string pattern, string matchString)
   {
     if (Regex.Match(matchString.TrimEnd(null), pattern.TrimEnd(null), RegexOptions.Compiled).Success)
     {
