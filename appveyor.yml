@@ -90,6 +90,9 @@ install:
   - cmd: drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost\SQL2017" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
   - ps: $Env:CWD = (Get-Location).path;
   - ps: wget "http://sqlsrv.drupal.org/"
+  - cmd: csc /target:library %APPVEYOR_BUILD_FOLDER%\tests\regex.cs
+  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE ASSEMBLY HelloWorld from 'c:\regex.dll' WITH PERMISSION_SET = SAFE"
+  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE PROCEDURE REGEX AS EXTERNAL NAME regex.Procedures.regex"
 build_script:
   - cmd: echo "No build"
 before_test:
