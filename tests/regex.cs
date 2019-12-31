@@ -7,6 +7,13 @@ public partial class RegExCompiled
   [SqlFunction(IsDeterministic = true, IsPrecise = true)]
   public static bool RegExCompiledMatch(string pattern, string matchString)
   {
-    return (int)Regex.Match(matchString.TrimEnd(null), pattern.TrimEnd(null), RegexOptions.Compiled).Success;
+    if (Regex.Match(matchString.TrimEnd(null), pattern.TrimEnd(null), RegexOptions.Compiled).Success)
+    {
+         return 1;
+    }
+    else
+    {
+         return 0;
+    }
   }
 };
