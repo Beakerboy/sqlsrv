@@ -18,7 +18,7 @@ class Select extends QuerySelect {
    * {@inheritdoc}
    */
   public function __construct($table, $alias, Connection $connection, $options = []) {
-    parent::__construct($table, $alias, $options);
+    parent::__construct($table, $alias, $connection, $options);
     $this->condition = new Condition($conjunction);
     $this->having = new Condition($conjunction);
   }
