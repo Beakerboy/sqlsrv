@@ -16,6 +16,18 @@ use Drupal\Core\Database\Query\Condition as DatabaseCondition;
 class Select extends QuerySelect {
 
   /**
+   * {@inheritdoc}
+   */
+  public function __construct($table, $alias, Connection $connection, $options = []) {
+    $options['return'] = Database::RETURN_STATEMENT;
+    parent::__construct($connection, $options);
+    $conjunction = isset($options['conjunction']) ? $options['conjunction'] : 'AND';
+    $this->condition = new Condition($conjunction);
+    $this->having = new Condition($conjunction);
+    $this->addJoin(NULL, $table, $alias);
+  }
+
+  /**
    * Overriden with an aditional exclude parameter that tells not to include this expression (by default)
    * in the select list.
    *
