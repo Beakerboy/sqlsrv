@@ -19,6 +19,7 @@ class Select extends QuerySelect {
    */
   public function __construct($table, $alias, Connection $connection, $options = []) {
     parent::__construct($table, $alias, $connection, $options);
+    $conjunction = isset($options['conjunction']) ? $options['conjunction'] : 'AND';
     $this->condition = new Condition($conjunction);
     $this->having = new Condition($conjunction);
   }
