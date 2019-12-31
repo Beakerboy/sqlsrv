@@ -19,7 +19,7 @@ class Condition extends QueryCondition {
     // Find any REGEXP conditions and turn them into function calls
     foreach ($this->conditions as &$condition) {
       if(isset($condition['operator'])) {
-        if (isset($condition['operator'] == 'REGEXP') {
+        if ($condition['operator'] == 'REGEXP') {
           $condition['field'] = 'RegExCompiledMatch(' . $field;
           $condition['operator'] = ',';
           $condition['value'] = $condition['value'] . ') = 1';
