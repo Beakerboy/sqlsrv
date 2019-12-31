@@ -3,7 +3,7 @@
 namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Connection as DatabaseConnection;
-
+use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\PlaceholderInterface as DatabasePlaceholderInterface;
 use Drupal\Core\Database\Query\SelectInterface as DatabaseSelectInterface;
 use Drupal\Core\Database\Query\Select as QuerySelect;
