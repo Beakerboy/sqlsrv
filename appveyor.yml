@@ -94,10 +94,10 @@ install:
   - cmd: |
       cd %APPVEYOR_BUILD_FOLDER%\tests\
       call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
-      csc.exe /target:library /out:regex.dll regex.cs
+      csc.exe /target:library /out:RegEx.dll regex.cs
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE"
-  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE ASSEMBLY Regex from '$Env:APPVEYOR_BUILD_FOLDER\tests\regex.dll' WITH PERMISSION_SET = SAFE"
-  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE PROCEDURE REGEX AS EXTERNAL NAME Regex.RegexCompiled.RegExCompiledMatch"
+  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE ASSEMBLY Regex from '$Env:APPVEYOR_BUILD_FOLDER\tests\RegEx.dll' WITH PERMISSION_SET = SAFE"
+  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE PROCEDURE REGEX AS EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
 build_script:
   - cmd: echo "No build"
 before_test:
