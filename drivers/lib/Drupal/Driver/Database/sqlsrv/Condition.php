@@ -27,8 +27,9 @@ class Condition extends QueryCondition {
         $condition['field'] = 'RegExCompiledMatch(' . $field;
         $condition['operator'] = ',';
         $condition['value'] = $condition['value'] . ') = 0';
-      }
+      } 
     }
+    parent::compile($connection, $queryPlaceholder);
   }
 }
 
