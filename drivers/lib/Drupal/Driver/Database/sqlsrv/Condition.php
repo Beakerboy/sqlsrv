@@ -18,15 +18,17 @@ class Condition extends QueryCondition {
   public function compile(DatabaseConnection $connection, PlaceholderInterface $queryPlaceholder) {
     // Find any REGEXP conditions and turn them into function calls
     foreach ($this->conditions as &$condition) {
-      if ($condition['operator'] == 'REGEXP') {
-        $condition['field'] = 'RegExCompiledMatch(' . $field;
-        $condition['operator'] = ',';
-        $condition['value'] = $condition['value'] . ') = 1';
-      } else if ($condition['operator'] == 'NOT REGEXP') {
-        $condition['field'] = 'RegExCompiledMatch(' . $field;
-        $condition['operator'] = ',';
-        $condition['value'] = $condition['value'] . ') = 0';
-      } 
+      if(isset($condition['operator'])) {
+        if (isset($condition['operator'] == 'REGEXP') {
+          $condition['field'] = 'RegExCompiledMatch(' . $field;
+          $condition['operator'] = ',';
+          $condition['value'] = $condition['value'] . ') = 1';
+        } else if ($condition['operator'] == 'NOT REGEXP') {
+          $condition['field'] = 'RegExCompiledMatch(' . $field;
+          $condition['operator'] = ',';
+          $condition['value'] = $condition['value'] . ') = 0';
+        } 
+      }
     }
     parent::compile($connection, $queryPlaceholder);
   }
