@@ -20,11 +20,11 @@ class Condition extends QueryCondition {
     foreach ($this->conditions as &$condition) {
       if(isset($condition['operator'])) {
         if ($condition['operator'] == 'REGEXP') {
-          $condition['field'] = 'dbo.REGEX(' . $connection->escapeField($condition['field']) . ', \'' . $condition['value'] . '\') = 1';
+          $condition['field'] = 'dbo.REGEX(' . $connection->escapeField($condition['field']) . ', \'' . $condition['value'] . '\')';
           $condition['operator'] = NULL;
           $condition['value'] = [];
         } else if ($condition['operator'] == 'NOT REGEXP') {
-          $condition['field'] = 'dbo.REGEX(' . $connection->escapeField($condition['field']) . ', \'' . $condition['value'] . '\') = 0';
+          $condition['field'] = 'NOT dbo.REGEX(' . $connection->escapeField($condition['field']) . ', \'' . $condition['value'] . '\')';
           $condition['operator'] = NULL;
           $condition['value'] = [];
         } 
