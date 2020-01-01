@@ -95,7 +95,7 @@ install:
       cd %APPVEYOR_BUILD_FOLDER%\tests\
       call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
       csc.exe /target:library /out:RegEx.dll regex.cs
-  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE"
+  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE ASSEMBLY Regex from '$Env:APPVEYOR_BUILD_FOLDER\tests\RegEx.dll' WITH PERMISSION_SET = SAFE"
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE FUNCTION dbo.REGEX(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS int EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
 build_script:
