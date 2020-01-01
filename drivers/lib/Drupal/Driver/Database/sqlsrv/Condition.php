@@ -20,11 +20,11 @@ class Condition extends QueryCondition {
     foreach ($this->conditions as &$condition) {
       if(isset($condition['operator'])) {
         if ($condition['operator'] == 'REGEXP') {
-          $condition['field'] = 'RegExCompiledMatch(' . $field;
+          $condition['field'] = 'RegExCompiledMatch(' . $condition['field'];
           $condition['operator'] = ',';
           $condition['value'] = $condition['value'] . ') = 1';
         } else if ($condition['operator'] == 'NOT REGEXP') {
-          $condition['field'] = 'RegExCompiledMatch(' . $field;
+          $condition['field'] = 'RegExCompiledMatch(' . $condition['field'];
           $condition['operator'] = ',';
           $condition['value'] = $condition['value'] . ') = 0';
         } 
