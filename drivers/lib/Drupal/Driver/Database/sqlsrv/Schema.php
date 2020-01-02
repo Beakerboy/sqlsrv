@@ -1377,9 +1377,7 @@ EOF;
   }
 
   /**
-   * Override DatabaseSchema::fieldSetDefault().
-   *
-   * @status complete
+   * {@inheritdoc}
    */
   public function fieldSetDefault($table, $field, $default) {
     @trigger_error('fieldSetDefault() is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
@@ -1387,12 +1385,7 @@ EOF;
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot set default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
     }
 
-    if ($default === NULL) {
-      $default = 'NULL';
-    }
-    elseif (is_string($default)) {
-      $default = "'" . addslashes($spec['default']) . "'";
-    }
+    $default = $this->escapeDefaultValue($default);
 
     // Try to remove any existing default first.
     try {
@@ -1406,9 +1399,7 @@ EOF;
   }
 
   /**
-   * Override DatabaseSchema::fieldSetNoDefault().
-   *
-   * @status complete
+   * {@inheritdoc}
    */
   public function fieldSetNoDefault($table, $field) {
     @trigger_error('fieldSetNoDefault() is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
@@ -1420,9 +1411,7 @@ EOF;
   }
 
   /**
-   * Override DatabaseSchema::addPrimaryKey().
-   *
-   * @status tested
+   * {@inheritdoc}
    */
   public function addPrimaryKey($table, $fields) {
     if (!$this->tableExists($table, TRUE)) {
@@ -1453,9 +1442,7 @@ EOF;
   }
 
   /**
-   * Override DatabaseSchema::dropPrimaryKey().
-   *
-   * @status tested
+   * {@inheritdoc}
    */
   public function dropPrimaryKey($table) {
     if (!$this->primaryKeyName($table)) {
@@ -1534,9 +1521,7 @@ EOF;
   }
 
   /**
-   * Override DatabaseSchema::addUniqueKey().
-   *
-   * @status tested
+   * {@inheritdoc}
    */
   public function addUniqueKey($table, $name, $fields) {
     if (!$this->tableExists($table, TRUE)) {
@@ -1569,7 +1554,7 @@ EOF;
   }
 
   /**
-   * Override DatabaseSchema::dropUniqueKey().
+   * {@inheritdoc}
    */
   public function dropUniqueKey($table, $name) {
     if (!$this->uniqueKeyExists($table, $name)) {
@@ -1599,9 +1584,7 @@ EOF;
   }
 
   /**
-   * Override DatabaseSchema::addIndex().
-   *
-   * @status tested
+   * {@inheritdoc}
    */
   public function addIndex($table, $name, $fields, array $spec = []) {
     if (!$this->tableExists($table, TRUE)) {
@@ -1627,9 +1610,7 @@ EOF;
   }
 
   /**
-   * Override DatabaseSchema::dropIndex().
-   *
-   * @status tested
+   * {@inheritdoc}
    */
   public function dropIndex($table, $name) {
     if (!$this->indexExists($table, $name)) {
@@ -1652,9 +1633,7 @@ EOF;
   }
 
   /**
-   * Override DatabaseSchema::indexExists().
-   *
-   * @status tested
+   * {@inheritdoc}
    */
   public function indexExists($table, $name) {
     $table = $this->connection->prefixTables('{' . $table . '}');
