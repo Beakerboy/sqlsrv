@@ -18,19 +18,14 @@ class Condition extends QueryCondition {
   public function compile(DatabaseConnection $connection, PlaceholderInterface $queryPlaceholder) {
     // Find any REGEXP conditions and turn them into function calls
     foreach ($this->conditions as &$condition) {
-      if(isset($condition['operator'])) {
-        $schema_name = $connection->schema->getDefaultSchema();
+      if (isset($condition['operator']) && ($condition['operator'] == 'REGEXP' || $condition['operator'] == 'NOT REGEXP')) {
+        $schema_name = $connection->schema()->getDefaultSchema();
         $placeholder = ':db_condition_placeholder_' . $queryPlaceholder->nextPlaceholder();
         $field_fragment = $connection->escapeField($condition['field']);
-        if ($condition['operator'] == 'REGEXP') {
-          $condition['field'] = '{$schema_name}.REGEXP({$placeholder}, {$field_fragment}) = 1';
-          $condition['operator'] = NULL;
-          $condition['value'] = [$placeholder => $condition['value']];
-        } else if ($condition['operator'] == 'NOT REGEXP') {
-          $condition['field'] = '{$schema_name}.REGEXP({$placeholder}, {$field_fragment}) = 0';
-          $condition['operator'] = NULL;
-          $condition['value'] = [$placeholder => $condition['value']];
-        } 
+        $comparison = $condition['operator'] == 'REGEXP' ? 1 : 0;
+        $condition['field'] = '{$schema_name}.REGEXP({$placeholder}, {$field_fragment}) = {$comparison}';
+        $condition['operator'] = NULL;
+        $condition['value'] = [$placeholder => $condition['value']];
       }
     }
     parent::compile($connection, $queryPlaceholder);
