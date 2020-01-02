@@ -80,8 +80,14 @@ class Connection extends DatabaseConnection {
   protected static $sqlsrvConditionOperatorMap = [
     'LIKE' => [],
     'NOT LIKE' => [],
-    'REGEXP' => ['operator' => 'LIKE'],
-    'NOT REGEXP' => ['operator' => 'NOT LIKE'],
+    'REGEXP' => [
+      'prefix' => '(',
+      'postfix' => ') = 1',
+    ],
+    'NOT REGEXP' => [
+      'prefix' => 'RegExCompiledMatch(',
+      'postfix' => ') = 0',
+    ],
   ];
 
 

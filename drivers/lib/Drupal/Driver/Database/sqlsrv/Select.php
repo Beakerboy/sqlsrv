@@ -3,7 +3,6 @@
 namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Connection as DatabaseConnection;
-
 use Drupal\Core\Database\Query\PlaceholderInterface as DatabasePlaceholderInterface;
 use Drupal\Core\Database\Query\SelectInterface as DatabaseSelectInterface;
 use Drupal\Core\Database\Query\Select as QuerySelect;
@@ -14,6 +13,16 @@ use Drupal\Core\Database\Query\Condition as DatabaseCondition;
  * @{
  */
 class Select extends QuerySelect {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($table, $alias, Connection $connection, $options = []) {
+    parent::__construct($table, $alias, $connection, $options);
+    $conjunction = isset($options['conjunction']) ? $options['conjunction'] : 'AND';
+    $this->condition = new Condition($conjunction);
+    $this->having = new Condition($conjunction);
+  }
 
   /**
    * Overriden with an aditional exclude parameter that tells not to include this expression (by default)
