@@ -22,8 +22,8 @@ class Condition extends QueryCondition {
         $schema_name = $connection->schema()->getDefaultSchema();
         $placeholder = ':db_condition_placeholder_' . $queryPlaceholder->nextPlaceholder();
         $field_fragment = $connection->escapeField($condition['field']);
-        $comparison = $condition['operator'] == 'REGEXP' ? 1 : 0;
-        $condition['field'] = '{$schema_name}.REGEXP({$placeholder}, {$field_fragment}) = {$comparison}';
+        $comparison = $condition['operator'] == 'REGEXP' ? '1' : '0';
+        $condition['field'] = "{$schema_name}.REGEXP({$placeholder}, {$field_fragment}) = {$comparison}";
         $condition['operator'] = NULL;
         $condition['value'] = [$placeholder => $condition['value']];
       }
