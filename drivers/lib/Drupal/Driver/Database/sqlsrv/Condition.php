@@ -19,12 +19,13 @@ class Condition extends QueryCondition {
     // Find any REGEXP conditions and turn them into function calls
     foreach ($this->conditions as &$condition) {
       if(isset($condition['operator'])) {
+        $schema_name = $connection->schema->getDefaultSchema();
         if ($condition['operator'] == 'REGEXP') {
-          $condition['field'] = 'dbo.REGEX(:db_regexp, ' . $connection->escapeField($condition['field']) . ') = 1';
+          $condition['field'] = '{$schema_name}.REGEXP(:db_regexp, ' . $connection->escapeField($condition['field']) . ') = 1';
           $condition['operator'] = NULL;
           $condition['value'] = [':db_regexp' => $condition['value']];
         } else if ($condition['operator'] == 'NOT REGEXP') {
-          $condition['field'] = 'dbo.REGEX(:db_regexp, ' . $connection->escapeField($condition['field']) . ') = 0';
+          $condition['field'] = '{$schema_name}.REGEXP(:db_regexp, ' . $connection->escapeField($condition['field']) . ') = 0';
           $condition['operator'] = NULL;
           $condition['value'] = [':db_regexp' => $condition['value']];
         } 
