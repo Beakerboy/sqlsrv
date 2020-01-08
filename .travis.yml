@@ -1,0 +1,42 @@
+language: php
+
+php:
+  - '7.2'
+
+before_install:
+  # Install SQL Server for Linux
+  - wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+  - sudo add-apt-repository "$(wget -qO- https://packages.microsoft.com/config/ubuntu/16.04/mssql-server-2019.list)"
+  - sudo add-apt-repository "$(wget -qO- https://packages.microsoft.com/config/ubuntu/16.04/prod.list)"
+  - sudo apt-get update
+  - sudo ACCEPT_EULA=Y apt-get install -y mssql-server mssql-tools unixodbc-dev
+  - export MSSQL_SA_PASSWORD=Passw0rd
+  - export ACCEPT_EULA=Y
+  - export MSSQL_PID=Evaluation
+  - sudo /opt/mssql/bin/mssql-conf setup
+  - /opt/mssql-tools/bin/sqlcmd -P Passw0rd -S localhost -U SA -Q 'CREATE DATABASE mydrupaldatabase'
+  # Install the pdo_sqlsrv extension
+  - curl -s https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+  - sudo bash -c "curl -s https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list"
+  - sudo apt-get update
+  - sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 mssql-tools
+  - sudo apt-get -y install unixodbc-dev
+  - sudo apt-get -y install gcc g++ make autoconf libc-dev pkg-config
+  - pecl install sqlsrv
+  - pecl install pdo_sqlsrv
+  - phpenv config-add install/travis-7.x.ini
+install:
+  # Create a Drupal Site
+  - cd ..
+  - composer create-project -n drupal-composer/drupal-project:8.x-dev
+  - cd drupal-project
+  - composer config repositories.drupal composer https://packages.drupal.org/8
+  - composer require drupal/sqlsrv:dev-1.x@dev
+  - composer require symfony/psr-http-message-bridge:1.1.x-dev
+  - cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
+  - cp -r $TRAVIS_BUILD_DIR/src ./web/modules/contrib/sqlsrv/src
+  - PATH=$PATH:./vendor/bin
+  - travis_wait 90 drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupaldatabase" --db-user="sa" --db-pass="Passw0rd" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+script: 
+
+after_success:
