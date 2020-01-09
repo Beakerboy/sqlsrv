@@ -94,7 +94,7 @@ class Connection extends DatabaseConnection {
    * Constructs a Connection object.
    */
   public function __construct(\PDO $connection, array $connection_options) {
-
+    $this->OS = strtoupper(substr(PHP_OS, 0, 3);
     // Initialize settings.
     $this->driver_settings = DriverSettings::instanceFromSettings();
 
@@ -672,7 +672,11 @@ class Connection extends DatabaseConnection {
 
     // Drill through everything...
     $success = FALSE;
-    $cache = \Drupal::cache()->get($query_signature);
+    if ($this->OS === 'WIN') {
+      $cache = wincache_ucache_get($query_signature, $success);
+    } else if (extension_loaded('apcu') && (PHP_SAPI !== 'cli' || (bool) ini_get('apc.enable_cli'))) {
+      $cache = apcu_fetch($query_signature, $success);
+    }
     if ($success) {
       return $cache;
     }
