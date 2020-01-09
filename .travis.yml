@@ -25,6 +25,9 @@ before_install:
   - pecl install sqlsrv
   - pecl install pdo_sqlsrv
   - phpenv config-add install/travis-7.x.ini
+  # Install REGEX CLR
+  - sudo apt-get install -qq mono-complete
+  - mono -target:library -out:test/RegEx.dll test/regex.cs 
 install:
   # Create a Drupal Site
   - cd ..
@@ -36,7 +39,9 @@ install:
   - cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
   - cp -r $TRAVIS_BUILD_DIR/src ./web/modules/contrib/sqlsrv/src
   - PATH=$PATH:./vendor/bin
-  - travis_wait 90 drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupaldatabase" --db-user="sa" --db-pass="Passw0rd" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+  - drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupaldatabase" --db-user="sa" --db-pass="Passw0rd" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+  - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist web/core/phpunit.xml
 script: 
-
+  - cd web
+  - phpunit -c core\phpunit.xml --testsuite=database,sqlsrv
 after_success:
