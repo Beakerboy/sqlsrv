@@ -43,5 +43,5 @@ install:
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist web/core/phpunit.xml
 script: 
   - cd web
-  - phpunit -c core/phpunit.xml --testsuite=database,sqlsrv
+  - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=database,sqlsrv
 after_success:
