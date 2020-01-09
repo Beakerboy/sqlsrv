@@ -94,7 +94,7 @@ class Connection extends DatabaseConnection {
    * Constructs a Connection object.
    */
   public function __construct(\PDO $connection, array $connection_options) {
-    $this->OS = strtoupper(substr(PHP_OS, 0, 3);
+    $this->OS = strtoupper(substr(PHP_OS, 0, 3));
     // Initialize settings.
     $this->driver_settings = DriverSettings::instanceFromSettings();
 
