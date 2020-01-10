@@ -1010,12 +1010,14 @@ EOF
       // nulls with the default value because this won't be done by MSSQL by default.
       if (!empty($spec['default'])) {
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $this->connection->query_direct("UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL");
+        $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
+        $this->connection->query_direct($sql);
+        echo $sql;
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
       $field_sql = $this->createFieldSql($table, $field, $spec, TRUE);
-      $this->connection->query_direct('ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}');
+      $this->connection->query_direct("ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}");
     }
 
     $this->recreateTableKeys($table, $new_keys);
