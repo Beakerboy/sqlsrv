@@ -1007,8 +1007,8 @@ EOF
       if (!empty($spec['default'])) {
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
         $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
-        $this->connection->query_direct($sql);
         fwrite(STDERR, $sql);
+        $this->connection->query_direct($sql);
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
