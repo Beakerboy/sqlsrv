@@ -14,7 +14,7 @@ before_install:
   - export ACCEPT_EULA=Y
   - export MSSQL_PID=Evaluation
   - sudo /opt/mssql/bin/mssql-conf setup
-  - /opt/mssql-tools/bin/sqlcmd -P Passw0rd -S localhost -U SA -Q 'CREATE DATABASE mydrupaldatabase'
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q 'CREATE DATABASE mydrupalsite'
   # Install the pdo_sqlsrv extension
   - curl -s https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
   - sudo bash -c "curl -s https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list"
@@ -39,7 +39,7 @@ install:
   - mv $TRAVIS_BUILD_DIR/drivers ./web/drivers
   - cp -r $TRAVIS_BUILD_DIR ./web/modules/contrib/sqlsrv
   - PATH=$PATH:./vendor/bin
-  - drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupaldatabase" --db-user="sa" --db-pass="Passw0rd" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+  - drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist web/core/phpunit.xml
 script: 
   - cd web
