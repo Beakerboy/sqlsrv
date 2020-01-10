@@ -26,8 +26,8 @@ before_install:
   - pecl install pdo_sqlsrv
   - phpenv config-add install/travis-7.x.ini
   # Install REGEX CLR
-  # - sudo apt-get install -qq mono-complete
-  #- mono -target:library -out:test/RegEx.dll test/regex.cs 
+  - sudo apt-get install -qq mono-complete
+  - mono -target:library -out:test/RegEx.dll test/regex.cs 
 install:
   # Create a Drupal Site
   - cd ..
