@@ -610,7 +610,7 @@ EOF
     return implode(' ', $result);
   }
 
-   /**
+  /**
    * {@inheritdoc}
    */
   protected function findPrimaryKeyColumns($table) {
@@ -668,6 +668,10 @@ EOF
    *   Name of the field.
    * @param $spec
    *   The field specification, as per the schema data structure format.
+   * @param boolean $skip_checks
+   *
+   * @return
+   *   The SQL statement to create the field.
    */
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
     // Use a prefixed table.
@@ -716,7 +720,7 @@ EOF
     if (!$skip_checks) {
       if (isset($spec['default'])) {
         $default = $this->defaultValueExpression($sqlsrv_type, $spec['default']);
-        $sql .= " CONSTRAINT {$table_prefixed}_{$name}_df DEFAULT  $default";
+        $sql .= " CONSTRAINT {$table_prefixed}_{$name}_df DEFAULT $default";
       }
       if (!empty($spec['identity'])) {
         $sql .= ' IDENTITY';
@@ -731,9 +735,10 @@ EOF
   /**
    * Get the SQL expression for a default value.
    *
-   * @param mixed $table
-   * @param mixed $field
+   * @param string $sqlsr_type
    * @param mixed $default
+   *
+   * @return an SQL default expression
    */
   private function defaultValueExpression($sqlsr_type, $default) {
     // The actual expression depends on the target data type as it might require conversions.
@@ -894,9 +899,7 @@ EOF
   }
 
   /**
-   * Override DatabaseSchema::renameTable().
-   *
-   * @status complete
+   * {@inheritdoc}
    */
   public function renameTable($table, $new_name) {
     if (!$this->tableExists($table, TRUE)) {
@@ -935,9 +938,7 @@ EOF
   }
 
   /**
-   * Override DatabaseSchema::dropTable().
-   *
-   * @status tested
+   * {@inheritdoc}
    */
   public function dropTable($table) {
     if (!$this->tableExists($table, TRUE)) {
@@ -948,7 +949,7 @@ EOF
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function fieldExists($table, $field) {
     return $this->connection
@@ -957,9 +958,7 @@ EOF
   }
 
   /**
-   * Override DatabaseSchema::addField().
-   *
-   * @status complete
+   * {@inheritdoc}
    */
   public function addField($table, $field, $spec, $new_keys = []) {
     if (!$this->tableExists($table, TRUE)) {
@@ -1005,19 +1004,18 @@ EOF
     if ($fixnull === TRUE) {
       // There is no warranty that the old data did not have NULL values, we need to populate
       // nulls with the default value because this won't be done by MSSQL by default.
-      if (!empty($spec['default'])) {
+      if (isset($spec['default'])) {
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field}] = {$default_expression} WHERE [{$field}] IS NULL");
+        $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
+        $this->connection->query_direct($sql);
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
-      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field, $spec, TRUE));
+      $field_sql = $this->createFieldSql($table, $field, $spec, TRUE);
+      $this->connection->query_direct("ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}");
     }
 
-    // Add the new keys.
-    if (isset($new_keys)) {
-      $this->recreateTableKeys($table, $new_keys);
-    }
+    $this->recreateTableKeys($table, $new_keys);
 
     // Commit.
     $transaction->commit();
@@ -1055,9 +1053,7 @@ EOF
   }
 
   /**
-   * Override DatabaseSchema::changeField().
-   *
-   * @status complete
+   * {@inheritdoc}
    */
   public function changeField($table, $field, $field_new, $spec, $new_keys = []) {
     if (!$this->fieldExists($table, $field)) {
