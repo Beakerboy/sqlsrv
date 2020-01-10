@@ -1152,7 +1152,7 @@ EOF
     }
 
     // Recreate the unique constraint if it existed.
-    if ($unique_key && (!isset($new_keys['unique keys']) || !in_array($field_new, $new_keys['unique keys'])) {
+    if ($unique_key && (!isset($new_keys['unique keys']) || !in_array($field_new, $new_keys['unique keys']))) {
       $new_keys['unique keys'][] = $field_new;
     }
 
