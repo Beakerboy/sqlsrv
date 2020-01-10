@@ -27,7 +27,7 @@ before_install:
   - phpenv config-add install/travis-7.x.ini
   # Install REGEX CLR
   - sudo apt-get install -qq mono-complete
-  - mcs -reference System.Data.dll -target:library -out:tests/RegEx.dll tests/regex.cs 
+  - mcs -reference:System.Data.dll -target:library -out:tests/RegEx.dll tests/regex.cs 
 install:
   # Create a Drupal Site
   - cd ..
