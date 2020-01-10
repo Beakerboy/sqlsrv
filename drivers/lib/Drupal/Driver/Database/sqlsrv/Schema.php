@@ -1153,7 +1153,7 @@ EOF
 
     // Recreate the unique constraint if it existed.
     if ($unique_key && (!isset($new_keys['unique keys']) || !in_array($field_new, $new_keys['unique keys']))) {
-      $new_keys['unique keys'][] = [$field_new];
+      $new_keys['unique keys'][$field] = [$field_new];
     }
 
     // Drop the old field.
@@ -1550,7 +1550,7 @@ EOF;
     // This is (very) unlikely to result in a collision with any actual value
     // in the columns of the unique key.
     $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$this->TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
-    $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON [{{$table}}] (__unique_{$name})");
+    $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON {{$table}} (__unique_{$name})");
   }
 
   /**
@@ -1561,8 +1561,8 @@ EOF;
       return FALSE;
     }
 
-    $this->connection->query('DROP INDEX ' . $name . '_unique ON [{' . $table . '}]');
-    $this->connection->query('ALTER TABLE [{' . $table . '}] DROP COLUMN __unique_' . $name);
+    $this->connection->query("DROP INDEX {$name}_unique ON {{$table}}");
+    $this->connection->query("ALTER TABLE {{$table}} DROP COLUMN __unique_{$name}");
 
     // Try to clean-up the technical primary key if possible.
     $this->cleanUpTechnicalPrimaryColumn($table);
