@@ -1071,15 +1071,24 @@ EOF
 
     // Prepare the specifications.
     $spec = $this->processField($spec);
-
-    // IMPORTANT NOTE: To maintain database portability, you have to explicitly recreate all indices and primary keys that are using the changed field.
-    // That means that you have to drop all affected keys and indexes with db_drop_{primary_key,unique_key,index}() before calling db_change_field().
-    // @see https://api.drupal.org/api/drupal/includes!database!database.inc/function/db_change_field/7
-    //
-    // What we are going to do in the SQL Server Driver is a best-effort try to preserve original keys if they do not conflict
-    // with the new_keys parameter, and if the callee has done it's job (droping constraints/keys) then they will of course not be recreated.
-    // Introspect the schema and save the current primary key if the column
-    // we are modifying is part of it. Make sure the schema is FRESH.
+    
+    /**
+     * IMPORTANT NOTE: To maintain database portability, you have to explicitly
+     * recreate all indices and primary keys that are using the changed field.
+     * That means that you have to drop all affected keys and indexes with
+     * db_drop_{primary_key,unique_key,index}() before calling
+     * db_change_field().
+     *
+     * @see https://api.drupal.org/api/drupal/includes!database!database.inc/function/db_change_field/7
+     *
+     * What we are going to do in the SQL Server Driver is a best-effort try to
+     * preserve original keys if they do not conflict with the new_keys
+     * parameter, and if the callee has done it's job (droping constraints/keys)
+     * then they will of course not be recreated.
+     *
+     * Introspect the schema and save the current primary key if the column
+     * we are modifying is part of it. Make sure the schema is FRESH.
+     */
     $primary_key_fields = $this->introspectPrimaryKeyFields($table);
     if (in_array($field, $primary_key_fields)) {
       // Let's drop the PK.
@@ -1114,42 +1123,37 @@ EOF
 
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion errors.
-    $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = CAST([{$field}_old] AS {$spec['sqlsrv_type']})");
+    $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$spec['sqlsrv_type']})";
+    $this->connection->query_direct($sql);
 
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
-      // There is no warranty that the old data did not have NULL values, we need to populate
-      // nulls with the default value because this won't be done by MSSQL by default.
+      // There is no warranty that the old data did not have NULL values, we
+      // need to populate nulls with the default value because this won't be
+      // done by MSSQL by default.
       if (!empty($spec['default'])) {
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $this->connection->query_direct("UPDATE [{{$table}}] SET [{$field_new}] = {$default_expression} WHERE [{$field_new}] IS NULL");
+        $sql = "UPDATE {{$table}} SET {$field_new} = {$default_expression} WHERE {$field_new} IS NULL";
+        $this->connection->query_direct($sql);
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
-      $this->connection->query_direct('ALTER TABLE {' . $table . '} ALTER COLUMN ' . $this->createFieldSql($table, $field_new, $spec, TRUE));
+      $field_sql = $this->createFieldSql($table, $field_new, $spec, TRUE);
+      $sql = "ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}";
+      $this->connection->query_direct($sql);
     }
-
-    // Initialize new keys.
-    if (!isset($new_keys)) {
-      $new_keys = [
-        'unique keys' => [],
-        'primary keys' => [],
-      ];
-    }
-
-    // Recreate the primary key if no new primary key
-    // has been sent along with the change field.
+    // Recreate the primary key if no new primary key has been sent along with
+    // the change field.
     if (in_array($field, $primary_key_fields) && (!isset($new_keys['primary keys']) || empty($new_keys['primary keys']))) {
-      // The new primary key needs to have
-      // the new column name.
+      // The new primary key needs to have the new column name.
       unset($primary_key_fields[$field]);
       $primary_key_fields[$field_new] = $field_new;
       $new_keys['primary key'] = $primary_key_fields;
     }
 
     // Recreate the unique constraint if it existed.
-    if ($unique_key && !isset($new_keys['unique keys']) && !in_array($field_new, $new_keys['unique keys'])) {
-      $new_keys['unique keys'][] = $field_new;
+    if ($unique_key && (!isset($new_keys['unique keys']) || !in_array($field_new, $new_keys['unique keys']))) {
+      $new_keys['unique keys'][$field] = [$field_new];
     }
 
     // Drop the old field.
@@ -1546,7 +1550,7 @@ EOF;
     // This is (very) unlikely to result in a collision with any actual value
     // in the columns of the unique key.
     $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$this->TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
-    $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON [{{$table}}] (__unique_{$name})");
+    $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON {{$table}} (__unique_{$name})");
   }
 
   /**
@@ -1557,8 +1561,8 @@ EOF;
       return FALSE;
     }
 
-    $this->connection->query('DROP INDEX ' . $name . '_unique ON [{' . $table . '}]');
-    $this->connection->query('ALTER TABLE [{' . $table . '}] DROP COLUMN __unique_' . $name);
+    $this->connection->query("DROP INDEX {$name}_unique ON {{$table}}");
+    $this->connection->query("ALTER TABLE {{$table}} DROP COLUMN __unique_{$name}");
 
     // Try to clean-up the technical primary key if possible.
     $this->cleanUpTechnicalPrimaryColumn($table);
