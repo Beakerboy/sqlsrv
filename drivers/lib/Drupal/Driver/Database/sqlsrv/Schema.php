@@ -610,7 +610,7 @@ EOF
     return implode(' ', $result);
   }
 
-   /**
+  /**
    * {@inheritdoc}
    */
   protected function findPrimaryKeyColumns($table) {
@@ -899,9 +899,7 @@ EOF
   }
 
   /**
-   * Override DatabaseSchema::renameTable().
-   *
-   * @status complete
+   * {@inheritdoc}
    */
   public function renameTable($table, $new_name) {
     if (!$this->tableExists($table, TRUE)) {
@@ -940,9 +938,7 @@ EOF
   }
 
   /**
-   * Override DatabaseSchema::dropTable().
-   *
-   * @status tested
+   * {@inheritdoc}
    */
   public function dropTable($table) {
     if (!$this->tableExists($table, TRUE)) {
@@ -953,7 +949,7 @@ EOF
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function fieldExists($table, $field) {
     return $this->connection
@@ -1012,7 +1008,7 @@ EOF
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
         $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
         $this->connection->query_direct($sql);
-        echo $sql;
+        fwrite(STDERR, $sql);
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
@@ -1058,9 +1054,7 @@ EOF
   }
 
   /**
-   * Override DatabaseSchema::changeField().
-   *
-   * @status complete
+   * {@inheritdoc}
    */
   public function changeField($table, $field, $field_new, $spec, $new_keys = []) {
     if (!$this->fieldExists($table, $field)) {
