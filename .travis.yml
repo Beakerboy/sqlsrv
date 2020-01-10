@@ -27,7 +27,10 @@ before_install:
   - phpenv config-add install/travis-7.x.ini
   # Install REGEX CLR
   - sudo apt-get install -qq mono-complete
-  - mcs -reference:System.Data.dll -target:library -out:tests/RegEx.dll tests/regex.cs 
+  - mcs -reference:System.Data.dll -target:library -out:tests/RegEx.dll tests/regex.cs
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q "CREATE ASSEMBLY Regex from '$Env:APPVEYOR_BUILD_FOLDER\tests\RegEx.dll' WITH PERMISSION_SET = SAFE"
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
 install:
   # Create a Drupal Site
   - cd ..
