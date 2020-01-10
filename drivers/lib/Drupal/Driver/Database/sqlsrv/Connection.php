@@ -468,7 +468,7 @@ class Connection extends DatabaseConnection {
     // SQL Server requires that temporary tables to be non-qualified.
     $tablename = '##' . $this->generateTemporaryTableName();
     // Temporary tables cannot be introspected so using them is limited on some scenarios.
-    if ($options['real_table'] === TRUE) {
+    if (isset($options['real_table']) && $options['real_table'] === TRUE) {
       $tablename = trim($tablename, "#");
     }
     $prefixes = $this->prefixes;
