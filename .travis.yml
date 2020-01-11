@@ -42,9 +42,9 @@ install:
   - cd $TRAVIS_BUILD_DIR/tests
   - mcs -reference:System.Data.dll -target:library -out:RegEx.dll regex.cs
   - sudo mv RegEx.dll /var/opt/mssql/data/
-  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
-  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q "CREATE ASSEMBLY Regex from '/var/opt/mssql/data/RegEx.dll' WITH PERMISSION_SET = SAFE"
-  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE ASSEMBLY Regex from '/var/opt/mssql/data/RegEx.dll' WITH PERMISSION_SET = SAFE"
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
   - cd $TRAVIS_BUILD_DIR/../drupal-project
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist web/core/phpunit.xml
   - phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
