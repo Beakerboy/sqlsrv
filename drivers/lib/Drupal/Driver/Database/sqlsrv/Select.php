@@ -358,10 +358,13 @@ class Select extends QuerySelect {
     // The ORDER BY clause is invalid in views, inline functions, derived
     // tables, subqueries, and common table expressions, unless TOP or FOR XML
     // is also specified.
-    // Sqlsev requires an order by if there is an offset.
+    // Sqlsrv requires an order by if there is an offset. We do not need an
+    // ORDER BY if the offset is a TOP.
     if ($this->order && empty($this->inSubQuery) || !empty($this->range)) {
-      if ($this->order == [] && $this->range['start'] > 0) {
-        $query .= "\nORDER BY (SELECT NULL)";
+      if ($this->order == []) {
+        if ($this->range['start'] > 0) {
+          $query .= "\nORDER BY (SELECT NULL)";
+        }
       } else {
         $query .= "\nORDER BY ";
         $fields = [];
