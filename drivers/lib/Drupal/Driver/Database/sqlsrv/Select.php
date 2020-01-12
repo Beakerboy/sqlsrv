@@ -333,6 +333,14 @@ class Select extends QuerySelect {
       $query .= "\nHAVING " . $this->having;
     }
 
+    // UNION is a little odd, as the select queries to combine are passed into
+    // this query, but syntactically they all end up on the same level.
+    if ($this->union) {
+      foreach ($this->union as $union) {
+        $query .= ' ' . $union['type'] . ' ' . (string) $union['query'];
+      }
+    }
+
     // ORDER BY
     // The ORDER BY clause is invalid in views, inline functions, derived
     // tables, subqueries, and common table expressions, unless TOP or FOR XML
@@ -349,14 +357,6 @@ class Select extends QuerySelect {
     // RANGE.
     if (!empty($this->range)) {
       $query = $this->connection->addRangeToQuery($query, $this->range['start'], $this->range['length']);
-    }
-
-    // UNION is a little odd, as the select queries to combine are passed into
-    // this query, but syntactically they all end up on the same level.
-    if ($this->union) {
-      foreach ($this->union as $union) {
-        $query .= ' ' . $union['type'] . ' ' . (string) $union['query'];
-      }
     }
 
     return $query;
