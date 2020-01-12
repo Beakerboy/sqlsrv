@@ -360,7 +360,7 @@ class Select extends QuerySelect {
     // is also specified.
     // Sqlsev requires an order by if there is an offset.
     if ($this->order && empty($this->inSubQuery) || !empty($this->range)) {
-      if (!isset($this->order && $this->range['start'] > 0)) {
+      if (!isset($this->order) && $this->range['start'] > 0) {
         $query .= "\nORDER BY (SELECT NULL)";
       } else {
         $query .= "\nORDER BY ";
