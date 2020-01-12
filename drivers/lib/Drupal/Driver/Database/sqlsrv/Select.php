@@ -362,13 +362,14 @@ class Select extends QuerySelect {
     if ($this->order && empty($this->inSubQuery) || !empty($this->range)) {
       if (!$this->order) {
         $query .= "\nORDER BY (SELECT NULL)";
+      } else {
+        $query .= "\nORDER BY ";
+        $fields = [];
+        foreach ($this->order as $field => $direction) {
+          $fields[] = $field . ' ' . $direction;
+        }
+        $query .= implode(', ', $fields);
       }
-      $query .= "\nORDER BY ";
-      $fields = [];
-      foreach ($this->order as $field => $direction) {
-        $fields[] = $field . ' ' . $direction;
-      }
-      $query .= implode(', ', $fields);
     }
 
     // RANGE.
