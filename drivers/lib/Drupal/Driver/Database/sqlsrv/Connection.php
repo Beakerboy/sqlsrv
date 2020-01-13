@@ -738,6 +738,9 @@ class Connection extends DatabaseConnection {
     else {
       if ($this->schema()->EngineVersionNumber() >= 11) {
         // As of SQL Server 2012 there is an easy (and faster!) way to page results.
+        if (false) {
+          $query .= "\nORDER BY (SELECT NULL)";
+        }
         $query = $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
       }
       else {
