@@ -361,6 +361,9 @@ class Select extends QuerySelect {
     // Sqlsrv requires an order by if there is an offset. We do not need an
     // ORDER BY if the offset is a TOP.
     if (!empty($this->order) && empty($this->inSubQuery) || !empty($this->range)) {
+      if (empty($this->order)) {
+          fwrite(STDERR, print_r($this->range, TRUE));
+      }
       if (empty($this->order) && !empty($this->range)) {
         if ($this->range['start'] > 0) {
           $query .= "\nORDER BY (SELECT NULL)";
