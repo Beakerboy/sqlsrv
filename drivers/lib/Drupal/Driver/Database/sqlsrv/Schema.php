@@ -742,7 +742,7 @@ EOF
    */
   private function defaultValueExpression($sqlsr_type, $default) {
     // The actual expression depends on the target data type as it might require conversions.
-    $result = is_string($default) ? "'" . addslashes($default) . "'" : $default;
+    $result = is_string($default) ? $this->connection->quote($default) : $default;
     if (DatabaseUtils::GetMSSQLType($sqlsr_type) == 'varbinary') {
       $default = addslashes($default);
       $result = "CONVERT({$sqlsr_type}, '{$default}')";
