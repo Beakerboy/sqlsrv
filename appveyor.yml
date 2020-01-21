@@ -103,26 +103,26 @@ build_script:
 before_test:
   - cmd: cd C:\projects\drupal-project
   # Enable pcov extension
-  #- ps: Add-Content $env:SITERUNTIMEPATH\php\php.ini "extension=php_pcov.dll"
-  #- ps: Add-Content $env:SITERUNTIMEPATH\php\php.ini "pcov.enabled = 1"
+  - ps: Add-Content $env:SITERUNTIMEPATH\php\php.ini "extension=php_pcov.dll"
+  - ps: Add-Content $env:SITERUNTIMEPATH\php\php.ini "pcov.enabled = 1"
   # Install composer packages for dev
-  #- cmd: composer require pcov/clobber --dev
+  - cmd: composer require pcov/clobber --dev
   - cmd: composer config repositories.php-coveralls git https://github.com/Beakerboy/php-coveralls.git
   - cmd: composer require beakerboy/php-coveralls dev-bugfix
   # Clobber existing vendor phpunit files.  Needed for phpunit 7.x
-  #- cmd: pcov clobber
+  - cmd: pcov clobber
   # Move custom test script to core
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: cp tests\phpunit.xml.dist C:\projects\drupal-project\web\core\phpunit.xml
-  #- cmd: mkdir .\build\logs
+  - cmd: mkdir .\build\logs
   # Associate Drupal coding standard into phpcs
   - cmd: phpcs --config-set installed_paths C:\projects\drupal-project\vendor\drupal\coder\coder_sniffer
   #- cmd: composer require pcov/clobber --dev
 test_script:
   - cmd: cd C:\projects\drupal-project\web
   - cmd: phpunit -c core\phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover %APPVEYOR_BUILD_FOLDER%\build\logs\clover.xml
-  #- cmd: cd %APPVEYOR_BUILD_FOLDER%
-  #- cmd: del /S /Q .\vendor\*
+  - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: del /S /Q .\vendor\*
   #- cmd: phpcs --standard=Drupal .
   #- cms: phpstan analyze drivers --level 7
 after_test:
