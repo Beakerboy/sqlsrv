@@ -78,8 +78,8 @@ class Connection extends DatabaseConnection {
    * literal, because it uses '' to escape the single quote, not \'.
    */
   protected static $sqlsrvConditionOperatorMap = [
-    'LIKE' => [],
-    'NOT LIKE' => [],
+    'LIKE' => ['postfix' => " ESCAPE '\\'"],
+    'NOT LIKE' => ['postfix' => " ESCAPE '\\'"],
   ];
 
 
@@ -426,13 +426,6 @@ class Connection extends DatabaseConnection {
    */
   public function quoteIdentifiers($identifiers) {
     return array_map([$this, 'quoteIdentifier'], $identifiers);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function escapeLike($string) {
-    return preg_replace('/([\\[\\]%_])/', '[$1]', $string);
   }
 
   /**
