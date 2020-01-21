@@ -431,13 +431,6 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    */
-  public function escapeLike($string) {
-    return preg_replace('/([\\[\\]%_])/', '[$1]', $string);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function queryRange($query, $from, $count, array $args = [], array $options = []) {
     $query = $this->addRangeToQuery($query, $from, $count);
     return $this->query($query, $args, $options);
