@@ -2,20 +2,17 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
+use Drupal\KernelTests\Core\Database\QueryTest as DrupalQueryTest;
 
 /**
  * Tests Drupal's extended prepared statement syntax..
  *
  * @group Database
  */
-class QueryTest extends DatabaseTestBase {
+class QueryTest extends DrupalQueryTest {
 
   /**
-   * Tests numeric query parameter expansion in expressions.
-   *
-   * @see \Drupal\Core\Database\Driver\sqlite\Statement::getStatement()
-   * @see http://bugs.php.net/bug.php?id=45259
+   *{@inheritdoc)
    */
   public function testNumericExpressionSubstitution() {
     $count = $this->connection->query('SELECT count(*) + :count FROM {test}', [
