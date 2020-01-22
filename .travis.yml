@@ -49,7 +49,7 @@ install:
 script:
   - pcov clobber
   - cd web
-  - ../vendor/phpunit -c core/phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover ./build/logs/clover.xml
+  - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover ./build/logs/clover.xml
   - phpcs --standard=Drupal  modules/contrib/sqlsrv
 after_success:
   - php-coveralls -v
