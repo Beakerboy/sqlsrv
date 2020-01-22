@@ -19,7 +19,7 @@ class QueryTest extends DrupalQueryTest {
     $substituted_count = $this->connection->query('SELECT count(*) + :count FROM {test}', [
       ':count' => 3,
     ])->fetchField();
-    $this->assertEqual($direct_count, $substituted_count);
+    $this->assertEqual($substituted_count, $direct_count);
   }
 
 }
