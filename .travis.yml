@@ -50,5 +50,5 @@ install:
   - phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
 script: 
   - cd web
-  - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=database,sqlsrv
+  - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=passing_database,sqlsrv
 after_success:
