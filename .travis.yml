@@ -33,7 +33,7 @@ install:
   - composer require pcov/clobber --dev
   - cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
   - cp -rf $TRAVIS_BUILD_DIR/* ./web/modules/contrib/sqlsrv
-  - PATH=$PATH:./vendor/bin
+  - PATH=$PATH:$TRAVIS_BUILD_DIR/../vendor/bin
   - drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
   # Install REGEX CLR
   - sudo apt-get install -qq mono-complete
