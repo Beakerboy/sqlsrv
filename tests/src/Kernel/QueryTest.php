@@ -15,11 +15,11 @@ class QueryTest extends DrupalQueryTest {
    *{@inheritdoc)
    */
   public function testNumericExpressionSubstitution() {
-    $direct_count = $this->connection->query('SELECT count(*) + 3 FROM {test}');
+    $direct_count = $this->connection->query('SELECT count(*) + 3 FROM {test}')->fetchField();
     $sql = 'SELECT count(*) + :count FROM {test}';
     $fields = [':count' => 3];
     $substituted_count = $this->connection->query($sql, $fields)->fetchField();
-    $this->assertEqual($direct_count, $substituted_count);
+    $this->assertEqual($substituted_count, $direct_count);
   }
 
 }
