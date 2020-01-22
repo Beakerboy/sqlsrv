@@ -50,6 +50,6 @@ script:
   - cd web
   - ../vendor/bin/pcov clobber
   - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=passing_database,sqlsrv --coverage-clover ./build/logs/clover.xml
-  - ../vendor/bin/phpcs --standard=Drupal  modules/contrib/sqlsrv
+  - phpcs --standard=Drupal  modules/contrib/sqlsrv
 after_success:
   - ../vendor/php-coveralls -v
