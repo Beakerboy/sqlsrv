@@ -19,12 +19,7 @@ before_install:
   - sudo /opt/mssql/bin/mssql-conf setup
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q 'CREATE DATABASE mydrupalsite'
   # Install the pdo_sqlsrv extension
-  - curl -s https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-  - sudo bash -c "curl -s https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list"
-  - sudo apt-get update
-  - sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 mssql-tools
-  - sudo apt-get -y install unixodbc-dev
-  - sudo apt-get -y install gcc g++ make autoconf libc-dev pkg-config
+  - sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev gcc g++ make autoconf libc-dev pkg-config
   - pecl install sqlsrv
   - pecl install pdo_sqlsrv
   - phpenv config-add install/travis-7.x.ini
