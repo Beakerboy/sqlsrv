@@ -18,10 +18,10 @@ class QueryTest extends DatabaseTestBase {
    * @see http://bugs.php.net/bug.php?id=45259
    */
   public function testNumericExpressionSubstitution() {
-    $count = $this->connection->query('SELECT MAX(2, :count) FROM {test}', [
+    $count = $this->connection->query('SELECT count(*) + :count FROM {test}', [
       ':count' => 3,
     ])->fetchField();
-    $this->assertEqual($count, 3);
+    $this->assertEqual($count, 6);
   }
 
 }
