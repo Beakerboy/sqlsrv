@@ -15,7 +15,7 @@ use PDOStatement as PDOStatement;
 class Statement extends DatabaseStatement implements StatementInterface {
 
   /**
-   *
+   * {@inheritdoc}
    */
   protected function __construct(Connection $dbh) {
     $this->allowRowCount = TRUE;
@@ -37,7 +37,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function execute($args = [], $options = []) {
     if (isset($options['fetch'])) {
@@ -122,6 +122,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
   /**
    * Throw a PDO Exception based on the last PDO error.
    *
+   * @param Statement $statement A statement
    * @status: Unfinished.
    */
   protected function throwPDOException(&$statement = NULL) {
@@ -143,16 +144,18 @@ class Statement extends DatabaseStatement implements StatementInterface {
   }
 
   /**
+   * Fetch All Keyed
+   *
    * Experimental, do not iterate if not needed.
    *
-   * @param mixed $key_index
-   * @param mixed $value_index
+   * @param mixed $key_index The key index
+   * @param mixed $value_index The value index
    *
-   * @return array|Statement
+   * @return array|Statement the result set
    */
   public function fetchAllKeyed($key_index = 0, $value_index = 1) {
     // If we are asked for the default behaviour, rely
-    // on the PDO as being faster. The result set needs to exactly bee 2 columns.
+    // on the PDO as being faster. The result set needs to exactly be 2 columns.
     if ($key_index == 0 && $value_index == 1 && $this->columnCount() == 2) {
       $this->setFetchMode(PDO::FETCH_KEY_PAIR);
       return $this->fetchAll();

@@ -40,7 +40,7 @@ class Index {
    *
    * @return string
    */
-  public function GetTable() {
+  public function getTable() {
     return $this->table;
   }
 
@@ -49,7 +49,7 @@ class Index {
    *
    * @return string
    */
-  public function GetName() {
+  public function getName() {
     return $this->name;
   }
 
@@ -58,7 +58,7 @@ class Index {
    *
    * @return string
    */
-  public function GetCode() {
+  public function getCode() {
     return $this->code;
   }
 

@@ -20,6 +20,7 @@ class IndexManager {
    * Creates an instance of DefaultIndexes with a all defined indexes.
    *
    * @param \Drupal\Driver\Database\sqlsrv\Connection $connection
+   *   the connection
    */
   public function __construct(Connection $connection) {
     $this->connection = $connection;
@@ -29,10 +30,8 @@ class IndexManager {
    * Deploy all missing indexes.
    *
    * @throws \Exception
-   *
-   * @return void
    */
-  public function DeployNew() {
+  public function deployNew() {
 
     // Scan the Implementations folder.
     $dir = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Implementations';
