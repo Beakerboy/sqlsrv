@@ -24,7 +24,7 @@ class FastCacheItem {
   /**
    * Locked.
    *
-   * @var boolean
+   * @var bool
    */
   public $locked = FALSE;
 
