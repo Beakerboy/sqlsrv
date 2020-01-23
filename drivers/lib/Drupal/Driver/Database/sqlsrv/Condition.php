@@ -32,7 +32,7 @@ class Condition extends QueryCondition {
     }
     parent::compile($connection, $queryPlaceholder);
   }
-  
+
 }
 
 /**
