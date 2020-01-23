@@ -25,24 +25,18 @@ class Select extends QuerySelect {
   }
 
   /**
-   * Overriden with an aditional exclude parameter that tells not to include this expression (by default)
-   * in the select list.
+   * {@inheritdoc}
    *
-   * @param string $expression
-   *
-   * @param string $alias
-   *
-   * @param string $arguments
+   * Overriden with an aditional exclude parameter that tells not to include
+   * this expression (by default) in the select list.
    *
    * @param string $exclude
-   *   If set to TRUE, this expression will not be added to the select list. Useful
-   *   when you want to reuse expressions in the WHERE part.
+   *   If set to TRUE, this expression will not be added to the select list.
+   *   Useful when you want to reuse expressions in the WHERE part.
    * @param string $expand
    *   If this expression will be expanded as a CROSS_JOIN so it can be consumed
-   *   from other parts of the query. TRUE by default. It attempts to detect expressions
-   *   that cannot be cross joined (aggregates).
-   *
-   * @return string
+   *   from other parts of the query. TRUE by default. It attempts to detect
+   *   expressions that cannot be cross joined (aggregates).
    */
   public function addExpression($expression, $alias = NULL, $arguments = [], $exclude = FALSE, $expand = TRUE) {
     $alias = parent::addExpression($expression, $alias, $arguments);
@@ -96,8 +90,8 @@ class Select extends QuerySelect {
         }
       }
 
-      // The other way round is also true, if using aggregates, all the fields in the SELECT
-      // must be present in the GROUP BY.
+      // The other way round is also true, if using aggregates, all the fields
+      // in the SELECT must be present in the GROUP BY.
       if (!empty($this->group)) {
         foreach ($this->fields as $field) {
           $spec = $field['table'] . '.' . $field['field'];
@@ -143,10 +137,19 @@ class Select extends QuerySelect {
   }
 
   /**
-   * Strpos that takes an array of values to match against a string
-   * note the stupid argument order (to match strpos)
+   * Strpos that takes an array of values to match against a string.
+   *
+   * Note the stupid argument order (to match strpos).
+   *
+   * @param mixed $haystack
+   *   The value to search within.
+   * @param mixed $needle
+   *   value(s) to look for.
+   *
+   * @return int
+   *   The position of the first $needle[] in the $haystack.
    */
-  private function stripos_arr($haystack, $needle) {
+  private function striposArr($haystack, $needle) {
     if (!is_array($needle)) {
       $needle = [$needle];
     }
@@ -181,15 +184,28 @@ class Select extends QuerySelect {
     )
   /Six';
 
-  private $cross_apply_aliases;
+  /**
+   * Aliases for cross apply.
+   *
+   * Is it an array, string, or something that implements ArrayAccess
+   *
+   * @var mixed
+   */
+  private $crossApplyAliases;
 
   /**
+   * Replace Reserve Alises.
    *
+   * @param mixed $matches
+   *   The matches. Is this an array or string?
+   *
+   * @return mixed
+   *   What does it return?
    */
   protected function replaceReservedAliases($matches) {
     if ($matches[1] !== '') {
       // Replace reserved words.
-      return $this->cross_apply_aliases[$matches[1]];
+      return $this->crossApplyAliases[$matches[1]];
     }
     // Let other value passthru.
     // by the logic of the regex above, this will always be the last match.
@@ -197,7 +213,7 @@ class Select extends QuerySelect {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function __toString() {
     // For convenience, we compile the query ourselves if the caller forgot
@@ -228,8 +244,8 @@ class Select extends QuerySelect {
         }
         else {
           $info = $this->connection->schema()->queryColumnInformation($table['table']);
-          // Some fields need to be "transparent" to Drupal, including technical primary keys
-          // or custom computed columns.
+          // Some fields need to be "transparent" to Drupal, including technical
+          // primary keys or custom computed columns.
           foreach ($info['columns_clean'] as $column) {
             $fields[] = $this->connection->escapeTable($alias) . '.' . $column['name'];
           }
@@ -247,14 +263,29 @@ class Select extends QuerySelect {
     // fit all that in a CROSS_APPLY with an alias and then consume
     // it from WHERE or AGGREGATE.
     $cross_apply = [];
-    $this->cross_apply_aliases = [];
+    $this->crossApplyAliases = [];
     foreach ($this->expressions as $alias => $expression) {
-      // Only use CROSS_APPLY for non-aggregate expresions. This trick
-      // will not work, and does not make sense, for aggregates.
-      // If the alias is 'expression' this is Drupal's default
-      // meaning that more than probably this expression
-      // is never reused in a WHERE.
-      if ($expression['expand'] !== FALSE && $expression['alias'] != 'expression' && $this->stripos_arr($expression['expression'], ['AVG(', 'GROUP_CONCAT(', 'COUNT(', 'MAX(', 'GROUPING(', 'GROUPING_ID(', 'COUNT_BIG(', 'CHECKSUM_AGG(', 'MIN(', 'SUM(', 'VAR(', 'VARP(', 'STDEV(', 'STDEVP(']) === FALSE) {
+      // Only use CROSS_APPLY for non-aggregate expresions. This trick will not
+      // work, and does not make sense, for aggregates. If the alias is
+      // 'expression' this is Drupal's default meaning that more than probably
+      // this expression is never reused in a WHERE.
+      $function_list = [
+        'AVG(',
+        'GROUP_CONCAT(',
+        'COUNT(',
+        'MAX(',
+        'GROUPING(',
+        'GROUPING_ID(',
+        'COUNT_BIG(',
+        'CHECKSUM_AGG(',
+        'MIN(',
+        'SUM(',
+        'VAR(',
+        'VARP(',
+        'STDEV(',
+        'STDEVP(',
+      ];
+      if ($expression['expand'] !== FALSE && $expression['alias'] != 'expression' && $this->striposArr($expression['expression'], $function_list) === FALSE) {
         // What we are doing here is using a CROSS APPLY to
         // generate an expression that can be used in the select and where
         // but we need to give this expression a new name.
@@ -265,7 +296,7 @@ class Select extends QuerySelect {
           $fields[] = $new_alias . ' AS ' . $expression['alias'];
         }
         // Store old expression and new representation.
-        $this->cross_apply_aliases[$expression['alias']] = 'cross_' . $expression['alias'] . '.cross_sqlsrv';
+        $this->crossApplyAliases[$expression['alias']] = 'cross_' . $expression['alias'] . '.cross_sqlsrv';
       }
       else {
         // We might not want an expression to appear in the select list.
@@ -276,7 +307,8 @@ class Select extends QuerySelect {
     }
     $query .= implode(', ', $fields);
 
-    // FROM - We presume all queries have a FROM, as any query that doesn't won't need the query builder anyway.
+    // FROM - We presume all queries have a FROM, as any query that doesn't
+    // won't need the query builder anyway.
     $query .= "\nFROM ";
     foreach ($this->tables as $alias => $table) {
       $query .= "\n";
@@ -284,7 +316,8 @@ class Select extends QuerySelect {
         $query .= $table['join type'] . ' JOIN ';
       }
 
-      // If the table is a subquery, compile it and integrate it into this query.
+      // If the table is a subquery, compile it and integrate it into this
+      // query.
       if ($table['table'] instanceof DatabaseSelectInterface) {
         // Run preparation steps on this sub-query before converting to string.
         $subquery = $table['table'];
@@ -318,8 +351,8 @@ class Select extends QuerySelect {
       // References to expressions in cross-apply need to be updated.
       // Now we need to update all references to the expression aliases
       // and point them to the CROSS APPLY alias.
-      if (!empty($this->cross_apply_aliases)) {
-        $regex = str_replace('{0}', implode('|', array_keys($this->cross_apply_aliases)), self::RESERVED_REGEXP_BASE);
+      if (!empty($this->crossApplyAliases)) {
+        $regex = str_replace('{0}', implode('|', array_keys($this->crossApplyAliases)), self::RESERVED_REGEXP_BASE);
         // Add and then remove the SELECT
         // keyword. Do this to use the exact same
         // regex that we have in DatabaseConnection_sqlrv.
@@ -336,7 +369,7 @@ class Select extends QuerySelect {
       // You named it, if the newly expanded expression
       // is added to the select list, then it must
       // also be present in the aggregate expression.
-      $group = array_merge($group, $this->cross_apply_aliases);
+      $group = array_merge($group, $this->crossApplyAliases);
       $query .= "\nGROUP BY " . implode(', ', $group);
     }
 
@@ -390,12 +423,11 @@ class Select extends QuerySelect {
   }
 
   /**
-   * Mark Alises
+   * Mark Alises.
    *
    * Does not return anything, so should not be called 'getUsedAliases'
-   *
    */
-  private function GetUsedAliases(DatabaseCondition $condition, array &$aliases = []) {
+  private function getUsedAliases(DatabaseCondition $condition, array &$aliases = []) {
     foreach ($condition->conditions() as $key => $c) {
       if (is_string($key) && substr($key, 0, 1) == '#') {
         continue;
@@ -412,10 +444,10 @@ class Select extends QuerySelect {
   /**
    * Create a count query.
    *
-   * This is like the default countQuery, but does not optimize field (or expressions)
-   * that are being used in conditions. (Why not?)
+   * This is like the default countQuery, but does not optimize field (or
+   * expressions) that are being used in conditions. (Why not?)
    *
-   * @return mixed $query
+   * @return mixed
    *   A query.
    */
   public function countQuery() {
@@ -428,7 +460,7 @@ class Select extends QuerySelect {
     if (!$count->distinct && !isset($having[0])) {
 
       $used_aliases = [];
-      $this->GetUsedAliases($count->condition, $used_aliases);
+      $this->getUsedAliases($count->condition, $used_aliases);
 
       // When not executing a distinct query, we can zero-out existing fields
       // and expressions that are not used by a GROUP BY or HAVING. Fields
