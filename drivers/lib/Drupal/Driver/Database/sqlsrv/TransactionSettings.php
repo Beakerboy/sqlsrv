@@ -34,17 +34,17 @@ class TransactionSettings {
   /**
    * @var \Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel
    */
-  private $_IsolationLevel;
+  private $isolationLevel;
 
   /**
    * @var \Drupal\Driver\Database\sqlsrv\TransactionScopeOption
    */
-  private $_ScopeOption;
+  private $scopeOption;
 
   /**
    * @var bool
    */
-  private $_Sane;
+  private $sane;
 
   /**
    * Summary of Get_IsolationLevel.
@@ -52,7 +52,7 @@ class TransactionSettings {
    * @return mixed
    */
   public function Get_IsolationLevel() {
-    return $this->_IsolationLevel;
+    return $this->isolationLevel;
   }
 
   /**
@@ -61,7 +61,7 @@ class TransactionSettings {
    * @return mixed
    */
   public function Get_ScopeOption() {
-    return $this->_ScopeOption;
+    return $this->scopeOption;
   }
 
   /**
@@ -70,7 +70,7 @@ class TransactionSettings {
    * @return mixed
    */
   public function Get_Sane() {
-    return $this->_Sane;
+    return $this->sane;
   }
 
   /**
@@ -78,7 +78,7 @@ class TransactionSettings {
    *
    * @return TransactionSettings
    */
-  public static function GetDefaults() {
+  public static function getDefaults() {
     // Use snapshot if available.
     $isolation = DatabaseTransactionIsolationLevel::Ignore();
     // Otherwise use Drupal's default behaviour (except for nesting!)
@@ -92,7 +92,7 @@ class TransactionSettings {
    *
    * @return TransactionSettings
    */
-  public static function GetBetterDefaults() {
+  public static function getBetterDefaults() {
     // Use snapshot if available.
     $isolation = DatabaseTransactionIsolationLevel::Ignore();
     // Otherwise use Drupal's default behaviour (except for nesting!)
@@ -106,7 +106,7 @@ class TransactionSettings {
    *
    * @return TransactionSettings
    */
-  public static function GetDDLCompatibleDefaults() {
+  public static function getDdlCompatibleDefaults() {
     return new TransactionSettings(TRUE,
                 DatabaseTransactionScopeOption::Required(),
                 DatabaseTransactionIsolationLevel::ReadCommitted());
