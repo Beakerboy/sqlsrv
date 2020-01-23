@@ -99,8 +99,8 @@ class FastCache {
    * Only enable this cache if the backend is DrupalWinCache
    * and the lock implementation is DrupalWinCache.
    *
-   * @param boolean $refresh
-   *    Is cache persistence enabled?
+   * @param bool $refresh
+   *   Is cache persistence enabled?
    */
   public function enabled($refresh = FALSE) {
     return !empty($this->cache);
