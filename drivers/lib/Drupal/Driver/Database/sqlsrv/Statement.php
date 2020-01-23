@@ -25,7 +25,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
   /**
    * Flag to tell if statement should be run insecure.
    *
-   * @var boolean
+   * @var bool
    */
   private $insecure = FALSE;
 
@@ -124,7 +124,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
   /**
    * Throw a PDO Exception based on the last PDO error.
    *
-   * @param Statement $statement
+   * @param DatabaseStatement $statement
    *   A statement.
    * @status: Unfinished.
    */
