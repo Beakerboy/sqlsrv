@@ -21,7 +21,7 @@ use PDO as PDO;
 class Insert extends QueryInsert {
 
   /**
-   * Max Batch Size
+   * Max Batch Size.
    *
    * Maximum number of inserts that the driver will perform
    * on a single statement.
@@ -102,7 +102,8 @@ class Insert extends QueryInsert {
     // At most we can process in batches of $batch_size.
     $batch = array_splice($this->insertValues, 0, Insert::MAX_BATCH_SIZE);
 
-    // If we are going to need more than one batch for this, start a transaction.
+    // If we are going to need more than one batch for this, start a
+    // transaction.
     if (empty($this->queryOptions['sqlsrv_skip_transactions']) && !empty($this->insertValues)) {
       $transaction = $this->connection->startTransaction('', DatabaseTransactionSettings::GetBetterDefaults());
     }
@@ -128,9 +129,9 @@ class Insert extends QueryInsert {
       // Run the query.
       $this->connection->query($stmt, [], array_merge($options, ['fetch' => PDO::FETCH_ASSOC]));
 
-      // We can only have 1 identity column per table (or none, where fetchColumn
-      // will fail). When the column does not have an identity column, no results
-      // are thrown back.
+      // We can only have 1 identity column per table (or none, where
+      // fetchColumnwill fail). When the column does not have an identity
+      // column, no results are thrown back.
       foreach ($stmt as $insert) {
         try {
           $this->insertedKeys[] = $insert[$identity];
@@ -160,6 +161,7 @@ class Insert extends QueryInsert {
 
   /**
    * Give an option to retrieve all keys.
+   *
    * @var mixed[]
    */
   private $insertedKeys = [];
@@ -167,7 +169,8 @@ class Insert extends QueryInsert {
   /**
    * Retrieve an array of the keys resulting from the last insert.
    *
-   * @return mixed[] The Keys
+   * @return mixed[]
+   *   The Keys.
    */
   public function getInsertedKeys() {
     return $this->insertedKeys;
@@ -189,7 +192,8 @@ class Insert extends QueryInsert {
    *
    * @throws \Exception
    *
-   * @return string SQL Statement
+   * @return string
+   *   SQL Statement.
    */
   private function buildQuery($batch_size) {
 
