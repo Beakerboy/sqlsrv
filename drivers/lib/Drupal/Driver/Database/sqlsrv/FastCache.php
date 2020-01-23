@@ -109,7 +109,7 @@ class FastCache {
   /**
    * Cache_clear_all wrapper.
    */
-  public function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
+  public function cacheClearAll($cid = NULL, $bin = NULL, $wildcard = FALSE) {
     $this->FixKeyAndBin($cid, $bin);
     if (!isset($this->fastcacheitems[$bin])) {
       $this->cacheLoadEnsure($bin, TRUE);
@@ -118,6 +118,15 @@ class FastCache {
     if (isset($this->fastcacheitems[$bin])) {
       $this->fastcacheitems[$bin]->clear($cid, $wildcard);
     }
+  }
+
+  /**
+   * Cache_clear_all wrapper.
+   *
+   * @deprecated
+   */
+  public function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
+    $this->cacheClearAll($cid, $bin, $wildcard);
   }
 
   /**
