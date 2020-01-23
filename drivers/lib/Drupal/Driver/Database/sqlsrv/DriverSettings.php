@@ -11,24 +11,74 @@ use PDO as PDO;
  */
 class DriverSettings {
 
+  /**
+   * Default Isolation Level.
+   *
+   * @var mixed
+   */
   private $_defaultIsolationLevel;
 
+  /**
+   * Direct Queries.
+   *
+   * @var bool
+   */
   private $_defaultDirectQueries;
 
+  /**
+   * Bypass Query Preprocess.
+   *
+   * @var bool
+   */
   private $_defaultBypassQueryPreprocess;
 
+  /**
+   * Statement Caching.
+   *
+   * @var bool
+   */
   private $_defaultStatementCaching;
 
+  /**
+   * Native Upsert.
+   *
+   * @var bool
+   */
   private $_useNativeUpsert;
 
+  /**
+   * Native Merge.
+   *
+   * @var bool
+   */
   private $_useNativeMerge;
 
+  /**
+   * Statement Caching Mode.
+   *
+   * @var string
+   */
   private $_statementCachingMode;
 
+  /**
+   * Stack Comments.
+   *
+   * @var bool
+   */
   private $_appendStackComments;
 
+  /**
+   * Enable Transactions.
+   *
+   * @var bool
+   */
   private $_enableTransactions;
 
+  /**
+   * Monitor Driver Status.
+   *
+   * @var bool
+   */
   private $_monitorDriverStatus;
 
   /**
@@ -36,7 +86,7 @@ class DriverSettings {
    *
    * @var array
    */
-  private static $default_driver_settings = [
+  private static $defaultDriverSettings = [
     'default_isolation_level' => FALSE,
     'default_direct_queries' => FALSE,
     'default_statement_caching' => FALSE,
@@ -52,9 +102,12 @@ class DriverSettings {
   /**
    * Checks for a valid setting in the list of allowed values.
    *
+   * @param mixed $name
+   *   Parameter name.
    * @param mixed $value
-   * @param mixed $value
+   *   Value to check.
    * @param array $allowed
+   *   Array of allowed values.
    *
    * @return mixed
    *   Value if valid.
@@ -74,21 +127,23 @@ class DriverSettings {
    */
   public static function instanceFromSettings() {
     $configuration = Settings::get('mssql_configuration', []);
-    $configuration = array_merge(static::$default_driver_settings, $configuration);
+    $configuration = array_merge(static::$defaultDriverSettings, $configuration);
     return new DriverSettings($configuration);
   }
 
   /**
-   * Builds a DriverSettings instance from custom settings. Missing settings are merged
-   * from the application settings.
+   * Builds a DriverSettings instance from custom settings.
+   *
+   * Missing settings are merged from the application settings.
    *
    * @param mixed $configuration
+   *   Configuration.
    *
    * @return DriverSettings
    *   DriverSettings object.
    */
   public static function instanceFromData($configuration) {
-    $configuration = array_merge(static::$default_driver_settings, $configuration);
+    $configuration = array_merge(static::$defaultDriverSettings, $configuration);
     return new DriverSettings($configuration);
   }
 
@@ -109,15 +164,17 @@ class DriverSettings {
       PDO::SQLSRV_TXN_SERIALIZABLE,
     ]);
 
-    $this->_defaultDirectQueries = $this->CheckValid('default_direct_queries', $configuration['default_direct_queries'], [TRUE, FALSE]);
-    $this->_defaultStatementCaching = $this->CheckValid('default_statement_caching', $configuration['default_statement_caching'], [TRUE, FALSE]);
-    $this->_defaultBypassQueryPreprocess = $this->CheckValid('default_bypass_query_preprocess', $configuration['default_bypass_query_preprocess'], [TRUE, FALSE]);
-    $this->_useNativeUpsert = $this->CheckValid('use_native_upsert', $configuration['use_native_upsert'], [TRUE, FALSE]);
-    $this->_useNativeMerge = $this->CheckValid('use_native_merge', $configuration['use_native_merge'], [TRUE, FALSE]);
-    $this->_statementCachingMode = $this->CheckValid('statement_caching_mode', $configuration['statement_caching_mode'], ['disabled', 'on-demand', 'always']);
-    $this->_appendStackComments = $this->CheckValid('append_stack_comments', $configuration['append_stack_comments'], [TRUE, FALSE]);
-    $this->_enableTransactions = $this->CheckValid('enable_transactions', $configuration['enable_transactions'], [TRUE, FALSE]);
-    $this->_monitorDriverStatus = $this->CheckValid('monitor_driver_status', $configuration['monitor_driver_status'], [TRUE, FALSE]);
+    $true_false = [TRUE, FALSE];
+    $caching_modes = ['disabled', 'on-demand', 'always'];
+    $this->_defaultDirectQueries = $this->CheckValid('default_direct_queries', $configuration['default_direct_queries'], $true_false);
+    $this->_defaultStatementCaching = $this->CheckValid('default_statement_caching', $configuration['default_statement_caching'], $true_false);
+    $this->_defaultBypassQueryPreprocess = $this->CheckValid('default_bypass_query_preprocess', $configuration['default_bypass_query_preprocess'], $true_false);
+    $this->_useNativeUpsert = $this->CheckValid('use_native_upsert', $configuration['use_native_upsert'], $true_false);
+    $this->_useNativeMerge = $this->CheckValid('use_native_merge', $configuration['use_native_merge'], $true_false);
+    $this->_statementCachingMode = $this->CheckValid('statement_caching_mode', $configuration['statement_caching_mode'], $caching_modes);
+    $this->_appendStackComments = $this->CheckValid('append_stack_comments', $configuration['append_stack_comments'], $true_false);
+    $this->_enableTransactions = $this->CheckValid('enable_transactions', $configuration['enable_transactions'], $true_false);
+    $this->_monitorDriverStatus = $this->CheckValid('monitor_driver_status', $configuration['monitor_driver_status'], $true_false);
   }
 
   /**
