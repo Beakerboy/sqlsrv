@@ -55,6 +55,9 @@ class DriverSettings {
    * @param mixed $value
    * @param mixed $value
    * @param array $allowed
+   *
+   * @return mixed
+   *   Value if valid.
    */
   private function checkValid($name, $value, array $allowed) {
     if (!in_array($value, $allowed)) {
@@ -67,6 +70,7 @@ class DriverSettings {
    * Builds a DriverSettings instance from the application settings.php file.
    *
    * @return DriverSettings
+   *   DriverSettings object.
    */
   public static function instanceFromSettings() {
     $configuration = Settings::get('mssql_configuration', []);
@@ -79,6 +83,9 @@ class DriverSettings {
    * from the application settings.
    *
    * @param mixed $configuration
+   *
+   * @return DriverSettings
+   *   DriverSettings object.
    */
   public static function instanceFromData($configuration) {
     $configuration = array_merge(static::$default_driver_settings, $configuration);
@@ -87,6 +94,9 @@ class DriverSettings {
 
   /**
    * Construct an instance of DriverSettings.
+   *
+   * @param mixed $configuration
+   *   Driver configuration.
    */
   private function __construct($configuration) {
 
@@ -114,6 +124,7 @@ class DriverSettings {
    * Export current driver configuration.
    *
    * @return array
+   *   Configuration.
    */
   public function exportConfiguration() {
     return [
@@ -130,19 +141,27 @@ class DriverSettings {
   }
 
   /**
+   * Monitor Driver Status.
    *
+   * @return mixed
+   *   Monitor Driver Status.
    */
   public function getMonitorDriverStatus() {
     return $this->_monitorDriverStatus;
   }
 
   /**
+   * Enable Transactions.
+   *
    * Completely disable transaction management
-   * at the driver leve. The MSSQL PDO has some issues
+   * at the driver level. The MSSQL PDO has some issues
    * that show up during testing so we need to diable
    * transactions to be able to run some tests...
    *
    * @see https://github.com/Azure/msphpsql/issues/49
+   *
+   * @return mixed
+   *   Enable Transactions.
    */
   public function getEnableTransactions() {
     return $this->_enableTransactions;
@@ -150,25 +169,32 @@ class DriverSettings {
 
   /**
    * Isolation level used for implicit transactions.
+   *
+   * @return mixed
+   *   Default transaction isolation level.
    */
   public function getDefaultIsolationLevel() {
     return $this->_defaultIsolationLevel;
   }
 
   /**
+   * Default transaction isolation level in statement.
+   *
    * PDO Constant names do not match 1-to-1 the transaction names that
    * need to be used in SQL.
    *
    * @return mixed
+   *   Default transaction isolation level.
    */
   public function getDefaultTransactionIsolationLevelInStatement() {
     return str_replace('_', ' ', $this->getDefaultIsolationLevel());
   }
 
   /**
-   * Default query preprocess.
+   * Default statement caching.
    *
    * @return mixed
+   *   Default statement caching.
    */
   public function getDeafultStatementCaching() {
     return $this->_defaultStatementCaching;
@@ -178,6 +204,7 @@ class DriverSettings {
    * Default query preprocess.
    *
    * @return mixed
+   *   Default query preprocess.
    */
   public function getDeafultBypassQueryPreprocess() {
     return $this->_defaultBypassQueryPreprocess;
@@ -212,8 +239,7 @@ class DriverSettings {
   }
 
   /**
-   * Experimental statement caching for PDO prepared statement
-   * reuse.
+   * Experimental statement caching for PDO prepared statement reuse.
    *
    * 'disabled' => Never use statement caching.
    * 'on-demand' => Only use statement caching when implicitly set in a Context.
