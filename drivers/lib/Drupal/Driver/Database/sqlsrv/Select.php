@@ -144,7 +144,7 @@ class Select extends QuerySelect {
    * @param mixed $haystack
    *   The value to search within.
    * @param mixed $needle
-   *   value(s) to look for.
+   *   Value(s) to look for.
    *
    * @return int
    *   The position of the first $needle[] in the $haystack.
@@ -187,7 +187,7 @@ class Select extends QuerySelect {
   /**
    * Aliases for cross apply.
    *
-   * Is it an array, string, or something that implements ArrayAccess
+   * Is it an array, string, or something that implements ArrayAccess.
    *
    * @var mixed
    */
