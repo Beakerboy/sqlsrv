@@ -12,13 +12,13 @@ use Drupal\KernelTests\Core\Database\QueryTest as DrupalQueryTest;
 class QueryTest extends DrupalQueryTest {
 
   /**
-   *{@inheritdoc)
+   * {@inheritdoc)
    */
   public function testNumericExpressionSubstitution() {
     $direct_count = $this->connection->query('SELECT count(*) + 3 FROM {test}')->fetchField();
-    $sql = 'SELECT count(*) + :count FROM {test}';
-    $fields = [':count' => 3];
-    $substituted_count = $this->connection->query($sql, $fields)->fetchField();
+    $substituted_count = $this->connection->query('SELECT count(*) + :count FROM {test}', [
+      ':count' => 3,
+    ])->fetchField();
     $this->assertEqual($substituted_count, $direct_count);
   }
 
