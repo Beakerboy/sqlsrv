@@ -670,6 +670,7 @@ class Connection extends DatabaseConnection {
     }
   }
 
+  // phpcs:disable
   /**
    * Like query but with no insecure detection or query preprocessing.
    *
@@ -689,11 +690,12 @@ class Connection extends DatabaseConnection {
    *   Query result.
    *
    * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0
-   * @see Drupal Project Issue
+   * @see https://www.drupal.org/project/sqlsrv/issues/3108368
    */
   public function query_direct($query, array $args = [], $options = []) {
     return $this->queryDirect($query, $args, $options);
   }
+  // phpcs:enable
 
   /**
    * Internal function: massage a query to make it compliant with SQL Server.
