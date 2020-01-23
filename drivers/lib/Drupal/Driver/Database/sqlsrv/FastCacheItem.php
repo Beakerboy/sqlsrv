@@ -3,38 +3,38 @@
 namespace Drupal\Driver\Database\sqlsrv;
 
 /**
- *
+ * An item in the fast cache.
  */
 class FastCacheItem {
-  
+
   /**
    * Persist.
    *
-   * @var boolean
+   * @var bool
    */
   public $persist = FALSE;
-  
+
   /**
    * Changed.
    *
-   * @var boolean
+   * @var bool
    */
   public $changed = FALSE;
-  
+
   /**
    * Locked.
    *
    * @var boolean
    */
   public $locked = FALSE;
-  
+
   /**
    * Binary.
    *
    * @var mixed
    */
   public $bin;
-  
+
   /**
    * Cache Data.
    *
