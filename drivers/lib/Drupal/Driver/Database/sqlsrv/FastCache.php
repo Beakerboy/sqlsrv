@@ -120,6 +120,7 @@ class FastCache {
     }
   }
 
+  // phpcs:disable
   /**
    * Cache_clear_all wrapper.
    *
@@ -129,6 +130,7 @@ class FastCache {
   public function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
     $this->cacheClearAll($cid, $bin, $wildcard);
   }
+  // phpcs:enable
 
   /**
    * Ensure cache binary is statically loaded.
