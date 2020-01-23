@@ -88,7 +88,7 @@ class FastCacheItem {
     $container->data = $value;
     $this->data[$key] = $container;
   }
-  
+
   /**
    * Retrieve a value from cache.
    *
