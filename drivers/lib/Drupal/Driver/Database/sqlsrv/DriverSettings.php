@@ -16,70 +16,70 @@ class DriverSettings {
    *
    * @var mixed
    */
-  private $_defaultIsolationLevel;
+  private $defaultIsolationLevel;
 
   /**
    * Direct Queries.
    *
    * @var bool
    */
-  private $_defaultDirectQueries;
+  private $defaultDirectQueries;
 
   /**
    * Bypass Query Preprocess.
    *
    * @var bool
    */
-  private $_defaultBypassQueryPreprocess;
+  private $defaultBypassQueryPreprocess;
 
   /**
    * Statement Caching.
    *
    * @var bool
    */
-  private $_defaultStatementCaching;
+  private $defaultStatementCaching;
 
   /**
    * Native Upsert.
    *
    * @var bool
    */
-  private $_useNativeUpsert;
+  private $useNativeUpsert;
 
   /**
    * Native Merge.
    *
    * @var bool
    */
-  private $_useNativeMerge;
+  private $useNativeMerge;
 
   /**
    * Statement Caching Mode.
    *
    * @var string
    */
-  private $_statementCachingMode;
+  private $statementCachingMode;
 
   /**
    * Stack Comments.
    *
    * @var bool
    */
-  private $_appendStackComments;
+  private $appendStackComments;
 
   /**
    * Enable Transactions.
    *
    * @var bool
    */
-  private $_enableTransactions;
+  private $enableTransactions;
 
   /**
    * Monitor Driver Status.
    *
    * @var bool
    */
-  private $_monitorDriverStatus;
+  private $monitorDriverStatus;
 
   /**
    * Default settings for the dabase driver.
@@ -155,7 +155,7 @@ class DriverSettings {
    */
   private function __construct($configuration) {
 
-    $this->_defaultIsolationLevel = $this->CheckValid('default_isolation_level', $configuration['default_isolation_level'], [
+    $this->defaultIsolationLevel = $this->CheckValid('default_isolation_level', $configuration['default_isolation_level'], [
       FALSE,
       PDO::SQLSRV_TXN_READ_UNCOMMITTED,
       PDO::SQLSRV_TXN_READ_COMMITTED,
@@ -166,15 +166,15 @@ class DriverSettings {
 
     $true_false = [TRUE, FALSE];
     $caching_modes = ['disabled', 'on-demand', 'always'];
-    $this->_defaultDirectQueries = $this->CheckValid('default_direct_queries', $configuration['default_direct_queries'], $true_false);
-    $this->_defaultStatementCaching = $this->CheckValid('default_statement_caching', $configuration['default_statement_caching'], $true_false);
-    $this->_defaultBypassQueryPreprocess = $this->CheckValid('default_bypass_query_preprocess', $configuration['default_bypass_query_preprocess'], $true_false);
-    $this->_useNativeUpsert = $this->CheckValid('use_native_upsert', $configuration['use_native_upsert'], $true_false);
-    $this->_useNativeMerge = $this->CheckValid('use_native_merge', $configuration['use_native_merge'], $true_false);
-    $this->_statementCachingMode = $this->CheckValid('statement_caching_mode', $configuration['statement_caching_mode'], $caching_modes);
-    $this->_appendStackComments = $this->CheckValid('append_stack_comments', $configuration['append_stack_comments'], $true_false);
-    $this->_enableTransactions = $this->CheckValid('enable_transactions', $configuration['enable_transactions'], $true_false);
-    $this->_monitorDriverStatus = $this->CheckValid('monitor_driver_status', $configuration['monitor_driver_status'], $true_false);
+    $this->defaultDirectQueries = $this->CheckValid('default_direct_queries', $configuration['default_direct_queries'], $true_false);
+    $this->defaultStatementCaching = $this->CheckValid('default_statement_caching', $configuration['default_statement_caching'], $true_false);
+    $this->defaultBypassQueryPreprocess = $this->CheckValid('default_bypass_query_preprocess', $configuration['default_bypass_query_preprocess'], $true_false);
+    $this->useNativeUpsert = $this->CheckValid('use_native_upsert', $configuration['use_native_upsert'], $true_false);
+    $this->useNativeMerge = $this->CheckValid('use_native_merge', $configuration['use_native_merge'], $true_false);
+    $this->statementCachingMode = $this->CheckValid('statement_caching_mode', $configuration['statement_caching_mode'], $caching_modes);
+    $this->appendStackComments = $this->CheckValid('append_stack_comments', $configuration['append_stack_comments'], $true_false);
+    $this->enableTransactions = $this->CheckValid('enable_transactions', $configuration['enable_transactions'], $true_false);
+    $this->monitorDriverStatus = $this->CheckValid('monitor_driver_status', $configuration['monitor_driver_status'], $true_false);
   }
 
   /**
@@ -204,7 +204,7 @@ class DriverSettings {
    *   Monitor Driver Status.
    */
   public function getMonitorDriverStatus() {
-    return $this->_monitorDriverStatus;
+    return $this->monitorDriverStatus;
   }
 
   /**
@@ -221,7 +221,7 @@ class DriverSettings {
    *   Enable Transactions.
    */
   public function getEnableTransactions() {
-    return $this->_enableTransactions;
+    return $this->enableTransactions;
   }
 
   /**
@@ -231,7 +231,7 @@ class DriverSettings {
    *   Default transaction isolation level.
    */
   public function getDefaultIsolationLevel() {
-    return $this->_defaultIsolationLevel;
+    return $this->defaultIsolationLevel;
   }
 
   /**
@@ -254,7 +254,7 @@ class DriverSettings {
    *   Default statement caching.
    */
   public function getDeafultStatementCaching() {
-    return $this->_defaultStatementCaching;
+    return $this->defaultStatementCaching;
   }
 
   /**
@@ -264,35 +264,35 @@ class DriverSettings {
    *   Default query preprocess.
    */
   public function getDeafultBypassQueryPreprocess() {
-    return $this->_defaultBypassQueryPreprocess;
+    return $this->defaultBypassQueryPreprocess;
   }
 
   /**
    * Wether to run all statements in direct query mode by default.
    */
   public function getDefaultDirectQueries() {
-    return $this->_defaultDirectQueries;
+    return $this->defaultDirectQueries;
   }
 
   /**
    * Wether to use or not the native upsert implementation.
    */
   public function getUseNativeUpsert() {
-    return $this->_useNativeUpsert;
+    return $this->useNativeUpsert;
   }
 
   /**
    * Wether to user or not the native merge implementaiton.
    */
   public function getUseNativeMerge() {
-    return $this->_useNativeMerge;
+    return $this->useNativeMerge;
   }
 
   /**
    * Enable appending of PHP stack as query comments.
    */
   public function getAppendCallstackComment() {
-    return $this->_appendStackComments;
+    return $this->appendStackComments;
   }
 
   /**
@@ -303,7 +303,7 @@ class DriverSettings {
    * 'always' => Always use statement caching.
    */
   public function getStatementCachingMode() {
-    return $this->_statementCachingMode;
+    return $this->statementCachingMode;
   }
 
 }
