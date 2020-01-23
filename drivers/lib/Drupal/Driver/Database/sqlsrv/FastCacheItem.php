@@ -97,8 +97,8 @@ class FastCacheItem {
    * @param mixed $value
    *   Value to be cached.
    *
-   * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0
-   * @see Drupal Project Issue
+   * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0.
+   * @see https://www.drupal.org/projects/sqlsrv/issues/3108368
    */
   public function data_set($key, $value) {
     $this->dataSet($key, $value);
@@ -130,8 +130,8 @@ class FastCacheItem {
    * @return bool|object
    *   Cache value.
    *
-   * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0
-   * @see Drupal Project Issue
+   * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0.
+   * @see https://www.drupal.org/projects/sqlsrv/issues/3108368
    */
   public function data_get($key) {
     return $this->dataGet($key);
