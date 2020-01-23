@@ -28,6 +28,7 @@ abstract class Enum {
    *
    * @param mixed $value
    *   Save the value.
+   *
    * @throws \UnexpectedValueException if incompatible type is given.
    */
   public function __construct($value) {
@@ -109,7 +110,7 @@ abstract class Enum {
   /**
    * Check if is valid enum value.
    *
-   * @param $value
+   * @param mixed $value
    *   Enum value.
    *
    * @return bool
@@ -122,7 +123,7 @@ abstract class Enum {
   /**
    * Check if is valid enum key.
    *
-   * @param $key
+   * @param mixed $key
    *   Key name.
    *
    * @return bool
@@ -136,7 +137,7 @@ abstract class Enum {
   /**
    * Return key for value.
    *
-   * @param $value
+   * @param mixed $value
    *   Value.
    *
    * @return mixed
