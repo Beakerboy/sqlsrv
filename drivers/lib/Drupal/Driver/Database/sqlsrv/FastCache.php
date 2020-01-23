@@ -123,7 +123,8 @@ class FastCache {
   /**
    * Cache_clear_all wrapper.
    *
-   * @deprecated
+   * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0.
+   * @see https://www.drupal.org/projects/sqlsrv/issues/3108368
    */
   public function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
     $this->cacheClearAll($cid, $bin, $wildcard);
