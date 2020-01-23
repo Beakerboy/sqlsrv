@@ -92,12 +92,13 @@ class FastCacheItem {
   /**
    * Set a value in cache.
    *
-   * @deprecated
-   *
    * @param mixed $key
    *   Cache key.
    * @param mixed $value
    *   Value to be cached.
+   *
+   * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0
+   * @see Drupal Project Issue
    */
   public function data_set($key, $value) {
     $this->dataSet($key, $value);
@@ -122,13 +123,15 @@ class FastCacheItem {
   /**
    * Retrieve a value from cache.
    *
-   * @deprecated
    *
    * @param mixed $key
    *   Cache key.
    *
    * @return bool|object
    *   Cache value.
+   *
+   * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0
+   * @see Drupal Project Issue
    */
   public function data_get($key) {
     return $this->dataGet($key);
