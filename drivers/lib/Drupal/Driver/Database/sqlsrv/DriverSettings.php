@@ -56,7 +56,7 @@ class DriverSettings {
    * @param mixed $value
    * @param array $allowed
    */
-  private function CheckValid($name, $value, array $allowed) {
+  private function checkValid($name, $value, array $allowed) {
     if (!in_array($value, $allowed)) {
       throw new \Exception("Invalid driver setting for $name");
     }
@@ -117,22 +117,22 @@ class DriverSettings {
    */
   public function exportConfiguration() {
     return [
-      'default_isolation_level' => $this->GetDefaultIsolationLevel(),
-      'default_direct_queries' => $this->GetDefaultDirectQueries(),
-      'use_native_upsert' => $this->GetUseNativeUpsert(),
-      'use_native_merge' => $this->GetUseNativeMerge(),
-      'statement_caching_mode' => $this->GetStatementCachingMode(),
-      'append_stack_comments' => $this->GetAppendCallstackComment(),
-      'default_bypass_query_preprocess' => $this->GetDeafultBypassQueryPreprocess(),
-      'default_statement_caching' => $this->GetDeafultStatementCaching(),
-      'monitorDriverStatus' => $this->GetMonitorDriverStatus(),
+      'default_isolation_level' => $this->getDefaultIsolationLevel(),
+      'default_direct_queries' => $this->getDefaultDirectQueries(),
+      'use_native_upsert' => $this->getUseNativeUpsert(),
+      'use_native_merge' => $this->getUseNativeMerge(),
+      'statement_caching_mode' => $this->getStatementCachingMode(),
+      'append_stack_comments' => $this->getAppendCallstackComment(),
+      'default_bypass_query_preprocess' => $this->getDeafultBypassQueryPreprocess(),
+      'default_statement_caching' => $this->getDeafultStatementCaching(),
+      'monitorDriverStatus' => $this->getMonitorDriverStatus(),
     ];
   }
 
   /**
    *
    */
-  public function GetMonitorDriverStatus() {
+  public function getMonitorDriverStatus() {
     return $this->_monitorDriverStatus;
   }
 
@@ -144,14 +144,14 @@ class DriverSettings {
    *
    * @see https://github.com/Azure/msphpsql/issues/49
    */
-  public function GetEnableTransactions() {
+  public function getEnableTransactions() {
     return $this->_enableTransactions;
   }
 
   /**
    * Isolation level used for implicit transactions.
    */
-  public function GetDefaultIsolationLevel() {
+  public function getDefaultIsolationLevel() {
     return $this->_defaultIsolationLevel;
   }
 
@@ -161,8 +161,8 @@ class DriverSettings {
    *
    * @return mixed
    */
-  public function GetDefaultTransactionIsolationLevelInStatement() {
-    return str_replace('_', ' ', $this->GetDefaultIsolationLevel());
+  public function getDefaultTransactionIsolationLevelInStatement() {
+    return str_replace('_', ' ', $this->getDefaultIsolationLevel());
   }
 
   /**
@@ -170,7 +170,7 @@ class DriverSettings {
    *
    * @return mixed
    */
-  public function GetDeafultStatementCaching() {
+  public function getDeafultStatementCaching() {
     return $this->_defaultStatementCaching;
   }
 
@@ -179,35 +179,35 @@ class DriverSettings {
    *
    * @return mixed
    */
-  public function GetDeafultBypassQueryPreprocess() {
+  public function getDeafultBypassQueryPreprocess() {
     return $this->_defaultBypassQueryPreprocess;
   }
 
   /**
    * Wether to run all statements in direct query mode by default.
    */
-  public function GetDefaultDirectQueries() {
+  public function getDefaultDirectQueries() {
     return $this->_defaultDirectQueries;
   }
 
   /**
    * Wether to use or not the native upsert implementation.
    */
-  public function GetUseNativeUpsert() {
+  public function getUseNativeUpsert() {
     return $this->_useNativeUpsert;
   }
 
   /**
    * Wether to user or not the native merge implementaiton.
    */
-  public function GetUseNativeMerge() {
+  public function getUseNativeMerge() {
     return $this->_useNativeMerge;
   }
 
   /**
    * Enable appending of PHP stack as query comments.
    */
-  public function GetAppendCallstackComment() {
+  public function getAppendCallstackComment() {
     return $this->_appendStackComments;
   }
 
@@ -219,7 +219,7 @@ class DriverSettings {
    * 'on-demand' => Only use statement caching when implicitly set in a Context.
    * 'always' => Always use statement caching.
    */
-  public function GetStatementCachingMode() {
+  public function getStatementCachingMode() {
     return $this->_statementCachingMode;
   }
 
