@@ -83,12 +83,26 @@ class FastCacheItem {
    * @param mixed $value
    *   Value to be cached.
    */
-  public function data_set($key, $value) {
+  public function dataSet($key, $value) {
     $container = new \stdClass();
     $container->data = $value;
     $this->data[$key] = $container;
   }
 
+  /**
+   * Set a value in cache.
+   *
+   * @deprecated
+   *
+   * @param mixed $key
+   *   Cache key.
+   * @param mixed $value
+   *   Value to be cached.
+   */
+  public function data_set($key, $value) {
+    $this->dataSet($key, $value);
+  }
+  
   /**
    * Retrieve a value from cache.
    *
@@ -98,11 +112,26 @@ class FastCacheItem {
    * @return bool|object
    *   Cache value.
    */
-  public function data_get($key) {
+  public function dataGet($key) {
     if (isset($this->data[$key])) {
       return $this->data[$key];
     }
     return FALSE;
+  }
+
+  /**
+   * Retrieve a value from cache.
+   *
+   * @deprecated
+   *
+   * @param mixed $key
+   *   Cache key.
+   *
+   * @return bool|object
+   *   Cache value.
+   */
+  public function data_get($key) {
+    return $this->dataGet($key);
   }
 
   /**
