@@ -7,19 +7,32 @@ namespace Drupal\sqlsrv\Indexes;
  */
 class Index {
 
-  /** Table Name **/
+  /**
+   * Table Name.
+   *
+   * @var string
+   */
   private $table;
 
-  /** Index Name **/
+  /**
+   * Index Name.
+   *
+   * @var string
+   */
   private $name;
 
-  /** SQL Statement **/
+  /**
+   * SQL Statement.
+   *
+   * @var string
+   */
   private $code;
 
   /**
    * Create an instance of Index.
    *
-   * @param mixed $uri A URI
+   * @param mixed $uri
+   *   A URI.
    *
    * @throws \Exception
    */
@@ -41,7 +54,7 @@ class Index {
   /**
    * Table name.
    *
-   * @return string
+   * @return string Table name
    */
   public function getTable() {
     return $this->table;
@@ -50,7 +63,7 @@ class Index {
   /**
    * Index name.
    *
-   * @return string
+   * @return string Index name
    */
   public function getName() {
     return $this->name;
@@ -59,7 +72,7 @@ class Index {
   /**
    * Get the SQL statement to create this index.
    *
-   * @return string
+   * @return string Code
    */
   public function getCode() {
     return $this->code;
