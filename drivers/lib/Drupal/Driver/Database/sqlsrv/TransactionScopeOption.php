@@ -7,13 +7,25 @@ namespace Drupal\Driver\Database\sqlsrv;
  */
 class TransactionScopeOption extends Enum {
 
-  /** Requires New **/
+  /**
+   * Requires New.
+   *
+   * @var string
+   */
   const RequiresNew = 'RequiresNew';
 
-  /** Suppress **/
+  /**
+   * Suppress.
+   *
+   * @var string
+   */
   const Supress = 'Supress';
 
-  /** Required **/
+  /**
+   * Required.
+   *
+   * @var string
+   */
   const Required = 'Required';
 
 }
