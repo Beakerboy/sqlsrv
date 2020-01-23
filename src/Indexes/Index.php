@@ -54,7 +54,8 @@ class Index {
   /**
    * Table name.
    *
-   * @return string Table name
+   * @return string
+   *   Table name.
    */
   public function getTable() {
     return $this->table;
@@ -63,7 +64,8 @@ class Index {
   /**
    * Index name.
    *
-   * @return string Index name
+   * @return string
+   *   Index name.
    */
   public function getName() {
     return $this->name;
@@ -72,7 +74,8 @@ class Index {
   /**
    * Get the SQL statement to create this index.
    *
-   * @return string Code
+   * @return string
+   *   SQL Statement.
    */
   public function getCode() {
     return $this->code;
