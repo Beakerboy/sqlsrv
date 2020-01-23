@@ -273,8 +273,8 @@ class Connection extends DatabaseConnection {
     }
 
     // It creates a cursor for the query, which allows you to iterate over the
-    // result set without fetching the whole result at once. A scrollable cursor,
-    // specifically, is one that allows iterating backwards.
+    // result set without fetching the whole result at once. A scrollable
+    // cursor, specifically, is one that allows iterating backwards.
     // https://msdn.microsoft.com/en-us/library/hh487158%28v=sql.105%29.aspx
     $pdo_options[PDO::ATTR_CURSOR] = PDO::CURSOR_SCROLL;
 
