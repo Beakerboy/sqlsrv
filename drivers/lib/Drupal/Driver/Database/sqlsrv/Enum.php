@@ -29,7 +29,8 @@ abstract class Enum {
    * @param mixed $value
    *   Save the value.
    *
-   * @throws \UnexpectedValueException if incompatible type is given.
+   * @throws \UnexpectedValueException
+   *   If incompatible type is given.
    */
   public function __construct($value) {
     if (!$this->isValid($value)) {
