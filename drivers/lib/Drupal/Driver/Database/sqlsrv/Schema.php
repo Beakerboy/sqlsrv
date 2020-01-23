@@ -1315,9 +1315,7 @@ EOF;
   }
 
   /**
-   * Override DatabaseSchema::dropField().
-   *
-   * @status complete
+   * {@inheritdoc}
    */
   public function dropField($table, $field) {
     if (!$this->fieldExists($table, $field)) {
@@ -1334,7 +1332,10 @@ EOF;
   /**
    * Drop the related objects of a column (indexes, constraints, etc.).
    *
-   * @status complete
+   * @param mixed $table
+   *   Table name.
+   * @param mixed $field
+   *   Field name.
    */
   protected function dropFieldRelatedObjects($table, $field) {
     // Fetch the list of indexes referencing this column.
@@ -1456,6 +1457,9 @@ EOF;
 
   /**
    * Return the name of the primary key of a table if it exists.
+   *
+   * @param mixed $table
+   *   Table name.
    */
   protected function primaryKeyName($table) {
     $table = $this->connection->prefixTables('{' . $table . '}');
@@ -1467,6 +1471,9 @@ EOF;
 
   /**
    * Check if a key is a technical primary key.
+   *
+   * @param string $key_name
+   *   Key name.
    */
   protected function isTechnicalPrimaryKey($key_name) {
     return $key_name && preg_match('/_pkey_technical$/', $key_name);
@@ -1474,6 +1481,9 @@ EOF;
 
   /**
    * Add a primary column to the table.
+   *
+   * @param mixed $table
+   *   Table name.
    */
   protected function createTechnicalPrimaryColumn($table) {
     if (!$this->fieldExists($table, $this->TECHNICAL_PK_COLUMN_NAME)) {
@@ -1485,6 +1495,7 @@ EOF;
    * Drop the primary key constraint.
    *
    * @param mixed $table
+   *   Table name.
    */
   protected function cleanUpPrimaryKey($table) {
     // We are droping the constraint, but not the column.
@@ -1503,12 +1514,14 @@ EOF;
   }
 
   /**
-   * Tries to clean up the technical primary column. It will
-   * be deleted if
+   * Tries to clean up the technical primary column.
+   *
+   * It will be deleted if:
    * (a) It is not being used as the current primary key and...
    * (b) There is no unique constraint because they depend on this column (see addUniqueKey())
    *
    * @param string $table
+   *   Table name.
    */
   protected function cleanUpTechnicalPrimaryColumn($table) {
     // Get the number of remaining unique indexes on the table, that
@@ -1573,7 +1586,13 @@ EOF;
   /**
    * Find if an unique key exists.
    *
-   * @status tested
+   * @param mixed $table
+   *   Table name.
+   * @param mixed $name
+   *   Index name.
+   *
+   * @return bool
+   *   Does the key exist?
    */
   protected function uniqueKeyExists($table, $name) {
     $table = $this->connection->prefixTables('{' . $table . '}');
@@ -1647,7 +1666,10 @@ EOF;
    * Check if a table already has an XML index.
    *
    * @param string $table
-   * @param string $name
+   *   Table name.
+   *
+   * @return mixed
+   *   Name if exists, else FALSE.
    */
   public function tableHasXmlIndex($table) {
     $info = $this->queryColumnInformation($table);
@@ -1661,22 +1683,18 @@ EOF;
     return FALSE;
   }
 
-  /**
-   *
-   */
-  public function copyTable($name, $table) {
-    throw new \Error("Method not implemented.");
-  }
-
   // Region Index.
 
   /**
-   * Verify if a in index exists in the database.
+   * Verify if an index exists in the database.
    *
    * @param mixed $table
+   *   Table name.
    * @param mixed $name
+   *   Index name.
    *
    * @return bool
+   *   Does the index exist?
    */
   public function _ExistsIndex($table, $index) {
     $table = $this->connection->prefixTables('{' . $table . '}');
@@ -1687,12 +1705,14 @@ EOF;
   }
 
   /**
-   * Drop an index, nothing to to if the index does not exists.
+   * Drop an index.
+   *
+   * Nothing to do if the index does not exists.
    *
    * @param mixed $table
-   * @param mixed $index
-   *
-   * @return void
+   *   Table name.
+   * @param mixed $name
+   *   Index name.
    */
   public function _DropIndex($table, $index) {
     if (!$this->_ExistsIndex($table, $index)) {
@@ -1715,8 +1735,9 @@ EOF;
    * Return the SQL statement to create or update a description.
    */
   protected function createDescriptionSql($value, $table = NULL, $column = NULL) {
-    // Inside the same transaction, you won't be able to read uncommited extended properties
-    // leading to SQL Exception if calling sp_addextendedproperty twice on same object.
+    // Inside the same transaction, you won't be able to read uncommited
+    // extended properties leading to SQL Exception if calling
+    // sp_addextendedproperty twice on same object.
     static $columns;
     if (!isset($columns)) {
       $columns = [];
@@ -1768,7 +1789,7 @@ EOF;
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function prepareComment($comment, $length = NULL) {
     // Truncate comment to maximum comment length.
