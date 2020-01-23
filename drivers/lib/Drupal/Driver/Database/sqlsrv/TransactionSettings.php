@@ -20,15 +20,15 @@ class TransactionSettings {
   public function __construct($Sane = FALSE,
       DatabaseTransactionScopeOption $ScopeOption = NULL,
       DatabaseTransactionIsolationLevel $IsolationLevel = NULL) {
-    $this->_Sane = $Sane;
+    $this->sane = $Sane;
     if ($ScopeOption == NULL) {
       $ScopeOption = DatabaseTransactionScopeOption::RequiresNew();
     }
     if ($IsolationLevel == NULL) {
       $IsolationLevel = DatabaseTransactionIsolationLevel::Unspecified();
     }
-    $this->_IsolationLevel = $IsolationLevel;
-    $this->_ScopeOption = $ScopeOption;
+    $this->isolationLevel = $IsolationLevel;
+    $this->scopeOption = $ScopeOption;
   }
 
   /**
