@@ -35,7 +35,7 @@ use Exception as Exception;
  *
  * Temporary tables: temporary table support is done by means of global
  * temporary tables (#) to avoid the use of DIRECT QUERIES. You can enable and
- * disable the use of direct queries with: 
+ * disable the use of direct queries with:
  * $this->driver_settings->defaultDirectQuery = TRUE|FALSE.
  * http://blogs.msdn.com/b/brian_swan/archive/2010/06/15/ctp2-of-microsoft-driver-for-php-for-sql-server-released.aspx.
  */
@@ -43,6 +43,8 @@ class Connection extends DatabaseConnection {
 
   /**
    * Database driver settings.
+   *
+   * Should be renamed to driverSettings.
    *
    * @var \Drupal\Driver\Database\sqlsrv\DriverSettings
    */
@@ -63,8 +65,9 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Error code for Login Failed, usually happens when
-   * the database does not exist.
+   * Error code for Login Failed.
+   *
+   * Usually happens when the database does not exist.
    */
   const DATABASE_NOT_FOUND = 28000;
 
@@ -247,7 +250,7 @@ class Connection extends DatabaseConnection {
       // security of parameterized queries is not in effect when you use
       // PDO::ATTR_EMULATE_PREPARES => true. Your application should ensure that
       // the data that is bound to the parameter(s) does not contain malicious
-      // 
+      //
       // Transact-SQL code.
       // Never use this when you need special column binding.
       // THIS ONLY WORKS IF SET AT THE STATEMENT LEVEL.
@@ -269,9 +272,9 @@ class Connection extends DatabaseConnection {
       $pdo_options[PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
 
-    // It creates a cursor for the query, which allows you to iterate over the result set
-    // without fetching the whole result at once. A scrollable cursor, specifically, is
-    // one that allows iterating backwards.
+    // It creates a cursor for the query, which allows you to iterate over the
+    // result set without fetching the whole result at once. A scrollable cursor,
+    // specifically, is one that allows iterating backwards.
     // https://msdn.microsoft.com/en-us/library/hh487158%28v=sql.105%29.aspx
     $pdo_options[PDO::ATTR_CURSOR] = PDO::CURSOR_SCROLL;
 
@@ -305,7 +308,7 @@ class Connection extends DatabaseConnection {
    * @return mixed
    *   Prepared query.
    */
-  public function PdoPrepare($query, array $options = []) {
+  public function pdoPrepare($query, array $options = []) {
 
     // Preprocess the query.
     if (!$this->driver_settings->GetDeafultBypassQueryPreprocess()) {
@@ -402,7 +405,6 @@ class Connection extends DatabaseConnection {
    *
    * @return string
    *   The match surrounded with brackets.
-   *   
    */
   protected function replaceReservedCallback($matches) {
     if ($matches[1] !== '') {
@@ -622,7 +624,7 @@ class Connection extends DatabaseConnection {
    * @return mixed
    *   Query result.
    */
-  public function query_direct($query, array $args = [], $options = []) {
+  public function queryDirect($query, array $args = [], $options = []) {
 
     // Use default values if not already set.
     $options += $this->defaultOptions();
@@ -666,6 +668,31 @@ class Connection extends DatabaseConnection {
       // value will be the same as for static::query().
       return $this->handleQueryException($e, $query, $args, $options);
     }
+  }
+
+  /**
+   * Like query but with no insecure detection or query preprocessing.
+   *
+   * The caller is sure that the query is MS SQL compatible! Used internally
+   * from the schema class, but could be called from anywhere.
+   *
+   * @param mixed $query
+   *   Query.
+   * @param array $args
+   *   Query arguments.
+   * @param mixed $options
+   *   Query options.
+   *
+   * @throws \PDOException
+   *
+   * @return mixed
+   *   Query result.
+   *
+   * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0
+   * @see Drupal Project Issue
+   */
+  public function query_direct($query, array $args = [], $options = []) {
+    return $this->queryDirect($query, $args, $options);
   }
 
   /**
