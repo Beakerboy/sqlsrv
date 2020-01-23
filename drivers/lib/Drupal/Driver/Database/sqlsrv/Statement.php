@@ -124,7 +124,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
   /**
    * Throw a PDO Exception based on the last PDO error.
    *
-   * @param DatabaseStatement $statement
+   * @param \Drupal\Core\Database\Statement $statement
    *   A statement.
    * @status: Unfinished.
    */
