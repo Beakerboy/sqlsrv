@@ -316,15 +316,14 @@ class Schema extends DatabaseSchema {
   /**
    * Remove comments from an SQL statement.
    *
-   * @see http://stackoverflow.com/questions/9690448/regular-expression-to-remove-comments-from-sql-statement
-   *
    * @param mixed $sql
    *   SQL statement to remove the comments from.
-   *
    * @param mixed $comments
    *   Comments removed from the statement.
    *
    * @return string
+   *
+   * @see http://stackoverflow.com/questions/9690448/regular-expression-to-remove-comments-from-sql-statement
    */
   public function removeSQLComments($sql, &$comments = NULL) {
     $sqlComments = '@(([\'"]).*?[^\\\]\2)|((?:\#|--).*?$|/\*(?:[^/*]|/(?!\*)|\*(?!/)|(?R))*\*\/)\s*|(?<=;)\s+@ms';
@@ -359,7 +358,7 @@ class Schema extends DatabaseSchema {
    * @param $table
    *   Name of the table.
    *
-   * @return
+   * @return bool
    *   True if the table exists, false otherwise.
    */
   public function tableExists($table) {
@@ -398,6 +397,7 @@ class Schema extends DatabaseSchema {
    * isolation level    read committed.
    *
    * @return mixed
+   *   User options.
    */
   public function UserOptions() {
     $result = $this->connection->query_direct('DBCC UserOptions')->fetchAllKeyed();
@@ -408,6 +408,7 @@ class Schema extends DatabaseSchema {
    * Retrieve Engine Version information.
    *
    * @return array
+   *   Engine version.
    */
   public function EngineVersion() {
     if (!isset($this->engineVersion)) {
@@ -424,8 +425,11 @@ EOF
 
   /**
    * Retrieve Major Engine Version Number as integer.
+   *
+   * @return int
+   *  Engine Version Number.
    */
-  public function EngineVersionNumber() {
+  public function engineVersionNumber() {
     $version = $this->EngineVersion();
     $start = strpos($version['VERSION'], '.');
     return intval(substr($version['VERSION'], 0, $start));
@@ -437,7 +441,7 @@ EOF
    * @param $function
    *   Name of the function.
    *
-   * @return
+   * @return bool
    *   True if the function exists, false otherwise.
    */
   public function functionExists($function) {
@@ -452,10 +456,14 @@ EOF
   }
 
   /**
-   * Check if CLR is enabled, required
-   * to run GROUP_CONCAT.
+   * Check if CLR is enabled.
+   *
+   * Required to run GROUP_CONCAT.
+   *
+   * @return bool
+   *   Is CLR enabled?
    */
-  public function CLREnabled() {
+  public function clrEnabled() {
     return $this->connection
       ->query_direct("SELECT CONVERT(int, [value]) as [enabled] FROM sys.configurations WHERE name = 'clr enabled'")
       ->fetchField() !== 1;
@@ -465,16 +473,26 @@ EOF
    * Check if a column is of variable length.
    */
   private function isVariableLengthType($type) {
-    $types = ['nvarchar' => TRUE, 'ntext' => TRUE, 'varchar' => TRUE, 'varbinary' => TRUE, 'image' => TRUE];
+    $types = [
+      'nvarchar' => TRUE,
+      'ntext' => TRUE,
+      'varchar' => TRUE,
+      'varbinary' => TRUE,
+      'image' => TRUE,
+    ];
     return isset($types[$type]);
   }
 
   /**
+   * Load field spec.
+   *
    * Retrieve an array of field specs from
    * an array of field names.
    *
    * @param array $fields
+   *   Table fields.
    * @param mixed $table
+   *   Table name.
    */
   private function loadFieldsSpec(array $fields, $table) {
     $result = [];
@@ -531,18 +549,25 @@ EOF
 
   /**
    * Change Database recovery model.
+   *
+   * @param string $model
+   *   Recovery model.
    */
   public function setRecoveryModel($model) {
     $this->connection->query("ALTER " . $this->connection->options['name'] . " model SET RECOVERY " . $model);
   }
 
   /**
+   * Recreate primary key.
+   *
    * Drops the current primary key and creates
    * a new one. If the previous primary key
    * was an internal primary key, it tries to cleant it up.
    *
-   * @param mixed $table
-   * @param mixed $primary_key_sql
+   * @param string $table
+   *   Table name.
+   * @param mixed $fields
+   *   Array of fields
    */
   protected function recreatePrimaryKey($table, $fields) {
     // Drop the existing primary key if exists, if it was a TPK
@@ -552,14 +577,19 @@ EOF
   }
 
   /**
+   * Create primary key.
+   *
    * Create a Primary Key for the table, does not drop
    * any prior primary keys neither it takes care of cleaning
    * technical primary column. Only call this if you are sure
    * the table does not currently hold a primary key.
    *
    * @param string $table
+   *   Table name.
    * @param mixed $fields
+   *   Array of fields.
    * @param int $limit
+   *   Size limit.
    */
   private function createPrimaryKey($table, $fields, $limit = 900) {
     // To be on the safe side, on the most restrictive use case the limit
@@ -600,8 +630,16 @@ EOF
   }
 
   /**
+   * Create technical primary key index SQL.
+   *
    * Create the SQL needed to add a new technical primary key based on a
    * computed column.
+   *
+   * @param string $table
+   *   Table name.
+   *
+   * @return string
+   *   SQL string.
    */
   private function createTechnicalPrimaryKeyIndexSql($table) {
     $result = [];
@@ -637,7 +675,7 @@ EOF
    * @param $table
    *   A Schema API table definition array.
    *
-   * @return
+   * @return string
    *   The SQL statement to create the table.
    */
   protected function createTableSql($name, $table) {
@@ -656,6 +694,8 @@ EOF
   }
 
   /**
+   * Create Field SQL.
+   *
    * Create an SQL string for a field to be used in table creation or
    * alteration.
    *
@@ -670,7 +710,7 @@ EOF
    *   The field specification, as per the schema data structure format.
    * @param boolean $skip_checks
    *
-   * @return
+   * @return string
    *   The SQL statement to create the field.
    */
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
@@ -680,8 +720,20 @@ EOF
     $sqlsrv_type = $spec['sqlsrv_type'];
     $sqlsrv_type_native = $spec['sqlsrv_type_native'];
 
-    $is_text = in_array($sqlsrv_type_native, ['char', 'varchar', 'text', 'nchar', 'nvarchar', 'ntext']);
-    $lengthable = in_array($sqlsrv_type_native, ['char', 'varchar', 'nchar', 'nvarchar']);
+    $is_text = in_array($sqlsrv_type_native, [
+      'char',
+      'varchar',
+      'text',
+      'nchar',
+      'nvarchar',
+      'ntext',
+    ]);
+    $lengthable = in_array($sqlsrv_type_native, [
+      'char',
+      'varchar',
+      'nchar',
+      'nvarchar',
+    ]);
 
     $sql = $this->connection->quoteIdentifier($name) . ' ';
 
@@ -736,12 +788,16 @@ EOF
    * Get the SQL expression for a default value.
    *
    * @param string $sqlsr_type
+   *   Database data type
    * @param mixed $default
+   *   Default value.
    *
-   * @return an SQL default expression
+   * @return an SQL
+   *   Default expression.
    */
   private function defaultValueExpression($sqlsr_type, $default) {
-    // The actual expression depends on the target data type as it might require conversions.
+    // The actual expression depends on the target data type as it might require
+    // conversions.
     $result = is_string($default) ? $this->connection->quote($default) : $default;
     if (DatabaseUtils::GetMSSQLType($sqlsr_type) == 'varbinary') {
       $default = addslashes($default);
@@ -751,15 +807,20 @@ EOF
   }
 
   /**
-   * Returns a list of field names coma separated ready
+   * Create key SQL.
+   *
+   * Returns a list of field names comma separated ready
    * to be used in a SQL Statement.
    *
    * @param array $fields
+   *   Array of field names.
    * @param bool $as_array
+   *   Return an array or a string?
    *
    * @return array|string
+   *   The comma separated fields, or an array of fields
    */
-  protected function createKeySql($fields, $as_array = FALSE) {
+  protected function createKeySql(array $fields, $as_array = FALSE) {
     $ret = [];
     foreach ($fields as $field) {
       if (is_array($field)) {
@@ -776,18 +837,21 @@ EOF
   }
 
   /**
-   * Returns the SQL needed (incomplete) to create and index. Supports XML indexes.
+   * Returns the SQL needed to create an index.
+   *
+   * Supports XML indexes. Incomplete. 
    *
    * @param string $table
    *   Table to create the index on.
-   *
    * @param string $name
    *   Name of the index.
-   *
    * @param array $fields
    *   Fields to be included in the Index.
+   * @param mixed $xml_field
+   *   The xml field.
    *
    * @return string
+   *   SQL string.
    */
   protected function createIndexSql($table, $name, $fields, &$xml_field) {
     // Get information about current columns.
@@ -812,8 +876,8 @@ EOF
     }
     if (empty($xml_field)) {
       // TODO: As we are already doing with primary keys, when a user requests
-      // an index that is too big for SQL Server (> 900 bytes) this could be dependant
-      // on a computed hash column.
+      // an index that is too big for SQL Server (> 900 bytes) this could be
+      // dependant on a computed hash column.
       $fields_csv = implode(', ', $fields);
       return "CREATE INDEX {$name}_idx ON [{{$table}}] ({$fields_csv})";
     }
@@ -825,7 +889,7 @@ EOF
   /**
    * Set database-engine specific properties for a field.
    *
-   * @param $field
+   * @param mixed $field
    *   A field description array, as specified in the schema documentation.
    */
   protected function processField($field) {
@@ -850,8 +914,7 @@ EOF
   }
 
   /**
-   * This maps a generic data type in combination with its data size
-   * to the engine-specific data type.
+   * {@inheritdoc}
    */
   public function getFieldTypeMap() {
     // Put :normal last so it gets preserved by array_flip.  This makes
@@ -978,7 +1041,8 @@ EOF
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
     // If the field is declared NOT NULL, we have to first create it NULL insert
-    // the initial data (or populate default values) and then switch to NOT NULL.
+    // the initial data (or populate default values) and then switch to NOT
+    // NULL.
     $fixnull = FALSE;
     if (!empty($spec['not null'])) {
       $fixnull = TRUE;
@@ -987,8 +1051,8 @@ EOF
 
     // Create the field.
     // Because the default values of fields can contain string literals
-    // with braces, we CANNOT allow the driver to prefix tables because the algorithm
-    // to do so is a crappy str_replace.
+    // with braces, we CANNOT allow the driver to prefix tables because the
+    // algorithm to do so is a crappy str_replace.
     $query = "ALTER TABLE {$table_prefixed} ADD ";
     $query .= $this->createFieldSql($table, $field, $spec);
     $this->connection->query_direct($query, [], ['prefix_tables' => FALSE]);
@@ -1002,8 +1066,9 @@ EOF
 
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
-      // There is no warranty that the old data did not have NULL values, we need to populate
-      // nulls with the default value because this won't be done by MSSQL by default.
+      // There is no warranty that the old data did not have NULL values, we
+      // need to populate nulls with the default value because this won't be
+      // done by MSSQL by default.
       if (isset($spec['default'])) {
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
         $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
@@ -1022,11 +1087,15 @@ EOF
   }
 
   /**
+   * Compress Primary key Index.
+   *
    * Sometimes the size of a table's primary key index needs
    * to be reduced to allow for Primary XML Indexes.
    *
    * @param string $table
+   *   Table name
    * @param int $limit
+   *   Limit size.
    */
   public function compressPrimaryKeyIndex($table, $limit = 900) {
     // Introspect the schema and save the current primary key if the column
@@ -1168,6 +1237,9 @@ EOF
 
   /**
    * Return size information for current database.
+   *
+   * @return mixed
+   *  Size info.
    */
   public function getSizeInfo() {
     $sql = <<< EOF
@@ -1194,6 +1266,7 @@ EOF;
    * Get database information from sys.databases.
    *
    * @return mixed
+   *   Database info.
    */
   public function getDatabaseInfo() {
     static $result;
@@ -1219,17 +1292,22 @@ EOF;
   }
 
   /**
-   * Get the collation of current connection wether
+   * Get the collation.
+   *
+   * Get the collation of current connection whether
    * it has or not a database defined in it.
    *
    * @param string $table
+   *   Table name.
    * @param string $column
+   *   Column name.
    *
    * @return string
+   *   Collation type.
    */
   public function getCollation($table = NULL, $column = NULL) {
     // No table or column provided, then get info about
-    // database (if exists) or server defaul collation.
+    // database (if exists) or server default collation.
     if (empty($table) && empty($column)) {
       // Database is defaulted from active connection.
       $options = $this->connection->getConnectionOptions();
@@ -1265,9 +1343,10 @@ EOF;
    * Get the list of fields participating in the Primary Key.
    *
    * @param string $table
-   * @param string $field
+   *   Table name.
    *
    * @return string[]
+   *   Fields participating in the Primary Key.
    */
   public function introspectPrimaryKeyFields($table) {
     $data = $this->queryColumnInformation($table, TRUE);
@@ -1518,7 +1597,8 @@ EOF;
    *
    * It will be deleted if:
    * (a) It is not being used as the current primary key and...
-   * (b) There is no unique constraint because they depend on this column (see addUniqueKey())
+   * (b) There is no unique constraint because they depend on this column
+   * (see addUniqueKey())
    *
    * @param string $table
    *   Table name.
@@ -1643,7 +1723,8 @@ EOF;
 
     $this->connection->query('DROP INDEX ' . $name . '_idx ON [{' . $table . '}]');
 
-    // If we just dropped an XML index, we can re-expand the original primary key index.
+    // If we just dropped an XML index, we can re-expand the original primary
+    // key index.
     if ($expand) {
       $this->compressPrimaryKeyIndex($table);
     }
