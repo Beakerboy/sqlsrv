@@ -7,16 +7,19 @@ namespace Drupal\sqlsrv\Indexes;
  */
 class Index {
 
+  /** Table Name **/
   private $table;
 
+  /** Index Name **/
   private $name;
 
+  /** SQL Statement **/
   private $code;
 
   /**
    * Create an instance of Index.
    *
-   * @param mixed $uri
+   * @param mixed $uri A URI
    *
    * @throws \Exception
    */
