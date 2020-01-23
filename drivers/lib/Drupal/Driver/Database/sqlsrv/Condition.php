@@ -16,7 +16,7 @@ class Condition extends QueryCondition {
    * {@inheritdoc}
    */
   public function compile(DatabaseConnection $connection, PlaceholderInterface $queryPlaceholder) {
-    // Find any REGEXP conditions and turn them into function calls
+    // Find any REGEXP conditions and turn them into function calls.
     foreach ($this->conditions as &$condition) {
       if (isset($condition['operator'])) {
         if ($condition['operator'] == 'REGEXP' || $condition['operator'] == 'NOT REGEXP') {
@@ -32,6 +32,7 @@ class Condition extends QueryCondition {
     }
     parent::compile($connection, $queryPlaceholder);
   }
+  
 }
 
 /**
