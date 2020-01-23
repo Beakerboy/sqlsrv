@@ -406,8 +406,9 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function escapeField($field) {
-    // TODO: Not really clear if using a cache here is really useful as the uncached implementation
-    // is fast out of the box anyways. Needs profiling.
+    // TODO: Not really clear if using a cache here is really useful as the
+    // uncached implementation is fast out of the box anyways.
+    // Needs profiling.
     if ($cache = $this->cache->get($field, 'schema_escapeField')) {
       return $cache->data;
     }
@@ -437,10 +438,11 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Generates a temporary table name. Because we are using
-   * global temporary tables, these are visible between
-   * connections so we need to make sure that their
-   * names are as unique as possible to prevent collisions.
+   * Generates a temporary table name.
+   *
+   * Because we are using global temporary tables, these are visible between
+   * connections so we need to make sure that their names are as unique as
+   * possible to prevent collisions.
    *
    * @return string
    *   A table name.
@@ -460,7 +462,8 @@ class Connection extends DatabaseConnection {
     // Generate a new GLOBAL temporary table name and protect it from prefixing.
     // SQL Server requires that temporary tables to be non-qualified.
     $tablename = '##' . $this->generateTemporaryTableName();
-    // Temporary tables cannot be introspected so using them is limited on some scenarios.
+    // Temporary tables cannot be introspected so using them is limited on some
+    // scenarios.
     if (isset($options['real_table']) && $options['real_table'] === TRUE) {
       $tablename = trim($tablename, "#");
     }
@@ -468,7 +471,8 @@ class Connection extends DatabaseConnection {
     $prefixes[$tablename] = '';
     $this->setPrefix($prefixes);
 
-    // Having comments in the query can be tricky and break the SELECT FROM  -> SELECT INTO conversion.
+    // Having comments in the query can be tricky and break the
+    // SELECT FROM  -> SELECT INTO conversion.
     $query = $this->schema()->removeSQLComments($query);
 
     // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
@@ -554,7 +558,7 @@ class Connection extends DatabaseConnection {
    *
    * @param \PDOException $e
    *   The exception thrown by static::query().
-   * @param $query
+   * @param mixed $query
    *   The query executed by static::query().
    * @param array $args
    *   An array of arguments for the prepared statement.
@@ -569,7 +573,7 @@ class Connection extends DatabaseConnection {
    * @throws \Drupal\Core\Database\DatabaseExceptionWrapper
    * @throws \Drupal\Core\Database\IntegrityConstraintViolationException
    */
-  public function handleQueryException(\PDOException $e, $query, array $args = [], $options = []) {
+  public function handleQueryException(\PDOException $e, $query, array $args = [], array $options = []) {
     if ($options['throw_exception']) {
       // Wrap the exception in another exception, because PHP does not allow
       // overriding Exception::getMessage(). Its message is the extra database
@@ -599,16 +603,21 @@ class Connection extends DatabaseConnection {
 
   /**
    * Like query but with no insecure detection or query preprocessing.
+   *
    * The caller is sure that his query is MS SQL compatible! Used internally
    * from the schema class, but could be called from anywhere.
    *
    * @param mixed $query
+   *   Query.
    * @param array $args
+   *   Query arguments.
    * @param mixed $options
+   *   Query options.
    *
    * @throws \PDOException
    *
    * @return mixed
+   *   Query result.
    */
   public function query_direct($query, array $args = [], $options = []) {
 
@@ -667,7 +676,8 @@ class Connection extends DatabaseConnection {
     $success = FALSE;
     if ($this->OS === 'WIN') {
       $cache = wincache_ucache_get($query_signature, $success);
-    } else if (extension_loaded('apcu') && (PHP_SAPI !== 'cli' || (bool) ini_get('apc.enable_cli'))) {
+    }
+    elseif (extension_loaded('apcu') && (PHP_SAPI !== 'cli' || (bool) ini_get('apc.enable_cli'))) {
       $cache = apcu_fetch($query_signature, $success);
     }
     if ($success) {
@@ -708,7 +718,8 @@ class Connection extends DatabaseConnection {
     // so that scarcely used queries don't stay in the cache forever.
     if ($this->OS === 'WIN') {
       wincache_ucache_set($query_signature, $query, rand(600, 3600));
-    } else if (extension_loaded('apcu') && (PHP_SAPI !== 'cli' || (bool) ini_get('apc.enable_cli'))) {
+    }
+    elseif (extension_loaded('apcu') && (PHP_SAPI !== 'cli' || (bool) ini_get('apc.enable_cli'))) {
       apcu_store($query_signature, $query, rand(600, 3600));
     }
 
@@ -730,16 +741,16 @@ class Connection extends DatabaseConnection {
     }
     else {
       if ($this->schema()->EngineVersionNumber() >= 11) {
-        // As of SQL Server 2012 there is an easy (and faster!) way to page results.
-        // SQL Server requires an ORDER BY if OFFSET is specified.
-        if (strpos($query, "ORDER BY") === false) {
+        // As of SQL Server 2012 there is an easy (and faster!) way to page
+        // results. SQL Server requires an ORDER BY if OFFSET is specified.
+        if (strpos($query, "ORDER BY") === FALSE) {
           $query .= " ORDER BY (SELECT NULL)";
         }
         $query = $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
       }
       else {
-        // More complex case: use a TOP query to retrieve $from + $count rows, and
-        // filter out the first $from rows using a window function.
+        // More complex case: use a TOP query to retrieve $from + $count rows,
+        // and filter out the first $from rows using a window function.
         $query = preg_replace('/^\s*SELECT(\s*DISTINCT)?/Dsi', 'SELECT$1 TOP(' . ($from + $count) . ') ', $query);
         $query = '
           SELECT * FROM (
@@ -773,12 +784,13 @@ class Connection extends DatabaseConnection {
         $this->query_direct('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', [':existing' => $existing]);
       }
       catch (Exception $e) {
-        // Doesn't matter if this fails, it just means that this value is already
-        // present in the table.
+        // Doesn't matter if this fails, it just means that this value is
+        // already present in the table.
       }
     }
 
-    // Refactored to use OUTPUT because under high concurrency LAST_INSERTED_ID does not work properly.
+    // Refactored to use OUTPUT because under high concurrency LAST_INSERTED_ID
+    // does not work properly.
     return $this->query_direct('INSERT INTO {sequences} OUTPUT (Inserted.[value]) DEFAULT VALUES')->fetchField();
   }
 
@@ -887,13 +899,13 @@ class Connection extends DatabaseConnection {
    * Summary of pushTransaction.
    *
    * @param string $name
-   * @param \Drupal\Core\Database\DatabaseTransactionSettings $settings
+   *   Transaction name.
+   * @param \Drupal\Core\Database\TransactionSettings $settings
+   *   Transaction settings.
    *
    * @throws \Drupal\Core\Database\TransactionNameNonUniqueException
-   *
-   * @return void
    */
-  public function pushTransaction($name, $settings = NULL) {
+  public function pushTransaction($name, DatabaseTransactionSettings $settings = NULL) {
     if ($settings == NULL) {
       $settings = DatabaseTransactionSettings::GetBetterDefaults();
     }
@@ -920,8 +932,9 @@ class Connection extends DatabaseConnection {
           break;
 
         case DatabaseTransactionScopeOption::Supress():
-          // The only way to supress the ambient transaction is to use a new connection
-          // during the scope of this transaction, a bit messy to implement.
+          // The only way to supress the ambient transaction is to use a new
+          // connection during the scope of this transaction, a bit messy to
+          // implement.
           throw new Exception('DatabaseTransactionScopeOption::Supress not implemented.');
       }
     }
@@ -942,7 +955,12 @@ class Connection extends DatabaseConnection {
       $this->connection->beginTransaction();
     }
     // Store the name and settings in the stack.
-    $this->transactionLayers[$name] = ['settings' => $settings, 'active' => TRUE, 'name' => $name, 'started' => $started];
+    $this->transactionLayers[$name] = [
+      'settings' => $settings,
+      'active' => TRUE,
+      'name' => $name,
+      'started' => $started,
+    ];
   }
 
   /**
@@ -952,7 +970,7 @@ class Connection extends DatabaseConnection {
    * back the transaction as necessary. If no transaction is active, we return
    * because the transaction may have manually been rolled back.
    *
-   * @param $name
+   * @param string $name
    *   The name of the savepoint
    *
    * @throws \Drupal\Core\Database\TransactionNoActiveException
