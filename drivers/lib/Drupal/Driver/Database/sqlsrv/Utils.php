@@ -106,7 +106,7 @@ class Utils {
    * @return string
    *   Data type spec.
    */
-  public static function getMSSQLType($type) {
+  public static function getMssqlType($type) {
     $matches = [];
     if (preg_match('/^[a-zA-Z]*/', $type, $matches)) {
       return reset($matches);
@@ -117,7 +117,7 @@ class Utils {
   /**
    * Get some info about extensions...
    *
-   * @param \ReflectionExtension $name
+   * @param mixed $name
    *   I don't know what this is.
    *
    * @return array
@@ -153,7 +153,7 @@ class Utils {
    * @return bool
    *   Is this server Windows?
    */
-  public static function windowsOS() {
+  public static function windowsOs() {
     return strncasecmp(PHP_OS, 'WIN', 3) == 0;
   }
 
