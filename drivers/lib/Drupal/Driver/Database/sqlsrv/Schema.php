@@ -145,7 +145,7 @@ class Schema extends DatabaseSchema {
     $info = [];
 
     // Don't use {} around information_schema.columns table.
-    $result = $this->connection->query_direct("SELECT sysc.name, sysc.max_length, sysc.precision, sysc.collation_name,
+    $result = $this->connection->queryDirect("SELECT sysc.name, sysc.max_length, sysc.precision, sysc.collation_name,
                     sysc.is_nullable, sysc.is_ansi_padded, sysc.is_identity, sysc.is_computed, TYPE_NAME(sysc.user_type_id) as type,
                     syscc.definition,
                     sm.[text] as default_value
@@ -196,7 +196,7 @@ class Schema extends DatabaseSchema {
     }
 
     // Now introspect information about indexes.
-    $result = $this->connection->query_direct("select tab.[name]  as [table_name],
+    $result = $this->connection->queryDirect("select tab.[name]  as [table_name],
          idx.[name]  as [index_name],
          allc.[name] as [column_name],
          idx.[type_desc],
@@ -373,7 +373,7 @@ class Schema extends DatabaseSchema {
     }
 
     $exists = $this->connection
-      ->query_direct($query)
+      ->queryDirect($query)
       ->fetchField() !== FALSE;
 
     return $exists;
@@ -400,7 +400,7 @@ class Schema extends DatabaseSchema {
    *   User options.
    */
   public function UserOptions() {
-    $result = $this->connection->query_direct('DBCC UserOptions')->fetchAllKeyed();
+    $result = $this->connection->queryDirect('DBCC UserOptions')->fetchAllKeyed();
     return $result;
   }
 
@@ -451,7 +451,7 @@ EOF
     // FS | AF = Assembly (CLR) Scalar Function
     // FT | AT = Assembly (CLR) Table Valued Function.
     return $this->connection
-      ->query_direct("SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('" . $function . "') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT', N'AF')")
+      ->queryDirect("SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('" . $function . "') AND type in (N'FN', N'IF', N'TF', N'FS', N'FT', N'AF')")
       ->fetchField() !== FALSE;
   }
 
@@ -465,7 +465,7 @@ EOF
    */
   public function clrEnabled() {
     return $this->connection
-      ->query_direct("SELECT CONVERT(int, [value]) as [enabled] FROM sys.configurations WHERE name = 'clr enabled'")
+      ->queryDirect("SELECT CONVERT(int, [value]) as [enabled] FROM sys.configurations WHERE name = 'clr enabled'")
       ->fetchField() !== 1;
   }
 
@@ -620,7 +620,7 @@ EOF
       $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$csv_fields})";
     }
 
-    $this->connection->query_direct('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
+    $this->connection->queryDirect('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
 
     // If we relied on a computed column for the Primary Key,
     // at least index the fields with a regular index.
@@ -991,7 +991,7 @@ EOF
     $objects = $this->connection->query_direct('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', [':table' => $new_table_info['schema'] . '.' . $new_table_info['table']]);
     foreach ($objects as $object) {
       if (preg_match('/^' . preg_quote($old_table_info['table']) . '_(.*)$/', $object->name, $matches)) {
-        $this->connection->query_direct('EXEC sp_rename :old, :new, :type', [
+        $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
           ':old' => $old_table_info['schema'] . '.' . $object->name,
           ':new' => $new_table_info['table'] . '_' . $matches[1],
           ':type' => 'OBJECT',
@@ -1007,7 +1007,7 @@ EOF
     if (!$this->tableExists($table, TRUE)) {
       return FALSE;
     }
-    $this->connection->query_direct('DROP TABLE {' . $table . '}');
+    $this->connection->queryDirect('DROP TABLE {' . $table . '}');
     return TRUE;
   }
 
@@ -1055,7 +1055,7 @@ EOF
     // algorithm to do so is a crappy str_replace.
     $query = "ALTER TABLE {$table_prefixed} ADD ";
     $query .= $this->createFieldSql($table, $field, $spec);
-    $this->connection->query_direct($query, [], ['prefix_tables' => FALSE]);
+    $this->connection->queryDirect($query, [], ['prefix_tables' => FALSE]);
 
     // Load the initial data.
     if (isset($spec['initial'])) {
@@ -1072,12 +1072,12 @@ EOF
       if (isset($spec['default'])) {
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
         $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
-        $this->connection->query_direct($sql);
+        $this->connection->queryDirect($sql);
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
       $field_sql = $this->createFieldSql($table, $field, $spec, TRUE);
-      $this->connection->query_direct("ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}");
+      $this->connection->queryDirect("ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}");
     }
 
     $this->recreateTableKeys($table, $new_keys);
@@ -1172,7 +1172,7 @@ EOF
     $this->dropFieldRelatedObjects($table, $field);
 
     // Start by renaming the current column.
-    $this->connection->query_direct('EXEC sp_rename :old, :new, :type', [
+    $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
       ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
       ':new' => $field . '_old',
       ':type' => 'COLUMN',
@@ -1193,7 +1193,7 @@ EOF
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion errors.
     $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$spec['sqlsrv_type']})";
-    $this->connection->query_direct($sql);
+    $this->connection->queryDirect($sql);
 
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
@@ -1209,7 +1209,7 @@ EOF
       $spec['not null'] = TRUE;
       $field_sql = $this->createFieldSql($table, $field_new, $spec, TRUE);
       $sql = "ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}";
-      $this->connection->query_direct($sql);
+      $this->connection->queryDirect($sql);
     }
     // Recreate the primary key if no new primary key has been sent along with
     // the change field.
@@ -1287,7 +1287,7 @@ EOF;
     // Database is defaulted from active connection.
     $options = $this->connection->getConnectionOptions();
     $database = $options['database'];
-    $result = $this->connection->query_direct($sql, [':database' => $database])->fetchObject();
+    $result = $this->connection->queryDirect($sql, [':database' => $database])->fetchObject();
     return $result;
   }
 
@@ -1315,12 +1315,12 @@ EOF;
       if (!empty($database)) {
         // Default collation for specific table.
         $sql = "SELECT CONVERT (varchar, DATABASEPROPERTYEX('$database', 'collation'))";
-        return $this->connection->query_direct($sql)->fetchField();
+        return $this->connection->queryDirect($sql)->fetchField();
       }
       else {
         // Server default collation.
         $sql = "SELECT SERVERPROPERTY ('collation') as collation";
-        return $this->connection->query_direct($sql)->fetchField();
+        return $this->connection->queryDirect($sql)->fetchField();
       }
     }
 
