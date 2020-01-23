@@ -162,7 +162,6 @@ class Utils {
    *
    * @param Connection $connection
    *   Connection used for deployment.
-   *
    * @param bool $redeploy
    *   Wether to redeploy existing functions, or only missing ones.
    */
