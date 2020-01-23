@@ -390,6 +390,9 @@ class Select extends QuerySelect {
   }
 
   /**
+   * Mark Alises
+   *
+   * Does not return anything, so should not be called 'getUsedAliases'
    *
    */
   private function GetUsedAliases(DatabaseCondition $condition, array &$aliases = []) {
@@ -407,8 +410,13 @@ class Select extends QuerySelect {
   }
 
   /**
+   * Create a count query.
+   *
    * This is like the default countQuery, but does not optimize field (or expressions)
-   * that are being used in conditions.
+   * that are being used in conditions. (Why not?)
+   *
+   * @return mixed $query
+   *   A query.
    */
   public function countQuery() {
     // Create our new query object that we will mutate into a count query.
@@ -440,8 +448,8 @@ class Select extends QuerySelect {
         }
       }
 
-      // Also remove 'all_fields' statements, which are expanded into tablename.*
-      // when the query is executed.
+      // Also remove 'all_fields' statements, which are expanded into
+      // tablename.* when the query is executed.
       foreach ($count->tables as $alias => &$table) {
         unset($table['all_fields']);
       }
@@ -458,7 +466,8 @@ class Select extends QuerySelect {
 
     if ($count->distinct && !empty($group_by)) {
       // If the query is distinct and contains a GROUP BY, we need to remove the
-      // distinct because SQL99 does not support counting on distinct multiple fields.
+      // distinct because SQL99 does not support counting on distinct multiple
+      // fields.
       $count->distinct = FALSE;
     }
 
