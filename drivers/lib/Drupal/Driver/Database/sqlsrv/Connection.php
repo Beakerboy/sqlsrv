@@ -554,24 +554,7 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Wraps and re-throws any PDO exception thrown by static::query().
-   *
-   * @param \PDOException $e
-   *   The exception thrown by static::query().
-   * @param mixed $query
-   *   The query executed by static::query().
-   * @param array $args
-   *   An array of arguments for the prepared statement.
-   * @param mixed $options
-   *   An associative array of options to control how the query is run.
-   *
-   * @return \Drupal\Core\Database\StatementInterface|int|null
-   *   Most database drivers will return NULL when a PDO exception is thrown for
-   *   a query, but some of them may need to re-run the query, so they can also
-   *   return a \Drupal\Core\Database\StatementInterface object or an integer.
-   *
-   * @throws \Drupal\Core\Database\DatabaseExceptionWrapper
-   * @throws \Drupal\Core\Database\IntegrityConstraintViolationException
+   * {@inheritdoc}
    */
   public function handleQueryException(\PDOException $e, $query, array $args = [], $options = []) {
     if ($options['throw_exception']) {
