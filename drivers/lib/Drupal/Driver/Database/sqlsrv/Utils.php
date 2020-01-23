@@ -12,12 +12,14 @@ use PDO as PDO;
 class Utils {
 
   /**
-   * Summary of BindArguments.
+   * Bind the arguments to the statement.
    *
    * @param \PDOStatement $stmt
+   *   Statement.
    * @param array $values
+   *   Argument values.
    */
-  public static function BindArguments(\PDOStatement $stmt, array &$values) {
+  public static function bindArguments(\PDOStatement $stmt, array &$values) {
     foreach ($values as $key => &$value) {
       $stmt->bindParam($key, $value, PDO::PARAM_STR);
     }
@@ -27,10 +29,13 @@ class Utils {
    * Summary of BindExpressions.
    *
    * @param \PDOStatement $stmt
+   *   Statement.
    * @param array $values
+   *   Argument values.
    * @param array $remove_from
+   *   Remove from.
    */
-  public static function BindExpressions(\PDOStatement $stmt, array &$values, array &$remove_from) {
+  public static function bindExpressions(\PDOStatement $stmt, array &$values, array &$remove_from) {
     foreach ($values as $key => $value) {
       unset($remove_from[$key]);
       if (empty($value['arguments'])) {
@@ -71,7 +76,7 @@ class Utils {
    * @param mixed $max_placeholder
    *   Placeholder count, if NULL will start with 0.
    */
-  public static function BindValues(\PDOStatement $stmt, array &$values, array &$blobs, $placeholder_prefix, $columnInformation, &$max_placeholder = NULL, $blob_suffix = NULL) {
+  public static function bindValues(\PDOStatement $stmt, array &$values, array &$blobs, $placeholder_prefix, $columnInformation, &$max_placeholder = NULL, $blob_suffix = NULL) {
     if (empty($max_placeholder)) {
       $max_placeholder = 0;
     }
@@ -96,10 +101,12 @@ class Utils {
    * Returns the spec for a MSSQL data type definition.
    *
    * @param string $type
+   *   Data type.
    *
    * @return string
+   *   Data type spec.
    */
-  public static function GetMSSQLType($type) {
+  public static function getMSSQLType($type) {
     $matches = [];
     if (preg_match('/^[a-zA-Z]*/', $type, $matches)) {
       return reset($matches);
@@ -110,11 +117,13 @@ class Utils {
   /**
    * Get some info about extensions...
    *
-   * @param \ReflectionExtension $re
+   * @param \ReflectionExtension $name
+   *   I don't know what this is.
    *
    * @return array
+   *   Extension information.
    */
-  public static function ExtensionData($name) {
+  public static function extensionData($name) {
 
     $re = new \ReflectionExtension($name);
 
@@ -144,7 +153,7 @@ class Utils {
    * @return bool
    *   Is this server Windows?
    */
-  public static function WindowsOS() {
+  public static function windowsOS() {
     return strncasecmp(PHP_OS, 'WIN', 3) == 0;
   }
 
@@ -157,7 +166,7 @@ class Utils {
    * @param bool $redeploy
    *   Wether to redeploy existing functions, or only missing ones.
    */
-  public static function DeployCustomFunctions(Connection $connection, $redeploy = FALSE) {
+  public static function deployCustomFunctions(Connection $connection, $redeploy = FALSE) {
     $yaml = new Parser();
     $base_path = dirname(__FILE__) . '/Programability';
     $configuration = $yaml->parse(file_get_contents("$base_path/configuration.yml"));
