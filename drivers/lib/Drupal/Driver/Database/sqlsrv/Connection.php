@@ -562,7 +562,7 @@ class Connection extends DatabaseConnection {
    *   The query executed by static::query().
    * @param array $args
    *   An array of arguments for the prepared statement.
-   * @param array $options
+   * @param mixed $options
    *   An associative array of options to control how the query is run.
    *
    * @return \Drupal\Core\Database\StatementInterface|int|null
@@ -573,7 +573,7 @@ class Connection extends DatabaseConnection {
    * @throws \Drupal\Core\Database\DatabaseExceptionWrapper
    * @throws \Drupal\Core\Database\IntegrityConstraintViolationException
    */
-  public function handleQueryException(\PDOException $e, $query, array $args = [], array $options = []) {
+  public function handleQueryException(\PDOException $e, $query, array $args = [], $options = []) {
     if ($options['throw_exception']) {
       // Wrap the exception in another exception, because PHP does not allow
       // overriding Exception::getMessage(). Its message is the extra database
