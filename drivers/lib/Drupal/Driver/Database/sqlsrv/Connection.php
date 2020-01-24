@@ -18,7 +18,7 @@ use Drupal\Core\Database\TransactionNameNonUniqueException as DatabaseTransactio
 
 use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
 use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
-use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
+use Drupal\Driver\Database\sqlsrv\TransactionSettings
 use Drupal\Driver\Database\sqlsrv\Context as DatabaseContext;
 
 
@@ -868,9 +868,9 @@ class Connection extends DatabaseConnection {
   /**
    * Overriden to allow transaction settings.
    */
-  public function startTransaction($name = '', DatabaseTransactionSettings $settings = NULL) {
+  public function startTransaction($name = '', TransactionSettings $settings = NULL) {
     if ($settings == NULL) {
-      $settings = DatabaseTransactionSettings::GetDefaults();
+      $settings = TransactionSettings::GetDefaults();
     }
     return new Transaction($this, $name, $settings);
   }
@@ -935,14 +935,14 @@ class Connection extends DatabaseConnection {
    *
    * @param string $name
    *   Transaction name.
-   * @param \Drupal\Core\Database\TransactionSettings $settings
-   *   Transaction settings.
+   * @param \Drupal\Driver\Database\sqlsrv\TransactionSettings $settings
+   *   Transaction settings. 
    *
    * @throws \Drupal\Core\Database\TransactionNameNonUniqueException
    */
-  public function pushTransaction($name, DatabaseTransactionSettings $settings = NULL) {
+  public function pushTransaction($name, TransactionSettings $settings = NULL) {
     if ($settings == NULL) {
-      $settings = DatabaseTransactionSettings::GetBetterDefaults();
+      $settings = TransactionSettings::GetBetterDefaults();
     }
     if (!$this->supportsTransactions()) {
       return;
@@ -1069,12 +1069,7 @@ class Connection extends DatabaseConnection {
   // End Transactions.
 
   /**
-   * Overrides \Drupal\Core\Database\Connection::createDatabase().
-   *
-   * @param string $database
-   *   The name of the database to create.
-   *
-   * @throws \Drupal\Core\Database\DatabaseNotFoundException
+   * {@inheritdoc}
    */
   public function createDatabase($database) {
     // Escape the database name.
