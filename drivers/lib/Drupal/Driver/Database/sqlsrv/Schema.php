@@ -1159,7 +1159,7 @@ EOF
   /**
    * {@inheritdoc}
    */
-  public function changeField($table, $field, $field_new, $spec, $new_keys = []) {
+  public function changeField($table, $field, $field_new, $spec, $keys_new = []) {
     if (!$this->fieldExists($table, $field)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", [
         '%table' => $table,
@@ -1172,6 +1172,9 @@ EOF
         '%name' => $field,
         '%name_new' => $field_new,
       ]));
+    }
+    if (isset($keys_new['primary key']) && in_array($field_new, $keys_new['primary key'], TRUE)) {
+      $this->ensureNotNullPrimaryKey($keys_new['primary key'], [$field_new => $spec]);
     }
 
     // SQL Server supports transactional DDL, so we can just start a transaction
@@ -1193,7 +1196,7 @@ EOF
      * @see https://api.drupal.org/api/drupal/includes!database!database.inc/function/db_change_field/7
      *
      * What we are going to do in the SQL Server Driver is a best-effort try to
-     * preserve original keys if they do not conflict with the new_keys
+     * preserve original keys if they do not conflict with the keys_new
      * parameter, and if the callee has done it's job (droping constraints/keys)
      * then they will of course not be recreated.
      *
@@ -1256,23 +1259,23 @@ EOF
     }
     // Recreate the primary key if no new primary key has been sent along with
     // the change field.
-    if (in_array($field, $primary_key_fields) && (!isset($new_keys['primary keys']) || empty($new_keys['primary keys']))) {
+    if (in_array($field, $primary_key_fields) && (!isset($keys_new['primary keys']) || empty($keys_new['primary keys']))) {
       // The new primary key needs to have the new column name.
       unset($primary_key_fields[$field]);
       $primary_key_fields[$field_new] = $field_new;
-      $new_keys['primary key'] = $primary_key_fields;
+      $keys_new['primary key'] = $primary_key_fields;
     }
 
     // Recreate the unique constraint if it existed.
-    if ($unique_key && (!isset($new_keys['unique keys']) || !in_array($field_new, $new_keys['unique keys']))) {
-      $new_keys['unique keys'][$field] = [$field_new];
+    if ($unique_key && (!isset($keys_new['unique keys']) || !in_array($field_new, $keys_new['unique keys']))) {
+      $keys_new['unique keys'][$field] = [$field_new];
     }
 
     // Drop the old field.
     $this->dropField($table, $field . '_old');
 
     // Add the new keys.
-    $this->recreateTableKeys($table, $new_keys);
+    $this->recreateTableKeys($table, $keys_new);
 
     // Commit.
     $transaction->commit();
