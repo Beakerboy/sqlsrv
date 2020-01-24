@@ -13,25 +13,25 @@ class TransactionSettings {
   /**
    * Summary of __construct.
    *
-   * @param mixed $Sane
+   * @param mixed $sane
    *   Sane.
-   * @param \Drupal\Driver\Database\sqlsrv\TransactionScopeOption $ScopeOption
+   * @param \Drupal\Driver\Database\sqlsrv\TransactionScopeOption $scopeOption
    *   Scope options.
-   * @param \Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel $IsolationLevel
+   * @param \Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel $isolationLevel
    *   Isolation level.
    */
-  public function __construct($Sane = FALSE,
-      DatabaseTransactionScopeOption $ScopeOption = NULL,
-      DatabaseTransactionIsolationLevel $IsolationLevel = NULL) {
-    $this->sane = $Sane;
-    if ($ScopeOption == NULL) {
-      $ScopeOption = DatabaseTransactionScopeOption::RequiresNew();
+  public function __construct($sane = FALSE,
+      DatabaseTransactionScopeOption $scopeOption = NULL,
+      DatabaseTransactionIsolationLevel $isolationLevel = NULL) {
+    $this->sane = $sane;
+    if ($scopeOption == NULL) {
+      $scopeOption = DatabaseTransactionScopeOption::RequiresNew();
     }
-    if ($IsolationLevel == NULL) {
-      $IsolationLevel = DatabaseTransactionIsolationLevel::Unspecified();
+    if ($isolationLevel == NULL) {
+      $isolationLevel = DatabaseTransactionIsolationLevel::Unspecified();
     }
-    $this->isolationLevel = $IsolationLevel;
-    $this->scopeOption = $ScopeOption;
+    $this->isolationLevel = $isolationLevel;
+    $this->scopeOption = $scopeOption;
   }
 
   /**
