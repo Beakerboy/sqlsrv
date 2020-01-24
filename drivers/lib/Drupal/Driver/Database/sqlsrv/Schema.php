@@ -35,7 +35,7 @@ class Schema extends DatabaseSchema {
    *
    * @var string
    */
-  public $defaultSchema;
+  protected $defaultSchema;
 
   /**
    * Maximum length of a comment in SQL Server.
