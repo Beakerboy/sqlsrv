@@ -35,16 +35,22 @@ class TransactionSettings {
   }
 
   /**
+   * Isolation level.
+   *
    * @var \Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel
    */
   private $isolationLevel;
 
   /**
+   * Scope option.
+   *
    * @var \Drupal\Driver\Database\sqlsrv\TransactionScopeOption
    */
   private $scopeOption;
 
   /**
+   * Sane.
+   *
    * @var bool
    */
   private $sane;
