@@ -73,8 +73,12 @@ class Utils {
    *   prefix to prevent key colision.
    * @param mixed $placeholder_prefix
    *   Prefix to use for generating the query placeholders.
+   * @param array $columnInformation
+   *   Column information.
    * @param mixed $max_placeholder
    *   Placeholder count, if NULL will start with 0.
+   * @param mixed $blob_suffix
+   *   Suffix for the blob key.
    */
   public static function bindValues(\PDOStatement $stmt, array &$values, array &$blobs, $placeholder_prefix, $columnInformation, &$max_placeholder = NULL, $blob_suffix = NULL) {
     if (empty($max_placeholder)) {
