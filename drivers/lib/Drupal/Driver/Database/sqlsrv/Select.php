@@ -24,12 +24,26 @@ class Select extends QuerySelect {
     $this->having = new Condition($conjunction);
   }
 
+  
   /**
-   * {@inheritdoc}
+   * Adds an expression to the list of "fields" to be SELECTed.
+   *
+   * An expression can be any arbitrary string that is valid SQL. That includes
+   * various functions, which may in some cases be database-dependent. This
+   * method makes no effort to correct for database-specific functions.
    *
    * Overriden with an aditional exclude parameter that tells not to include
    * this expression (by default) in the select list.
    *
+   * @param $expression
+   *   The expression string. May contain placeholders.
+   * @param $alias
+   *   The alias for this expression. If not specified, one will be generated
+   *   automatically in the form "expression_#". The alias will be checked for
+   *   uniqueness, so the requested alias may not be the alias that is assigned
+   *   in all cases.
+   * @param $arguments
+   *   Any placeholder arguments needed for this expression.
    * @param string $exclude
    *   If set to TRUE, this expression will not be added to the select list.
    *   Useful when you want to reuse expressions in the WHERE part.
@@ -37,6 +51,9 @@ class Select extends QuerySelect {
    *   If this expression will be expanded as a CROSS_JOIN so it can be consumed
    *   from other parts of the query. TRUE by default. It attempts to detect
    *   expressions that cannot be cross joined (aggregates).
+   *
+   * @return
+   *   The unique alias that was assigned for this expression.
    */
   public function addExpression($expression, $alias = NULL, $arguments = [], $exclude = FALSE, $expand = TRUE) {
     $alias = parent::addExpression($expression, $alias, $arguments);
