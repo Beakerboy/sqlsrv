@@ -32,36 +32,60 @@ class Schema extends DatabaseSchema {
 
   /**
    * Default schema for SQL Server databases.
+   *
+   * @var string
    */
   public $defaultSchema;
 
   /**
    * Maximum length of a comment in SQL Server.
+   *
+   @var int
    */
   const COMMENT_MAX_BYTES = 7500;
 
   /**
    * Default recommended collation for SQL Server.
+   *
+   * @var string
    */
   const DEFAULT_COLLATION_CI = 'Latin1_General_CI_AI';
 
   /**
-   * Default recommended collation for SQL Server.
-   * when case sensitivity is required.
+   * Default case-sensitive collation.
+   *
+   * Default recommended collation for SQL Server when case sensitivity is
+   * required.
+   *
+   * @var string
    */
   const DEFAULT_COLLATION_CS = 'Latin1_General_CS_AI';
 
-  // Name for the technical column used for computed keys
-  // or technical primary key.
-  // IMPORTANT: They both start with "__" because the
-  // statement class will remove those columns from the final
-  // result set.
-  // This should be constants, but we are using variable to ease.
+  // Name for the technical column used for computed key sor technical primary
+  // key.
+  // IMPORTANT: They both start with "__" because the statement class will
+  // remove those columns from the final result set. This should be constants,
+  // but we are using variable to ease their use in inline strings.
+
   /**
-   * Their use in inline strings.
+   * Computed primary key name.
+   *
+   * @var string
    */
   public $COMPUTED_PK_COLUMN_NAME = '__pkc';
+  
+  /**
+   * Computed primary key index.
+   *
+   * @var string
+   */
   public $COMPUTED_PK_COLUMN_INDEX = '__ix_pkc';
+  
+  /**
+   * Technical primary key name.
+   *
+   * @var string
+   */
   public $TECHNICAL_PK_COLUMN_NAME = '__pk';
 
   /**
@@ -72,13 +96,16 @@ class Schema extends DatabaseSchema {
   protected $engineVersion;
 
   /**
-   * Returns a list of functions that are not
-   * available by default on SQL Server, but used
-   * in Drupal Core or contributed modules
-   * because they are available in other databases
-   * such as MySQL.
+   * Drupal specific functions.
+   *
+   * Returns a list of functions that are not available by default on SQL
+   * Server, but used in Drupal Core or contributed modules because they are
+   * available in other databases such as MySQL.
+   *
+   * @return array
+   *   List of functions.
    */
-  public function DrupalSpecificFunctions() {
+  public function drupalSpecificFunctions() {
     $functions = [
       'SUBSTRING',
       'SUBSTRING_INDEX',
@@ -101,7 +128,7 @@ class Schema extends DatabaseSchema {
   /**
    * Return active default Schema.
    */
-  public function GetDefaultSchema() {
+  public function getDefaultSchema() {
     if (!isset($this->defaultSchema)) {
       $result = $this->connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
       $this->defaultSchema = $result;
@@ -112,9 +139,10 @@ class Schema extends DatabaseSchema {
   /**
    * Database introspection: fetch technical information about a table.
    *
-   * @return
+   * @return array
    *   An array with the following structure:
-   *   - blobs[]: Array of column names that should be treated as blobs in this table.
+   *   - blobs[]: Array of column names that should be treated as blobs in this
+   *     table.
    *   - identities[]: Array of column names that are identities in this table.
    *   - identity: The name of the identity column
    *   - columns[]: An array of specification details for the columns
@@ -136,8 +164,8 @@ class Schema extends DatabaseSchema {
 
     $table_info = $this->getPrefixInfo($table);
 
-    // We could adapt the current code to support temporary table introspection, but
-    // for now this is not supported.
+    // We could adapt the current code to support temporary table introspection,
+    // but for now this is not supported.
     if ($table_info['table'][0] == '#') {
       throw new Exception('Temporary table introspection is not supported.');
     }
@@ -162,14 +190,15 @@ class Schema extends DatabaseSchema {
         $info['blobs'][$column->name] = TRUE;
       }
       $info['columns'][$column->name] = (array) $column;
-      // Provide a clean list of columns that excludes the ones internally created by the
-      // database driver.
+      // Provide a clean list of columns that excludes the ones internally
+      // created by the database driver.
       if (!(isset($column->name[1]) && substr($column->name, 0, 2) == "__")) {
         $info['columns_clean'][$column->name] = (array) $column;
       }
     }
 
-    // If we have computed columns, it is important to know what other columns they depend on!
+    // If we have computed columns, it is important to know what other columns
+    // they depend on!
     $column_names = array_keys($info['columns']);
     $column_regex = implode('|', $column_names);
     foreach ($info['columns'] as &$column) {
@@ -255,7 +284,7 @@ class Schema extends DatabaseSchema {
   }
 
   /**
-   * {@Inheritdoc}.
+   * {@inheritdoc}
    */
   public function createTable($name, $table) {
     if ($this->tableExists($name, FALSE)) {
@@ -269,14 +298,17 @@ class Schema extends DatabaseSchema {
     $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
 
     // Create the table with a default technical primary key.
-    // $this->createTableSql already prefixes the table name, and we must inhibit prefixing at the query level
-    // because field default _context_menu_block_active_values definitions can contain string literals with braces.
+    // $this->createTableSql already prefixes the table name, and we must
+    // inhibit prefixing at the query level because field
+    // default_context_menu_block_active_values definitions can contain string
+    // literals with braces.
     $this->connection->query_direct($this->createTableSql($name, $table), [], ['prefix_tables' => FALSE]);
 
-    // If the spec had a primary key, set it now after all fields have been created.
-    // We are creating the keys after creating the table so that createPrimaryKey
-    // is able to introspect column definition from the database to calculate index sizes
-    // This adds quite quite some overhead, but is only noticeable during table creation.
+    // If the spec had a primary key, set it now after all fields have been
+    // created. We are creating the keys after creating the table so that
+    // createPrimaryKey is able to introspect column definition from the
+    // database to calculate index sizes This adds quite quite some overhead,
+    // but is only noticeable during table creation.
     if (!empty($table['primary key']) && is_array($table['primary key'])) {
       $this->createPrimaryKey($name, $table['primary key']);
     }
@@ -322,10 +354,11 @@ class Schema extends DatabaseSchema {
    *   Comments removed from the statement.
    *
    * @return string
+   *   SQL statement without comments.
    *
    * @see http://stackoverflow.com/questions/9690448/regular-expression-to-remove-comments-from-sql-statement
    */
-  public function removeSQLComments($sql, &$comments = NULL) {
+  public function removeSqlComments($sql, &$comments = NULL) {
     $sqlComments = '@(([\'"]).*?[^\\\]\2)|((?:\#|--).*?$|/\*(?:[^/*]|/(?!\*)|\*(?!/)|(?R))*\*\/)\s*|(?<=;)\s+@ms';
     /* Commented version
     $sqlComments = '@
@@ -355,7 +388,7 @@ class Schema extends DatabaseSchema {
   /**
    * Find if a table already exists.
    *
-   * @param $table
+   * @param string $table
    *   Name of the table.
    *
    * @return bool
@@ -399,7 +432,7 @@ class Schema extends DatabaseSchema {
    * @return mixed
    *   User options.
    */
-  public function UserOptions() {
+  public function userOptions() {
     $result = $this->connection->queryDirect('DBCC UserOptions')->fetchAllKeyed();
     return $result;
   }
@@ -410,7 +443,7 @@ class Schema extends DatabaseSchema {
    * @return array
    *   Engine version.
    */
-  public function EngineVersion() {
+  public function engineVersion() {
     if (!isset($this->engineVersion)) {
       $this->engineVersion = $this->connection
         ->query_direct(<<< EOF
@@ -427,7 +460,7 @@ EOF
    * Retrieve Major Engine Version Number as integer.
    *
    * @return int
-   *  Engine Version Number.
+   *   Engine Version Number.
    */
   public function engineVersionNumber() {
     $version = $this->EngineVersion();
@@ -438,7 +471,7 @@ EOF
   /**
    * Find if a table function exists.
    *
-   * @param $function
+   * @param string $function
    *   Name of the function.
    *
    * @return bool
@@ -535,7 +568,8 @@ EOF
       $max_var_size += 4;
     }
 
-    // Part of the row, known as the null bitmap, is reserved to manage column nullability. Calculate its size.
+    // Part of the row, known as the null bitmap, is reserved to manage column
+    // nullability. Calculate its size.
     $null_bitmap = 2 + (($num_cols + 7) / 8);
 
     // Calculate the variable-length data size.
@@ -567,7 +601,7 @@ EOF
    * @param string $table
    *   Table name.
    * @param mixed $fields
-   *   Array of fields
+   *   Array of fields.
    */
   protected function recreatePrimaryKey($table, $fields) {
     // Drop the existing primary key if exists, if it was a TPK
@@ -670,15 +704,15 @@ EOF
   /**
    * Generate SQL to create a new table from a Drupal schema definition.
    *
-   * @param $name
+   * @param string $name
    *   The name of the table to create.
-   * @param $table
+   * @param array $table
    *   A Schema API table definition array.
    *
    * @return string
    *   The SQL statement to create the table.
    */
-  protected function createTableSql($name, $table) {
+  protected function createTableSql($name, array $table) {
     $sql_fields = [];
     foreach ($table['fields'] as $field_name => $field) {
       $sql_fields[] = $this->createFieldSql($name, $field_name, $this->processField($field));
@@ -702,13 +736,14 @@ EOF
    * Before passing a field out of a schema definition into this
    * function it has to be processed by _db_process_field().
    *
-   * @param $table
+   * @param string $table
    *   The name of the table.
-   * @param $name
+   * @param string $name
    *   Name of the field.
-   * @param $spec
+   * @param mixed $spec
    *   The field specification, as per the schema data structure format.
-   * @param boolean $skip_checks
+   * @param bool $skip_checks
+   *   Skip checks.
    *
    * @return string
    *   The SQL statement to create the field.
@@ -788,12 +823,12 @@ EOF
    * Get the SQL expression for a default value.
    *
    * @param string $sqlsr_type
-   *   Database data type
+   *   Database data type.
    * @param mixed $default
    *   Default value.
    *
-   * @return an SQL
-   *   Default expression.
+   * @return $string
+   *   An SQL Default expression.
    */
   private function defaultValueExpression($sqlsr_type, $default) {
     // The actual expression depends on the target data type as it might require
@@ -839,7 +874,7 @@ EOF
   /**
    * Returns the SQL needed to create an index.
    *
-   * Supports XML indexes. Incomplete. 
+   * Supports XML indexes. Incomplete.
    *
    * @param string $table
    *   Table to create the index on.
@@ -853,7 +888,7 @@ EOF
    * @return string
    *   SQL string.
    */
-  protected function createIndexSql($table, $name, $fields, &$xml_field) {
+  protected function createIndexSql($table, $name, array $fields, &$xml_field) {
     // Get information about current columns.
     $info = $this->queryColumnInformation($table);
     // Flatten $fields array if neccesary.
@@ -1093,7 +1128,7 @@ EOF
    * to be reduced to allow for Primary XML Indexes.
    *
    * @param string $table
-   *   Table name
+   *   Table name.
    * @param int $limit
    *   Limit size.
    */
@@ -1126,10 +1161,19 @@ EOF
    */
   public function changeField($table, $field, $field_new, $spec, $new_keys = []) {
     if (!$this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", ['%table' => $table, '%name' => $field]));
+      $string = "Cannot change the definition of field %table.%name: field doesn't exist.";
+      throw new DatabaseSchemaObjectDoesNotExistException(t($string, [
+        '%table' => $table,
+        '%name' => $field,
+      ]));
     }
     if (($field != $field_new) && $this->fieldExists($table, $field_new)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", ['%table' => $table, '%name' => $field, '%name_new' => $field_new]));
+      $string = "Cannot rename field %table.%name to %name_new: target field already exists.";
+      throw new DatabaseSchemaObjectExistsException(t($string, [
+        '%table' => $table,
+        '%name' => $field,
+        '%name_new' => $field_new,
+      ]));
     }
 
     // SQL Server supports transactional DDL, so we can just start a transaction
@@ -1140,8 +1184,8 @@ EOF
 
     // Prepare the specifications.
     $spec = $this->processField($spec);
-    
-    /**
+
+    /*
      * IMPORTANT NOTE: To maintain database portability, you have to explicitly
      * recreate all indices and primary keys that are using the changed field.
      * That means that you have to drop all affected keys and indexes with
@@ -1191,7 +1235,8 @@ EOF
     $this->addField($table, $field_new, $spec);
 
     // Migrate the data over.
-    // Explicitly cast the old value to the new value to avoid conversion errors.
+    // Explicitly cast the old value to the new value to avoid conversion
+    // errors.
     $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$spec['sqlsrv_type']})";
     $this->connection->queryDirect($sql);
 
@@ -1239,7 +1284,7 @@ EOF
    * Return size information for current database.
    *
    * @return mixed
-   *  Size info.
+   *   Size info.
    */
   public function getSizeInfo() {
     $sql = <<< EOF
@@ -1460,7 +1505,10 @@ EOF;
    * {@inheritdoc}
    */
   public function fieldSetDefault($table, $field, $default) {
+    // phpcs:disable
+    // Error format is necessary for kernel test, but does not meet the coding standard
     @trigger_error('fieldSetDefault() is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
+    // phpcs:enable
     if (!$this->fieldExists($table, $field)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot set default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
     }
@@ -1482,7 +1530,10 @@ EOF;
    * {@inheritdoc}
    */
   public function fieldSetNoDefault($table, $field) {
+    // phpcs:disable
+    // Error format is necessary for kernel test, but does not meet the coding standard
     @trigger_error('fieldSetNoDefault() is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
+    // phpcs:enable
     if (!$this->fieldExists($table, $field)) {
       throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot remove default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
     }
@@ -1771,7 +1822,7 @@ EOF;
    *
    * @param mixed $table
    *   Table name.
-   * @param mixed $name
+   * @param mixed $index
    *   Index name.
    *
    * @return bool
@@ -1792,7 +1843,7 @@ EOF;
    *
    * @param mixed $table
    *   Table name.
-   * @param mixed $name
+   * @param mixed $index
    *   Index name.
    */
   public function _DropIndex($table, $index) {
