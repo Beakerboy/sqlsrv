@@ -18,9 +18,7 @@ use Drupal\Core\Database\TransactionNameNonUniqueException as DatabaseTransactio
 
 use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
 use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
-use Drupal\Driver\Database\sqlsrv\TransactionSettings;
 use Drupal\Driver\Database\sqlsrv\Context as DatabaseContext;
-
 
 use PDO as PDO;
 use Exception as Exception;
@@ -936,7 +934,7 @@ class Connection extends DatabaseConnection {
    * @param string $name
    *   Transaction name.
    * @param \Drupal\Driver\Database\sqlsrv\TransactionSettings $settings
-   *   Transaction settings. 
+   *   Transaction settings.
    *
    * @throws \Drupal\Core\Database\TransactionNameNonUniqueException
    */
