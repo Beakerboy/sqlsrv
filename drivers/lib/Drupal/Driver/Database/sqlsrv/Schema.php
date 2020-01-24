@@ -40,7 +40,7 @@ class Schema extends DatabaseSchema {
   /**
    * Maximum length of a comment in SQL Server.
    *
-   @var int
+   * @var int
    */
   const COMMENT_MAX_BYTES = 7500;
 
@@ -73,14 +73,14 @@ class Schema extends DatabaseSchema {
    * @var string
    */
   public $COMPUTED_PK_COLUMN_NAME = '__pkc';
-  
+
   /**
    * Computed primary key index.
    *
    * @var string
    */
   public $COMPUTED_PK_COLUMN_INDEX = '__ix_pkc';
-  
+
   /**
    * Technical primary key name.
    *
@@ -827,7 +827,7 @@ EOF
    * @param mixed $default
    *   Default value.
    *
-   * @return $string
+   * @return string
    *   An SQL Default expression.
    */
   private function defaultValueExpression($sqlsr_type, $default) {
@@ -1161,15 +1161,13 @@ EOF
    */
   public function changeField($table, $field, $field_new, $spec, $new_keys = []) {
     if (!$this->fieldExists($table, $field)) {
-      $string = "Cannot change the definition of field %table.%name: field doesn't exist.";
-      throw new DatabaseSchemaObjectDoesNotExistException(t($string, [
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", [
         '%table' => $table,
         '%name' => $field,
       ]));
     }
     if (($field != $field_new) && $this->fieldExists($table, $field_new)) {
-      $string = "Cannot rename field %table.%name to %name_new: target field already exists.";
-      throw new DatabaseSchemaObjectExistsException(t($string, [
+      throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", [
         '%table' => $table,
         '%name' => $field,
         '%name_new' => $field_new,
