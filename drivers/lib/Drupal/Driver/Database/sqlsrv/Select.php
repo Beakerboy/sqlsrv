@@ -24,7 +24,6 @@ class Select extends QuerySelect {
     $this->having = new Condition($conjunction);
   }
 
-  
   /**
    * Adds an expression to the list of "fields" to be SELECTed.
    *
@@ -35,14 +34,14 @@ class Select extends QuerySelect {
    * Overriden with an aditional exclude parameter that tells not to include
    * this expression (by default) in the select list.
    *
-   * @param $expression
+   * @param string $expression
    *   The expression string. May contain placeholders.
-   * @param $alias
+   * @param string $alias
    *   The alias for this expression. If not specified, one will be generated
    *   automatically in the form "expression_#". The alias will be checked for
    *   uniqueness, so the requested alias may not be the alias that is assigned
    *   in all cases.
-   * @param $arguments
+   * @param mixed $arguments
    *   Any placeholder arguments needed for this expression.
    * @param string $exclude
    *   If set to TRUE, this expression will not be added to the select list.
@@ -52,7 +51,7 @@ class Select extends QuerySelect {
    *   from other parts of the query. TRUE by default. It attempts to detect
    *   expressions that cannot be cross joined (aggregates).
    *
-   * @return
+   * @return string
    *   The unique alias that was assigned for this expression.
    */
   public function addExpression($expression, $alias = NULL, $arguments = [], $exclude = FALSE, $expand = TRUE) {
