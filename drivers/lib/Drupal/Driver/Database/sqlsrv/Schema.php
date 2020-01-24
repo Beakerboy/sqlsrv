@@ -1813,52 +1813,6 @@ EOF;
     return FALSE;
   }
 
-  // Region Index.
-
-  /**
-   * Verify if an index exists in the database.
-   *
-   * @param mixed $table
-   *   Table name.
-   * @param mixed $index
-   *   Index name.
-   *
-   * @return bool
-   *   Does the index exist?
-   */
-  public function _ExistsIndex($table, $index) {
-    $table = $this->connection->prefixTables('{' . $table . '}');
-    return (bool) $this->connection->query_direct('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
-      ':table' => $table,
-      ':name' => $index,
-    ])->fetchField();
-  }
-
-  /**
-   * Drop an index.
-   *
-   * Nothing to do if the index does not exists.
-   *
-   * @param mixed $table
-   *   Table name.
-   * @param mixed $index
-   *   Index name.
-   */
-  public function _DropIndex($table, $index) {
-    if (!$this->_ExistsIndex($table, $index)) {
-      // Nothing to do....
-      return;
-    }
-    $table = $this->connection->prefixTables('{' . $table . '}');
-    $this->connection->query_direct('DROP INDEX :index ON :table',
-      [
-        ':index' => $index,
-        ':table' => $table,
-      ]
-    );
-  }
-
-  // Endregion
   // Region Comment Related Functions (D8 only)
 
   /**
