@@ -6,6 +6,7 @@ php:
 before_install:
   # Use pcov instead of xdebug
   - phpenv config-rm xdebug.ini
+  - pecl channel-update pecl.php.net
   - pecl install pcov
   # Install SQL Server for Linux
   - wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
