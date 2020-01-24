@@ -18,7 +18,7 @@ use Drupal\Core\Database\TransactionNameNonUniqueException as DatabaseTransactio
 
 use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
 use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
-use Drupal\Driver\Database\sqlsrv\TransactionSettings
+use Drupal\Driver\Database\sqlsrv\TransactionSettings;
 use Drupal\Driver\Database\sqlsrv\Context as DatabaseContext;
 
 
