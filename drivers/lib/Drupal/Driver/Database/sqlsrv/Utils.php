@@ -68,9 +68,6 @@ class Utils {
    * @param array $blobs
    *   When sending binary data to the PDO driver, we need to keep
    *   track of the original references to data.
-   * @param array $ref_prefix
-   *   The $ref_holder might be shared between statements, use this
-   *   prefix to prevent key colision.
    * @param mixed $placeholder_prefix
    *   Prefix to use for generating the query placeholders.
    * @param array $columnInformation
@@ -80,7 +77,7 @@ class Utils {
    * @param mixed $blob_suffix
    *   Suffix for the blob key.
    */
-  public static function bindValues(\PDOStatement $stmt, array &$values, array &$blobs, $placeholder_prefix, $columnInformation, &$max_placeholder = NULL, $blob_suffix = NULL) {
+  public static function bindValues(\PDOStatement $stmt, array &$values, array &$blobs, $placeholder_prefix, array $columnInformation, &$max_placeholder = NULL, $blob_suffix = NULL) {
     if (empty($max_placeholder)) {
       $max_placeholder = 0;
     }
