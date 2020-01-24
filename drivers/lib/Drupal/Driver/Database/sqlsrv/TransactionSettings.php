@@ -61,7 +61,7 @@ class TransactionSettings {
    * @return mixed
    *   Isolation level.
    */
-  public function Get_IsolationLevel() {
+  public function getIsolationLevel() {
     return $this->isolationLevel;
   }
 
@@ -71,9 +71,23 @@ class TransactionSettings {
    * @return mixed
    *   Scope option.
    */
-  public function Get_ScopeOption() {
+  public function getScopeOption() {
     return $this->scopeOption;
   }
+
+  //phpcs:disable
+  public function Get_Sane() {
+    return $this->getSane();
+  }
+
+  public function Get_IsolationLevel() {
+    return $this->getIsolationLevel();
+  }
+
+  public function Get_ScopeOption() {
+    return $this->getScopeOption();
+  }
+  //phpcs:enable
 
   /**
    * Summary of Get_Sane.
@@ -81,7 +95,7 @@ class TransactionSettings {
    * @return mixed
    *   Sane.
    */
-  public function Get_Sane() {
+  public function getSane() {
     return $this->sane;
   }
 
