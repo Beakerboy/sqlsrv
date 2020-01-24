@@ -7,17 +7,19 @@ use Symfony\Component\Yaml\Parser;
 use PDO as PDO;
 
 /**
- *
+ * Utility function for the SQL Server driver.
  */
 class Utils {
 
   /**
-   * Summary of BindArguments.
+   * Bind the arguments to the statement.
    *
    * @param \PDOStatement $stmt
+   *   Statement.
    * @param array $values
+   *   Argument values.
    */
-  public static function BindArguments(\PDOStatement $stmt, array &$values) {
+  public static function bindArguments(\PDOStatement $stmt, array &$values) {
     foreach ($values as $key => &$value) {
       $stmt->bindParam($key, $value, PDO::PARAM_STR);
     }
@@ -27,10 +29,13 @@ class Utils {
    * Summary of BindExpressions.
    *
    * @param \PDOStatement $stmt
+   *   Statement.
    * @param array $values
+   *   Argument values.
    * @param array $remove_from
+   *   Remove from.
    */
-  public static function BindExpressions(\PDOStatement $stmt, array &$values, array &$remove_from) {
+  public static function bindExpressions(\PDOStatement $stmt, array &$values, array &$remove_from) {
     foreach ($values as $key => $value) {
       unset($remove_from[$key]);
       if (empty($value['arguments'])) {
@@ -51,31 +56,28 @@ class Utils {
   }
 
   /**
-   * Binds a set of values to a PDO Statement,
-   * taking care of properly managing binary data.
+   * Binds a set of values to a PDO Statement.
+   *
+   * Takes care of properly managing binary data.
    *
    * @param \PDOStatement $stmt
    *   PDOStatement to bind the values to.
-   *
    * @param array $values
    *   Values to bind. It's an array where the keys are column
    *   names and the values what is going to be inserted.
-   *
    * @param array $blobs
    *   When sending binary data to the PDO driver, we need to keep
    *   track of the original references to data.
-   *
-   * @param array $ref_prefix
-   *   The $ref_holder might be shared between statements, use this
-   *   prefix to prevent key colision.
-   *
    * @param mixed $placeholder_prefix
    *   Prefix to use for generating the query placeholders.
-   *
+   * @param array $columnInformation
+   *   Column information.
    * @param mixed $max_placeholder
    *   Placeholder count, if NULL will start with 0.
+   * @param mixed $blob_suffix
+   *   Suffix for the blob key.
    */
-  public static function BindValues(\PDOStatement $stmt, array &$values, array &$blobs, $placeholder_prefix, $columnInformation, &$max_placeholder = NULL, $blob_suffix = NULL) {
+  public static function bindValues(\PDOStatement $stmt, array &$values, array &$blobs, $placeholder_prefix, array $columnInformation, &$max_placeholder = NULL, $blob_suffix = NULL) {
     if (empty($max_placeholder)) {
       $max_placeholder = 0;
     }
@@ -100,10 +102,12 @@ class Utils {
    * Returns the spec for a MSSQL data type definition.
    *
    * @param string $type
+   *   Data type.
    *
    * @return string
+   *   Data type spec.
    */
-  public static function GetMSSQLType($type) {
+  public static function getMssqlType($type) {
     $matches = [];
     if (preg_match('/^[a-zA-Z]*/', $type, $matches)) {
       return reset($matches);
@@ -114,11 +118,13 @@ class Utils {
   /**
    * Get some info about extensions...
    *
-   * @param \ReflectionExtension $re
+   * @param mixed $name
+   *   I don't know what this is.
    *
    * @return array
+   *   Extension information.
    */
-  public static function ExtensionData($name) {
+  public static function extensionData($name) {
 
     $re = new \ReflectionExtension($name);
 
@@ -140,9 +146,15 @@ class Utils {
   }
 
   /**
-   * Wether or not this is a Windows operating system.
+   * Whether or not this is a Windows operating system.
+   *
+   * Does there need to be a function to determine if the database is on a
+   * Windows environment?
+   *
+   * @return bool
+   *   Is this server Windows?
    */
-  public static function WindowsOS() {
+  public static function windowsOs() {
     return strncasecmp(PHP_OS, 'WIN', 3) == 0;
   }
 
@@ -151,11 +163,10 @@ class Utils {
    *
    * @param Connection $connection
    *   Connection used for deployment.
-   *
    * @param bool $redeploy
    *   Wether to redeploy existing functions, or only missing ones.
    */
-  public static function DeployCustomFunctions(Connection $connection, $redeploy = FALSE) {
+  public static function deployCustomFunctions(Connection $connection, $redeploy = FALSE) {
     $yaml = new Parser();
     $base_path = dirname(__FILE__) . '/Programability';
     $configuration = $yaml->parse(file_get_contents("$base_path/configuration.yml"));
@@ -173,15 +184,21 @@ class Utils {
       if ($exists) {
         $connection->query_direct("DROP FUNCTION [{$name}]");
       }
-      $script = trim(static::remove_utf8_bom(file_get_contents($path)));
+      $script = trim(static::removeUtf8Bom(file_get_contents($path)));
       $connection->query_direct($script);
     }
   }
 
   /**
+   * Remove UTF8 BOM.
    *
+   * @param string $text
+   *   UTF8 text.
+   *
+   * @return string
+   *   Text without UTF8 BOM.
    */
-  private static function remove_utf8_bom($text) {
+  private static function removeUtf8Bom($text) {
     $bom = pack('H*', 'EFBBBF');
     $text = preg_replace("/^$bom/", '', $text);
     return $text;

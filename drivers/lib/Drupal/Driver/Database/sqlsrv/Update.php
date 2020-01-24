@@ -32,7 +32,8 @@ class Update extends QueryUpdate {
     DatabaseUtils::BindExpressions($stmt, $this->expressionFields, $fields);
 
     // We use this array to store references to the blob handles.
-    // This is necessary because the PDO will otherwise messes up with references.
+    // This is necessary because the PDO will otherwise messes up with
+    // references.
     $blobs = [];
     DatabaseUtils::BindValues($stmt, $fields, $blobs, ':db_update_placeholder_', $columnInformation);
 

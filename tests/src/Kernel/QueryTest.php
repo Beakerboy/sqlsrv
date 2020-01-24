@@ -12,7 +12,7 @@ use Drupal\KernelTests\Core\Database\QueryTest as DrupalQueryTest;
 class QueryTest extends DrupalQueryTest {
 
   /**
-   * {@inheritdoc)
+   * {@inheritdoc}
    */
   public function testNumericExpressionSubstitution() {
     $direct_count = $this->connection->query('SELECT count(*) + 3 FROM {test}')->fetchField();

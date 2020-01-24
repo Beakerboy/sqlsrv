@@ -20,7 +20,7 @@ class IndexManager {
    * Creates an instance of DefaultIndexes with a all defined indexes.
    *
    * @param \Drupal\Driver\Database\sqlsrv\Connection $connection
-   *   the connection
+   *   The connection.
    */
   public function __construct(Connection $connection) {
     $this->connection = $connection;

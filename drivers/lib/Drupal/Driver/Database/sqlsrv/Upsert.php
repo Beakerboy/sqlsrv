@@ -79,7 +79,7 @@ class Upsert extends QueryUpsert {
     //
     // INSERT INTO table_name
     // SELECT
-    //   temp_table.primary_key, temp_table.column1 [, temp_table.column2 ...]
+    // temp_table.primary_key, temp_table.column1 [, temp_table.column2 ...]
     // FROM temp_table
     // LEFT OUTER JOIN table_name ON (table_name.id = temp_table.id)
     // WHERE table_name.id IS NULL;.

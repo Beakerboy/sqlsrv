@@ -41,6 +41,7 @@
     <testsuite name="database">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
       <exclude>tests/Drupal/KernelTests/Core/Database/QueryTest.php</exclude>
+      <exclude>tests/Drupal/KernelTests/Core/Database/UpdateTest.php</exclude>
     </testsuite>
     <testsuite name="passing_database">
       <file>tests/Drupal/KernelTests/Core/Database/AlterTest.php</file>
@@ -72,14 +73,14 @@
     <testsuite name="failing_database">
       <file>tests/Drupal/KernelTests/Core/Database/FetchTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/LoggingTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/QueryTest.php</file>
+      <!--<file>tests/Drupal/KernelTests/Core/Database/QueryTest.php</file> -->
       <file>tests/Drupal/KernelTests/Core/Database/SchemaTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectComplexTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/TransactionTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/UpdateComplexTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/UpdateTest.php</file>
+      <!-- <file>tests/Drupal/KernelTests/Core/Database/UpdateTest.php</file> -->
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>

@@ -10,7 +10,7 @@ use PDOException as PDOException;
 use PDOStatement as PDOStatement;
 
 /**
- *
+ * SQL Server implementation of \Drupal\Core\Database\Statement.
  */
 class Statement extends DatabaseStatement implements StatementInterface {
 
@@ -24,6 +24,8 @@ class Statement extends DatabaseStatement implements StatementInterface {
 
   /**
    * Flag to tell if statement should be run insecure.
+   *
+   * @var bool
    */
   private $insecure = FALSE;
 
@@ -32,7 +34,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
   /**
    * Such as SQLSRV_ATTR_DIRECT_QUERY and ATTR_EMULATE_PREPARES.
    */
-  public function RequireInsecure() {
+  public function requireInsecure() {
     $this->insecure = TRUE;
   }
 
@@ -122,10 +124,11 @@ class Statement extends DatabaseStatement implements StatementInterface {
   /**
    * Throw a PDO Exception based on the last PDO error.
    *
-   * @param Statement $statement A statement
+   * @param \Drupal\Core\Database\Statement $statement
+   *   A statement.
    * @status: Unfinished.
    */
-  protected function throwPDOException(&$statement = NULL) {
+  protected function throwPdoException(DatabaseStatement &$statement = NULL) {
     // This is what a SQL Server PDO "no error" looks like.
     $null_error = [0 => '00000', 1 => NULL, 2 => NULL];
     // The implementation in Drupal's Core StatementPrefetch Class
@@ -144,14 +147,17 @@ class Statement extends DatabaseStatement implements StatementInterface {
   }
 
   /**
-   * Fetch All Keyed
+   * Fetch All Keyed.
    *
    * Experimental, do not iterate if not needed.
    *
-   * @param mixed $key_index The key index
-   * @param mixed $value_index The value index
+   * @param mixed $key_index
+   *   The key index.
+   * @param mixed $value_index
+   *   The value index.
    *
-   * @return array|Statement the result set
+   * @return array|Statement
+   *   The result set
    */
   public function fetchAllKeyed($key_index = 0, $value_index = 1) {
     // If we are asked for the default behaviour, rely

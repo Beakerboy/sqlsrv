@@ -5,8 +5,10 @@ namespace Drupal\Driver\Database\sqlsrv;
 use Drupal\Core\Database\Database;
 
 /**
- * Defines a behaviour scope for the database
- * driver that lasts until the object is destroyed.
+ * The Context Class.
+ *
+ * Defines a behaviour scope for the database driver that lasts until the object
+ * is destroyed.
  */
 class Context {
 
@@ -25,24 +27,19 @@ class Context {
   public $settings = NULL;
 
   /**
+   * Constructor.
+   *
    * Define the behaviour of the database driver during the scope of the
    * life of this instance.
    *
    * @param Connection $connection
-   *
    *   Instance of the connection to be configured. Leave null to use the
    *   current default connection.
-   *
    * @param mixed $bypass_queries
-   *
    *   Do not preprocess the query before execution.
-   *
    * @param mixed $direct_query
-   *
    *   Prepare statements with SQLSRV_ATTR_DIRECT_QUERY = TRUE.
-   *
    * @param mixed $statement_caching
-   *
    *   Enable prepared statement caching. Cached statements are reused even
    *   after the context has expired.
    */
@@ -75,7 +72,7 @@ class Context {
   }
 
   /**
-   *
+   * Reset the driver settings when we leave the context.
    */
   public function __destruct() {
     // Restore previous driver configuration.

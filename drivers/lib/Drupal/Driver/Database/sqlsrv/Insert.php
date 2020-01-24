@@ -11,12 +11,18 @@ use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSett
 use PDO as PDO;
 
 /**
- * @ingroup database
+ * @addtogroup database
  * @{
+ */
+
+/**
+ * Sql Server implementation of \Drupal\Core\Database\Query\Insert.
  */
 class Insert extends QueryInsert {
 
   /**
+   * Max Batch Size.
+   *
    * Maximum number of inserts that the driver will perform
    * on a single statement.
    */
@@ -54,7 +60,8 @@ class Insert extends QueryInsert {
       // Run the query.
       $this->connection->query($stmt, [], $options);
 
-      // We can only have 1 identity column per table (or none, where fetchColumn will fail)
+      // We can only have 1 identity column per table
+      // (or none, where fetchColumn will fail)
       try {
         return $stmt->fetchColumn(0);
       }
@@ -74,7 +81,8 @@ class Insert extends QueryInsert {
       // Run the query.
       $this->connection->query($stmt, [], $options);
 
-      // We can only have 1 identity column per table (or none, where fetchColumn will fail)
+      // We can only have 1 identity column per table
+      // (or none, where fetchColumn will fail)
       try {
         return $stmt->fetchColumn(0);
       }
@@ -85,16 +93,17 @@ class Insert extends QueryInsert {
 
     // Endregion
     // Region Regular Inserts.
-    $this->inserted_keys = [];
+    $this->insertedKeys = [];
 
-    // Each insert happens in its own query. However, we wrap it in a transaction
-    // so that it is atomic where possible.
+    // Each insert happens in its own query. However, we wrap it in a
+    // transaction so that it is atomic where possible.
     $transaction = NULL;
 
     // At most we can process in batches of $batch_size.
     $batch = array_splice($this->insertValues, 0, Insert::MAX_BATCH_SIZE);
 
-    // If we are going to need more than one batch for this... start a transaction.
+    // If we are going to need more than one batch for this, start a
+    // transaction.
     if (empty($this->queryOptions['sqlsrv_skip_transactions']) && !empty($this->insertValues)) {
       $transaction = $this->connection->startTransaction('', DatabaseTransactionSettings::GetBetterDefaults());
     }
@@ -107,7 +116,8 @@ class Insert extends QueryInsert {
       $stmt = $this->connection->prepareQuery($query);
 
       // We use this array to store references to the blob handles.
-      // This is necessary because the PDO will otherwise messes up with references.
+      // This is necessary because the PDO will otherwise mess up with
+      // references.
       $blobs = [];
 
       $max_placeholder = 0;
@@ -119,14 +129,15 @@ class Insert extends QueryInsert {
       // Run the query.
       $this->connection->query($stmt, [], array_merge($options, ['fetch' => PDO::FETCH_ASSOC]));
 
-      // We can only have 1 identity column per table (or none, where fetchColumn will fail)
-      // When the column does not have an identity column, no results are thrown back.
+      // We can only have 1 identity column per table (or none, where
+      // fetchColumnwill fail). When the column does not have an identity
+      // column, no results are thrown back.
       foreach ($stmt as $insert) {
         try {
-          $this->inserted_keys[] = $insert[$identity];
+          $this->insertedKeys[] = $insert[$identity];
         }
         catch (\Exception $e) {
-          $this->inserted_keys[] = NULL;
+          $this->insertedKeys[] = NULL;
         }
       }
 
@@ -143,29 +154,30 @@ class Insert extends QueryInsert {
     $this->insertValues = [];
 
     // Return the last inserted key.
-    return empty($this->inserted_keys) ? NULL : end($this->inserted_keys);
+    return empty($this->insertedKeys) ? NULL : end($this->insertedKeys);
 
     // Endregion.
   }
 
-  // Because we can handle multiple inserts, give.
   /**
-   * An option to retrieve all keys.
+   * Give an option to retrieve all keys.
+   *
+   * @var mixed[]
    */
-  private $inserted_keys = [];
+  private $insertedKeys = [];
 
   /**
-   * Retrieve an array of the keys resulting from
-   * the last insert.
+   * Retrieve an array of the keys resulting from the last insert.
    *
    * @return mixed[]
+   *   The Keys.
    */
-  public function GetInsertedKeys() {
-    return $this->inserted_keys();
+  public function getInsertedKeys() {
+    return $this->insertedKeys;
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function __toString() {
     // Default to a query that inserts everything at the same time.
@@ -181,8 +193,9 @@ class Insert extends QueryInsert {
    * @throws \Exception
    *
    * @return string
+   *   SQL Statement.
    */
-  private function BuildQuery($batch_size) {
+  private function buildQuery($batch_size) {
 
     // Make sure we don't go crazy with this numbers.
     if ($batch_size > Insert::MAX_BATCH_SIZE) {
@@ -248,3 +261,7 @@ class Insert extends QueryInsert {
   }
 
 }
+
+/**
+ * @} End of "addtogroup database".
+ */

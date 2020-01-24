@@ -36,16 +36,25 @@ class FastCache {
   }
 
   /**
-   * @var FastCacheItem[]*/
+   * Fastcache Items.
+   *
+   * @var FastCacheItem[]
+   */
   private $fastcacheitems = [];
 
   /**
-   * @var bool*/
+   * Enabled.
+   *
+   * @var bool
+   */
   private $enabled = NULL;
 
   /**
-   * @var bool*/
-  private $shutdown_registered = FALSE;
+   * Shutdown Registered.
+   *
+   * @var bool
+   */
+  private $shutdownRegistered = FALSE;
 
   /**
    * Site prefix.
@@ -55,15 +64,17 @@ class FastCache {
   private $prefix = '';
 
   /**
+   * Fix Key and Binary.
+   *
    * Make sure that keys without binaries have their own binaries
    * and that a valid test prefix is used.
    *
    * @param string $key
+   *   Key.
    * @param string $bin
-   *
-   * @return void
+   *   Binary.
    */
-  private function FixKeyAndBin(&$key, &$bin) {
+  private function fixKeyAndBin(&$key, &$bin) {
     // We always need a binary, if non is specified, this item
     // should be treated as having it's own binary.
     if (empty($bin)) {
@@ -80,23 +91,28 @@ class FastCache {
   private $cache;
 
   /**
+   * Enabled.
+   *
    * Tell if cache persistence is enabled. If not, this cache
    * will behave as DRUPAL_STATIC until the end of request.
    *
    * Only enable this cache if the backend is DrupalWinCache
    * and the lock implementation is DrupalWinCache.
+   *
+   * @param bool $refresh
+   *   Is cache persistence enabled?
    */
-  public function Enabled($refresh = FALSE) {
+  public function enabled($refresh = FALSE) {
     return !empty($this->cache);
   }
 
   /**
    * Cache_clear_all wrapper.
    */
-  public function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
+  public function cacheClearAll($cid = NULL, $bin = NULL, $wildcard = FALSE) {
     $this->FixKeyAndBin($cid, $bin);
     if (!isset($this->fastcacheitems[$bin])) {
-      $this->cache_load_ensure($bin, TRUE);
+      $this->cacheLoadEnsure($bin, TRUE);
     }
     // If the cache did not exist, it will still not be loaded.
     if (isset($this->fastcacheitems[$bin])) {
@@ -104,10 +120,22 @@ class FastCache {
     }
   }
 
+  // phpcs:disable
+  /**
+   * Cache_clear_all wrapper.
+   *
+   * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0.
+   * @see https://www.drupal.org/projects/sqlsrv/issues/3108368
+   */
+  public function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
+    $this->cacheClearAll($cid, $bin, $wildcard);
+  }
+  // phpcs:enable
+
   /**
    * Ensure cache binary is statically loaded.
    */
-  private function cache_load_ensure($bin, $skiploadifempty = FALSE) {
+  private function cacheLoadEnsure($bin, $skiploadifempty = FALSE) {
     if (!isset($this->fastcacheitems[$bin])) {
       // If storage is enabled, try to load from cache.
       if ($this->Enabled()) {
@@ -124,9 +152,9 @@ class FastCache {
         $this->fastcacheitems[$bin] = new FastCacheItem($bin);
       }
       // Register shutdown persistence once, only if enabled!
-      if ($this->shutdown_registered == FALSE && $this->Enabled()) {
+      if ($this->shutdownRegistered == FALSE && $this->Enabled()) {
         register_shutdown_function([&$this, 'persist']);
-        $this->shutdown_registered = TRUE;
+        $this->shutdownRegistered = TRUE;
       }
     }
   }
@@ -136,7 +164,7 @@ class FastCache {
    */
   public function get($cid, $bin = NULL) {
     $this->FixKeyAndBin($cid, $bin);
-    $this->cache_load_ensure($bin);
+    $this->cacheLoadEnsure($bin);
     return $this->fastcacheitems[$bin]->data_get($cid);
   }
 
@@ -145,7 +173,7 @@ class FastCache {
    */
   public function set($cid, $data, $bin = NULL) {
     $this->FixKeyAndBin($cid, $bin);
-    $this->cache_load_ensure($bin);
+    $this->cacheLoadEnsure($bin);
     if ($this->fastcacheitems[$bin]->changed == FALSE) {
       $this->fastcacheitems[$bin]->changed = TRUE;
       // Do not lock if this is an atomic binary ($cid = $bin).
@@ -158,7 +186,8 @@ class FastCache {
         if ($this->Enabled()) {
           // Hold this locks longer than usual because
           // they run after the request has finished.
-          // if (function_exists('lock_acquire') && lock_acquire('fastcache_' . $bin, 120)) {.
+          // if (function_exists('lock_acquire')
+          // && lock_acquire('fastcache_' . $bin, 120)) {.
           $this->fastcacheitems[$bin]->persist = TRUE;
           // $this->fastcacheitems[$bin]->locked = TRUE;
           // }
@@ -169,15 +198,14 @@ class FastCache {
   }
 
   /**
-   * Called on shutdown, persists the cache
-   * if necessary.
+   * Called on shutdown, persists the cache if necessary.
    */
   public function persist() {
     foreach ($this->fastcacheitems as $cache) {
       if ($cache->persist == TRUE) {
         $this->cache->set($cache->bin, $cache->rawdata(), CacheBackendInterface::CACHE_PERMANENT);
         // If ($cache->locked) {
-        //  lock_release('fastcache_' . $cache->bin);
+        // lock_release('fastcache_' . $cache->bin);
         // }.
       }
     }

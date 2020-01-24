@@ -27,13 +27,16 @@ class Transaction extends DatabaseTransaction {
   protected $settings = FALSE;
 
   /**
+   * {@inheritdoc}
+   *
    * Overriden to add settings.
    *
-   * @param Connection $connection database connection
-   *
-   * @param string $name savepoint name
-   *
-   * @param DatabaseTransactionSettings $settings datatbase transaction settings
+   * @param Connection $connection
+   *   Database connection.
+   * @param string $name
+   *   Savepoint name.
+   * @param \Drupal\Driver\Database\sqlsrv\TransactionSettings $settings
+   *   Datatbase transaction settings.
    */
   public function __construct(Connection $connection, $name = NULL, DatabaseTransactionSettings $settings = NULL) {
 
