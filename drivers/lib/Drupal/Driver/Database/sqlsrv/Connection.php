@@ -515,7 +515,10 @@ class Connection extends DatabaseConnection {
     // Use default values if not already set.
     $options += $this->defaultOptions();
     if (isset($options['target'])) {
-      @trigger_error('Passing a \'target\' key to \\Drupal\\Core\\Database\\Connection::query $options argument is deprecated in Drupal 8.0.x and will be removed before Drupal 9.0.0. Instead, use \\Drupal\\Core\\Database\\Database::getConnection($target)->query(). See https://www.drupal.org/node/2993033' . '.', E_USER_DEPRECATED);
+      // phpcs:disable
+      // Error format is necessary for kernel test, but does not meet the coding standard
+      @trigger_error('Passing a \'target\' key to \\Drupal\\Core\\Database\\Connection::query $options argument is deprecated in Drupal 8.0.x and will be removed before Drupal 9.0.0. Instead, use \\Drupal\\Core\\Database\\Database::getConnection($target)->query(). See https://www.drupal.org/node/2993033.', E_USER_DEPRECATED);
+      // phpcs:enable
     }
     $stmt = NULL;
 
