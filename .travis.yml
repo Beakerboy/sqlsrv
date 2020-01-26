@@ -49,9 +49,9 @@ install:
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist web/core/phpunit.xml
   - phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
   # Install patches for tests
-  - wget https://www.drupal.org/files/issues/2020-01-26/drupal-3108025-testNumericExpressionSubstitution-5.patch ./web
   - cd web
-  - git apply drupal-3108025-testNumericExpressionSubstitution-5.patch
+  - wget https://www.drupal.org/files/issues/2020-01-26/drupal-3108025-testNumericExpressionSubstitution-6.patch
+  - git apply drupal-3108025-testNumericExpressionSubstitution-6.patch
 script:
   - pcov clobber
   - cd web
