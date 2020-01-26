@@ -49,6 +49,99 @@ class Connection extends DatabaseConnection {
   public $driver_settings = NULL;
 
   /**
+   * Error code for Login Failed.
+   *
+   * Usually happens when the database does not exist.
+   */
+  const DATABASE_NOT_FOUND = 28000;
+
+  /**
+   * Summary of $cache.
+   *
+   * @var FastCache
+   */
+  public $cache;
+
+  /**
+   * Prepared PDO statements only makes sense if we cache them...
+   *
+   * @var mixed
+   */
+  private $statementCache = [];
+
+  /**
+   * This is the original replacement regexp from Microsoft.
+   *
+   * We could probably simplify it a lot because queries only contain
+   * placeholders when we modify them.
+   *
+   * NOTE: removed 'escape' from the list, because it explodes
+   * with LIKE xxx ESCAPE yyy syntax.
+   */
+  const RESERVED_REGEXP = '/\G
+    # Everything that follows a boundary that is not : or _.
+    \b(?<![:\[_])(?:
+      # Any reserved words, followed by a boundary that is not an opening parenthesis.
+      (action|admin|alias|any|are|array|at|begin|boolean|class|commit|contains|current|
+      data|date|day|depth|domain|external|file|full|function|get|go|host|input|language|
+      last|less|local|map|min|module|new|no|object|old|open|operation|parameter|parameters|
+      path|plan|prefix|proc|public|ref|result|returns|role|row|rule|save|search|second|
+      section|session|size|state|statistics|temporary|than|time|timestamp|tran|translate|
+      translation|trim|user|value|variable|view|without)
+      (?!\()
+      |
+      # Or a normal word.
+      ([a-z]+)
+    )\b
+    |
+    \b(
+      [^a-z\'"\\\\]+
+    )\b
+    |
+    (?=[\'"])
+    (
+      "  [^\\\\"] * (?: \\\\. [^\\\\"] *) * "
+      |
+      \' [^\\\\\']* (?: \\\\. [^\\\\\']*) * \'
+    )
+  /Six';
+
+  /**
+   * {@inheritdoc}
+   */
+  public function queryRange($query, $from, $count, array $args = [], array $options = []) {
+    $query = $this->addRangeToQuery($query, $from, $count);
+    return $this->query($query, $args, $options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function queryTemporary($query, array $args = [], array $options = []) {
+    // Generate a new GLOBAL temporary table name and protect it from prefixing.
+    // SQL Server requires that temporary tables to be non-qualified.
+    $tablename = '##' . $this->generateTemporaryTableName();
+    // Temporary tables cannot be introspected so using them is limited on some
+    // scenarios.
+    if (isset($options['real_table']) && $options['real_table'] === TRUE) {
+      $tablename = trim($tablename, "#");
+    }
+    $prefixes = $this->prefixes;
+    $prefixes[$tablename] = '';
+    $this->setPrefix($prefixes);
+
+    // Having comments in the query can be tricky and break the
+    // SELECT FROM  -> SELECT INTO conversion.
+    $query = $this->schema()->removeSQLComments($query);
+
+    // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
+    $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
+    $this->query($query, $args, $options);
+
+    return $tablename;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function driver() {
@@ -63,11 +156,47 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Error code for Login Failed.
-   *
-   * Usually happens when the database does not exist.
+   * {@inheritdoc}
    */
-  const DATABASE_NOT_FOUND = 28000;
+  public function createDatabase($database) {
+    // Escape the database name.
+    $database = Database::getConnection()->escapeDatabase($database);
+
+    try {
+      // Create the database and set it as active.
+      $this->connection->exec("CREATE DATABASE $database COLLATE " . Schema::DEFAULT_COLLATION_CI);
+    }
+    catch (DatabaseException $e) {
+      throw new DatabaseNotFoundException($e->getMessage());
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function mapConditionOperator($operator) {
+    return isset(static::$sqlsrvConditionOperatorMap[$operator]) ? static::$sqlsrvConditionOperatorMap[$operator] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function nextId($existing = 0) {
+    // If an exiting value is passed, for its insertion into the sequence table.
+    if ($existing > 0) {
+      try {
+        $this->query_direct('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', [':existing' => $existing]);
+      }
+      catch (Exception $e) {
+        // Doesn't matter if this fails, it just means that this value is
+        // already present in the table.
+      }
+    }
+
+    // Refactored to use OUTPUT because under high concurrency LAST_INSERTED_ID
+    // does not work properly.
+    return $this->query_direct('INSERT INTO {sequences} OUTPUT (Inserted.[value]) DEFAULT VALUES')->fetchField();
+  }
 
   /**
    * A map of condition operators to sqlsrv operators.
@@ -81,14 +210,6 @@ class Connection extends DatabaseConnection {
     'LIKE' => ['postfix' => " ESCAPE '\\'"],
     'NOT LIKE' => ['postfix' => " ESCAPE '\\'"],
   ];
-
-
-  /**
-   * Summary of $cache.
-   *
-   * @var FastCache
-   */
-  public $cache;
 
   /**
    * {@inheritdoc}
@@ -177,13 +298,6 @@ class Connection extends DatabaseConnection {
 
     return $pdo;
   }
-
-  /**
-   * Prepared PDO statements only makes sense if we cache them...
-   *
-   * @var mixed
-   */
-  private $statementCache = [];
 
   /**
    * Temporary override of DatabaseConnection::prepareQuery().
@@ -356,43 +470,6 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * This is the original replacement regexp from Microsoft.
-   *
-   * We could probably simplify it a lot because queries only contain
-   * placeholders when we modify them.
-   *
-   * NOTE: removed 'escape' from the list, because it explodes
-   * with LIKE xxx ESCAPE yyy syntax.
-   */
-  const RESERVED_REGEXP = '/\G
-    # Everything that follows a boundary that is not : or _.
-    \b(?<![:\[_])(?:
-      # Any reserved words, followed by a boundary that is not an opening parenthesis.
-      (action|admin|alias|any|are|array|at|begin|boolean|class|commit|contains|current|
-      data|date|day|depth|domain|external|file|full|function|get|go|host|input|language|
-      last|less|local|map|min|module|new|no|object|old|open|operation|parameter|parameters|
-      path|plan|prefix|proc|public|ref|result|returns|role|row|rule|save|search|second|
-      section|session|size|state|statistics|temporary|than|time|timestamp|tran|translate|
-      translation|trim|user|value|variable|view|without)
-      (?!\()
-      |
-      # Or a normal word.
-      ([a-z]+)
-    )\b
-    |
-    \b(
-      [^a-z\'"\\\\]+
-    )\b
-    |
-    (?=[\'"])
-    (
-      "  [^\\\\"] * (?: \\\\. [^\\\\"] *) * "
-      |
-      \' [^\\\\\']* (?: \\\\. [^\\\\\']*) * \'
-    )
-  /Six';
-
-  /**
    * Replace reserved words.
    *
    * This method gets called between 3,000 and 10,000 times
@@ -450,14 +527,6 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function queryRange($query, $from, $count, array $args = [], array $options = []) {
-    $query = $this->addRangeToQuery($query, $from, $count);
-    return $this->query($query, $args, $options);
-  }
-
-  /**
    * Generates a temporary table name.
    *
    * Because we are using global temporary tables, these are visible between
@@ -473,33 +542,6 @@ class Connection extends DatabaseConnection {
       $temp_key = strtoupper(md5(uniqid(rand(), TRUE)));
     }
     return "db_temp_" . $this->temporaryNameIndex++ . '_' . $temp_key;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function queryTemporary($query, array $args = [], array $options = []) {
-    // Generate a new GLOBAL temporary table name and protect it from prefixing.
-    // SQL Server requires that temporary tables to be non-qualified.
-    $tablename = '##' . $this->generateTemporaryTableName();
-    // Temporary tables cannot be introspected so using them is limited on some
-    // scenarios.
-    if (isset($options['real_table']) && $options['real_table'] === TRUE) {
-      $tablename = trim($tablename, "#");
-    }
-    $prefixes = $this->prefixes;
-    $prefixes[$tablename] = '';
-    $this->setPrefix($prefixes);
-
-    // Having comments in the query can be tricky and break the
-    // SELECT FROM  -> SELECT INTO conversion.
-    $query = $this->schema()->removeSQLComments($query);
-
-    // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
-    $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
-    $this->query($query, $args, $options);
-
-    return $tablename;
   }
 
   /**
@@ -799,35 +841,6 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function mapConditionOperator($operator) {
-    return isset(static::$sqlsrvConditionOperatorMap[$operator]) ? static::$sqlsrvConditionOperatorMap[$operator] : NULL;
-  }
-
-  /**
-   * Override of DatabaseConnection::nextId().
-   *
-   * @status tested
-   */
-  public function nextId($existing = 0) {
-    // If an exiting value is passed, for its insertion into the sequence table.
-    if ($existing > 0) {
-      try {
-        $this->query_direct('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', [':existing' => $existing]);
-      }
-      catch (Exception $e) {
-        // Doesn't matter if this fails, it just means that this value is
-        // already present in the table.
-      }
-    }
-
-    // Refactored to use OUTPUT because under high concurrency LAST_INSERTED_ID
-    // does not work properly.
-    return $this->query_direct('INSERT INTO {sequences} OUTPUT (Inserted.[value]) DEFAULT VALUES')->fetchField();
-  }
-
-  /**
    * Override DatabaseConnection::escapeTable().
    *
    * @status needswork
@@ -860,8 +873,6 @@ class Connection extends DatabaseConnection {
 
     return $result;
   }
-
-  // Transactions.
 
   /**
    * Overriden to allow transaction settings.
@@ -1061,24 +1072,6 @@ class Connection extends DatabaseConnection {
       else {
         // Savepoints cannot be commited, only rolled back.
       }
-    }
-  }
-
-  // End Transactions.
-
-  /**
-   * {@inheritdoc}
-   */
-  public function createDatabase($database) {
-    // Escape the database name.
-    $database = Database::getConnection()->escapeDatabase($database);
-
-    try {
-      // Create the database and set it as active.
-      $this->connection->exec("CREATE DATABASE $database COLLATE " . Schema::DEFAULT_COLLATION_CI);
-    }
-    catch (DatabaseException $e) {
-      throw new DatabaseNotFoundException($e->getMessage());
     }
   }
 
