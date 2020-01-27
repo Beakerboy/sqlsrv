@@ -60,6 +60,6 @@ script:
   #- phpcs --standard=Drupal  modules/contrib/sqlsrv
 after_success:
   - cd $TRAVIS_BUILD_DIR
-  - sed -i 's/modules\/contrib//g' build.logs/clover.xml
-  - sed -i 's/divers\/lib/sqlsrv\/drivers\/lib/g' build.logs/clover.xml
+  - sed -i 's/modules\/contrib//g' ./build/logs/clover.xml
+  - sed -i 's/drivers\/lib/sqlsrv\/drivers\/lib/g' ./build/logs/clover.xml
   - php-coveralls -v
