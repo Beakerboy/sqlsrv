@@ -2,6 +2,7 @@
 
 namespace Drupal\Driver\Database\sqlsrv;
 
+use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Database\Query\Update as QueryUpdate;
 
 use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
