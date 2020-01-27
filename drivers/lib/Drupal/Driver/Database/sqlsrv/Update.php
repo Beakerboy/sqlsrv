@@ -64,6 +64,12 @@ class Update extends QueryUpdate {
     $fields = $this->fields;
     $update_fields = [];
     foreach ($this->expressionFields as $field => $data) {
+      if ($data['expression'] instanceof SelectInterface) {
+        // Compile and cast expression subquery to a string.
+        $data['expression']->compile($this->connection, $this);
+        $data['expression'] = ' (' . $data['expression'] . ')';
+      }
+      // Why are we using quoteIdentifier() instead of escapeField()?
       $update_fields[] = $this->connection->quoteIdentifier($field) . '=' . $data['expression'];
       unset($fields[$field]);
     }
