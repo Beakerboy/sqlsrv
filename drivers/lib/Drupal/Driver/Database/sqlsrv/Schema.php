@@ -137,6 +137,22 @@ class Schema extends DatabaseSchema {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function introspectIndexSchema($table) {
+    if (!$this->tableExists($table)) {
+      throw new SchemaObjectDoesNotExistException("The table $table doesn't exist.");
+    }
+    $index_schema = [
+      'primary key' => [],
+      'unique keys' => [],
+      'indexes' => [],
+    ];
+
+    return $index_schema;
+  }
+
+  /**
    * Database introspection: fetch technical information about a table.
    *
    * @return array
