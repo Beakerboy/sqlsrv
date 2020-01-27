@@ -26,18 +26,21 @@ class Utils {
   }
 
   /**
-   * Summary of BindExpressions.
+   * Bind Expressions
+   *
+   * If an expression and a field share a name, we remove it from the field list.
+   * There seems to be a bug when an expression contains a subselect.
    *
    * @param \PDOStatement $stmt
    *   Statement.
    * @param array $values
    *   Argument values.
-   * @param array $remove_from
-   *   Remove from.
+   * @param array $fields
+   *   an array of fields.
    */
-  public static function bindExpressions(\PDOStatement $stmt, array &$values, array &$remove_from) {
+  public static function bindExpressions(\PDOStatement $stmt, array &$values, array &$fields) {
     foreach ($values as $key => $value) {
-      unset($remove_from[$key]);
+      unset($fields[$key]);
       if (empty($value['arguments'])) {
         continue;
       }
