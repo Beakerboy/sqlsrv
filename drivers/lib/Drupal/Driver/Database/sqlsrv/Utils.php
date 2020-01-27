@@ -46,7 +46,13 @@ class Utils {
       if (empty($value['arguments'])) {
         continue;
       }
-      if (is_array($value['arguments'])) {
+      if ($value['expression'] instanceof SelectInterface) {
+        $value['expression']->compile($connection, $stmt);
+        foreach ($value['expression']->arguments() as $placeholder => $argument) {
+           $stmt->bindParam($placeholder, $argument);
+        }
+      }
+      elseif (is_array($value['arguments'])) {
         foreach ($value['arguments'] as $placeholder => $argument) {
           // We assume that an expression will never happen on a BLOB field,
           // which is a fairly safe assumption to make since in most cases
@@ -56,12 +62,6 @@ class Utils {
       }
       else {
         $stmt->bindParam($key, $value['arguments'], PDO::PARAM_STR);
-      }
-      if ($value['expression'] instanceof SelectInterface) {
-        $value['expression']->compile($connection, $stmt);
-        foreach ($value['expression']->arguments() as $placeholder => $argument) {
-           $stmt->bindParam($placeholder, $argument);
-        }
       }
     }
   }
