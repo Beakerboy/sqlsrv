@@ -51,17 +51,17 @@ class Utils {
           // We assume that an expression will never happen on a BLOB field,
           // which is a fairly safe assumption to make since in most cases
           // it would be an invalid query anyway.
-          $stmt->bindParam($placeholder, $value['arguments'][$placeholder]);
-        }
-      }
-      if ($value['expression'] instanceof SelectInterface) {
-        $value['expression']->compile($connection, $stmt);
-        foreach ($value['expression']->arguments() as $placeholder => $argument) {
-           $stmt->bindParam($placeholder, $value['expression'][$placeholder]);
+          $stmt->bindParam($placeholder, $argument);
         }
       }
       else {
         $stmt->bindParam($key, $value['arguments'], PDO::PARAM_STR);
+      }
+      if ($value['expression'] instanceof SelectInterface) {
+        $value['expression']->compile($connection, $stmt);
+        foreach ($value['expression']->arguments() as $placeholder => $argument) {
+           $stmt->bindParam($placeholder, $argument);
+        }
       }
     }
   }
