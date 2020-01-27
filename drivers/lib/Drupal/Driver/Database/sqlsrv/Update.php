@@ -30,7 +30,7 @@ class Update extends QueryUpdate {
     // Expressions take priority over literal fields, so we process those first
     // and remove any literal fields that conflict.
     $fields = $this->fields;
-    DatabaseUtils::BindExpressions($stmt, $this->expressionFields, $fields);
+    DatabaseUtils::BindExpressions($stmt, $this->expressionFields, $fields, $this->connection);
 
     // We use this array to store references to the blob handles.
     // This is necessary because the PDO will otherwise messes up with
