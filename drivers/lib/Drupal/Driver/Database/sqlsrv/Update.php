@@ -2,6 +2,8 @@
 
 namespace Drupal\Driver\Database\sqlsrv;
 
+use Drupal\Core\Database\Database;
+use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Database\Query\Update as QueryUpdate;
 
 use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
@@ -29,7 +31,24 @@ class Update extends QueryUpdate {
     // Expressions take priority over literal fields, so we process those first
     // and remove any literal fields that conflict.
     $fields = $this->fields;
-    DatabaseUtils::BindExpressions($stmt, $this->expressionFields, $fields);
+    foreach ($this->expressionFields as $field => $data) {
+      if (!empty($data['arguments'])) {
+        foreach ($data['arguments'] as $placeholder => $argument) {
+          // We assume that an expression will never happen on a BLOB field,
+          // which is a fairly safe assumption to make since in most cases
+          // it would be an invalid query anyway.
+          $stmt->bindParam($placeholder, $data['arguments'][$placeholder]);
+        }
+      }
+      if ($data['expression'] instanceof SelectInterface) {
+        $data['expression']->compile($this->connection, $this);
+        $select_query_arguments = $data['expression']->arguments();
+        foreach ($select_query_arguments as $placeholder => $argument) {
+          $stmt->bindParam($placeholder, $select_query_arguments[$placeholder]);
+        }
+      }
+      unset($fields[$field]);
+    }
 
     // We use this array to store references to the blob handles.
     // This is necessary because the PDO will otherwise messes up with
@@ -46,10 +65,9 @@ class Update extends QueryUpdate {
 
     $options = $this->queryOptions;
     $options['already_prepared'] = TRUE;
+    $options['return'] = Database::RETURN_AFFECTED;
 
-    $this->connection->query($stmt, [], $options);
-
-    return $stmt->rowCount();
+    return $this->connection->query($stmt, [], $options);
   }
 
   /**
@@ -64,6 +82,12 @@ class Update extends QueryUpdate {
     $fields = $this->fields;
     $update_fields = [];
     foreach ($this->expressionFields as $field => $data) {
+      if ($data['expression'] instanceof SelectInterface) {
+        // Compile and cast expression subquery to a string.
+        $data['expression']->compile($this->connection, $this);
+        $data['expression'] = ' (' . $data['expression'] . ')';
+      }
+      // Why are we using quoteIdentifier() instead of escapeField()?
       $update_fields[] = $this->connection->quoteIdentifier($field) . '=' . $data['expression'];
       unset($fields[$field]);
     }

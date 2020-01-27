@@ -26,27 +26,38 @@ class Utils {
   }
 
   /**
-   * Summary of BindExpressions.
+   * Bind Expressions
+   *
+   * If an expression and a field share a name, we remove it from the field list.
+   * There seems to be a bug when an expression contains a subselect.
    *
    * @param \PDOStatement $stmt
    *   Statement.
    * @param array $values
    *   Argument values.
-   * @param array $remove_from
-   *   Remove from.
+   * @param array $fields
+   *   an array of fields.
+   * @param mixed $connection
+   *   Database connection
    */
-  public static function bindExpressions(\PDOStatement $stmt, array &$values, array &$remove_from) {
+  public static function bindExpressions(\PDOStatement $stmt, array &$values, array &$fields, $connection = NULL) {
     foreach ($values as $key => $value) {
-      unset($remove_from[$key]);
+      unset($fields[$key]);
       if (empty($value['arguments'])) {
         continue;
       }
-      if (is_array($value['arguments'])) {
+      if ($value['expression'] instanceof SelectInterface) {
+        $value['expression']->compile($connection, $stmt);
+        foreach ($value['expression']->arguments() as $placeholder => $argument) {
+           $stmt->bindParam($placeholder, $argument);
+        }
+      }
+      elseif (is_array($value['arguments'])) {
         foreach ($value['arguments'] as $placeholder => $argument) {
           // We assume that an expression will never happen on a BLOB field,
           // which is a fairly safe assumption to make since in most cases
           // it would be an invalid query anyway.
-          $stmt->bindParam($placeholder, $value['arguments'][$placeholder]);
+          $stmt->bindParam($placeholder, $argument);
         }
       }
       else {
