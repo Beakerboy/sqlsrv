@@ -37,8 +37,10 @@ class Utils {
    *   Argument values.
    * @param array $fields
    *   an array of fields.
+   * @param mixed $connection
+   *   Database connection
    */
-  public static function bindExpressions(\PDOStatement $stmt, array &$values, array &$fields) {
+  public static function bindExpressions(\PDOStatement $stmt, array &$values, array &$fields, $connection = NULL) {
     foreach ($values as $key => $value) {
       unset($fields[$key]);
       if (empty($value['arguments'])) {
@@ -50,6 +52,12 @@ class Utils {
           // which is a fairly safe assumption to make since in most cases
           // it would be an invalid query anyway.
           $stmt->bindParam($placeholder, $value['arguments'][$placeholder]);
+        }
+      }
+      if ($value['expression'] instanceof SelectInterface) {
+        $value['expression']->compile($connection, $stmt);
+        foreach ($value['expression']->arguments() as $placeholder => $argument) {
+           $stmt->bindParam($placeholder, $value['expression'][$placeholder]);
         }
       }
       else {
