@@ -162,7 +162,7 @@ class Schema extends DatabaseSchema {
       }
     }
     foreach ($column_information['columns'] as $name => $spec) {
-      if (substr($name, 0, 9) == '__unique_' && $column_information['indexes'][substr($name, 9) . '_unique']['is_inique'] == 1) {
+      if (substr($name, 0, 9) == '__unique_' && $column_information['indexes'][substr($name, 9) . '_unique']['is_unique'] == 1) {
         $index_schema['unique'][] = substr($name, 9);
         $definition = $spec['definition'];
         $matches = [];
