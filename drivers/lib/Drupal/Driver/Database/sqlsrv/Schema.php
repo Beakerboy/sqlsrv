@@ -148,7 +148,15 @@ class Schema extends DatabaseSchema {
       'unique keys' => [],
       'indexes' => [],
     ];
-    fwrite(STDERR, print_r($this->queryColumnInformation($table), TRUE));
+    $column_information = $this->queryColumnInformation($table);
+    foreach($column_information['indexes'] as $key => $values) {
+      if ($value['is_primary_key'] == 1) {
+          foreach ($value['columns'] as $num => $stats) {
+            $index_schema['primary key'][] = $stats['name'];
+          }
+      }
+    }
+    fwrite(STDERR, print_r($column_information['indexes'], TRUE));
     return $index_schema;
   }
 
