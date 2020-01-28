@@ -148,7 +148,7 @@ class Schema extends DatabaseSchema {
       'unique keys' => [],
       'indexes' => [],
     ];
-
+    fwrite(STDERR, print_r($this->queryColumnInformation($table), TRUE));
     return $index_schema;
   }
 
