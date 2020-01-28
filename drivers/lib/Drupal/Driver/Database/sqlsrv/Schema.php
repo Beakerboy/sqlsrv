@@ -1504,7 +1504,7 @@ EOF;
    *   Field name.
    */
   protected function dropFieldRelatedObjects($table, $field) {
-    if ($this->findPrimaryKeyColumns() == [$field]) {
+    if ($this->findPrimaryKeyColumns($table) == [$field]) {
       $this->dropPrimaryKey($table);
     }
     // Fetch the list of indexes referencing this column.
