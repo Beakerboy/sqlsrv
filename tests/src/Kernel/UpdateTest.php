@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\Database\UpdateTest as DrupalUpdateTest;
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Tests the update query builder.
  *
  * @group Database
  */
-class UpdateTest extends DrupalUpdateTest {
+class UpdateTest extends DatabaseTestBase {
 
   /**
    * Expect an exception when updating a primary key.
