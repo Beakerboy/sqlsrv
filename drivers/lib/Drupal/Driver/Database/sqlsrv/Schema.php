@@ -148,7 +148,32 @@ class Schema extends DatabaseSchema {
       'unique keys' => [],
       'indexes' => [],
     ];
-
+    $column_information = $this->queryColumnInformation($table);
+    foreach($column_information['indexes'] as $key => $values) {
+      if ($values['is_primary_key'] == 1) {
+        foreach ($values['columns'] as $num => $stats) {
+          $index_schema['primary key'][] = $stats['name'];
+        }
+      }
+      elseif ($values['data_space_id'] == 1 && $values['is_unique'] == 0) {
+        foreach ($values['columns'] as $num => $stats) {
+          $index_schema['indexes'][substr($key, 0, -4)][] = $stats['name'];
+        }
+      }
+    }
+    foreach ($column_information['columns'] as $name => $spec) {
+      if (substr($name, 0, 9) == '__unique_' && $column_information['indexes'][substr($name, 9) . '_unique']['is_unique'] == 1) {
+        //$index_schema['unique'][] = substr($name, 9);
+        $definition = $spec['definition'];
+        $matches = [];
+        preg_match_all("/CONVERT\(\[varbinary\]\(max\),\[([a-zA-Z0-9_]*)\]/", $definition, $matches);
+        foreach ($matches[1] as $match) {
+          if ($match != '__pk') {
+            $index_schema['unique keys'][substr($name, 9)][] = $match;
+          }
+        }
+      }
+    }
     return $index_schema;
   }
 
