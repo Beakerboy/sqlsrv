@@ -1505,7 +1505,7 @@ EOF;
    */
   protected function dropFieldRelatedObjects($table, $field) {
     if ($this->findPrimaryKeyColumns() == [$field]) {
-      $this->dropPrimaryKey();
+      $this->dropPrimaryKey($table);
     }
     // Fetch the list of indexes referencing this column.
     $indexes = $this->connection->query('SELECT DISTINCT i.name FROM sys.columns c INNER JOIN sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id INNER JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id WHERE i.is_primary_key = 0 AND i.is_unique_constraint = 0 AND c.object_id = OBJECT_ID(:table) AND c.name = :name', [
