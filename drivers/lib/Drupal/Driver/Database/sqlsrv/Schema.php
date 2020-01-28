@@ -157,7 +157,7 @@ class Schema extends DatabaseSchema {
       }
       elseif ($values['data_space_id'] == 1 && $values['is_unique'] == 0) {
         foreach ($values['columns'] as $num => $stats) {
-          $index_schema['indexes'][substr($key, 0, -4)] = $stats['name'];
+          $index_schema['indexes'][substr($key, 0, -4)][] = $stats['name'];
         }
       }
     }
