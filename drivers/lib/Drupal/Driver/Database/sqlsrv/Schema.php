@@ -155,8 +155,13 @@ class Schema extends DatabaseSchema {
           $index_schema['primary key'][] = $stats['name'];
         }
       }
+      elseif ($values['data_space_id'] == 1 && $values['is_unique'] == 0) {
+        foreach ($values['columns'] as $num => $stats) {
+          $index_schema['indexes'][substr($key, 0, -4)] = $stats['name'];
+        }
+      }
     }
-    fwrite(STDERR, print_r($column_information['indexes'], TRUE));
+    // fwrite(STDERR, print_r($column_information['indexes'], TRUE));
     return $index_schema;
   }
 
