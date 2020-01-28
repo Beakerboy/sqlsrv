@@ -150,10 +150,10 @@ class Schema extends DatabaseSchema {
     ];
     $column_information = $this->queryColumnInformation($table);
     foreach($column_information['indexes'] as $key => $values) {
-      if ($value['is_primary_key'] == 1) {
-          foreach ($value['columns'] as $num => $stats) {
-            $index_schema['primary key'][] = $stats['name'];
-          }
+      if ($values['is_primary_key'] == 1) {
+        foreach ($values['columns'] as $num => $stats) {
+          $index_schema['primary key'][] = $stats['name'];
+        }
       }
     }
     fwrite(STDERR, print_r($column_information['indexes'], TRUE));
