@@ -166,7 +166,7 @@ class Schema extends DatabaseSchema {
         $index_schema['unique'][] = substr($name, 9);
         $definition = $spec['definition'];
         $matches = [];
-        preg_match_all("/CONVERT\([varbinary]\(max\),[(.*)]/", $definition, $matches);
+        preg_match_all("/CONVERT\(\[varbinary\]\(max\),\[(.*)\]/", $definition, $matches);
         foreach ($matches[1] as $match) {
           if ($match != '__pk') {
             $index_schema['unique'][substr($name, 9)][] = $match;
