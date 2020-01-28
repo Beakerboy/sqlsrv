@@ -59,6 +59,7 @@
       <file>tests/Drupal/KernelTests/Core/Database/MergeTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/NextIdTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/PrefixInfoTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/QueryTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/RangeQueryTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/RegressionTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/ReplicaKillSwitchTest.php</file>
@@ -69,6 +70,7 @@
       <file>tests/Drupal/KernelTests/Core/Database/TaggingTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/UpdateComplexTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/UpdateLobTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/UpdateTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/UpsertTest.php</file>
     </testsuite>
     <testsuite name="failing_database">
