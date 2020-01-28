@@ -1092,7 +1092,10 @@ EOF
    */
   public function fieldExists($table, $field) {
     return $this->connection
-      ->query("SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "' AND column_name = '" . $field . "'")
+      ->query('SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = :table AND column_name = :name', [
+        ':table' => $this->connection->prefixTables('{' . $table . '}'),
+        ':name" => $field,
+      ])
       ->fetchField() !== FALSE;
   }
 
@@ -1490,8 +1493,12 @@ EOF;
 
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
-    $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
 
+    $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
+    
+    // Do we need to:
+    //  add a technical primary key if $field was a primary key
+    //  Remake the primary key if $field was a part of a computed key
     return TRUE;
   }
 
@@ -1504,9 +1511,6 @@ EOF;
    *   Field name.
    */
   protected function dropFieldRelatedObjects($table, $field) {
-    if ($this->findPrimaryKeyColumns($table) == [$field]) {
-      $this->dropPrimaryKey($table);
-    }
     // Fetch the list of indexes referencing this column.
     $indexes = $this->connection->query('SELECT DISTINCT i.name FROM sys.columns c INNER JOIN sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id INNER JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id WHERE i.is_primary_key = 0 AND i.is_unique_constraint = 0 AND c.object_id = OBJECT_ID(:table) AND c.name = :name', [
       ':table' => $this->connection->prefixTables('{' . $table . '}'),
@@ -1674,7 +1678,8 @@ EOF;
    */
   protected function cleanUpPrimaryKey($table) {
     // We are droping the constraint, but not the column.
-    if ($existing_primary_key = $this->primaryKeyName($table)) {
+    $existing_primary_key = $this->primaryKeyName($table);
+    if ($existing_primary_key !== FALSE) {
       $this->connection->query("ALTER TABLE [{{$table}}] DROP CONSTRAINT {$existing_primary_key}");
     }
     // We are using computed columns to store primary keys,
