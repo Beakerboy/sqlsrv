@@ -592,9 +592,8 @@ class Schema extends DatabaseSchema {
      * Introspect the schema and save the current primary key if the column
      * we are modifying is part of it. Make sure the schema is FRESH.
      */
-    // $primary_key_fields = $this->introspectPrimaryKeyFields($table);
-    $primary_key_columns = $this->findPrimaryKeyColumns($table);
-    $primary_key_fields = array_combine($primary_key_columns, $primary_key_columns);
+    $primary_key_fields = $this->findPrimaryKeyColumns($table);
+
     if (in_array($field, $primary_key_fields)) {
       // Let's drop the PK.
       $this->cleanUpPrimaryKey($table);
@@ -652,8 +651,9 @@ class Schema extends DatabaseSchema {
     // the change field.
     if (in_array($field, $primary_key_fields) && (!isset($keys_new['primary keys']) || empty($keys_new['primary keys']))) {
       // The new primary key needs to have the new column name, and be in the same order.
-      unset($primary_key_fields[$field]);
-      $primary_key_fields[$field_new] = $field_new;
+      if ($field !== $field_new) {
+        $primary_key_fields[array_search($field, $primary_key_fields)] = $field_new;
+      }
       $keys_new['primary key'] = $primary_key_fields;
     }
 
