@@ -85,6 +85,9 @@
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
     </testsuite>
+    <testsuite name="entity">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Entity</directory>
+    </testsuite>
   </testsuites>
   <listeners>
     <listener class="\Drupal\Tests\Listeners\DrupalListener">
