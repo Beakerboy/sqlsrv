@@ -139,7 +139,7 @@ class SchemaTest extends KernelTestBase {
     }
   }
 
-  public function numericVariation() {
+  public function numericVariations() {
     return [
           [['not null' => FALSE]],
           [['not null' => FALSE, 'default' => 7]],
