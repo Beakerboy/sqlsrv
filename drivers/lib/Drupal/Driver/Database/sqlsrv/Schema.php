@@ -593,7 +593,7 @@ class Schema extends DatabaseSchema {
      * we are modifying is part of it. Make sure the schema is FRESH.
      */
     // $primary_key_fields = $this->introspectPrimaryKeyFields($table);
-    $primary_key_columns = $this->findPrimaryKeyColumns();
+    $primary_key_columns = $this->findPrimaryKeyColumns($table);
     $primary_key_fields = array_combine($primary_key_columns, $primary_key_columns);
     if (in_array($field, $primary_key_fields)) {
       // Let's drop the PK.
