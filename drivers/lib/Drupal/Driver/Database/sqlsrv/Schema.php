@@ -738,7 +738,7 @@ EOF
       . "TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND "
       . "KU.table_name='{$table_prefixed}' AND column_name != '__pk' AND column_name != '__pkc' "
       . "ORDER BY KU.ORDINAL_POSITION";
-    $result = $this->connection->query($query)->fetchAllKeyed();
+    $result = $this->connection->query($query)->fetchAllAssoc('column_name');
     return array_keys($result);
   }
 
