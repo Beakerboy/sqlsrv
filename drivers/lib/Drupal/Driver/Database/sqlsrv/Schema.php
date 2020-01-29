@@ -1205,7 +1205,7 @@ EOF
   private function createPrimaryKey($table, $fields, $limit = 900) {
     // To be on the safe side, on the most restrictive use case the limit
     // for a primary key clustered index is of 128 bytes (usually 900).
-    // @see http://blogs.msdn.com/b/jgalla/archive/2005/08/18/453189.aspx
+    // @see https://web.archive.org/web/20140510074940/http://blogs.msdn.com/b/jgalla/archive/2005/08/18/453189.aspx
     // If that is going to be exceeded, use a computed column.
     $csv_fields = $this->createKeySql($fields);
     $size = $this->calculateClusteredIndexRowSizeBytes($table, $this->createKeySql($fields, TRUE));
