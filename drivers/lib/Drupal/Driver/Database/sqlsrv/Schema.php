@@ -252,6 +252,12 @@ class Schema extends DatabaseSchema {
         ->execute();
     }
 
+    if ((isset($spec['initial_from_field'])) {
+        $this->connection->update($table)
+        ->expression("$field = $spec['initial_from_field']")
+        ->execute();
+    }
+        
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
       // There is no warranty that the old data did not have NULL values, we
@@ -262,6 +268,7 @@ class Schema extends DatabaseSchema {
         $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
         $this->connection->queryDirect($sql);
       }
+      
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
       $field_sql = $this->createFieldSql($table, $field, $spec, TRUE);
