@@ -616,38 +616,7 @@ class Connection extends DatabaseConnection {
       // value will be the same as for static::query().
       return $this->handleQueryException($e, $query, $args, $options);
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function handleQueryException(\PDOException $e, $query, array $args = [], $options = []) {
-    if ($options['throw_exception']) {
-      // Wrap the exception in another exception, because PHP does not allow
-      // overriding Exception::getMessage(). Its message is the extra database
-      // debug information.
-      if ($query instanceof StatementInterface) {
-        $query_string = $query->getQueryString();
-      }
-      else {
-        $query_string = $query;
-      }
-
-      $message = $e->getMessage() . ": " . $query_string . "; " . print_r($args, TRUE);
-      // Match all SQLSTATE 23xxx errors.
-      if (substr($e->getCode(), -6, -3) == '23') {
-        $exception = new IntegrityConstraintViolationException($message, $e->getCode(), $e);
-      }
-      else {
-        $exception = new DatabaseExceptionWrapper($message, 0, $e);
-      }
-      $exception->query_string = $query_string;
-      $exception->args = $args;
-      throw $exception;
-    }
-
-    return NULL;
-  }
+  } 
 
   /**
    * Like query but with no insecure detection or query preprocessing.
