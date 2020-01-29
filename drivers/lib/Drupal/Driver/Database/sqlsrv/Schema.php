@@ -225,6 +225,9 @@ class Schema extends DatabaseSchema {
     // Use already prefixed table name.
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
+    if ($this->findPrimaryKeyColumns($table) !== [] && isset($new_keys['primary key']) && in_array($field, $new_keys['primary key'])) {
+      $this->cleanUpPrimaryKey($table);
+    }
     // If the field is declared NOT NULL, we have to first create it NULL insert
     // the initial data (or populate default values) and then switch to NOT
     // NULL.
