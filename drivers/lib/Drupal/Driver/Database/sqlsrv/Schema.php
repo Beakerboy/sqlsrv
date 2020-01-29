@@ -518,18 +518,13 @@ class Schema extends DatabaseSchema {
       throw new SchemaObjectDoesNotExistException("The table $table doesn't exist.");
     }
     $index_schema = [
-      'primary key' => [],
+      'primary key' => $this->findPrimaryKeyColumns($table),
       'unique keys' => [],
       'indexes' => [],
     ];
     $column_information = $this->queryColumnInformation($table);
     foreach($column_information['indexes'] as $key => $values) {
-      if ($values['is_primary_key'] == 1) {
-        foreach ($values['columns'] as $num => $stats) {
-          $index_schema['primary key'][] = $stats['name'];
-        }
-      }
-      elseif ($values['data_space_id'] == 1 && $values['is_unique'] == 0) {
+      if ($values['is_primary_key'] !== 1 && $values['data_space_id'] == 1 && $values['is_unique'] == 0) {
         foreach ($values['columns'] as $num => $stats) {
           $index_schema['indexes'][substr($key, 0, -4)][] = $stats['name'];
         }
