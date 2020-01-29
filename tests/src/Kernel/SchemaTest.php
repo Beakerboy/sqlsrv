@@ -20,6 +20,34 @@ use Drupal\Tests\Core\Database\SchemaIntrospectionTestTrait;
  */
 class SchemaTest extends KernelTestBase {
 
+use SchemaIntrospectionTestTrait;
+  /**
+   * A global counter for table and field creation.
+   *
+   * @var int
+   */
+  protected $counter;
+  /**
+   * Connection to the database.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $connection;
+  /**
+   * Database schema instance.
+   *
+   * @var \Drupal\Core\Database\Schema
+   */
+  protected $schema;
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp() {
+    parent::setUp();
+    $this->connection = Database::getConnection();
+    $this->schema = $this->connection->schema();
+  }
+
   /**
    * Tests various schema changes' effect on the table's primary key.
    *
