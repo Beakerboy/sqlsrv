@@ -246,15 +246,22 @@ class Schema extends DatabaseSchema {
     $this->connection->queryDirect($query, [], ['prefix_tables' => FALSE]);
 
     // Load the initial data.
-    if (isset($spec['initial'])) {
+    if (isset($spec['initial_from_field'])) {
+      if (isset($spec['initial'])) {
+        $expression = 'COALESCE(' . $spec['initial_from_field'] . ', :default_initial_value)';
+        $arguments = [':default_initial_value' => $spec['initial']];
+      }
+      else {
+        $expression = $spec['initial_from_field'];
+        $arguments = [];
+      }
       $this->connection->update($table)
-        ->fields([$field => $spec['initial']])
+        ->expression($field, $expression, $arguments)
         ->execute();
     }
-
-    if (isset($spec['initial_from_field'])) {
-        $this->connection->update($table)
-        ->expression($field, $spec['initial_from_field'])
+    elseif (isset($spec['initial'])) {
+      $this->connection->update($table)
+        ->fields([$field => $spec['initial']])
         ->execute();
     }
         
