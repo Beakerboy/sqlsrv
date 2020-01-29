@@ -40,8 +40,6 @@
   <testsuites>
     <testsuite name="database">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
-      <exclude>tests/Drupal/KernelTests/Core/Database/QueryTest.php</exclude>
-      <exclude>tests/Drupal/KernelTests/Core/Database/UpdateTest.php</exclude>
     </testsuite>
     <testsuite name="passing_database">
       <file>tests/Drupal/KernelTests/Core/Database/AlterTest.php</file>
