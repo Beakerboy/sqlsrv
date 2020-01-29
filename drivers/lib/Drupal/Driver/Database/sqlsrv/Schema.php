@@ -1094,7 +1094,7 @@ EOF
     return $this->connection
       ->query('SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = :table AND column_name = :name', [
         ':table' => $this->connection->prefixTables('{' . $table . '}'),
-        ':name" => $field,
+        ':name' => $field,
       ])
       ->fetchField() !== FALSE;
   }
