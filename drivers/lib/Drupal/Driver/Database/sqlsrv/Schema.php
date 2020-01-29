@@ -283,16 +283,13 @@ class Schema extends DatabaseSchema {
     if (in_array($field, $primary_key_fields)) {
       // Let's drop the PK.
       $this->cleanUpPrimaryKey($table);
+      $this->createTechnicalPrimaryColumn($table);
     }
     
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
     $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
-    
-    // Do we need to:
-    //  add a technical primary key if $field was a primary key
-    //  Remake the primary key if $field was a part of a computed key
     return TRUE;
   }
 
