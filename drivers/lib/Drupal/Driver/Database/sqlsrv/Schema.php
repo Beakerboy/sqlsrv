@@ -96,44 +96,412 @@ class Schema extends DatabaseSchema {
   protected $engineVersion;
 
   /**
-   * Drupal specific functions.
-   *
-   * Returns a list of functions that are not available by default on SQL
-   * Server, but used in Drupal Core or contributed modules because they are
-   * available in other databases such as MySQL.
-   *
-   * @return array
-   *   List of functions.
+   * {@inheritdoc}
    */
-  public function drupalSpecificFunctions() {
-    $functions = [
-      'SUBSTRING',
-      'SUBSTRING_INDEX',
-      'GREATEST',
-      'MD5',
-      'LPAD',
-      'GROUP_CONCAT',
-      'CONCAT',
-      'IF',
-      'CONNECTION_ID',
+  public function getFieldTypeMap() {
+    // Put :normal last so it gets preserved by array_flip.  This makes
+    // it much easier for modules (such as schema.module) to map
+    // database types back into schema types.
+    return [
+      'varchar:normal' => 'nvarchar',
+      'char:normal' => 'nchar',
+      'varchar_ascii:normal' => 'varchar(255)',
+
+      'text:tiny' => 'nvarchar(255)',
+      'text:small' => 'nvarchar(255)',
+      'text:medium' => 'nvarchar(max)',
+      'text:big' => 'nvarchar(max)',
+      'text:normal' => 'nvarchar(max)',
+
+      'serial:tiny'     => 'smallint',
+      'serial:small'    => 'smallint',
+      'serial:medium'   => 'int',
+      'serial:big'      => 'bigint',
+      'serial:normal'   => 'int',
+
+      'int:tiny' => 'smallint',
+      'int:small' => 'smallint',
+      'int:medium' => 'int',
+      'int:big' => 'bigint',
+      'int:normal' => 'int',
+
+      'float:tiny' => 'real',
+      'float:small' => 'real',
+      'float:medium' => 'real',
+      'float:big' => 'float(53)',
+      'float:normal' => 'real',
+
+      'numeric:normal' => 'numeric',
+
+      'blob:big' => 'varbinary(max)',
+      'blob:normal' => 'varbinary(max)',
+
+      'datetime:normal' => 'timestamp',
+      'date:normal'     => 'date',
+      'datetime:normal' => 'datetime2(0)',
+      'time:normal'     => 'time(0)',
     ];
-    // Since SQL Server 2012 (11), there
-    // is a native CONCAT implementation.
-    if ($this->EngineVersionNumber() >= 11) {
-      $functions = array_diff($functions, ['CONCAT']);
-    }
-    return $functions;
   }
 
   /**
-   * Return active default Schema.
+   * {@inheritdoc}
    */
-  public function getDefaultSchema() {
-    if (!isset($this->defaultSchema)) {
-      $result = $this->connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
-      $this->defaultSchema = $result;
+  public function renameTable($table, $new_name) {
+    if (!$this->tableExists($table, TRUE)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot rename %table to %table_new: table %table doesn't exist.", ['%table' => $table, '%table_new' => $new_name]));
     }
-    return $this->defaultSchema;
+    if ($this->tableExists($new_name, TRUE)) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot rename %table to %table_new: table %table_new already exists.", ['%table' => $table, '%table_new' => $new_name]));
+    }
+
+    $old_table_info = $this->getPrefixInfo($table);
+    $new_table_info = $this->getPrefixInfo($new_name);
+
+    // We don't support renaming tables across schemas (yet).
+    if ($old_table_info['schema'] != $new_table_info['schema']) {
+      throw new PDOException(t('Cannot rename a table across schema.'));
+    }
+
+    $this->connection->query_direct('EXEC sp_rename :old, :new', [
+      ':old' => $old_table_info['schema'] . '.' . $old_table_info['table'],
+      ':new' => $new_table_info['table'],
+    ]);
+
+    // Constraint names are global in SQL Server, so we need to rename them
+    // when renaming the table. For some strange reason, indexes are local to
+    // a table.
+    $objects = $this->connection->query_direct('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', [':table' => $new_table_info['schema'] . '.' . $new_table_info['table']]);
+    foreach ($objects as $object) {
+      if (preg_match('/^' . preg_quote($old_table_info['table']) . '_(.*)$/', $object->name, $matches)) {
+        $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
+          ':old' => $old_table_info['schema'] . '.' . $object->name,
+          ':new' => $new_table_info['table'] . '_' . $matches[1],
+          ':type' => 'OBJECT',
+        ]);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function dropTable($table) {
+    if (!$this->tableExists($table, TRUE)) {
+      return FALSE;
+    }
+    $this->connection->queryDirect('DROP TABLE {' . $table . '}');
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldExists($table, $field) {
+    return $this->connection
+      ->query('SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = :table AND column_name = :name', [
+        ':table' => $this->connection->prefixTables('{' . $table . '}'),
+        ':name' => $field,
+      ])
+      ->fetchField() !== FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addField($table, $field, $spec, $new_keys = []) {
+    if (!$this->tableExists($table, TRUE)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", ['%field' => $field, '%table' => $table]));
+    }
+    if ($this->fieldExists($table, $field)) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", ['%field' => $field, '%table' => $table]));
+    }
+
+    /** @var Transaction $transaction */
+    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
+
+    // Prepare the specifications.
+    $spec = $this->processField($spec);
+
+    // Use already prefixed table name.
+    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
+
+    // If the field is declared NOT NULL, we have to first create it NULL insert
+    // the initial data (or populate default values) and then switch to NOT
+    // NULL.
+    $fixnull = FALSE;
+    if (!empty($spec['not null'])) {
+      $fixnull = TRUE;
+      $spec['not null'] = FALSE;
+    }
+
+    // Create the field.
+    // Because the default values of fields can contain string literals
+    // with braces, we CANNOT allow the driver to prefix tables because the
+    // algorithm to do so is a crappy str_replace.
+    $query = "ALTER TABLE {$table_prefixed} ADD ";
+    $query .= $this->createFieldSql($table, $field, $spec);
+    $this->connection->queryDirect($query, [], ['prefix_tables' => FALSE]);
+
+    // Load the initial data.
+    if (isset($spec['initial'])) {
+      $this->connection->update($table)
+        ->fields([$field => $spec['initial']])
+        ->execute();
+    }
+
+    // Switch to NOT NULL now.
+    if ($fixnull === TRUE) {
+      // There is no warranty that the old data did not have NULL values, we
+      // need to populate nulls with the default value because this won't be
+      // done by MSSQL by default.
+      if (isset($spec['default'])) {
+        $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
+        $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
+        $this->connection->queryDirect($sql);
+      }
+      // Now it's time to make this non-nullable.
+      $spec['not null'] = TRUE;
+      $field_sql = $this->createFieldSql($table, $field, $spec, TRUE);
+      $this->connection->queryDirect("ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}");
+    }
+
+    $this->recreateTableKeys($table, $new_keys);
+
+    // Commit.
+    $transaction->commit();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function dropField($table, $field) {
+    if (!$this->fieldExists($table, $field)) {
+      return FALSE;
+    }
+
+    // Drop the related objects.
+    $this->dropFieldRelatedObjects($table, $field);
+
+    $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
+    
+    // Do we need to:
+    //  add a technical primary key if $field was a primary key
+    //  Remake the primary key if $field was a part of a computed key
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldSetDefault($table, $field, $default) {
+    // phpcs:disable
+    // Error format is necessary for kernel test, but does not meet the coding standard
+    @trigger_error('fieldSetDefault() is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
+    // phpcs:enable
+    if (!$this->fieldExists($table, $field)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot set default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
+    }
+
+    $default = $this->escapeDefaultValue($default);
+
+    // Try to remove any existing default first.
+    try {
+      $this->fieldSetNoDefault($table, $field);
+    }
+    catch (Exception $e) {
+    }
+
+    // Create the new default.
+    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD CONSTRAINT {' . $table . '}_' . $field . '_df DEFAULT ' . $default . ' FOR [' . $field . ']');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldSetNoDefault($table, $field) {
+    // phpcs:disable
+    // Error format is necessary for kernel test, but does not meet the coding standard
+    @trigger_error('fieldSetNoDefault() is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
+    // phpcs:enable
+    if (!$this->fieldExists($table, $field)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot remove default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
+    }
+
+    $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT {' . $table . '}_' . $field . '_df');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function indexExists($table, $name) {
+    $table = $this->connection->prefixTables('{' . $table . '}');
+    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
+      ':table' => $table,
+      ':name' => $name . '_idx',
+    ])->fetchField();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addPrimaryKey($table, $fields) {
+    if (!$this->tableExists($table, TRUE)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add primary key to table %table: table doesn't exist.", ['%table' => $table]));
+    }
+
+    if ($primary_key_name = $this->primaryKeyName($table)) {
+      if ($this->isTechnicalPrimaryKey($primary_key_name)) {
+        // Destroy the existing technical primary key.
+        $this->connection->query_direct('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
+        $this->cleanUpTechnicalPrimaryColumn($table);
+      }
+      else {
+        throw new DatabaseSchemaObjectExistsException(t("Cannot add primary key to table %table: primary key already exists.", ['%table' => $table]));
+      }
+    }
+
+    // The size limit of the primary key depends on the
+    // cohexistance with an XML field.
+    if ($this->tableHasXmlIndex($table)) {
+      $this->createPrimaryKey($table, $fields, 128);
+    }
+    else {
+      $this->createPrimaryKey($table, $fields);
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function dropPrimaryKey($table) {
+    if (!$this->primaryKeyName($table)) {
+      return FALSE;
+    }
+    $this->cleanUpPrimaryKey($table);
+    $this->createTechnicalPrimaryColumn($table);
+    $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$this->TECHNICAL_PK_COLUMN_NAME})");
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function findPrimaryKeyColumns($table) {
+    if (!$this->tableExists($table)) {
+      return FALSE;
+    }
+    // Use already prefixed table name.
+    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
+    $query = "SELECT column_name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC "
+      . "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KU "
+      . "ON TC.CONSTRAINT_TYPE = 'PRIMARY KEY' AND "
+      . "TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND "
+      . "KU.table_name='{$table_prefixed}' AND column_name != '__pk' AND column_name != '__pkc' "
+      . "ORDER BY KU.ORDINAL_POSITION";
+    $result = $this->connection->query($query)->fetchAllAssoc('column_name');
+    return array_keys($result);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addUniqueKey($table, $name, $fields) {
+    if (!$this->tableExists($table, TRUE)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add unique key %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
+    }
+    if ($this->uniqueKeyExists($table, $name)) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot add unique key %name to table %table: unique key already exists.", ['%table' => $table, '%name' => $name]));
+    }
+
+    $this->createTechnicalPrimaryColumn($table);
+
+    // Then, build a expression based on the columns.
+    $column_expression = [];
+    foreach ($fields as $field) {
+      if (is_array($field)) {
+        $column_expression[] = 'SUBSTRING(CAST(' . $field[0] . ' AS varbinary(max)),1,' . $field[1] . ')';
+      }
+      else {
+        $column_expression[] = 'CAST(' . $field . ' AS varbinary(max))';
+      }
+    }
+    $column_expression = implode(' + ', $column_expression);
+
+    // Build a computed column based on the expression that replaces NULL
+    // values with the globally unique identifier generated previously.
+    // This is (very) unlikely to result in a collision with any actual value
+    // in the columns of the unique key.
+    $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$this->TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
+    $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON {{$table}} (__unique_{$name})");
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function dropUniqueKey($table, $name) {
+    if (!$this->uniqueKeyExists($table, $name)) {
+      return FALSE;
+    }
+
+    $this->connection->query("DROP INDEX {$name}_unique ON {{$table}}");
+    $this->connection->query("ALTER TABLE {{$table}} DROP COLUMN __unique_{$name}");
+
+    // Try to clean-up the technical primary key if possible.
+    $this->cleanUpTechnicalPrimaryColumn($table);
+
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addIndex($table, $name, $fields, array $spec = []) {
+    if (!$this->tableExists($table, TRUE)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
+    }
+    if ($this->indexExists($table, $name)) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot add index %name to table %table: index already exists.", ['%table' => $table, '%name' => $name]));
+    }
+
+    $xml_field = NULL;
+    $sql = $this->createIndexSql($table, $name, $fields, $xml_field);
+    if (!empty($xml_field)) {
+      // We can create an XML field, but the current primary key index
+      // size needs to be under 128bytes.
+      $pk_fields = $this->introspectPrimaryKeyFields($table);
+      $size = $this->calculateClusteredIndexRowSizeBytes($table, $pk_fields, TRUE);
+      if ($size > 128) {
+        // Alright the compress the index.
+        $this->compressPrimaryKeyIndex($table, 128);
+      }
+    }
+    $this->connection->query($sql);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function dropIndex($table, $name) {
+    if (!$this->indexExists($table, $name)) {
+      return FALSE;
+    }
+
+    $expand = FALSE;
+    if (($index = $this->tableHasXmlIndex($table)) && $index == ($name . '_idx')) {
+      $expand = TRUE;
+    }
+
+    $this->connection->query('DROP INDEX ' . $name . '_idx ON [{' . $table . '}]');
+
+    // If we just dropped an XML index, we can re-expand the original primary
+    // key index.
+    if ($expand) {
+      $this->compressPrimaryKeyIndex($table);
+    }
+
+    return TRUE;
   }
 
   /**
@@ -175,6 +543,174 @@ class Schema extends DatabaseSchema {
       }
     }
     return $index_schema;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function changeField($table, $field, $field_new, $spec, $keys_new = []) {
+    if (!$this->fieldExists($table, $field)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", [
+        '%table' => $table,
+        '%name' => $field,
+      ]));
+    }
+    if (($field != $field_new) && $this->fieldExists($table, $field_new)) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", [
+        '%table' => $table,
+        '%name' => $field,
+        '%name_new' => $field_new,
+      ]));
+    }
+    if (isset($keys_new['primary key']) && in_array($field_new, $keys_new['primary key'], TRUE)) {
+      $this->ensureNotNullPrimaryKey($keys_new['primary key'], [$field_new => $spec]);
+    }
+
+    // SQL Server supports transactional DDL, so we can just start a transaction
+    // here and pray for the best.
+
+    /** @var Transaction $transaction */
+    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
+
+    // Prepare the specifications.
+    $spec = $this->processField($spec);
+
+    /*
+     * IMPORTANT NOTE: To maintain database portability, you have to explicitly
+     * recreate all indices and primary keys that are using the changed field.
+     * That means that you have to drop all affected keys and indexes with
+     * db_drop_{primary_key,unique_key,index}() before calling
+     * db_change_field().
+     *
+     * @see https://api.drupal.org/api/drupal/includes!database!database.inc/function/db_change_field/7
+     *
+     * What we are going to do in the SQL Server Driver is a best-effort try to
+     * preserve original keys if they do not conflict with the keys_new
+     * parameter, and if the callee has done it's job (droping constraints/keys)
+     * then they will of course not be recreated.
+     *
+     * Introspect the schema and save the current primary key if the column
+     * we are modifying is part of it. Make sure the schema is FRESH.
+     */
+    // $primary_key_fields = $this->introspectPrimaryKeyFields($table);
+    $primary_key_columns = $this->findPrimaryKeyColumns();
+    $primary_key_fields = array_combine($primary_key_columns, $primary_key_columns);
+    if (in_array($field, $primary_key_fields)) {
+      // Let's drop the PK.
+      $this->cleanUpPrimaryKey($table);
+    }
+
+    // If there is a generated unique key for this field, we will need to
+    // add it back in when we are done.
+    $unique_key = $this->uniqueKeyExists($table, $field);
+
+    // Drop the related objects.
+    $this->dropFieldRelatedObjects($table, $field);
+
+    // Start by renaming the current column.
+    $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
+      ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
+      ':new' => $field . '_old',
+      ':type' => 'COLUMN',
+    ]);
+
+    // If the new column does not allow nulls, we need to
+    // create it first as nullable, then either migrate
+    // data from previous column or populate default values.
+    $fixnull = FALSE;
+    if (!empty($spec['not null'])) {
+      $fixnull = TRUE;
+      $spec['not null'] = FALSE;
+    }
+
+    // Create a new field.
+    $this->addField($table, $field_new, $spec);
+
+    // Migrate the data over.
+    // Explicitly cast the old value to the new value to avoid conversion
+    // errors.
+    $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$spec['sqlsrv_type']})";
+    $this->connection->queryDirect($sql);
+
+    // Switch to NOT NULL now.
+    if ($fixnull === TRUE) {
+      // There is no warranty that the old data did not have NULL values, we
+      // need to populate nulls with the default value because this won't be
+      // done by MSSQL by default.
+      if (!empty($spec['default'])) {
+        $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
+        $sql = "UPDATE {{$table}} SET {$field_new} = {$default_expression} WHERE {$field_new} IS NULL";
+        $this->connection->query_direct($sql);
+      }
+      // Now it's time to make this non-nullable.
+      $spec['not null'] = TRUE;
+      $field_sql = $this->createFieldSql($table, $field_new, $spec, TRUE);
+      $sql = "ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}";
+      $this->connection->queryDirect($sql);
+    }
+    // Recreate the primary key if no new primary key has been sent along with
+    // the change field.
+    if (in_array($field, $primary_key_fields) && (!isset($keys_new['primary keys']) || empty($keys_new['primary keys']))) {
+      // The new primary key needs to have the new column name, and be in the same order.
+      unset($primary_key_fields[$field]);
+      $primary_key_fields[$field_new] = $field_new;
+      $keys_new['primary key'] = $primary_key_fields;
+    }
+
+    // Recreate the unique constraint if it existed.
+    if ($unique_key && (!isset($keys_new['unique keys']) || !in_array($field_new, $keys_new['unique keys']))) {
+      $keys_new['unique keys'][$field] = [$field_new];
+    }
+
+    // Drop the old field.
+    $this->dropField($table, $field . '_old');
+
+    // Add the new keys.
+    $this->recreateTableKeys($table, $keys_new);
+
+    // Commit.
+    $transaction->commit();
+  }
+
+  /**
+   * Drupal specific functions.
+   *
+   * Returns a list of functions that are not available by default on SQL
+   * Server, but used in Drupal Core or contributed modules because they are
+   * available in other databases such as MySQL.
+   *
+   * @return array
+   *   List of functions.
+   */
+  public function drupalSpecificFunctions() {
+    $functions = [
+      'SUBSTRING',
+      'SUBSTRING_INDEX',
+      'GREATEST',
+      'MD5',
+      'LPAD',
+      'GROUP_CONCAT',
+      'CONCAT',
+      'IF',
+      'CONNECTION_ID',
+    ];
+    // Since SQL Server 2012 (11), there
+    // is a native CONCAT implementation.
+    if ($this->EngineVersionNumber() >= 11) {
+      $functions = array_diff($functions, ['CONCAT']);
+    }
+    return $functions;
+  }
+
+  /**
+   * Return active default Schema.
+   */
+  public function getDefaultSchema() {
+    if (!isset($this->defaultSchema)) {
+      $result = $this->connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
+      $this->defaultSchema = $result;
+    }
+    return $this->defaultSchema;
   }
 
   /**
@@ -724,25 +1260,6 @@ EOF
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function findPrimaryKeyColumns($table) {
-    if (!$this->tableExists($table)) {
-      return FALSE;
-    }
-    // Use already prefixed table name.
-    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
-    $query = "SELECT column_name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC "
-      . "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KU "
-      . "ON TC.CONSTRAINT_TYPE = 'PRIMARY KEY' AND "
-      . "TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND "
-      . "KU.table_name='{$table_prefixed}' AND column_name != '__pk' AND column_name != '__pkc' "
-      . "ORDER BY KU.ORDINAL_POSITION";
-    $result = $this->connection->query($query)->fetchAllAssoc('column_name');
-    return array_keys($result);
-  }
-
-  /**
    * Generate SQL to create a new table from a Drupal schema definition.
    *
    * @param string $name
@@ -990,182 +1507,6 @@ EOF
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function getFieldTypeMap() {
-    // Put :normal last so it gets preserved by array_flip.  This makes
-    // it much easier for modules (such as schema.module) to map
-    // database types back into schema types.
-    return [
-      'varchar:normal' => 'nvarchar',
-      'char:normal' => 'nchar',
-      'varchar_ascii:normal' => 'varchar(255)',
-
-      'text:tiny' => 'nvarchar(255)',
-      'text:small' => 'nvarchar(255)',
-      'text:medium' => 'nvarchar(max)',
-      'text:big' => 'nvarchar(max)',
-      'text:normal' => 'nvarchar(max)',
-
-      'serial:tiny'     => 'smallint',
-      'serial:small'    => 'smallint',
-      'serial:medium'   => 'int',
-      'serial:big'      => 'bigint',
-      'serial:normal'   => 'int',
-
-      'int:tiny' => 'smallint',
-      'int:small' => 'smallint',
-      'int:medium' => 'int',
-      'int:big' => 'bigint',
-      'int:normal' => 'int',
-
-      'float:tiny' => 'real',
-      'float:small' => 'real',
-      'float:medium' => 'real',
-      'float:big' => 'float(53)',
-      'float:normal' => 'real',
-
-      'numeric:normal' => 'numeric',
-
-      'blob:big' => 'varbinary(max)',
-      'blob:normal' => 'varbinary(max)',
-
-      'datetime:normal' => 'timestamp',
-      'date:normal'     => 'date',
-      'datetime:normal' => 'datetime2(0)',
-      'time:normal'     => 'time(0)',
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function renameTable($table, $new_name) {
-    if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot rename %table to %table_new: table %table doesn't exist.", ['%table' => $table, '%table_new' => $new_name]));
-    }
-    if ($this->tableExists($new_name, TRUE)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot rename %table to %table_new: table %table_new already exists.", ['%table' => $table, '%table_new' => $new_name]));
-    }
-
-    $old_table_info = $this->getPrefixInfo($table);
-    $new_table_info = $this->getPrefixInfo($new_name);
-
-    // We don't support renaming tables across schemas (yet).
-    if ($old_table_info['schema'] != $new_table_info['schema']) {
-      throw new PDOException(t('Cannot rename a table across schema.'));
-    }
-
-    $this->connection->query_direct('EXEC sp_rename :old, :new', [
-      ':old' => $old_table_info['schema'] . '.' . $old_table_info['table'],
-      ':new' => $new_table_info['table'],
-    ]);
-
-    // Constraint names are global in SQL Server, so we need to rename them
-    // when renaming the table. For some strange reason, indexes are local to
-    // a table.
-    $objects = $this->connection->query_direct('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', [':table' => $new_table_info['schema'] . '.' . $new_table_info['table']]);
-    foreach ($objects as $object) {
-      if (preg_match('/^' . preg_quote($old_table_info['table']) . '_(.*)$/', $object->name, $matches)) {
-        $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
-          ':old' => $old_table_info['schema'] . '.' . $object->name,
-          ':new' => $new_table_info['table'] . '_' . $matches[1],
-          ':type' => 'OBJECT',
-        ]);
-      }
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function dropTable($table) {
-    if (!$this->tableExists($table, TRUE)) {
-      return FALSE;
-    }
-    $this->connection->queryDirect('DROP TABLE {' . $table . '}');
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function fieldExists($table, $field) {
-    return $this->connection
-      ->query('SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = :table AND column_name = :name', [
-        ':table' => $this->connection->prefixTables('{' . $table . '}'),
-        ':name' => $field,
-      ])
-      ->fetchField() !== FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addField($table, $field, $spec, $new_keys = []) {
-    if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", ['%field' => $field, '%table' => $table]));
-    }
-    if ($this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", ['%field' => $field, '%table' => $table]));
-    }
-
-    /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
-
-    // Prepare the specifications.
-    $spec = $this->processField($spec);
-
-    // Use already prefixed table name.
-    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
-
-    // If the field is declared NOT NULL, we have to first create it NULL insert
-    // the initial data (or populate default values) and then switch to NOT
-    // NULL.
-    $fixnull = FALSE;
-    if (!empty($spec['not null'])) {
-      $fixnull = TRUE;
-      $spec['not null'] = FALSE;
-    }
-
-    // Create the field.
-    // Because the default values of fields can contain string literals
-    // with braces, we CANNOT allow the driver to prefix tables because the
-    // algorithm to do so is a crappy str_replace.
-    $query = "ALTER TABLE {$table_prefixed} ADD ";
-    $query .= $this->createFieldSql($table, $field, $spec);
-    $this->connection->queryDirect($query, [], ['prefix_tables' => FALSE]);
-
-    // Load the initial data.
-    if (isset($spec['initial'])) {
-      $this->connection->update($table)
-        ->fields([$field => $spec['initial']])
-        ->execute();
-    }
-
-    // Switch to NOT NULL now.
-    if ($fixnull === TRUE) {
-      // There is no warranty that the old data did not have NULL values, we
-      // need to populate nulls with the default value because this won't be
-      // done by MSSQL by default.
-      if (isset($spec['default'])) {
-        $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
-        $this->connection->queryDirect($sql);
-      }
-      // Now it's time to make this non-nullable.
-      $spec['not null'] = TRUE;
-      $field_sql = $this->createFieldSql($table, $field, $spec, TRUE);
-      $this->connection->queryDirect("ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}");
-    }
-
-    $this->recreateTableKeys($table, $new_keys);
-
-    // Commit.
-    $transaction->commit();
-  }
-
-  /**
    * Compress Primary key Index.
    *
    * Sometimes the size of a table's primary key index needs
@@ -1198,133 +1539,6 @@ EOF
     // Refresh introspection for this table.
     $this->queryColumnInformation($table, TRUE);
 
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function changeField($table, $field, $field_new, $spec, $keys_new = []) {
-    if (!$this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", [
-        '%table' => $table,
-        '%name' => $field,
-      ]));
-    }
-    if (($field != $field_new) && $this->fieldExists($table, $field_new)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", [
-        '%table' => $table,
-        '%name' => $field,
-        '%name_new' => $field_new,
-      ]));
-    }
-    if (isset($keys_new['primary key']) && in_array($field_new, $keys_new['primary key'], TRUE)) {
-      $this->ensureNotNullPrimaryKey($keys_new['primary key'], [$field_new => $spec]);
-    }
-
-    // SQL Server supports transactional DDL, so we can just start a transaction
-    // here and pray for the best.
-
-    /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
-
-    // Prepare the specifications.
-    $spec = $this->processField($spec);
-
-    /*
-     * IMPORTANT NOTE: To maintain database portability, you have to explicitly
-     * recreate all indices and primary keys that are using the changed field.
-     * That means that you have to drop all affected keys and indexes with
-     * db_drop_{primary_key,unique_key,index}() before calling
-     * db_change_field().
-     *
-     * @see https://api.drupal.org/api/drupal/includes!database!database.inc/function/db_change_field/7
-     *
-     * What we are going to do in the SQL Server Driver is a best-effort try to
-     * preserve original keys if they do not conflict with the keys_new
-     * parameter, and if the callee has done it's job (droping constraints/keys)
-     * then they will of course not be recreated.
-     *
-     * Introspect the schema and save the current primary key if the column
-     * we are modifying is part of it. Make sure the schema is FRESH.
-     */
-    $primary_key_fields = $this->introspectPrimaryKeyFields($table);
-    if (in_array($field, $primary_key_fields)) {
-      // Let's drop the PK.
-      $this->cleanUpPrimaryKey($table);
-    }
-
-    // If there is a generated unique key for this field, we will need to
-    // add it back in when we are done.
-    $unique_key = $this->uniqueKeyExists($table, $field);
-
-    // Drop the related objects.
-    $this->dropFieldRelatedObjects($table, $field);
-
-    // Start by renaming the current column.
-    $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
-      ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
-      ':new' => $field . '_old',
-      ':type' => 'COLUMN',
-    ]);
-
-    // If the new column does not allow nulls, we need to
-    // create it first as nullable, then either migrate
-    // data from previous column or populate default values.
-    $fixnull = FALSE;
-    if (!empty($spec['not null'])) {
-      $fixnull = TRUE;
-      $spec['not null'] = FALSE;
-    }
-
-    // Create a new field.
-    $this->addField($table, $field_new, $spec);
-
-    // Migrate the data over.
-    // Explicitly cast the old value to the new value to avoid conversion
-    // errors.
-    $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$spec['sqlsrv_type']})";
-    $this->connection->queryDirect($sql);
-
-    // Switch to NOT NULL now.
-    if ($fixnull === TRUE) {
-      // There is no warranty that the old data did not have NULL values, we
-      // need to populate nulls with the default value because this won't be
-      // done by MSSQL by default.
-      if (!empty($spec['default'])) {
-        $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
-        $sql = "UPDATE {{$table}} SET {$field_new} = {$default_expression} WHERE {$field_new} IS NULL";
-        $this->connection->query_direct($sql);
-      }
-      // Now it's time to make this non-nullable.
-      $spec['not null'] = TRUE;
-      $field_sql = $this->createFieldSql($table, $field_new, $spec, TRUE);
-      $sql = "ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}";
-      $this->connection->queryDirect($sql);
-    }
-    // Recreate the primary key if no new primary key has been sent along with
-    // the change field.
-    if (in_array($field, $primary_key_fields) && (!isset($keys_new['primary keys']) || empty($keys_new['primary keys']))) {
-      // The new primary key needs to have the new column name, and be in the sample order.
-      $keys = array_keys($primary_key_fields);
-      $keys[array_search($field, $keys)] = $field_new;
-      $primary_key_fields = array_combine($keys, $primary_key_fields);
-
-      $keys_new['primary key'] = $primary_key_fields;
-    }
-
-    // Recreate the unique constraint if it existed.
-    if ($unique_key && (!isset($keys_new['unique keys']) || !in_array($field_new, $keys_new['unique keys']))) {
-      $keys_new['unique keys'][$field] = [$field_new];
-    }
-
-    // Drop the old field.
-    $this->dropField($table, $field . '_old');
-
-    // Add the new keys.
-    $this->recreateTableKeys($table, $keys_new);
-
-    // Commit.
-    $transaction->commit();
   }
 
   /**
@@ -1486,25 +1700,6 @@ EOF;
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function dropField($table, $field) {
-    if (!$this->fieldExists($table, $field)) {
-      return FALSE;
-    }
-
-    // Drop the related objects.
-    $this->dropFieldRelatedObjects($table, $field);
-
-    $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
-    
-    // Do we need to:
-    //  add a technical primary key if $field was a primary key
-    //  Remake the primary key if $field was a part of a computed key
-    return TRUE;
-  }
-
-  /**
    * Drop the related objects of a column (indexes, constraints, etc.).
    *
    * @param mixed $table
@@ -1550,90 +1745,6 @@ EOF;
     if (isset($data['columns'][$this->COMPUTED_PK_COLUMN_NAME]['dependencies'][$field])) {
       $this->cleanUpPrimaryKey($table);
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function fieldSetDefault($table, $field, $default) {
-    // phpcs:disable
-    // Error format is necessary for kernel test, but does not meet the coding standard
-    @trigger_error('fieldSetDefault() is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
-    // phpcs:enable
-    if (!$this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot set default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
-    }
-
-    $default = $this->escapeDefaultValue($default);
-
-    // Try to remove any existing default first.
-    try {
-      $this->fieldSetNoDefault($table, $field);
-    }
-    catch (Exception $e) {
-    }
-
-    // Create the new default.
-    $this->connection->query('ALTER TABLE [{' . $table . '}] ADD CONSTRAINT {' . $table . '}_' . $field . '_df DEFAULT ' . $default . ' FOR [' . $field . ']');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function fieldSetNoDefault($table, $field) {
-    // phpcs:disable
-    // Error format is necessary for kernel test, but does not meet the coding standard
-    @trigger_error('fieldSetNoDefault() is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
-    // phpcs:enable
-    if (!$this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot remove default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
-    }
-
-    $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT {' . $table . '}_' . $field . '_df');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addPrimaryKey($table, $fields) {
-    if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add primary key to table %table: table doesn't exist.", ['%table' => $table]));
-    }
-
-    if ($primary_key_name = $this->primaryKeyName($table)) {
-      if ($this->isTechnicalPrimaryKey($primary_key_name)) {
-        // Destroy the existing technical primary key.
-        $this->connection->query_direct('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
-        $this->cleanUpTechnicalPrimaryColumn($table);
-      }
-      else {
-        throw new DatabaseSchemaObjectExistsException(t("Cannot add primary key to table %table: primary key already exists.", ['%table' => $table]));
-      }
-    }
-
-    // The size limit of the primary key depends on the
-    // cohexistance with an XML field.
-    if ($this->tableHasXmlIndex($table)) {
-      $this->createPrimaryKey($table, $fields, 128);
-    }
-    else {
-      $this->createPrimaryKey($table, $fields);
-    }
-
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function dropPrimaryKey($table) {
-    if (!$this->primaryKeyName($table)) {
-      return FALSE;
-    }
-    $this->cleanUpPrimaryKey($table);
-    $this->createTechnicalPrimaryColumn($table);
-    $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$this->TECHNICAL_PK_COLUMN_NAME})");
-    return TRUE;
   }
 
   /**
@@ -1717,56 +1828,6 @@ EOF;
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function addUniqueKey($table, $name, $fields) {
-    if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add unique key %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
-    }
-    if ($this->uniqueKeyExists($table, $name)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot add unique key %name to table %table: unique key already exists.", ['%table' => $table, '%name' => $name]));
-    }
-
-    $this->createTechnicalPrimaryColumn($table);
-
-    // Then, build a expression based on the columns.
-    $column_expression = [];
-    foreach ($fields as $field) {
-      if (is_array($field)) {
-        $column_expression[] = 'SUBSTRING(CAST(' . $field[0] . ' AS varbinary(max)),1,' . $field[1] . ')';
-      }
-      else {
-        $column_expression[] = 'CAST(' . $field . ' AS varbinary(max))';
-      }
-    }
-    $column_expression = implode(' + ', $column_expression);
-
-    // Build a computed column based on the expression that replaces NULL
-    // values with the globally unique identifier generated previously.
-    // This is (very) unlikely to result in a collision with any actual value
-    // in the columns of the unique key.
-    $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$this->TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
-    $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON {{$table}} (__unique_{$name})");
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function dropUniqueKey($table, $name) {
-    if (!$this->uniqueKeyExists($table, $name)) {
-      return FALSE;
-    }
-
-    $this->connection->query("DROP INDEX {$name}_unique ON {{$table}}");
-    $this->connection->query("ALTER TABLE {{$table}} DROP COLUMN __unique_{$name}");
-
-    // Try to clean-up the technical primary key if possible.
-    $this->cleanUpTechnicalPrimaryColumn($table);
-
-    return TRUE;
-  }
-
-  /**
    * Find if an unique key exists.
    *
    * @param mixed $table
@@ -1782,67 +1843,6 @@ EOF;
     return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
       ':table' => $table,
       ':name' => $name . '_unique',
-    ])->fetchField();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addIndex($table, $name, $fields, array $spec = []) {
-    if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
-    }
-    if ($this->indexExists($table, $name)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot add index %name to table %table: index already exists.", ['%table' => $table, '%name' => $name]));
-    }
-
-    $xml_field = NULL;
-    $sql = $this->createIndexSql($table, $name, $fields, $xml_field);
-    if (!empty($xml_field)) {
-      // We can create an XML field, but the current primary key index
-      // size needs to be under 128bytes.
-      $pk_fields = $this->introspectPrimaryKeyFields($table);
-      $size = $this->calculateClusteredIndexRowSizeBytes($table, $pk_fields, TRUE);
-      if ($size > 128) {
-        // Alright the compress the index.
-        $this->compressPrimaryKeyIndex($table, 128);
-      }
-    }
-    $this->connection->query($sql);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function dropIndex($table, $name) {
-    if (!$this->indexExists($table, $name)) {
-      return FALSE;
-    }
-
-    $expand = FALSE;
-    if (($index = $this->tableHasXmlIndex($table)) && $index == ($name . '_idx')) {
-      $expand = TRUE;
-    }
-
-    $this->connection->query('DROP INDEX ' . $name . '_idx ON [{' . $table . '}]');
-
-    // If we just dropped an XML index, we can re-expand the original primary
-    // key index.
-    if ($expand) {
-      $this->compressPrimaryKeyIndex($table);
-    }
-
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function indexExists($table, $name) {
-    $table = $this->connection->prefixTables('{' . $table . '}');
-    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
-      ':table' => $table,
-      ':name' => $name . '_idx',
     ])->fetchField();
   }
 
@@ -1866,8 +1866,6 @@ EOF;
     }
     return FALSE;
   }
-
-  // Region Comment Related Functions (D8 only)
 
   /**
    * Return the SQL statement to create or update a description.
@@ -1954,7 +1952,6 @@ EOF;
     return $comment;
   }
 
-  // Endregion.
 }
 
 /**
