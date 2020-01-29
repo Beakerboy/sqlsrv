@@ -225,6 +225,9 @@ class Schema extends DatabaseSchema {
     // Use already prefixed table name.
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
+    if ($this->findPrimaryKeyColumns($table) !== [] && isset($new_keys['primary key']) && in_array($field, $new_keys['primary key'])) {
+      $this->cleanUpPrimaryKey($table);
+    }
     // If the field is declared NOT NULL, we have to first create it NULL insert
     // the initial data (or populate default values) and then switch to NOT
     // NULL.
@@ -278,15 +281,18 @@ class Schema extends DatabaseSchema {
     if (!$this->fieldExists($table, $field)) {
       return FALSE;
     }
+    $primary_key_fields = $this->findPrimaryKeyColumns($table);
 
+    if (in_array($field, $primary_key_fields)) {
+      // Let's drop the PK.
+      $this->cleanUpPrimaryKey($table);
+      $this->createTechnicalPrimaryColumn($table);
+    }
+    
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
     $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
-    
-    // Do we need to:
-    //  add a technical primary key if $field was a primary key
-    //  Remake the primary key if $field was a part of a computed key
     return TRUE;
   }
 
@@ -512,18 +518,13 @@ class Schema extends DatabaseSchema {
       throw new SchemaObjectDoesNotExistException("The table $table doesn't exist.");
     }
     $index_schema = [
-      'primary key' => [],
+      'primary key' => $this->findPrimaryKeyColumns($table),
       'unique keys' => [],
       'indexes' => [],
     ];
     $column_information = $this->queryColumnInformation($table);
     foreach($column_information['indexes'] as $key => $values) {
-      if ($values['is_primary_key'] == 1) {
-        foreach ($values['columns'] as $num => $stats) {
-          $index_schema['primary key'][] = $stats['name'];
-        }
-      }
-      elseif ($values['data_space_id'] == 1 && $values['is_unique'] == 0) {
+      if ($values['is_primary_key'] !== 1 && $values['data_space_id'] == 1 && $values['is_unique'] == 0) {
         foreach ($values['columns'] as $num => $stats) {
           $index_schema['indexes'][substr($key, 0, -4)][] = $stats['name'];
         }
