@@ -252,7 +252,7 @@ class Schema extends DatabaseSchema {
         ->execute();
     }
 
-    if ((isset($spec['initial_from_field'])) {
+    if (isset($spec['initial_from_field'])) {
         $this->connection->update($table)
         ->expression($field, $spec['initial_from_field'])
         ->execute();
