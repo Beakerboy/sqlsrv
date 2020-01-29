@@ -1304,9 +1304,11 @@ EOF
     // Recreate the primary key if no new primary key has been sent along with
     // the change field.
     if (in_array($field, $primary_key_fields) && (!isset($keys_new['primary keys']) || empty($keys_new['primary keys']))) {
-      // The new primary key needs to have the new column name.
-      unset($primary_key_fields[$field]);
-      $primary_key_fields[$field_new] = $field_new;
+      // The new primary key needs to have the new column name, and be in the sample order.
+      $keys = array_keys($primary_key_fields);
+      $keys[array_search($field, $keys)] = $field_new;
+      $primary_key_fields = array_combine($keys, $primary_key_fields);
+
       $keys_new['primary key'] = $primary_key_fields;
     }
 
