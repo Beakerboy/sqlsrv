@@ -278,7 +278,13 @@ class Schema extends DatabaseSchema {
     if (!$this->fieldExists($table, $field)) {
       return FALSE;
     }
+    $primary_key_fields = $this->findPrimaryKeyColumns($table);
 
+    if (in_array($field, $primary_key_fields)) {
+      // Let's drop the PK.
+      $this->cleanUpPrimaryKey($table);
+    }
+    
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
