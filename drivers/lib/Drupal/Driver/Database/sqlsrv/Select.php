@@ -458,15 +458,15 @@ class Select extends QuerySelect {
   }
 
   /**
-   * Create a count query.
+   * prepare a count query.
    *
-   * This is like the default countQuery, but does not optimize field (or
+   * This is like the default prepareCountQuery, but does not optimize field (or
    * expressions) that are being used in conditions. (Why not?)
    *
    * @return mixed
-   *   A query.
+   *   A Select object.
    */
-  public function countQuery() {
+  public function prepareCountQuery() {
     // Create our new query object that we will mutate into a count query.
     $count = clone($this);
 
@@ -518,11 +518,8 @@ class Select extends QuerySelect {
       // fields.
       $count->distinct = FALSE;
     }
-
-    $query = $this->connection->select($count);
-    $query->addExpression('COUNT(*)');
-
-    return $query;
+    
+    return $count;
   }
 
 }
