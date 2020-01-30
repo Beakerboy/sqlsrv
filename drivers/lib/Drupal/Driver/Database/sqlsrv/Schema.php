@@ -1339,7 +1339,7 @@ EOF
       'nvarchar',
     ]);
 
-    $sql = $this->connection->quoteIdentifier($name) . ' ';
+    $sql = $this->connection->escapeField($name) . ' ';
 
     if (!empty($spec['length']) && $lengthable) {
       $sql .= $sqlsrv_type_native . '(' . $spec['length'] . ')';
@@ -1382,7 +1382,7 @@ EOF
         $sql .= ' IDENTITY';
       }
       if (!empty($spec['unsigned'])) {
-        $sql .= ' CHECK (' . $this->connection->quoteIdentifier($name) . ' >= 0)';
+        $sql .= ' CHECK (' . $this->connection->escapeField($name) . ' >= 0)';
       }
     }
     return $sql;
