@@ -87,7 +87,6 @@ class Update extends QueryUpdate {
         $data['expression']->compile($this->connection, $this);
         $data['expression'] = ' (' . $data['expression'] . ')';
       }
-      // Why are we using quoteIdentifier() instead of escapeField()?
       $update_fields[] = $this->connection->escapeField($field) . '=' . $data['expression'];
       unset($fields[$field]);
     }
