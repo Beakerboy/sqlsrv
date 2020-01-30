@@ -55,10 +55,7 @@ install:
   - wget https://www.drupal.org/files/issues/2020-01-27/drupal-3108287-Remove_or_mark_as_core_only_testPrimaryKeyUpdate-3.patch
   - git apply drupal-3108025-testNumericExpressionSubstitution-6.patch
   - git apply drupal-3108287-Remove_or_mark_as_core_only_testPrimaryKeyUpdate-3.patch
-  - cd drivers/lib/Drupal/Driver/Database/sqlsrv
-  - rm Select.php
-  - mv Select.php.new Select.php
-  - cd $TRAVIS_BUILD_DIR/../drupal-project
+  - cd ..
 script:
   - pcov clobber
   - cd web
