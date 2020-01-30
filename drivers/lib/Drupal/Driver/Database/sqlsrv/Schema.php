@@ -193,11 +193,11 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function addField($table, $field, $spec, $new_keys = []) {
-    if (!$this->tableExists($table, TRUE)) {
-      throw new SchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", ['%field' => $field, '%table' => $table]));
+    if (!$this->tableExists($table)) {
+      throw new SchemaObjectDoesNotExistException(t("Cannot add field @table.@field: table doesn't exist.", ['@field' => $field, '@table' => $table]));
     }
     if ($this->fieldExists($table, $field)) {
-      throw new SchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", ['%field' => $field, '%table' => $table]));
+      throw new SchemaObjectExistsException(t("Cannot add field @table.@field: field already exists.", ['@field' => $field, '@table' => $table]));
     }
 
     // Fields that are part of a PRIMARY KEY must be added as NOT NULL.
