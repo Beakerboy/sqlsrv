@@ -88,13 +88,13 @@ class Update extends QueryUpdate {
         $data['expression'] = ' (' . $data['expression'] . ')';
       }
       // Why are we using quoteIdentifier() instead of escapeField()?
-      $update_fields[] = $this->connection->quoteIdentifier($field) . '=' . $data['expression'];
+      $update_fields[] = $this->connection->escapeField($field) . '=' . $data['expression'];
       unset($fields[$field]);
     }
 
     $max_placeholder = 0;
     foreach ($fields as $field => $value) {
-      $update_fields[] = $this->connection->quoteIdentifier($field) . '=:db_update_placeholder_' . ($max_placeholder++);
+      $update_fields[] = $this->connection->escapeField($field) . '=:db_update_placeholder_' . ($max_placeholder++);
     }
 
     $query = $prefix . 'UPDATE {' . $this->connection->escapeTable($this->table) . '} SET ' . implode(', ', $update_fields);
