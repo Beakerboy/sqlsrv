@@ -4,7 +4,7 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 use Drupal\Core\Database\InvalidQueryException;
 use Drupal\Core\Database\Database;
 
-use Drupal\Core\Database\DatabaseTestBase;
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Tests the Select query builder.
