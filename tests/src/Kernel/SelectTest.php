@@ -22,6 +22,7 @@ class SelectTest extends DatabaseTestBase {
     // Normally it would throw an exception but we are suppressing
     // it with the throw_exception option.
     $options['throw_exception'] = FALSE;
+    $options['special_test'] = TRUE;
     $this->connection->select('some_table_that_doesnt_exist', 't', $options)
       ->fields('t')
       ->countQuery()
