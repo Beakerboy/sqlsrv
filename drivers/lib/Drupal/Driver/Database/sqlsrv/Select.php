@@ -30,11 +30,11 @@ class Select extends QuerySelect {
 
   public function execute() {
     $options = $this->queryOptions;
-      if ($options['special_test']) {
-       fwrite(STDERR, print_r($options, TRUE));
-        fwrite(STDERR, $options['throw_exception']?'true':'false');
+    if ($options['special_test']) {
+      fwrite(STDERR, print_r($options, TRUE));
+      fwrite(STDERR, $options['throw_exception']?'true':'false');
     }
-    return parent::execute()
+    return parent::execute();
   }
 
   /**
