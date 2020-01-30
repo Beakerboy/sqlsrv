@@ -19,8 +19,8 @@ class Select extends QuerySelect {
    */
   public function __construct($table, $alias, Connection $connection, $options = []) {
     if ($table == 'some_table_that_doesnt_exist') {
-      echo print_r($options, TRUE);
-      echo $options['throw_exception']?'true':'false';
+      fwrite(STDOUT, print_r($options, TRUE));
+      fwrite(STDOUT, $options['throw_exception']?'true':'false');
     }
     parent::__construct($table, $alias, $connection, $options);
     $conjunction = isset($options['conjunction']) ? $options['conjunction'] : 'AND';
@@ -30,7 +30,7 @@ class Select extends QuerySelect {
 
   public function execute() {
     $options = $this->queryOptions;
-    if ($options['special_test']) {
+    if (isset($options['special_test'])) {
       fwrite(STDERR, print_r($options, TRUE));
       fwrite(STDERR, $options['throw_exception']?'true':'false');
     }
