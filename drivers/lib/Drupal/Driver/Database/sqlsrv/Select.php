@@ -3,8 +3,8 @@
 namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Connection as DatabaseConnection;
-use Drupal\Core\Database\Query\PlaceholderInterface as DatabasePlaceholderInterface;
-use Drupal\Core\Database\Query\SelectInterface as DatabaseSelectInterface;
+use Drupal\Core\Database\Query\PlaceholderInterface;
+use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Database\Query\Select as QuerySelect;
 use Drupal\Core\Database\Query\Condition as DatabaseCondition;
 
@@ -62,12 +62,9 @@ class Select extends QuerySelect {
   }
 
   /**
-   * Override for SelectQuery::preExecute().
-   *
-   * Ensure that all the fields in ORDER BY and GROUP BY are part of the
-   * main query.
+   * {@inheritdoc}
    */
-  public function preExecute(DatabaseSelectInterface $query = NULL) {
+  public function preExecute(SelectInterface $query = NULL) {
     // If no query object is passed in, use $this.
     if (!isset($query)) {
       $query = $this;
@@ -143,11 +140,11 @@ class Select extends QuerySelect {
   }
 
   /**
-   * Override for SelectQuery::compile().
+   * {@inheritdoc}
    *
-   * Detect when this query is prepared for use in a sub-query.
+   * Why this is needed?
    */
-  public function compile(DatabaseConnection $connection, DatabasePlaceholderInterface $queryPlaceholder) {
+  public function compile(DatabaseConnection $connection, PlaceholderInterface $queryPlaceholder) {
     $this->inSubQuery = $queryPlaceholder != $this;
     return parent::compile($connection, $queryPlaceholder);
   }
@@ -334,7 +331,7 @@ class Select extends QuerySelect {
 
       // If the table is a subquery, compile it and integrate it into this
       // query.
-      if ($table['table'] instanceof DatabaseSelectInterface) {
+      if ($table['table'] instanceof SelectInterface) {
         // Run preparation steps on this sub-query before converting to string.
         $subquery = $table['table'];
         $subquery->preExecute();
@@ -458,15 +455,15 @@ class Select extends QuerySelect {
   }
 
   /**
-   * Create a count query.
+   * prepare a count query.
    *
-   * This is like the default countQuery, but does not optimize field (or
+   * This is like the default prepareCountQuery, but does not optimize field (or
    * expressions) that are being used in conditions. (Why not?)
    *
    * @return mixed
-   *   A query.
+   *   A Select object.
    */
-  public function countQuery() {
+  protected function prepareCountQuery() {
     // Create our new query object that we will mutate into a count query.
     $count = clone($this);
 
@@ -518,11 +515,8 @@ class Select extends QuerySelect {
       // fields.
       $count->distinct = FALSE;
     }
-
-    $query = $this->connection->select($count);
-    $query->addExpression('COUNT(*)');
-
-    return $query;
+    
+    return $count;
   }
 
 }
