@@ -3,8 +3,8 @@
 namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Connection as DatabaseConnection;
-use Drupal\Core\Database\Query\PlaceholderInterface as DatabasePlaceholderInterface;
-use Drupal\Core\Database\Query\SelectInterface as DatabaseSelectInterface;
+use Drupal\Core\Database\Query\PlaceholderInterface;
+use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Database\Query\Select as QuerySelect;
 use Drupal\Core\Database\Query\Condition as DatabaseCondition;
 
@@ -62,12 +62,9 @@ class Select extends QuerySelect {
   }
 
   /**
-   * Override for SelectQuery::preExecute().
-   *
-   * Ensure that all the fields in ORDER BY and GROUP BY are part of the
-   * main query.
+   * {@inheritdoc}
    */
-  public function preExecute(DatabaseSelectInterface $query = NULL) {
+  public function preExecute(SelectInterface $query = NULL) {
     // If no query object is passed in, use $this.
     if (!isset($query)) {
       $query = $this;
@@ -143,11 +140,11 @@ class Select extends QuerySelect {
   }
 
   /**
-   * Override for SelectQuery::compile().
+   * {@inheritdoc}
    *
-   * Detect when this query is prepared for use in a sub-query.
+   * Why this is needed?
    */
-  public function compile(DatabaseConnection $connection, DatabasePlaceholderInterface $queryPlaceholder) {
+  public function compile(DatabaseConnection $connection, PlaceholderInterface $queryPlaceholder) {
     $this->inSubQuery = $queryPlaceholder != $this;
     return parent::compile($connection, $queryPlaceholder);
   }
@@ -334,7 +331,7 @@ class Select extends QuerySelect {
 
       // If the table is a subquery, compile it and integrate it into this
       // query.
-      if ($table['table'] instanceof DatabaseSelectInterface) {
+      if ($table['table'] instanceof SelectInterface) {
         // Run preparation steps on this sub-query before converting to string.
         $subquery = $table['table'];
         $subquery->preExecute();
