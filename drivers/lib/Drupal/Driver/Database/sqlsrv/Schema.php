@@ -24,13 +24,6 @@ use PDOException as PDOException;
 class Schema extends DatabaseSchema {
 
   /**
-   * Connection.
-   *
-   * @var Connection
-   */
-  protected $connection;
-
-  /**
    * Default schema for SQL Server databases.
    *
    * @var string
