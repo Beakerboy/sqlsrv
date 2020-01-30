@@ -20,6 +20,7 @@ class Select extends QuerySelect {
   public function __construct($table, $alias, Connection $connection, $options = []) {
     if ($table == 'some_table_that_doesnt_exist') {
       fwrite(STDERR, print_r($options, TRUE));
+      fwrite(STDERR, $options['throw_exception']?'true':'false');
     }
     parent::__construct($table, $alias, $connection, $options);
     $conjunction = isset($options['conjunction']) ? $options['conjunction'] : 'AND';
