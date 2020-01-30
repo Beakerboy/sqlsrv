@@ -532,7 +532,7 @@ class Select extends QuerySelect {
       $count->distinct = FALSE;
     }
 
-    $query = $this->connection->select($count);
+    $query = $this->connection->select($count, $this->queryOptions);
     $query->addExpression('COUNT(*)');
 
     return $query;
