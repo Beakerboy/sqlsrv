@@ -28,6 +28,15 @@ class Select extends QuerySelect {
     $this->having = new Condition($conjunction);
   }
 
+  public function execute() {
+    $options = $this->queryOptions;
+      if ($options['special_test']) {
+       fwrite(STDERR, print_r($options, TRUE));
+        fwrite(STDERR, $options['throw_exception']?'true':'false');
+    }
+    return parent::execute()
+  }
+
   /**
    * Adds an expression to the list of "fields" to be SELECTed.
    *
