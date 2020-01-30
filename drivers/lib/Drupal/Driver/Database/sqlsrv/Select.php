@@ -18,6 +18,7 @@ class Select extends QuerySelect {
    * {@inheritdoc}
    */
   public function __construct($table, $alias, Connection $connection, $options = []) {
+    fwrite(STDERR, print_r($options, TRUE));
     parent::__construct($table, $alias, $connection, $options);
     $conjunction = isset($options['conjunction']) ? $options['conjunction'] : 'AND';
     $this->condition = new Condition($conjunction);
