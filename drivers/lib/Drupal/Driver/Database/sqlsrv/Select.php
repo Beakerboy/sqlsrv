@@ -466,7 +466,7 @@ class Select extends QuerySelect {
    * @return mixed
    *   A Select object.
    */
-  public function prepareCountQuery() {
+  protected function prepareCountQuery() {
     // Create our new query object that we will mutate into a count query.
     $count = clone($this);
 
