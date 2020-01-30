@@ -107,6 +107,86 @@ class Connection extends DatabaseConnection {
   /Six';
 
   /**
+   * The list of SQLServer reserved key words.
+   *
+   */
+  private $reservedKeyWords = [
+    'action',
+    'admin',
+    'alias',
+    'any',
+    'are',
+    'array',
+    'at',
+    'begin',
+    'boolean',
+    'class',
+    'commit',
+    'contains',
+    'current',
+    'data',
+    'date',
+    'day',
+    'depth',
+    'domain',
+    'external',
+    'file',
+    'full',
+    'function',
+    'get',
+    'go',
+    'host',
+    'input',
+    'language',
+    'last',
+    'less',
+    'local',
+    'map',
+    'min',
+    'module',
+    'new',
+    'no',
+    'object',
+    'old',
+    'open',
+    'operation',
+    'parameter',
+    'parameters',
+    'path',
+    'plan',
+    'prefix',
+    'proc',
+    'public',
+    'ref',
+    'result',
+    'returns',
+    'role',
+    'row',
+    'rule',
+    'save',
+    'search',
+    'second',
+    'section',
+    'session',
+    'size',
+    'state',
+    'statistics',
+    'temporary',
+    'than',
+    'time',
+    'timestamp',
+    'tran',
+    'translate',
+    'translation',
+    'trim',
+    'user',
+    'value',
+    'variable',
+    'view',
+    'without'
+  ];
+
+  /**
    * {@inheritdoc}
    */
   public function queryRange($query, $from, $count, array $args = [], array $options = []) {
@@ -494,30 +574,33 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * {@inheritdoc}
+   * Quotes an identifier if it matches a SQLServer reserved keyword.
+   *
+   * @param string $identifier
+   *   The field to check.
+   *
+   * @return string
+   *   The identifier, quoted if it matches a SQLServer reserved keyword.
    */
-  public function quoteIdentifier($identifier) {
-    return '[' . $identifier . ']';
+
+  private function quoteIdentifier($identifier) {
+    if (strpos($identifier, '.') !== FALSE) {
+      list($table, $identifier) = explode('.', $identifier, 2);
+    }
+    if (in_array(strtolower($identifier), $this->reservedKeyWords, TRUE)) {
+      // Quote the string for SQLServer reserved keywords.
+      $identifier = '[' . $identifier . ']';
+    }
+    return isset($table) ? $table . '.' . $identifier : $identifier;
+
   }
 
   /**
    * {@inheritdoc}
    */
   public function escapeField($field) {
-    // TODO: Not really clear if using a cache here is really useful as the
-    // uncached implementation is fast out of the box anyways.
-    // Needs profiling.
-    if ($cache = $this->cache->get($field, 'schema_escapeField')) {
-      return $cache->data;
-    }
-    if (strlen($field) > 0) {
-      $result = implode('.', array_map([$this, 'quoteIdentifier'], explode('.', preg_replace('/[^A-Za-z0-9_.]+/', '', $field))));
-    }
-    else {
-      $result = '';
-    }
-    $this->cache->set($field, $result, 'schema_escapeField');
-    return $result;
+    $field = parent::escapeField($field);
+    return $this->quoteIdentifier($field);
   }
 
   /**
