@@ -216,6 +216,12 @@ class Schema extends DatabaseSchema {
       throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", ['%field' => $field, '%table' => $table]));
     }
 
+    // Fields that are part of a PRIMARY KEY must be added as NOT NULL.
+    $is_primary_key = isset($keys_new['primary key']) && in_array($field, $keys_new['primary key'], TRUE);
+    if ($is_primary_key) {
+      $this->ensureNotNullPrimaryKey($keys_new['primary key'], [$field => $spec]);
+    }
+
     /** @var Transaction $transaction */
     $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
 
