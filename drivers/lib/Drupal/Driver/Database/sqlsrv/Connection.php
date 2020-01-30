@@ -233,7 +233,7 @@ class Connection extends DatabaseConnection {
     $this->transactionalDDLSupport = $this->transactionSupport;
 
     // Store connection options for future reference.
-    // $this->connectionOptions = &$connection_options;
+    $this->connectionOptions = $connection_options;
   }
 
   /**
