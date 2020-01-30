@@ -192,7 +192,7 @@ class Schema extends DatabaseSchema {
   /**
    * {@inheritdoc}
    */
-  public function addField($table, $field, $spec, $new_keys = []) {
+  public function addField($table, $field, $spec, $keys_new = []) {
     if (!$this->tableExists($table)) {
       throw new SchemaObjectDoesNotExistException(t("Cannot add field @table.@field: table doesn't exist.", ['@field' => $field, '@table' => $table]));
     }
@@ -215,7 +215,7 @@ class Schema extends DatabaseSchema {
     // Use already prefixed table name.
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
-    if ($this->findPrimaryKeyColumns($table) !== [] && isset($new_keys['primary key']) && in_array($field, $new_keys['primary key'])) {
+    if ($this->findPrimaryKeyColumns($table) !== [] && isset($keys_new['primary key']) && in_array($field, $keys_new['primary key'])) {
       $this->cleanUpPrimaryKey($table);
     }
     // If the field is declared NOT NULL, we have to first create it NULL insert
@@ -272,7 +272,7 @@ class Schema extends DatabaseSchema {
       $this->connection->queryDirect("ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}");
     }
 
-    $this->recreateTableKeys($table, $new_keys);
+    $this->recreateTableKeys($table, $keys_new);
 
     // Commit.
     $transaction->commit();
