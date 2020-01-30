@@ -61,8 +61,8 @@ install:
 script:
   - pcov clobber
   - cd web
-  - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=database,sqlsrv --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
-  #- phpcs --standard=Drupal  modules/contrib/sqlsrv
+  - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=entity,database,sqlsrv --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
+  #- phpcs --standard=Drupal modules/contrib/sqlsrv
 after_success:
   - cd $TRAVIS_BUILD_DIR
   #- cat ./build/logs/clover.xml
