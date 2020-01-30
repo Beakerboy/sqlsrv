@@ -895,9 +895,10 @@ class Schema extends DatabaseSchema {
     // If the spec had a primary key, set it now after all fields have been
     // created. We are creating the keys after creating the table so that
     // createPrimaryKey is able to introspect column definition from the
-    // database to calculate index sizes This adds quite quite some overhead,
+    // database to calculate index sizes. This adds quite quite some overhead,
     // but is only noticeable during table creation.
     if (!empty($table['primary key']) && is_array($table['primary key'])) {
+      $this->ensureNotNullPrimaryKey($table['primary key'], $table['fields']);
       $this->createPrimaryKey($name, $table['primary key']);
     }
     // Otherwise use a technical primary key.
