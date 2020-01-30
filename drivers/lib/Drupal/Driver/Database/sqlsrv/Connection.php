@@ -611,6 +611,8 @@ class Connection extends DatabaseConnection {
       }
     }
     catch (\PDOException $e) {
+      fwrite(STDERR, print_r($options, TRUE));
+      fwrite(STDERR, $options['throw_exception']?'true':'false');
       // Most database drivers will return NULL here, but some of them
       // (e.g. the SQLite driver) may need to re-run the query, so the return
       // value will be the same as for static::query().
