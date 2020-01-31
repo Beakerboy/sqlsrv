@@ -626,10 +626,11 @@ class Schema extends DatabaseSchema {
     // Create a new field.
     $this->addField($table, $field_new, $spec);
 
+    $new_data_type = $this->createDataType($spec);
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion
     // errors.
-    $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$spec['sqlsrv_type']})";
+    $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$new_data_type})";
     $this->connection->queryDirect($sql);
 
     // Switch to NOT NULL now.
@@ -1312,48 +1313,9 @@ EOF
     // Use a prefixed table.
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
-    $sqlsrv_type = $spec['sqlsrv_type'];
-    $sqlsrv_type_native = $spec['sqlsrv_type_native'];
-
-    $is_text = in_array($sqlsrv_type_native, [
-      'char',
-      'varchar',
-      'text',
-      'nchar',
-      'nvarchar',
-      'ntext',
-    ]);
-    $lengthable = in_array($sqlsrv_type_native, [
-      'char',
-      'varchar',
-      'nchar',
-      'nvarchar',
-    ]);
-
     $sql = $this->connection->quoteIdentifier($name) . ' ';
-
-    if (!empty($spec['length']) && $lengthable) {
-      $sql .= $sqlsrv_type_native . '(' . $spec['length'] . ')';
-    }
-    elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
-      // Maximum precision for SQL Server 2008 orn greater is 38.
-      // For previous versions it's 28.
-      if ($spec['precision'] > 38) {
-        // Logs an error.
-        \Drupal::logger('sqlsrv')->warning("Field '@field' in table '@table' has had it's precision dropped from @precision to 38",
-                [
-                  '@field' => $name,
-                  '@table' => $table,
-                  '@precision' => $spec['precision'],
-                ]
-                );
-        $spec['precision'] = 38;
-      }
-      $sql .= $sqlsrv_type_native . '(' . $spec['precision'] . ', ' . $spec['scale'] . ')';
-    }
-    else {
-      $sql .= $sqlsrv_type;
-    }
+    
+    $sql .= $this->createDataType($spec);
 
     // When binary is true, case sensitivity is requested.
     if ($is_text === TRUE && isset($spec['binary']) && $spec['binary'] === TRUE) {
@@ -1377,6 +1339,52 @@ EOF
       }
     }
     return $sql;
+  }
+
+  /**
+   * Create the data type from a field specification
+   */
+  protected function createDataType($spec) {
+    $sqlsrv_type = $spec['sqlsrv_type'];
+    $sqlsrv_type_native = $spec['sqlsrv_type_native'];
+
+    $is_text = in_array($sqlsrv_type_native, [
+      'char',
+      'varchar',
+      'text',
+      'nchar',
+      'nvarchar',
+      'ntext',
+    ]);
+    $lengthable = in_array($sqlsrv_type_native, [
+      'char',
+      'varchar',
+      'nchar',
+      'nvarchar',
+    ]);
+
+    if (!empty($spec['length']) && $lengthable) {
+      return $sqlsrv_type_native . '(' . $spec['length'] . ')';
+    }
+    elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
+      // Maximum precision for SQL Server 2008 or greater is 38.
+      // For previous versions it's 28.
+      if ($spec['precision'] > 38) {
+        // Logs an error.
+        \Drupal::logger('sqlsrv')->warning("Field '@field' in table '@table' has had it's precision dropped from @precision to 38",
+                [
+                  '@field' => $name,
+                  '@table' => $table,
+                  '@precision' => $spec['precision'],
+                ]
+                );
+        $spec['precision'] = 38;
+      }
+      return $sqlsrv_type_native . '(' . $spec['precision'] . ', ' . $spec['scale'] . ')';
+    }
+    else {
+      return $sqlsrv_type;
+    }
   }
 
   /**
@@ -1489,9 +1497,7 @@ EOF
    *   A field description array, as specified in the schema documentation.
    */
   protected function processField($field) {
-    if (!isset($field['size'])) {
-      $field['size'] = 'normal';
-    }
+    $field['size'] = $field['size'] ?: 'normal';
 
     // Set the correct database-engine specific datatype.
     if (!isset($field['sqlsrv_type'])) {
@@ -1499,9 +1505,7 @@ EOF
       $field['sqlsrv_type'] = $map[$field['type'] . ':' . $field['size']];
     }
 
-    if (isset($field['sqlsrv_type'])) {
-      $field['sqlsrv_type_native'] = Utils::GetMSSQLType($field['sqlsrv_type']);
-    }
+    $field['sqlsrv_type_native'] = Utils::GetMSSQLType($field['sqlsrv_type']);
 
     if ($field['type'] == 'serial') {
       $field['identity'] = TRUE;
