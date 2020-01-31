@@ -626,7 +626,7 @@ class Schema extends DatabaseSchema {
     // Create a new field.
     $this->addField($table, $field_new, $spec);
 
-    $new_data_type = $this->createDataType($spec);
+    $new_data_type = $this->createDataType($table, $field_new, $spec);
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion
     // errors.
@@ -1315,7 +1315,7 @@ EOF
 
     $sql = $this->connection->quoteIdentifier($name) . ' ';
     
-    $sql .= $this->createDataType($spec);
+    $sql .= $this->createDataType($table, $name, $spec);
 
     $sqlsrv_type = $spec['sqlsrv_type'];
     $sqlsrv_type_native = $spec['sqlsrv_type_native'];
@@ -1355,7 +1355,7 @@ EOF
   /**
    * Create the data type from a field specification
    */
-  protected function createDataType($spec) {
+  protected function createDataType($table, $name, $spec) {
     $sqlsrv_type = $spec['sqlsrv_type'];
     $sqlsrv_type_native = $spec['sqlsrv_type_native'];
 
