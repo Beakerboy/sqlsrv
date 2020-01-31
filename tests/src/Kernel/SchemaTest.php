@@ -109,8 +109,16 @@ use SchemaIntrospectionTestTrait;
         ->insert($table_name)
         ->fields(['test_field'], [$test_data])
         ->execute();
+   
+      $field_value = $this->connection
+        ->select($table_name)
+        ->fields($table_name, ['test_field'])
+        ->condition('serial_column', $id)
+        ->execute()
+        ->fetchField();
+      
+      $this->assertIdentical($field_value, $test_data, "ID: $id. Field: $field_value. Test: $test_data");
     }
-
     // Change the field.
     $this->schema->changeField($table_name, 'test_field', 'test_field', $new_spec);
 
