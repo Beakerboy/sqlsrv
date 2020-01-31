@@ -1317,6 +1317,14 @@ EOF
     
     $sql .= $this->createDataType($spec);
 
+    $is_text = in_array($sqlsrv_type_native, [
+      'char',
+      'varchar',
+      'text',
+      'nchar',
+      'nvarchar',
+      'ntext',
+    ]);
     // When binary is true, case sensitivity is requested.
     if ($is_text === TRUE && isset($spec['binary']) && $spec['binary'] === TRUE) {
       $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
@@ -1348,14 +1356,6 @@ EOF
     $sqlsrv_type = $spec['sqlsrv_type'];
     $sqlsrv_type_native = $spec['sqlsrv_type_native'];
 
-    $is_text = in_array($sqlsrv_type_native, [
-      'char',
-      'varchar',
-      'text',
-      'nchar',
-      'nvarchar',
-      'ntext',
-    ]);
     $lengthable = in_array($sqlsrv_type_native, [
       'char',
       'varchar',
