@@ -1317,6 +1317,9 @@ EOF
     
     $sql .= $this->createDataType($spec);
 
+    $sqlsrv_type = $spec['sqlsrv_type'];
+    $sqlsrv_type_native = $spec['sqlsrv_type_native'];
+    
     $is_text = in_array($sqlsrv_type_native, [
       'char',
       'varchar',
