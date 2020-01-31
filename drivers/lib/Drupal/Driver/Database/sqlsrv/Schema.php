@@ -1497,7 +1497,7 @@ EOF
    *   A field description array, as specified in the schema documentation.
    */
   protected function processField($field) {
-    $field['size'] = $field['size'] ?: 'normal';
+    $field['size'] = $field['size'] ?? 'normal';
 
     // Set the correct database-engine specific datatype.
     if (!isset($field['sqlsrv_type'])) {
