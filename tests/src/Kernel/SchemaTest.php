@@ -121,7 +121,7 @@ use SchemaIntrospectionTestTrait;
         ->condition('serial_column', $id)
         ->execute()
         ->fetchField();
-      $this->assertIdentical($field_value, $test_data);
+      $this->assertIdentical($field_value, $test_data, "ID: $id. Field: $field_value. Test: $test_data");
     }
 
     // Check the field was changed.
