@@ -2,25 +2,12 @@
 
 namespace Drupal\Driver\Database\sqlsrv;
 
-use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Database\Statement as DatabaseStatement;
-
-use PDO as PDO;
-use PDOException as PDOException;
-use PDOStatement as PDOStatement;
 
 /**
  * SQL Server implementation of \Drupal\Core\Database\Statement.
  */
-class Statement extends DatabaseStatement implements StatementInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function __construct(Connection $dbh) {
-    $this->allowRowCount = TRUE;
-    parent::__construct($dbh);
-  }
+class Statement extends DatabaseStatement {
 
   /**
    * Flag to tell if statement should be run insecure.
@@ -47,7 +34,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
         // Default to an object. Note: db fields will be added to the object
         // before the constructor is run. If you need to assign fields after
         // the constructor is run, see http://drupal.org/node/315092.
-        $this->setFetchMode(PDO::FETCH_CLASS, $options['fetch']);
+        $this->setFetchMode(\PDO::FETCH_CLASS, $options['fetch']);
       }
       else {
         $this->setFetchMode($options['fetch']);
@@ -66,7 +53,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
 
     // Execute the query. Bypass parent override
     // and directly call PDOStatement implementation.
-    $return = PDOStatement::execute($args);
+    $return = \PDOStatement::execute($args);
 
     if (!$return) {
       $this->throwPDOException($statement);
@@ -84,7 +71,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
       switch ($type) {
         case 'varbinary':
           $null[$i] = NULL;
-          $this->bindColumn($i + 1, $null[$i], PDO::PARAM_LOB, 0, PDO::SQLSRV_ENCODING_BINARY);
+          $this->bindColumn($i + 1, $null[$i], \PDO::PARAM_LOB, 0, \PDO::SQLSRV_ENCODING_BINARY);
           break;
 
         case 'int':
@@ -92,13 +79,13 @@ class Statement extends DatabaseStatement implements StatementInterface {
         case 'smallint':
         case 'tinyint':
           $null[$i] = NULL;
-          $this->bindColumn($i + 1, $null[$i], PDO::PARAM_INT);
+          $this->bindColumn($i + 1, $null[$i], \PDO::PARAM_INT);
           break;
 
         case 'nvarchar':
         case 'varchar':
           $null[$i] = NULL;
-          $this->bindColumn($i + 1, $null[$i], PDO::PARAM_STR, 0, PDO::SQLSRV_ENCODING_UTF8);
+          $this->bindColumn($i + 1, $null[$i], \PDO::PARAM_STR, 0, \PDO::SQLSRV_ENCODING_UTF8);
           break;
       }
     }
@@ -140,7 +127,7 @@ class Statement extends DatabaseStatement implements StatementInterface {
     // and statement error info are valid.
     // We rebuild a message formatted in the same way as PDO.
     $error_info = ($error_info_connection === $null_error) ? $error_info_statement : $error_info_connection;
-    $exception = new PDOException("SQLSTATE[" . $error_info[0] . "]: General error " . $error_info[1] . ": " . $error_info[2]);
+    $exception = new \PDOException("SQLSTATE[" . $error_info[0] . "]: General error " . $error_info[1] . ": " . $error_info[2]);
     $exception->errorInfo = $error_info;
     unset($statement);
     throw $exception;
@@ -163,12 +150,12 @@ class Statement extends DatabaseStatement implements StatementInterface {
     // If we are asked for the default behaviour, rely
     // on the PDO as being faster. The result set needs to exactly be 2 columns.
     if ($key_index == 0 && $value_index == 1 && $this->columnCount() == 2) {
-      $this->setFetchMode(PDO::FETCH_KEY_PAIR);
+      $this->setFetchMode(\PDO::FETCH_KEY_PAIR);
       return $this->fetchAll();
     }
     // We need to do this manually.
     $return = [];
-    $this->setFetchMode(PDO::FETCH_NUM);
+    $this->setFetchMode(\PDO::FETCH_NUM);
     foreach ($this as $record) {
       $return[$record[$key_index]] = $record[$value_index];
     }
