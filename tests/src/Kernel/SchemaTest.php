@@ -72,7 +72,7 @@ use SchemaIntrospectionTestTrait;
         // Note if the serialized data contained an object this would fail on
         // Postgres.
         // @see https://www.drupal.org/node/1031122
-        $this->assertFieldChange($old_spec, $new_spec, serialize(['string' => "This \n has \\\\ some backslash \"*string action.\\n"]));
+        $this->assertFieldChange($old_spec, $new_spec, serialize(['i'=>$i, 'j'=>$j, 'string' => "This \n has \\\\ some backslash \"*string action.\\n"]));
       }
     }
 
