@@ -29,7 +29,7 @@ class CommentTest extends KernelTestBase {
     $this->schema = $this->connection->schema();
   }
 
-  public function checkCommentWithDriver() {
+  public function testGetCommentWithDriver() {
     $table = 'comment_table_driver';
     $prefixed_table = $this->connection->prefixTables('{'.$table.'}');
     $pdo = new \PDO('sqlsrv:host=localhost;dbname=mydrupalsite', 'sa', 'Password123!');
