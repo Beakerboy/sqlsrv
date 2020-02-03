@@ -906,7 +906,7 @@ class Schema extends DatabaseSchema {
     }
     // Add table comment.
     if (!empty($table['description'])) {
-      $this->connection->queryDirect($this->getCommentSql($table['description'], $name));
+      $this->connection->queryDirect($this->createCommentSql($table['description'], $name));
     }
     // Commit changes until now.
     $transaction->commit();
