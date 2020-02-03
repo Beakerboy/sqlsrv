@@ -147,7 +147,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
   }
 
   public function testPdoComment() {
-    $pdo = new \PDO('sqlsrv:Server=localhost;Database=mydrupalsite', 'sa', 'Password123!');
+    $pdo = new \PDO('sqlsrv:Server=localhost;Database=mydrupalsite', 'sa', 'Password12!');
 
     // Create table
     $sql = 'CREATE table comment_table_test (comment_field_a int)';
