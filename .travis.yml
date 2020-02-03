@@ -51,10 +51,10 @@ install:
   - phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
   # Install patches for tests
   - cd web
-  - wget https://www.drupal.org/files/issues/2020-01-26/drupal-3108025-testNumericExpressionSubstitution-6.patch
+  #- wget https://www.drupal.org/files/issues/2020-01-26/drupal-3108025-testNumericExpressionSubstitution-6.patch
   - wget https://www.drupal.org/files/issues/2020-01-27/drupal-3108287-Remove_or_mark_as_core_only_testPrimaryKeyUpdate-3.patch
   - wget https://www.drupal.org/files/issues/2020-01-30/drupal-3108540-deprecationErrors-3.patch
-  - git apply drupal-3108025-testNumericExpressionSubstitution-6.patch
+  #- git apply drupal-3108025-testNumericExpressionSubstitution-6.patch
   - git apply drupal-3108287-Remove_or_mark_as_core_only_testPrimaryKeyUpdate-3.patch
   - git apply drupal-3108540-deprecationErrors-3.patch
   - cd ..
