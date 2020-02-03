@@ -93,18 +93,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
    */
   public function providerEscapeFields() {
     return [
-      ['[title]', 'title'],
-      ['[isDefaultRevision]', 'isDefaultRevision'],
-      ['[isDefaultRevision]', '"isDefaultRevision"'],
-      ['[entity_test].[isDefaultRevision]', 'entity_test.isDefaultRevision'],
-      ['[entity_test].[isDefaultRevision]', '"entity_test"."isDefaultRevision"'],
-      ['[entityTest].[isDefaultRevision]', '"entityTest"."isDefaultRevision"'],
-      ['[entityTest].[isDefaultRevision]', 'entityTest.isDefaultRevision'],
-
-      // This one might be a regression.
-      // Given: 'entity_test.is.Default.Revision'.
-      // pgsql returns: 'entity_test."isDefaultRevision"'.
-      // sqlsrv returns: '[entity_test].[is].[Default].[Revision]'.
+      ['[timestamp]', 'timestamp'],
     ];
   }
 
