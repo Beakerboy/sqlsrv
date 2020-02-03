@@ -1313,7 +1313,7 @@ EOF
     // Use a prefixed table.
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
-    $sql = $this->connection->quoteIdentifier($name) . ' ';
+    $sql = $this->connection->escapeField($name) . ' ';
     
     $sql .= $this->createDataType($table, $name, $spec);
 
@@ -1346,7 +1346,7 @@ EOF
         $sql .= ' IDENTITY';
       }
       if (!empty($spec['unsigned'])) {
-        $sql .= ' CHECK (' . $this->connection->quoteIdentifier($name) . ' >= 0)';
+        $sql .= ' CHECK (' . $this->connection->escapeField($name) . ' >= 0)';
       }
     }
     return $sql;
