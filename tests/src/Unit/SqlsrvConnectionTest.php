@@ -146,7 +146,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
     $this->assertEquals('sqlsrv', $sqlsvr_connection->databaseType());
   }
 
-  public function pdoComment() {
+  public function testPdoComment() {
     $pdo = new \PDO('sqlsrv:host=localhost;dbname=mydrupalsite', 'sa', 'Password123!');
 
     // Create table
