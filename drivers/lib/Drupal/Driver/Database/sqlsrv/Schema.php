@@ -1313,7 +1313,7 @@ EOF
     // Use a prefixed table.
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
-    $sql = $this->connection->quoteIdentifier($name) . ' ';
+    $sql = $this->connection->escapeField($name) . ' ';
     
     $sql .= $this->createDataType($table, $name, $spec);
 
