@@ -1918,7 +1918,11 @@ EOF;
     $sp = "sp_addextendedproperty";
     $schema = $this->getDefaultSchema();
     $name = 'MS_Description';
+    
+    // Should this be $this->prefixTables('{'.$table.'}');
+    $table_info = $this->getPrefixInfo($table);
     $table = $table_info['table'];
+    
     $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value=" . $value . "";
     if (isset($schema)) {
       $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
