@@ -1919,15 +1919,13 @@ EOF;
     $schema = $this->getDefaultSchema();
     $name = 'MS_Description';
     
-    // Should this be $this->prefixTables('{'.$table.'}');
-    $table_info = $this->getPrefixInfo($table);
-    $table = $table_info['table'];
+    $prefixed_table= $this->prefixTables('{'.$table.'}');
     
     $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value=" . $value . "";
     if (isset($schema)) {
       $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
       if (isset($table)) {
-        $sql .= ",@level1type = N'Table', @level1name = '" . $table . "'";
+        $sql .= ",@level1type = N'Table', @level1name = '" . $prefixed_table . "'";
         if ($column !== NULL) {
           $sql .= ",@level2type = N'Column', @level2name = '" . $column . "'";
         }
