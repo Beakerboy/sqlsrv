@@ -1940,7 +1940,8 @@ EOF;
    */
   public function getComment($table, $column = NULL) {
     $schema = $this->getDefaultSchema();
-    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','" . $schema . "','Table','" . $table . "',";
+    $prefixed_table= $this->connection->prefixTables('{' . $table . '}');
+    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','" . $schema . "','Table','" . $prefixed_table . "',";
     if (isset($column)) {
       $sql .= "'Column','" . $column . "')";
     }
