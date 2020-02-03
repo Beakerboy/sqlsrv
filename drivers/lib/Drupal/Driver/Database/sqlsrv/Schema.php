@@ -2,33 +2,17 @@
 
 namespace Drupal\Driver\Database\sqlsrv;
 
-use Drupal\Core\Database\SchemaObjectExistsException;
-use Drupal\Core\Database\Schema as DatabaseSchema;
-
 use Drupal\Component\Utility\Unicode;
 
-use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
-
-use Drupal\Core\Database\SchemaObjectDoesNotExistException as DatabaseSchemaObjectDoesNotExistException;
-use Drupal\Core\Database\SchemaObjectExistsException as DatabaseSchemaObjectExistsException;
-
-use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
-
-use Exception as Exception;
-use PDOException as PDOException;
+use Drupal\Core\Database\Schema as DatabaseSchema;
+use Drupal\Core\Database\SchemaObjectDoesNotExistException;
+use Drupal\Core\Database\SchemaObjectExistsException;
 
 /**
  * @addtogroup schemaapi
  * @{
  */
 class Schema extends DatabaseSchema {
-
-  /**
-   * Connection.
-   *
-   * @var Connection
-   */
-  protected $connection;
 
   /**
    * Default schema for SQL Server databases.
@@ -148,10 +132,10 @@ class Schema extends DatabaseSchema {
    */
   public function renameTable($table, $new_name) {
     if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot rename %table to %table_new: table %table doesn't exist.", ['%table' => $table, '%table_new' => $new_name]));
+      throw new SchemaObjectDoesNotExistException(t("Cannot rename %table to %table_new: table %table doesn't exist.", ['%table' => $table, '%table_new' => $new_name]));
     }
     if ($this->tableExists($new_name, TRUE)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot rename %table to %table_new: table %table_new already exists.", ['%table' => $table, '%table_new' => $new_name]));
+      throw new SchemaObjectExistsException(t("Cannot rename %table to %table_new: table %table_new already exists.", ['%table' => $table, '%table_new' => $new_name]));
     }
 
     $old_table_info = $this->getPrefixInfo($table);
@@ -159,7 +143,7 @@ class Schema extends DatabaseSchema {
 
     // We don't support renaming tables across schemas (yet).
     if ($old_table_info['schema'] != $new_table_info['schema']) {
-      throw new PDOException(t('Cannot rename a table across schema.'));
+      throw new \PDOException(t('Cannot rename a table across schema.'));
     }
 
     $this->connection->query_direct('EXEC sp_rename :old, :new', [
@@ -208,16 +192,22 @@ class Schema extends DatabaseSchema {
   /**
    * {@inheritdoc}
    */
-  public function addField($table, $field, $spec, $new_keys = []) {
-    if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", ['%field' => $field, '%table' => $table]));
+  public function addField($table, $field, $spec, $keys_new = []) {
+    if (!$this->tableExists($table)) {
+      throw new SchemaObjectDoesNotExistException(t("Cannot add field @table.@field: table doesn't exist.", ['@field' => $field, '@table' => $table]));
     }
     if ($this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", ['%field' => $field, '%table' => $table]));
+      throw new SchemaObjectExistsException(t("Cannot add field @table.@field: field already exists.", ['@field' => $field, '@table' => $table]));
+    }
+
+    // Fields that are part of a PRIMARY KEY must be added as NOT NULL.
+    $is_primary_key = isset($keys_new['primary key']) && in_array($field, $keys_new['primary key'], TRUE);
+    if ($is_primary_key) {
+      $this->ensureNotNullPrimaryKey($keys_new['primary key'], [$field => $spec]);
     }
 
     /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
+    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
 
     // Prepare the specifications.
     $spec = $this->processField($spec);
@@ -225,7 +215,7 @@ class Schema extends DatabaseSchema {
     // Use already prefixed table name.
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
-    if ($this->findPrimaryKeyColumns($table) !== [] && isset($new_keys['primary key']) && in_array($field, $new_keys['primary key'])) {
+    if ($this->findPrimaryKeyColumns($table) !== [] && isset($keys_new['primary key']) && in_array($field, $keys_new['primary key'])) {
       $this->cleanUpPrimaryKey($table);
     }
     // If the field is declared NOT NULL, we have to first create it NULL insert
@@ -282,7 +272,7 @@ class Schema extends DatabaseSchema {
       $this->connection->queryDirect("ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}");
     }
 
-    $this->recreateTableKeys($table, $new_keys);
+    $this->recreateTableKeys($table, $keys_new);
 
     // Commit.
     $transaction->commit();
@@ -317,7 +307,7 @@ class Schema extends DatabaseSchema {
     @trigger_error('fieldSetDefault() is deprecated in drupal:8.7.0 and will be removed before drupal:9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
 
     if (!$this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot set default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
+      throw new SchemaObjectDoesNotExistException(t("Cannot set default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
     }
 
     $default = $this->escapeDefaultValue($default);
@@ -326,7 +316,7 @@ class Schema extends DatabaseSchema {
     try {
       $this->fieldSetNoDefault($table, $field);
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
     }
 
     // Create the new default.
@@ -340,7 +330,7 @@ class Schema extends DatabaseSchema {
     @trigger_error('fieldSetNoDefault() is deprecated in drupal:8.7.0 and will be removed before drupal:9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
 
     if (!$this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot remove default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
+      throw new SchemaObjectDoesNotExistException(t("Cannot remove default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
     }
 
     $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT {' . $table . '}_' . $field . '_df');
@@ -362,7 +352,7 @@ class Schema extends DatabaseSchema {
    */
   public function addPrimaryKey($table, $fields) {
     if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add primary key to table %table: table doesn't exist.", ['%table' => $table]));
+      throw new SchemaObjectDoesNotExistException(t("Cannot add primary key to table %table: table doesn't exist.", ['%table' => $table]));
     }
 
     if ($primary_key_name = $this->primaryKeyName($table)) {
@@ -372,7 +362,7 @@ class Schema extends DatabaseSchema {
         $this->cleanUpTechnicalPrimaryColumn($table);
       }
       else {
-        throw new DatabaseSchemaObjectExistsException(t("Cannot add primary key to table %table: primary key already exists.", ['%table' => $table]));
+        throw new SchemaObjectExistsException(t("Cannot add primary key to table %table: primary key already exists.", ['%table' => $table]));
       }
     }
 
@@ -425,10 +415,10 @@ class Schema extends DatabaseSchema {
    */
   public function addUniqueKey($table, $name, $fields) {
     if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add unique key %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
+      throw new SchemaObjectDoesNotExistException(t("Cannot add unique key %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
     }
     if ($this->uniqueKeyExists($table, $name)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot add unique key %name to table %table: unique key already exists.", ['%table' => $table, '%name' => $name]));
+      throw new SchemaObjectExistsException(t("Cannot add unique key %name to table %table: unique key already exists.", ['%table' => $table, '%name' => $name]));
     }
 
     $this->createTechnicalPrimaryColumn($table);
@@ -475,10 +465,10 @@ class Schema extends DatabaseSchema {
    */
   public function addIndex($table, $name, $fields, array $spec = []) {
     if (!$this->tableExists($table, TRUE)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
+      throw new SchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
     }
     if ($this->indexExists($table, $name)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot add index %name to table %table: index already exists.", ['%table' => $table, '%name' => $name]));
+      throw new SchemaObjectExistsException(t("Cannot add index %name to table %table: index already exists.", ['%table' => $table, '%name' => $name]));
     }
 
     $xml_field = NULL;
@@ -561,13 +551,13 @@ class Schema extends DatabaseSchema {
    */
   public function changeField($table, $field, $field_new, $spec, $keys_new = []) {
     if (!$this->fieldExists($table, $field)) {
-      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", [
+      throw new SchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", [
         '%table' => $table,
         '%name' => $field,
       ]));
     }
     if (($field != $field_new) && $this->fieldExists($table, $field_new)) {
-      throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", [
+      throw new SchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", [
         '%table' => $table,
         '%name' => $field,
         '%name_new' => $field_new,
@@ -581,7 +571,7 @@ class Schema extends DatabaseSchema {
     // here and pray for the best.
 
     /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
+    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
 
     // Prepare the specifications.
     $spec = $this->processField($spec);
@@ -636,10 +626,11 @@ class Schema extends DatabaseSchema {
     // Create a new field.
     $this->addField($table, $field_new, $spec);
 
+    $new_data_type = $this->createDataType($table, $field_new, $spec);
     // Migrate the data over.
     // Explicitly cast the old value to the new value to avoid conversion
     // errors.
-    $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$spec['sqlsrv_type']})";
+    $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$new_data_type})";
     $this->connection->queryDirect($sql);
 
     // Switch to NOT NULL now.
@@ -755,7 +746,7 @@ class Schema extends DatabaseSchema {
     // We could adapt the current code to support temporary table introspection,
     // but for now this is not supported.
     if ($table_info['table'][0] == '#') {
-      throw new Exception('Temporary table introspection is not supported.');
+      throw new \Exception('Temporary table introspection is not supported.');
     }
 
     $info = [];
@@ -883,7 +874,7 @@ class Schema extends DatabaseSchema {
     // creation in case of an error.
 
     /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
+    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
 
     // Create the table with a default technical primary key.
     // $this->createTableSql already prefixes the table name, and we must
@@ -895,9 +886,10 @@ class Schema extends DatabaseSchema {
     // If the spec had a primary key, set it now after all fields have been
     // created. We are creating the keys after creating the table so that
     // createPrimaryKey is able to introspect column definition from the
-    // database to calculate index sizes This adds quite quite some overhead,
+    // database to calculate index sizes. This adds quite quite some overhead,
     // but is only noticeable during table creation.
     if (!empty($table['primary key']) && is_array($table['primary key'])) {
+      $this->ensureNotNullPrimaryKey($table['primary key'], $table['fields']);
       $this->createPrimaryKey($name, $table['primary key']);
     }
     // Otherwise use a technical primary key.
@@ -925,7 +917,7 @@ class Schema extends DatabaseSchema {
         try {
           $this->addIndex($name, $key_name, $key);
         }
-        catch (Exception $e) {
+        catch (\Exception $e) {
           // Log the exception but do not rollback the transaction.
           watchdog_exception('database', $e);
         }
@@ -1321,9 +1313,13 @@ EOF
     // Use a prefixed table.
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
+    $sql = $this->connection->quoteIdentifier($name) . ' ';
+    
+    $sql .= $this->createDataType($table, $name, $spec);
+
     $sqlsrv_type = $spec['sqlsrv_type'];
     $sqlsrv_type_native = $spec['sqlsrv_type_native'];
-
+    
     $is_text = in_array($sqlsrv_type_native, [
       'char',
       'varchar',
@@ -1332,38 +1328,6 @@ EOF
       'nvarchar',
       'ntext',
     ]);
-    $lengthable = in_array($sqlsrv_type_native, [
-      'char',
-      'varchar',
-      'nchar',
-      'nvarchar',
-    ]);
-
-    $sql = $this->connection->escapeField($name) . ' ';
-
-    if (!empty($spec['length']) && $lengthable) {
-      $sql .= $sqlsrv_type_native . '(' . $spec['length'] . ')';
-    }
-    elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
-      // Maximum precision for SQL Server 2008 orn greater is 38.
-      // For previous versions it's 28.
-      if ($spec['precision'] > 38) {
-        // Logs an error.
-        \Drupal::logger('sqlsrv')->warning("Field '@field' in table '@table' has had it's precision dropped from @precision to 38",
-                [
-                  '@field' => $name,
-                  '@table' => $table,
-                  '@precision' => $spec['precision'],
-                ]
-                );
-        $spec['precision'] = 38;
-      }
-      $sql .= $sqlsrv_type_native . '(' . $spec['precision'] . ', ' . $spec['scale'] . ')';
-    }
-    else {
-      $sql .= $sqlsrv_type;
-    }
-
     // When binary is true, case sensitivity is requested.
     if ($is_text === TRUE && isset($spec['binary']) && $spec['binary'] === TRUE) {
       $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
@@ -1382,10 +1346,49 @@ EOF
         $sql .= ' IDENTITY';
       }
       if (!empty($spec['unsigned'])) {
-        $sql .= ' CHECK (' . $this->connection->escapeField($name) . ' >= 0)';
+        $sql .= ' CHECK (' . $this->connection->quoteIdentifier($name) . ' >= 0)';
       }
     }
     return $sql;
+  }
+
+  /**
+   * Create the data type from a field specification
+   */
+  protected function createDataType($table, $name, $spec) {
+    $sqlsrv_type = $spec['sqlsrv_type'];
+    $sqlsrv_type_native = $spec['sqlsrv_type_native'];
+
+    $lengthable = in_array($sqlsrv_type_native, [
+      'char',
+      'varchar',
+      'nchar',
+      'nvarchar',
+    ]);
+
+    $sql = $this->connection->escapeField($name) . ' ';
+    if (!empty($spec['length']) && $lengthable) {
+      return $sqlsrv_type_native . '(' . $spec['length'] . ')';
+    }
+    elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
+      // Maximum precision for SQL Server 2008 or greater is 38.
+      // For previous versions it's 28.
+      if ($spec['precision'] > 38) {
+        // Logs an error.
+        \Drupal::logger('sqlsrv')->warning("Field '@field' in table '@table' has had it's precision dropped from @precision to 38",
+                [
+                  '@field' => $name,
+                  '@table' => $table,
+                  '@precision' => $spec['precision'],
+                ]
+                );
+        $spec['precision'] = 38;
+      }
+      return $sqlsrv_type_native . '(' . $spec['precision'] . ', ' . $spec['scale'] . ')';
+    }
+    else {
+      return $sqlsrv_type;
+    }
   }
 
   /**
@@ -1403,7 +1406,8 @@ EOF
     // The actual expression depends on the target data type as it might require
     // conversions.
     $result = is_string($default) ? $this->connection->quote($default) : $default;
-    if (DatabaseUtils::GetMSSQLType($sqlsr_type) == 'varbinary') {
+    if (
+      Utils::GetMSSQLType($sqlsr_type) == 'varbinary') {
       $default = addslashes($default);
       $result = "CONVERT({$sqlsr_type}, '{$default}')";
     }
@@ -1497,9 +1501,7 @@ EOF
    *   A field description array, as specified in the schema documentation.
    */
   protected function processField($field) {
-    if (!isset($field['size'])) {
-      $field['size'] = 'normal';
-    }
+    $field['size'] = $field['size'] ?? 'normal';
 
     // Set the correct database-engine specific datatype.
     if (!isset($field['sqlsrv_type'])) {
@@ -1507,9 +1509,7 @@ EOF
       $field['sqlsrv_type'] = $map[$field['type'] . ':' . $field['size']];
     }
 
-    if (isset($field['sqlsrv_type'])) {
-      $field['sqlsrv_type_native'] = Utils::GetMSSQLType($field['sqlsrv_type']);
-    }
+    $field['sqlsrv_type_native'] = Utils::GetMSSQLType($field['sqlsrv_type']);
 
     if ($field['type'] == 'serial') {
       $field['identity'] = TRUE;
@@ -1537,7 +1537,7 @@ EOF
     // here and pray for the best.
 
     /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
+    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
 
     // Clear current Primary Key.
     $this->cleanUpPrimaryKey($table);
