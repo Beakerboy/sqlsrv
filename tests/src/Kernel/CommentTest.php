@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal/sqlsrv/Kernel;
+namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 
