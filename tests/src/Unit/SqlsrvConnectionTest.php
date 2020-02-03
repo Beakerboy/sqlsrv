@@ -146,4 +146,25 @@ class SqlsrvConnectionTest extends UnitTestCase {
     $this->assertEquals('sqlsrv', $sqlsvr_connection->databaseType());
   }
 
+  public function pdoComment() {
+    $pdo = new \PDO('sqlsrv:host=localhost;dbname=mydrupalsite', 'sa', 'Password123!');
+
+    // Create table
+    $sql = 'CREATE table comment_table_test (comment_field_a int)';
+    $pdo->query($sql);
+    
+    // Add Comment
+    $sql = "EXEC sp_addextendedproperty @name=N'MS_Description', @value='Test Comment'";
+    $sql .= ",@level0type = N'Schema', @level0name = 'dbo'";
+    $sql .= ",@level1type = N'Table', @level1name = 'comment_table_test'";
+    $pdo->query($sql);
+
+    // Query Comment
+    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','dbo','Table','comment_table_test',NULL,NULL)";
+    $statement = $pdo->query($sql);
+    $results = $statement-> setFetchMode(\PDO::FETCH_NUM);
+    $comment = $results->fetch();
+    $this->assertEquals('Test Comment', $comment);
+  }
+
 }
