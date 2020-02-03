@@ -1919,7 +1919,7 @@ EOF;
     $schema = $this->getDefaultSchema();
     $name = 'MS_Description';
     
-    $prefixed_table= $this->prefixTables('{'.$table.'}');
+    $prefixed_table= $this->connection->prefixTables('{' . $table . '}');
     
     $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value=" . $value . "";
     if (isset($schema)) {
