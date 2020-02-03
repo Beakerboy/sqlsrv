@@ -1919,10 +1919,10 @@ EOF;
     $sp = "sp_addextendedproperty";
     $schema = $this->getDefaultSchema();
     $name = 'MS_Description';
-    
+    $value = $this->connection->quote($value);
     $prefixed_table= $this->connection->prefixTables('{' . $table . '}');
     
-    $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value='" . $value . "'";
+    $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value=" . $value . "";
     if (isset($schema)) {
       $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
       if (isset($table)) {
