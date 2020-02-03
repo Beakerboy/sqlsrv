@@ -33,7 +33,7 @@ class CommentTest extends KernelTestBase {
   public function testGetCommentWithDriver() {
     $table = 'comment_table_driver';
     $prefixed_table = $this->connection->prefixTables('{'.$table.'}');
-    $pdo = new \PDO('sqlsrv:host=localhost;dbname=mydrupalsite', 'sa', 'Password123!');
+    $pdo = new \PDO('sqlsrv:Server=localhost;Database=mydrupalsite', 'sa', 'Password12!');
 
     // Create table
     $sql = 'CREATE table $prefixed_table (comment_field_a int)';
