@@ -904,7 +904,10 @@ class Schema extends DatabaseSchema {
         $this->addUniqueKey($name, $key_name, $key);
       }
     }
-
+    // Add table comment.
+    if (!empty($table['description'])) {
+      $this->connection->queryDirect($this->getCommentSql($table['description'], $name));
+    }
     // Commit changes until now.
     $transaction->commit();
 
@@ -1879,6 +1882,8 @@ EOF;
 
   /**
    * Return the SQL statement to create or update a description.
+   *
+   * Change this to "edit comment" and "delete comment"
    */
   protected function createDescriptionSql($value, $table = NULL, $column = NULL) {
     // Inside the same transaction, you won't be able to read uncommited
@@ -1904,48 +1909,29 @@ EOF;
     }
     $columns[$key] = $value;
 
-    // Only continue if the new value is different from the existing value.
-    $sql = '';
-    if ($result !== $value) {
-      if ($value == '') {
-        $sp = "sp_dropextendedproperty";
-        $sql = "EXEC " . $sp . " @name=N'" . $name;
-      }
-      else {
-        if ($result != '') {
-          $sp = "sp_updateextendedproperty";
-        }
-        else {
-          $sp = "sp_addextendedproperty";
-        }
-        $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value=" . $value . "";
-      }
-      if (isset($schema)) {
-        $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
-        if (isset($table)) {
-          $sql .= ",@level1type = N'Table', @level1name = '" . $table . "'";
-          if ($column !== NULL) {
-            $sql .= ",@level2type = N'Column', @level2name = '" . $column . "'";
-          }
-        }
-      }
-    }
-
-    return $sql;
   }
 
   /**
-   * {@inheritdoc}
+   * Create the SQL statement to add a new comment
    */
-  public function prepareComment($comment, $length = NULL) {
-    // Truncate comment to maximum comment length.
-    if (isset($length)) {
-      // Add table prefixes before truncating.
-      $comment = Unicode::truncateBytes($this->connection->prefixTables($comment), $length, TRUE, TRUE);
+  protected function createCommentSql($value, $table = NULL, $column = NULL) {
+    $sp = "sp_addextendedproperty";
+    $schema = $this->getDefaultSchema();
+    $name = 'MS_Description';
+    $table = $table_info['table'];
+    $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value=" . $value . "";
+    if (isset($schema)) {
+      $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
+      if (isset($table)) {
+        $sql .= ",@level1type = N'Table', @level1name = '" . $table . "'";
+        if ($column !== NULL) {
+          $sql .= ",@level2type = N'Column', @level2name = '" . $column . "'";
+        }
+      }
     }
-    return $this->connection->quote($comment);
+    return $sql;
   }
-
+  
   /**
    * Retrieve a table or column comment.
    */
