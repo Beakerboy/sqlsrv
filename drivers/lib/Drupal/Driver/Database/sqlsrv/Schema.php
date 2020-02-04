@@ -1941,14 +1941,9 @@ EOF;
   public function getComment($table, $column = NULL) {
     $schema = $this->getDefaultSchema();
     $prefixed_table= $this->connection->prefixTables('{' . $table . '}');
-    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','" . $schema . "','Table','" . $prefixed_table . "',";
-    if (isset($column)) {
-      $sql .= "'Column','" . $column . "')";
-    }
-    else {
-      $sql .= "NULL,NULL)";
-    }
-    $comment = $this->connection->queryComment($sql);
+    $column_string = isset($column) ? "'Column','{$column}'" : "NULL,NULL"
+    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','{$schema}','Table','{{$table}}',{$column_string})";
+    $comment = $this->connection->query($sql)->fetchField();
     return $comment;
   }
 
