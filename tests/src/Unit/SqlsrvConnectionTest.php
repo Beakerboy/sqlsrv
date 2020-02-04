@@ -162,7 +162,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
     // Query Comment
     $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','dbo','Table','comment_table_test',NULL,NULL)";
     $statement = $pdo->query($sql);
-    $results = $statement-> setFetchMode(\PDO::FETCH_NUM);
+    $results = $statement->setFetchMode(\PDO::FETCH_NUM);
     $comment = $results->fetch();
     $this->assertEquals('Test Comment', $comment);
   }
