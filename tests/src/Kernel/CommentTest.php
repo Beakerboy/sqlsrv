@@ -110,4 +110,21 @@ class CommentTest extends KernelTestBase {
     $comment = $this->schema->getComment($table);
     $this->assertEquals('Test Comment', $comment);
   }
+
+   public function testSetCommentWithFunction() {
+    $pdo = new \PDO('sqlsrv:Server=localhost;Database=mydrupalsite', 'sa', 'Password12!');
+    $table = 'comment_table_test';
+    $prefixed_table = $this->connection->prefixTables('{'.$table.'}');
+    // Create table
+    $sql = "CREATE table $prefixed_table (comment_field_a int)";
+    $pdo->query($sql);
+    
+    // Add Comment
+    $sql = $this->schema->getCommentSQL('Test Comment', $table);
+    $this->connection->query($sql);
+
+    // Query Comment
+    $comment = $this->schema->getComment($table);
+    $this->assertEquals('Test Comment', $comment);
+  }
 }
