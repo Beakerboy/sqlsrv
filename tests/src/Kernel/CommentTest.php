@@ -120,7 +120,7 @@ class CommentTest extends KernelTestBase {
     $pdo->query($sql);
     
     // Add Comment
-    $sql = $this->schema->getCommentSQL('Test Comment', $table);
+    $sql = $this->schema->createCommentSQL('Test Comment', $table);
     $this->connection->query($sql);
 
     // Query Comment
