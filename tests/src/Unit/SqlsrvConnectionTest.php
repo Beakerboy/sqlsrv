@@ -164,7 +164,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
     $statement = $pdo->query($sql);
     $statement->setFetchMode(\PDO::FETCH_NUM);
     $comment = $statement->fetch();
-    $this->assertEquals('Test Comment', $comment[O]);
+    $this->assertEquals('Test Comment', $comment[0]);
   }
 
 }
