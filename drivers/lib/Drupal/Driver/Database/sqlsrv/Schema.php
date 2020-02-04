@@ -645,12 +645,16 @@ class Schema extends DatabaseSchema {
     // Create a new field.
     $this->addField($table, $field_new, $spec);
 
-    $new_data_type = $this->createDataType($table, $field_new, $spec);
-    // Migrate the data over.
-    // Explicitly cast the old value to the new value to avoid conversion
-    // errors.
-    $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$new_data_type})";
-    $this->connection->queryDirect($sql);
+    // Don't need to do this if there is no data
+    // Cannot do this it column is serial
+    if ($spec['type'] != 'serial') {
+      $new_data_type = $this->createDataType($table, $field_new, $spec);
+      // Migrate the data over.
+      // Explicitly cast the old value to the new value to avoid conversion
+      // errors.
+      $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$new_data_type})";
+      $this->connection->queryDirect($sql);
+    }
 
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
