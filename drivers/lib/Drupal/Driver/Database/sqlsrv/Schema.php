@@ -1948,8 +1948,7 @@ EOF;
     else {
       $sql .= "NULL,NULL)";
     }
-    $statement = $this->connection->queryDirect($sql);
-    $comment = $statement->fetchField();
+    $comment = $this->connection->queryComment($sql);
     return $comment;
   }
 
