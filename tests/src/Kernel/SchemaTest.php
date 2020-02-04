@@ -45,18 +45,18 @@ class SchemaTest extends KernelTestBase {
         ],
       ],
     ];
-    // create table with description
+    // Create table with description.
     $this->schema->createTable($name, $table);
 
-    // drop table
+    // Drop table and ensure comment does not exist.
     $this->schema->dropTable($name);
     $this->assertFalse($this->schema->getComment($name));
 
-    // create table with different description
+    // Create table with different description.
     $table['description'] = 'New Comment';
     $this->schema->createTable($name, $table);
 
-    // verify comment is correct
+    // Verify comment is correct.
     $comment = $this->schema->getComment($name);
     $this->assertEquals('New Comment', $comment);
   }
