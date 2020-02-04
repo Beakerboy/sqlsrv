@@ -69,6 +69,6 @@ class CommentTest extends KernelTestBase {
     // Query Comment
     $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','dbo','Table','{$prefixed_table}',NULL,NULL)";
     $comment = $this->connection->query($sql)->fetchField();
-    $this->assertEquals('Test Comment', $comment[0]);
+    $this->assertEquals('Test Comment', $comment);
   }
 }
