@@ -95,7 +95,7 @@ class Upsert extends QueryUpsert {
     // Drop the "temporary" table.
     $this->connection->query_direct("DROP TABLE {$temp_table}");
 
-    $transaction->commit();
+    // $transaction->commit();
 
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = [];
