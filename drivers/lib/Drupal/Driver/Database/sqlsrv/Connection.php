@@ -1042,6 +1042,19 @@ class Connection extends DatabaseConnection {
     }
   }
 
+  /**
+   * Directly query the database
+   *
+   * Do not use
+   * This is used by the gate comment function because I cannot
+   * figure out why query or queryDirect do not work.
+   */
+  public function queryComment($sql) {
+    $statement = $this->connection->query($sql);
+    $statement->setFetchMode(\PDO::FETCH_NUM);
+    $comment = $statement->fetch();
+    return $comment;
+  }
 }
 
 /**
