@@ -882,6 +882,8 @@ class Schema extends DatabaseSchema {
     // default_context_menu_block_active_values definitions can contain string
     // literals with braces.
     $this->connection->queryDirect($this->createTableSql($name, $table), [], ['prefix_tables' => FALSE]);
+
+    // Create Field Comments
     foreach ($table['fields'] as $field_name => $field) {
       if (isset($field['description'])) {
          $this->connection->queryDirect($this->createCommentSQL($field['description'], $name, $field_name));
