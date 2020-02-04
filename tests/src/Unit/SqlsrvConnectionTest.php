@@ -145,5 +145,5 @@ class SqlsrvConnectionTest extends UnitTestCase {
 
     $this->assertEquals('sqlsrv', $sqlsvr_connection->databaseType());
   }
-  
+
 }
