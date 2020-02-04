@@ -1941,7 +1941,7 @@ EOF;
   /**
    * Create an SQL statement to delete a comment
    */
-  protected function deleteCommentSql($table = NULL, $field = NULL) {
+  protected function deleteCommentSql($table = NULL, $column = NULL) {
     $schema = $this->getDefaultSchema();
     $sql = "EXEC sp_dropextendedproperty @name=N'MS_Description'";
     $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
