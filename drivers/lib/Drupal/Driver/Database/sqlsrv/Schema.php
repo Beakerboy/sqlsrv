@@ -910,7 +910,7 @@ class Schema extends DatabaseSchema {
     
     // Add table comment.
     if (!empty($table['description'])) {
-       $this->connection->queryDirect($this->createCommentSql($table['description'], $name));
+       $this->connection->query($this->createCommentSql($table['description'], $name));
     }
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
@@ -1916,20 +1916,15 @@ EOF;
    * Create the SQL statement to add a new comment
    */
   protected function createCommentSql($value, $table = NULL, $column = NULL) {
-    $sp = "sp_addextendedproperty";
     $schema = $this->getDefaultSchema();
-    $name = 'MS_Description';
     $value = $this->connection->quote($value);
-    $prefixed_table= $this->connection->prefixTables('{' . $table . '}');
     
-    $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value=" . $value . "";
-    if (isset($schema)) {
-      $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
-      if (isset($table)) {
-        $sql .= ",@level1type = N'Table', @level1name = '" . $prefixed_table . "'";
-        if ($column !== NULL) {
-          $sql .= ",@level2type = N'Column', @level2name = '" . $column . "'";
-        }
+    $sql = "EXEC sp_addextendedproperty @name=N'MS_Description', @value={$value}";
+    $sql .= ",@level0type = N'Schema', @level0name = '{$schema}'";
+    if (isset($table)) {
+      $sql .= ",@level1type = N'Table', @level1name = '{{$table}}'";
+      if (isset($column)) {
+        $sql .= ",@level2type = N'Column', @level2name = '{$column}'";
       }
     }
     return $sql;
