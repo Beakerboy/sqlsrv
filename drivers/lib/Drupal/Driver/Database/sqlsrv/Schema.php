@@ -278,7 +278,7 @@ class Schema extends DatabaseSchema {
       $this->connection->queryDirect($this->createCommentSql($spec['description'], $table, $field));
     }
     // Commit.
-    $transaction->commit();
+    // $transaction->commit();
   }
 
   /**
@@ -694,7 +694,7 @@ class Schema extends DatabaseSchema {
     $this->recreateTableKeys($table, $keys_new);
 
     // Commit.
-    $transaction->commit();
+    // $transaction->commit();
   }
 
   /**
@@ -939,7 +939,7 @@ class Schema extends DatabaseSchema {
     }
 
     // Commit changes until now.
-    $transaction->commit();
+    // $transaction->commit();
     
    
     // Create the indexes but ignore any error during the creation. We do that
