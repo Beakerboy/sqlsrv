@@ -579,7 +579,7 @@ class Schema extends DatabaseSchema {
     /*
      * IMPORTANT NOTE: To maintain database portability, you have to explicitly
      * recreate all indices and primary keys that are using the changed field.
-     * That means that you have to drop all affected keys and indexes with
+     * That means that you ohave to drop all affected keys and indexes with
      * db_drop_{primary_key,unique_key,index}() before calling
      * db_change_field().
      *
@@ -1948,7 +1948,7 @@ EOF;
     else {
       $sql .= "NULL,NULL)";
     }
-    fwrite(STDERR, $sql);
+   // fwrite(STDERR, $sql);
     $comment = $this->connection->query($sql)->fetchField();
     return $comment;
   }
