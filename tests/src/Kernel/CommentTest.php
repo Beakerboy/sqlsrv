@@ -52,7 +52,7 @@ class CommentTest extends KernelTestBase {
     $this->assertEquals('Test Comment', $comment[0]);
   }
 
-  public function testGetCommentWithPrefixes() {
+  public function testGetCommentWithQuery() {
     $pdo = new \PDO('sqlsrv:Server=localhost;Database=mydrupalsite', 'sa', 'Password12!');
     $table = 'comment_table_test';
     $prefixed_table = $this->connection->prefixTables('{'.$table.'}');
