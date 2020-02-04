@@ -1948,6 +1948,7 @@ EOF;
     else {
       $sql .= "NULL,NULL)";
     }
+    fwrite(STDERR, $sql);
     $comment = $this->connection->query($sql)->fetchField();
     return $comment;
   }
