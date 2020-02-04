@@ -50,6 +50,7 @@ class SchemaTest extends KernelTestBase {
 
     // drop table
     $this->schema->dropTable($name);
+    $this->assertFalse($this->schema->getComment($name));
 
     // create table with different description
     $table['description'] = 'New Comment';
