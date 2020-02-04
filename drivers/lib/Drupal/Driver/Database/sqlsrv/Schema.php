@@ -882,7 +882,11 @@ class Schema extends DatabaseSchema {
     // default_context_menu_block_active_values definitions can contain string
     // literals with braces.
     $this->connection->queryDirect($this->createTableSql($name, $table), [], ['prefix_tables' => FALSE]);
-
+    foreach ($table['fields'] as $field_name => $field) {
+      if (isset($field['description'])) {
+         $this->connection->queryDirect($this->createCommentSQL($field['description'], $name, $field_name);
+      }
+    }
     // If the spec had a primary key, set it now after all fields have been
     // created. We are creating the keys after creating the table so that
     // createPrimaryKey is able to introspect column definition from the
@@ -904,14 +908,15 @@ class Schema extends DatabaseSchema {
         $this->addUniqueKey($name, $key_name, $key);
       }
     }
-    
+     // Add table comment.
+    if (!empty($table['description'])) {
+       $this->connection->queryDirect($this->createCommentSql($table['description'], $name));
+    }
+
     // Commit changes until now.
     $transaction->commit();
     
-    // Add table comment.
-    if (!empty($table['description'])) {
-       $this->connection->query($this->createCommentSql($table['description'], $name));
-    }
+   
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
     // with invalid data types (long columns), before we come up with a better
