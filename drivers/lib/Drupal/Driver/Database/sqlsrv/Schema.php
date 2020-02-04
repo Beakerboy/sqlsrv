@@ -1578,7 +1578,7 @@ EOF
     // Recreate the Primary Key with the given limit size.
     $this->createPrimaryKey($table, $primary_key_fields, $limit);
 
-    $transaction->commit();
+    // $transaction->commit();
 
     // Refresh introspection for this table.
     $this->queryColumnInformation($table, TRUE);
