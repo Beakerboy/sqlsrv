@@ -689,6 +689,10 @@ class Schema extends DatabaseSchema {
     // Add the new keys.
     $this->recreateTableKeys($table, $keys_new);
 
+    // Add field comment
+    if (isset($spec['description'])) {
+      $this->connection->queryDirect($this->createCommentSql($spec['description'], $table, $field_new));
+    }
     // Commit.
     $transaction->commit();
   }
