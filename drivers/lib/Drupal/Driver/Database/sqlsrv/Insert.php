@@ -146,9 +146,9 @@ class Insert extends QueryInsert {
     }
 
     // If we started a transaction, commit it.
-    if ($transaction) {
-      $transaction->commit();
-    }
+    // if ($transaction) {
+    // $transaction->commit();
+    // }
 
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = [];
