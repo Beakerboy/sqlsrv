@@ -274,12 +274,17 @@ class Schema extends DatabaseSchema {
 
     $this->recreateTableKeys($table, $keys_new);
 
+    if (isset($spec['description'])) {
+      $this->connection->queryDirect($this->createCommentSql($spec['description'], $table, $field));
+    }
     // Commit.
     $transaction->commit();
   }
 
   /**
    * {@inheritdoc}
+   *
+   * Should this be in a Transaction?
    */
   public function dropField($table, $field) {
     if (!$this->fieldExists($table, $field)) {
@@ -295,6 +300,11 @@ class Schema extends DatabaseSchema {
     
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
+    
+    // Drop field comments
+    if ($this->getComment($table, $field) !== FALSE) {
+     $this->connection->queryDirect($this->deleteCommentSql($table, $field));
+    }
 
     $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
     return TRUE;
@@ -566,6 +576,11 @@ class Schema extends DatabaseSchema {
     if (isset($keys_new['primary key']) && in_array($field_new, $keys_new['primary key'], TRUE)) {
       $this->ensureNotNullPrimaryKey($keys_new['primary key'], [$field_new => $spec]);
     }
+    // Check if we need to drop field comments
+    $drop_field_comment = FALSE;
+    if ($this->getComment($table, $field) !== FALSE) {
+      $drop_field_comment = TRUE;     
+    }
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
@@ -607,6 +622,10 @@ class Schema extends DatabaseSchema {
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
+    if ($drop_field_comment) {  
+      $this->connection->queryDirect($this->deleteCommentSql($table, $field));
+    }
+    
     // Start by renaming the current column.
     $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
       ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
@@ -1917,6 +1936,22 @@ EOF;
     }
     $columns[$key] = $value;
 
+  }
+
+  /**
+   * Create an SQL statement to delete a comment
+   */
+  protected function deleteCommentSql($table = NULL, $field = NULL) {
+    $schema = $this->getDefaultSchema();
+    $sql = "EXEC sp_dropextendedproperty @name=N'MS_Description'";
+    $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
+    if (isset($table)) {
+      $sql .= ",@level1type = N'Table', @level1name = '{{$table}}'";
+      if (isset($column)) {
+        $sql .= ",@level2type = N'Column', @level2name = '{$column}'";
+      }
+    }
+    return $sql;
   }
 
   /**
