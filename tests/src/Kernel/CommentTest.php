@@ -48,9 +48,14 @@ class CommentTest extends KernelTestBase {
     // Query Comment
     $comment = $this->schema->getComment($table);
     //$sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','dbo','Table','comment_table_test',NULL,NULL)";
+     //        "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','dbo','Table','comment_table_test',NULL,NULL)";
     //$statement = $pdo->query($sql);
     //$results = $statement-> setFetchMode(\PDO::FETCH_NUM);
     //$comment = $results->fetch();
+    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','dbo','Table','{$prefixed_table}',NULL,NULL)";
+    $this->assertEquals('Test Comment', $comment);
+    $statement = $this->connection->query($sql);
+    $comment = $statement->fetchField();
     $this->assertEquals('Test Comment', $comment);
   }
 }
