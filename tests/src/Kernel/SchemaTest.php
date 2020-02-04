@@ -46,7 +46,7 @@ class SchemaTest extends KernelTestBase {
       ],
     ];
     // create table with description
-    $this->createTable($name, $table);
+    $this->schema->createTable($name, $table);
 
     // drop table
     $this->schema->dropTable($name);
