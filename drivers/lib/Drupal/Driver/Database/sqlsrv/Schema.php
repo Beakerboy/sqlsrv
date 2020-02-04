@@ -884,7 +884,7 @@ class Schema extends DatabaseSchema {
     $this->connection->queryDirect($this->createTableSql($name, $table), [], ['prefix_tables' => FALSE]);
     foreach ($table['fields'] as $field_name => $field) {
       if (isset($field['description'])) {
-         $this->connection->queryDirect($this->createCommentSQL($field['description'], $name, $field_name);
+         $this->connection->queryDirect($this->createCommentSQL($field['description'], $name, $field_name));
       }
     }
     // If the spec had a primary key, set it now after all fields have been
