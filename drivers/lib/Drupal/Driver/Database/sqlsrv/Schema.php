@@ -1908,37 +1908,6 @@ EOF;
   }
 
   /**
-   * Return the SQL statement to create or update a description.
-   *
-   * Change this to "edit comment" and "delete comment"
-   */
-  protected function createDescriptionSql($value, $table = NULL, $column = NULL) {
-    // Inside the same transaction, you won't be able to read uncommited
-    // extended properties leading to SQL Exception if calling
-    // sp_addextendedproperty twice on same object.
-    static $columns;
-    if (!isset($columns)) {
-      $columns = [];
-    }
-
-    $schema = $this->getDefaultSchema();
-    $table_info = $this->getPrefixInfo($table);
-    $table = $table_info['table'];
-    $name = 'MS_Description';
-
-    // Determine if a value exists for this database object.
-    $key = $this->getDefaultSchema() . '.' . $table . '.' . $column;
-    if (isset($columns[$key])) {
-      $result = $columns[$key];
-    }
-    else {
-      $result = $this->getComment($table, $column);
-    }
-    $columns[$key] = $value;
-
-  }
-
-  /**
    * Create an SQL statement to delete a comment
    */
   protected function deleteCommentSql($table = NULL, $column = NULL) {
