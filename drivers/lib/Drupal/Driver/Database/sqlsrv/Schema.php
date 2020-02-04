@@ -274,12 +274,17 @@ class Schema extends DatabaseSchema {
 
     $this->recreateTableKeys($table, $keys_new);
 
+    if (isset($spec['description'])) {
+      $this->connection->queryDirect($this->createCommentSql($spec['description'], $table, $field));
+    }
     // Commit.
     $transaction->commit();
   }
 
   /**
    * {@inheritdoc}
+   *
+   * Should this be in a Transaction?
    */
   public function dropField($table, $field) {
     if (!$this->fieldExists($table, $field)) {
@@ -295,6 +300,11 @@ class Schema extends DatabaseSchema {
     
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
+    
+    // Drop field comments
+    if ($this->getComment($table, $field) !== FALSE) {
+     $this->connection->queryDirect($this->deleteCommentSql($table, $field));
+    }
 
     $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
     return TRUE;
@@ -566,6 +576,11 @@ class Schema extends DatabaseSchema {
     if (isset($keys_new['primary key']) && in_array($field_new, $keys_new['primary key'], TRUE)) {
       $this->ensureNotNullPrimaryKey($keys_new['primary key'], [$field_new => $spec]);
     }
+    // Check if we need to drop field comments
+    $drop_field_comment = FALSE;
+    if ($this->getComment($table, $field) !== FALSE) {
+      $drop_field_comment = TRUE;     
+    }
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
@@ -579,7 +594,7 @@ class Schema extends DatabaseSchema {
     /*
      * IMPORTANT NOTE: To maintain database portability, you have to explicitly
      * recreate all indices and primary keys that are using the changed field.
-     * That means that you have to drop all affected keys and indexes with
+     * That means that you ohave to drop all affected keys and indexes with
      * db_drop_{primary_key,unique_key,index}() before calling
      * db_change_field().
      *
@@ -607,6 +622,10 @@ class Schema extends DatabaseSchema {
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
+    if ($drop_field_comment) {  
+      $this->connection->queryDirect($this->deleteCommentSql($table, $field));
+    }
+    
     // Start by renaming the current column.
     $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
       ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
@@ -626,12 +645,16 @@ class Schema extends DatabaseSchema {
     // Create a new field.
     $this->addField($table, $field_new, $spec);
 
-    $new_data_type = $this->createDataType($table, $field_new, $spec);
-    // Migrate the data over.
-    // Explicitly cast the old value to the new value to avoid conversion
-    // errors.
-    $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$new_data_type})";
-    $this->connection->queryDirect($sql);
+    // Don't need to do this if there is no data
+    // Cannot do this it column is serial
+    if ($spec['type'] != 'serial') {
+      $new_data_type = $this->createDataType($table, $field_new, $spec);
+      // Migrate the data over.
+      // Explicitly cast the old value to the new value to avoid conversion
+      // errors.
+      $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$new_data_type})";
+      $this->connection->queryDirect($sql);
+    }
 
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
@@ -881,8 +904,14 @@ class Schema extends DatabaseSchema {
     // inhibit prefixing at the query level because field
     // default_context_menu_block_active_values definitions can contain string
     // literals with braces.
-    $this->connection->query_direct($this->createTableSql($name, $table), [], ['prefix_tables' => FALSE]);
+    $this->connection->queryDirect($this->createTableSql($name, $table), [], ['prefix_tables' => FALSE]);
 
+    // Create Field Comments
+    foreach ($table['fields'] as $field_name => $field) {
+      if (isset($field['description'])) {
+         $this->connection->queryDirect($this->createCommentSQL($field['description'], $name, $field_name));
+      }
+    }
     // If the spec had a primary key, set it now after all fields have been
     // created. We are creating the keys after creating the table so that
     // createPrimaryKey is able to introspect column definition from the
@@ -904,10 +933,15 @@ class Schema extends DatabaseSchema {
         $this->addUniqueKey($name, $key_name, $key);
       }
     }
+     // Add table comment.
+    if (!empty($table['description'])) {
+       $this->connection->queryDirect($this->createCommentSql($table['description'], $name));
+    }
 
     // Commit changes until now.
     $transaction->commit();
-
+    
+   
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
     // with invalid data types (long columns), before we come up with a better
@@ -1878,86 +1912,46 @@ EOF;
   }
 
   /**
-   * Return the SQL statement to create or update a description.
+   * Create an SQL statement to delete a comment
    */
-  protected function createDescriptionSql($value, $table = NULL, $column = NULL) {
-    // Inside the same transaction, you won't be able to read uncommited
-    // extended properties leading to SQL Exception if calling
-    // sp_addextendedproperty twice on same object.
-    static $columns;
-    if (!isset($columns)) {
-      $columns = [];
-    }
-
+  protected function deleteCommentSql($table = NULL, $column = NULL) {
     $schema = $this->getDefaultSchema();
-    $table_info = $this->getPrefixInfo($table);
-    $table = $table_info['table'];
-    $name = 'MS_Description';
-
-    // Determine if a value exists for this database object.
-    $key = $this->getDefaultSchema() . '.' . $table . '.' . $column;
-    if (isset($columns[$key])) {
-      $result = $columns[$key];
-    }
-    else {
-      $result = $this->getComment($table, $column);
-    }
-    $columns[$key] = $value;
-
-    // Only continue if the new value is different from the existing value.
-    $sql = '';
-    if ($result !== $value) {
-      if ($value == '') {
-        $sp = "sp_dropextendedproperty";
-        $sql = "EXEC " . $sp . " @name=N'" . $name;
-      }
-      else {
-        if ($result != '') {
-          $sp = "sp_updateextendedproperty";
-        }
-        else {
-          $sp = "sp_addextendedproperty";
-        }
-        $sql = "EXEC " . $sp . " @name=N'" . $name . "', @value=" . $value . "";
-      }
-      if (isset($schema)) {
-        $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
-        if (isset($table)) {
-          $sql .= ",@level1type = N'Table', @level1name = '" . $table . "'";
-          if ($column !== NULL) {
-            $sql .= ",@level2type = N'Column', @level2name = '" . $column . "'";
-          }
-        }
+    $sql = "EXEC sp_dropextendedproperty @name=N'MS_Description'";
+    $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
+    if (isset($table)) {
+      $sql .= ",@level1type = N'Table', @level1name = '{{$table}}'";
+      if (isset($column)) {
+        $sql .= ",@level2type = N'Column', @level2name = '{$column}'";
       }
     }
-
     return $sql;
   }
 
   /**
-   * {@inheritdoc}
+   * Create the SQL statement to add a new comment
    */
-  public function prepareComment($comment, $length = NULL) {
-    // Truncate comment to maximum comment length.
-    if (isset($length)) {
-      // Add table prefixes before truncating.
-      $comment = Unicode::truncateBytes($this->connection->prefixTables($comment), $length, TRUE, TRUE);
+  protected function createCommentSql($value, $table = NULL, $column = NULL) {
+    $schema = $this->getDefaultSchema();
+    $value = $this->connection->quote($value);
+    
+    $sql = "EXEC sp_addextendedproperty @name=N'MS_Description', @value={$value}";
+    $sql .= ",@level0type = N'Schema', @level0name = '{$schema}'";
+    if (isset($table)) {
+      $sql .= ",@level1type = N'Table', @level1name = '{{$table}}'";
+      if (isset($column)) {
+        $sql .= ",@level2type = N'Column', @level2name = '{$column}'";
+      }
     }
-    return $this->connection->quote($comment);
+    return $sql;
   }
-
+  
   /**
    * Retrieve a table or column comment.
    */
   public function getComment($table, $column = NULL) {
     $schema = $this->getDefaultSchema();
-    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','" . $schema . "','Table','" . $table . "',";
-    if (isset($column)) {
-      $sql .= "'Column','" . $column . "')";
-    }
-    else {
-      $sql .= "NULL,NULL)";
-    }
+    $column_string = isset($column) ? "'Column','{$column}'" : "NULL,NULL";
+    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','{$schema}','Table','{{$table}}',{$column_string})";
     $comment = $this->connection->query($sql)->fetchField();
     return $comment;
   }
