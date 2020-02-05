@@ -6,6 +6,8 @@ use Drupal\Core\Database\Statement as DatabaseStatement;
 
 /**
  * SQL Server implementation of \Drupal\Core\Database\Statement.
+ *
+ * Ths class may not be needed. Removing it does not affect Database kernel tests.
  */
 class Statement extends DatabaseStatement {
 
