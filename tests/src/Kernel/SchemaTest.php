@@ -60,4 +60,5 @@ class SchemaTest extends KernelTestBase {
     $comment = $this->schema->getComment($name);
     $this->assertEquals('New Comment', $comment);
   }
+
 }

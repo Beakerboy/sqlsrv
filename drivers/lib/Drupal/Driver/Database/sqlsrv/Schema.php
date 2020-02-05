@@ -120,7 +120,6 @@ class Schema extends DatabaseSchema {
       'blob:big' => 'varbinary(max)',
       'blob:normal' => 'varbinary(max)',
 
-      'datetime:normal' => 'timestamp',
       'date:normal'     => 'date',
       'datetime:normal' => 'datetime2(0)',
       'time:normal'     => 'time(0)',
@@ -1528,14 +1527,18 @@ EOF
     $field['size'] = $field['size'] ?? 'normal';
 
     // Set the correct database-engine specific datatype.
-    if (!isset($field['sqlsrv_type'])) {
+    // In case one is already provided, force it to lowercase.
+    if (isset($field['sqlsrv_type'])) {
+      $field['sqlsrv_type'] = mb_strtolower($field['sqlsrv_type']);
+    }
+    else {
       $map = $this->getFieldTypeMap();
       $field['sqlsrv_type'] = $map[$field['type'] . ':' . $field['size']];
     }
 
     $field['sqlsrv_type_native'] = Utils::GetMSSQLType($field['sqlsrv_type']);
 
-    if ($field['type'] == 'serial') {
+    if (isset($field['type']) && $field['type'] == 'serial') {
       $field['identity'] = TRUE;
     }
     return $field;
