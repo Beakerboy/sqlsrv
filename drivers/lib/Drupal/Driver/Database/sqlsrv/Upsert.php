@@ -4,8 +4,6 @@ namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Query\Upsert as QueryUpsert;
 
-use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
-
 /**
  * Implements the Upsert query for the MSSQL database driver.
  *
@@ -38,7 +36,7 @@ class Upsert extends QueryUpsert {
 
     // We have to execute multiple queries, therefore we wrap everything in a
     // transaction so that it is atomic where possible.
-    $transaction = $this->connection->startTransaction(NULL, DatabaseTransactionSettings::GetDDLCompatibleDefaults());
+    $transaction = $this->connection->startTransaction(NULL);
 
     // First, create a temporary table with the same schema as the table we
     // are trying to upsert in.
@@ -94,8 +92,6 @@ class Upsert extends QueryUpsert {
 
     // Drop the "temporary" table.
     $this->connection->query_direct("DROP TABLE {$temp_table}");
-
-    // $transaction->commit();
 
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = [];
