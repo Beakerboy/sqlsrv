@@ -65,6 +65,7 @@
       <file>tests/Drupal/KernelTests/Core/Database/ReplicaKillSwitchTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SchemaLegacyTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectCloneTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/SelectComplexTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectOrderedTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SerializeQueryTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/TaggingTest.php</file>
@@ -77,7 +78,6 @@
     <testsuite name="failing_database">
       <file>tests/Drupal/KernelTests/Core/Database/LoggingTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SchemaTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/SelectComplexTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectTest.php</file>
     </testsuite>
