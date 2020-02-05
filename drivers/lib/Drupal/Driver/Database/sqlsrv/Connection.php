@@ -1012,24 +1012,6 @@ class Connection extends DatabaseConnection {
       }
     }
   }
-  /**
-   * Do the actual commit, invoke post-commit callbacks.
-   *
-   * @internal
-   */
-  protected function doCommit() {
-    $success = $this->connection->commit();
-    if (!empty($this->rootTransactionEndCallbacks)) {
-      $callbacks = $this->rootTransactionEndCallbacks;
-      $this->rootTransactionEndCallbacks = [];
-      foreach ($callbacks as $callback) {
-        call_user_func($callback, $success);
-      }
-    }
-    if (!$success) {
-      throw new TransactionCommitFailedException();
-    }
-  }
 
 }
 
