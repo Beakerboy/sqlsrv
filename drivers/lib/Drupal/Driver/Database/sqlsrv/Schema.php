@@ -1539,7 +1539,7 @@ EOF
 
     $field['sqlsrv_type_native'] = Utils::GetMSSQLType($field['sqlsrv_type']);
 
-    if ($field['type'] == 'serial') {
+    if (isset($field['type']) && $field['type'] == 'serial') {
       $field['identity'] = TRUE;
     }
     return $field;
