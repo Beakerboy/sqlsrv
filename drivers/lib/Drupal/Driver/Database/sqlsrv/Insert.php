@@ -4,8 +4,6 @@ namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Query\Insert as QueryInsert;
 
-use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
-
 /**
  * @addtogroup database
  * @{
