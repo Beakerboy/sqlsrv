@@ -922,7 +922,7 @@ class Connection extends DatabaseConnection {
    */
   public function pushTransaction($name) {
     //if ($settings == NULL) {
-      $settings = DatabaseTransactionSettings::GetBetterDefaults();
+      $settings = TransactionSettings::GetBetterDefaults();
     //}
     if (!$this->supportsTransactions()) {
       return;
