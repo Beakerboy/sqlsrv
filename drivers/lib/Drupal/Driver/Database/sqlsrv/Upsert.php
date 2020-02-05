@@ -36,7 +36,7 @@ class Upsert extends QueryUpsert {
 
     // We have to execute multiple queries, therefore we wrap everything in a
     // transaction so that it is atomic where possible.
-    $transaction = $this->connection->startTransaction(NULL);
+    $transaction = $this->connection->startTransaction();
 
     // First, create a temporary table with the same schema as the table we
     // are trying to upsert in.
