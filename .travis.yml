@@ -52,9 +52,9 @@ install:
   # Install patches for tests
   - cd web
   - wget https://www.drupal.org/files/issues/2020-01-30/drupal-3108540-deprecationErrors-3.patch
-  - wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-2.patch
+  - wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
   - git apply drupal-3108540-deprecationErrors-3.patch
-  - git apply drupal-3111134-database_specific_types-2.patch
+  - git apply drupal-3111134-database_specific_types-3.patch
   - cd ..
 script:
   #- pcov clobber
