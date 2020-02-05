@@ -1528,7 +1528,12 @@ EOF
     $field['size'] = $field['size'] ?? 'normal';
 
     // Set the correct database-engine specific datatype.
-    if (!isset($field['sqlsrv_type'])) {
+    // Set the correct database-engine specific datatype.
+    // In case one is already provided, force it to lowercase.
+    if (isset($field['sqlsrv_type'])) {
+      $field['sqlsrv_type'] = mb_strtolower($field['sqlsrv_type']);
+    }
+    else {
       $map = $this->getFieldTypeMap();
       $field['sqlsrv_type'] = $map[$field['type'] . ':' . $field['size']];
     }
