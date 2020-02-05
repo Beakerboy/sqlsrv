@@ -890,7 +890,7 @@ class Schema extends DatabaseSchema {
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
 
-    $transaction = $this->connection->startTransaction(NULL);
+    $transaction = $this->connection->startTransaction();
 
     // Create the table with a default technical primary key.
     // $this->createTableSql already prefixes the table name, and we must
@@ -1560,16 +1560,13 @@ EOF
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
 
-    /** @var Transaction $transaction */
-    // $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
+    $transaction = $this->connection->startTransaction();
 
     // Clear current Primary Key.
     $this->cleanUpPrimaryKey($table);
 
     // Recreate the Primary Key with the given limit size.
     $this->createPrimaryKey($table, $primary_key_fields, $limit);
-
-    // $transaction->commit();
 
     // Refresh introspection for this table.
     $this->queryColumnInformation($table, TRUE);
