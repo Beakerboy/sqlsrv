@@ -68,6 +68,7 @@
       <file>tests/Drupal/KernelTests/Core/Database/SelectOrderedTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SerializeQueryTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/TaggingTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/TransactionTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/UpdateComplexTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/UpdateLobTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/UpdateTest.php</file>
@@ -79,7 +80,6 @@
       <file>tests/Drupal/KernelTests/Core/Database/SelectComplexTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/TransactionTest.php</file>
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
