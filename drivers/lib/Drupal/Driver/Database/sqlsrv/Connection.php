@@ -963,7 +963,7 @@ class Connection extends DatabaseConnection {
       }
       // In order to start a transaction current statement cursors
       // must be closed.
-      foreach ($this->statement_cache as $statement) {
+      foreach ($this->statementCache as $statement) {
         $statement->closeCursor();
       }
       $this->connection->beginTransaction();
