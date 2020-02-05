@@ -206,7 +206,7 @@ class Schema extends DatabaseSchema {
       $this->ensureNotNullPrimaryKey($keys_new['primary key'], [$field => $spec]);
     }
 
-    $transaction = $this->connection->startTransaction(NULL);
+    $transaction = $this->connection->startTransaction();
 
     // Prepare the specifications.
     $spec = $this->processField($spec);
@@ -583,7 +583,7 @@ class Schema extends DatabaseSchema {
     // here and pray for the best.
 
     /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL);
+    $transaction = $this->connection->startTransaction();
 
     // Prepare the specifications.
     $spec = $this->processField($spec);
