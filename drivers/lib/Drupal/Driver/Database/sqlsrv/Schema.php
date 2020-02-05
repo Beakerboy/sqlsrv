@@ -207,7 +207,7 @@ class Schema extends DatabaseSchema {
     }
 
     /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
+    //$transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
 
     // Prepare the specifications.
     $spec = $this->processField($spec);
@@ -586,7 +586,7 @@ class Schema extends DatabaseSchema {
     // here and pray for the best.
 
     /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
+    // $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
 
     // Prepare the specifications.
     $spec = $this->processField($spec);
@@ -897,7 +897,7 @@ class Schema extends DatabaseSchema {
     // creation in case of an error.
 
     /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
+    // $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
 
     // Create the table with a default technical primary key.
     // $this->createTableSql already prefixes the table name, and we must
@@ -1570,7 +1570,7 @@ EOF
     // here and pray for the best.
 
     /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
+    // $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
 
     // Clear current Primary Key.
     $this->cleanUpPrimaryKey($table);
