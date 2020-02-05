@@ -11,7 +11,7 @@ use Drupal\Core\Database\DatabaseNotFoundException;
 
 use Drupal\Core\Database\Connection as DatabaseConnection;
 
-use Drupal\Core\Database\TransactionNoActiveException as DatabaseTransactionNoActiveException;
+use Drupal\Core\Database\TransactionNoActiveException;
 use Drupal\Core\Database\TransactionCommitFailedException as DatabaseTransactionCommitFailedException;
 use Drupal\Core\Database\TransactionOutOfOrderException;
 use Drupal\Core\Database\TransactionNameNonUniqueException;
