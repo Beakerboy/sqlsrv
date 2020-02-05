@@ -4,12 +4,6 @@ namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Query\Insert as QueryInsert;
 
-use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
-
-use Drupal\Driver\Database\sqlsrv\TransactionSettings as DatabaseTransactionSettings;
-
-use PDO as PDO;
-
 /**
  * @addtogroup database
  * @{
@@ -46,7 +40,7 @@ class Insert extends QueryInsert {
     // Retrieve query options.
     $options = $this->queryOptions;
 
-    // Region Select Based Insert.
+    // Select Based Insert.
     if (!empty($this->fromQuery)) {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = [];
@@ -55,7 +49,7 @@ class Insert extends QueryInsert {
 
       // Handle the case of SELECT-based INSERT queries first.
       $arguments = $this->fromQuery->getArguments();
-      DatabaseUtils::BindArguments($stmt, $arguments);
+      Utils::BindArguments($stmt, $arguments);
 
       // Run the query.
       $this->connection->query($stmt, [], $options);
@@ -70,8 +64,7 @@ class Insert extends QueryInsert {
       }
     }
 
-    // Endregion
-    // Region Inserts with no values (full defaults)
+    // Inserts with no values (full defaults)
     // Handle the case of full-default queries.
     if (empty($this->fromQuery) && (empty($this->insertFields) || empty($this->insertValues))) {
       // Re-initialize the values array so that we can re-use this query.
@@ -91,8 +84,7 @@ class Insert extends QueryInsert {
       }
     }
 
-    // Endregion
-    // Region Regular Inserts.
+    // Regular Inserts.
     $this->insertedKeys = [];
 
     // Each insert happens in its own query. However, we wrap it in a
@@ -105,7 +97,7 @@ class Insert extends QueryInsert {
     // If we are going to need more than one batch for this, start a
     // transaction.
     if (empty($this->queryOptions['sqlsrv_skip_transactions']) && !empty($this->insertValues)) {
-      $transaction = $this->connection->startTransaction('', DatabaseTransactionSettings::GetBetterDefaults());
+      $transaction = $this->connection->startTransaction();
     }
 
     while (!empty($batch)) {
@@ -123,11 +115,11 @@ class Insert extends QueryInsert {
       $max_placeholder = 0;
       foreach ($batch as $insert_index => $insert_values) {
         $values = array_combine($this->insertFields, $insert_values);
-        DatabaseUtils::BindValues($stmt, $values, $blobs, ':db_insert', $columnInformation, $max_placeholder, $insert_index);
+        Utils::BindValues($stmt, $values, $blobs, ':db_insert', $columnInformation, $max_placeholder, $insert_index);
       }
 
       // Run the query.
-      $this->connection->query($stmt, [], array_merge($options, ['fetch' => PDO::FETCH_ASSOC]));
+      $this->connection->query($stmt, [], array_merge($options, ['fetch' => \PDO::FETCH_ASSOC]));
 
       // We can only have 1 identity column per table (or none, where
       // fetchColumnwill fail). When the column does not have an identity
@@ -145,18 +137,11 @@ class Insert extends QueryInsert {
       $batch = array_splice($this->insertValues, 0, Insert::MAX_BATCH_SIZE);
     }
 
-    // If we started a transaction, commit it.
-    if ($transaction) {
-      $transaction->commit();
-    }
-
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = [];
 
     // Return the last inserted key.
     return empty($this->insertedKeys) ? NULL : end($this->insertedKeys);
-
-    // Endregion.
   }
 
   /**

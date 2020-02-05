@@ -11,10 +11,10 @@ use Drupal\Core\Database\DatabaseNotFoundException;
 
 use Drupal\Core\Database\Connection as DatabaseConnection;
 
-use Drupal\Core\Database\TransactionNoActiveException as DatabaseTransactionNoActiveException;
-use Drupal\Core\Database\TransactionCommitFailedException as DatabaseTransactionCommitFailedException;
-use Drupal\Core\Database\TransactionOutOfOrderException as DatabaseTransactionOutOfOrderException;
-use Drupal\Core\Database\TransactionNameNonUniqueException as DatabaseTransactionNameNonUniqueException;
+use Drupal\Core\Database\TransactionNoActiveException;
+use Drupal\Core\Database\TransactionCommitFailedException;
+use Drupal\Core\Database\TransactionOutOfOrderException;
+use Drupal\Core\Database\TransactionNameNonUniqueException;
 
 use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
 use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
@@ -916,49 +916,38 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Overriden to allow transaction settings.
+   * {@inheritdoc}
+   *
+   * Using SQL Server query syntax.
    */
-  public function startTransaction($name = '', TransactionSettings $settings = NULL) {
-    if ($settings == NULL) {
-      $settings = TransactionSettings::GetDefaults();
-    }
-    return new Transaction($this, $name, $settings);
-  }
-
-  /**
-   * Overriden.
-   */
-  public function rollback($savepoint_name = 'drupal_transaction') {
+  public function rollBack($savepoint_name = 'drupal_transaction') {
     if (!$this->supportsTransactions()) {
       return;
     }
     if (!$this->inTransaction()) {
-      throw new DatabaseTransactionNoActiveException();
+      throw new TransactionNoActiveException();
     }
     // A previous rollback to an earlier savepoint may mean that the savepoint
     // in question has already been accidentally committed.
     if (!isset($this->transactionLayers[$savepoint_name])) {
-      throw new DatabaseTransactionNoActiveException();
+      throw new TransactionNoActiveException();
     }
-
     // We need to find the point we're rolling back to, all other savepoints
     // before are no longer needed. If we rolled back other active savepoints,
     // we need to throw an exception.
     $rolled_back_other_active_savepoints = FALSE;
     while ($savepoint = array_pop($this->transactionLayers)) {
-      if ($savepoint['name'] == $savepoint_name) {
+      if ($savepoint == $savepoint_name) {
         // If it is the last the transaction in the stack, then it is not a
         // savepoint, it is the transaction itself so we will need to roll back
         // the transaction rather than a savepoint.
         if (empty($this->transactionLayers)) {
           break;
         }
-        if ($savepoint['started'] == TRUE) {
-          $this->query_direct('ROLLBACK TRANSACTION ' . $savepoint['name']);
-        }
+        $this->query('ROLLBACK TRANSACTION ' . $savepoint);
         $this->popCommittableTransactions();
         if ($rolled_back_other_active_savepoints) {
-          throw new DatabaseTransactionOutOfOrderException();
+          throw new TransactionOutOfOrderException();
         }
         return;
       }
@@ -966,152 +955,60 @@ class Connection extends DatabaseConnection {
         $rolled_back_other_active_savepoints = TRUE;
       }
     }
-    $this->connection->rollBack();
-    // Restore original transaction isolation level.
-    if ($level = $this->driver_settings->GetDefaultTransactionIsolationLevelInStatement()) {
-      if ($savepoint['settings']->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) {
-        if ($level != $savepoint['settings']->Get_IsolationLevel()) {
-          $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
-        }
-      }
+    // Notify the callbacks about the rollback.
+    $callbacks = $this->rootTransactionEndCallbacks;
+    $this->rootTransactionEndCallbacks = [];
+    foreach ($callbacks as $callback) {
+      call_user_func($callback, FALSE);
     }
+    $this->connection->rollBack();
     if ($rolled_back_other_active_savepoints) {
-      throw new DatabaseTransactionOutOfOrderException();
+      throw new TransactionOutOfOrderException();
     }
   }
 
   /**
-   * Summary of pushTransaction.
+   * {@inheritdoc}
    *
-   * @param string $name
-   *   Transaction name.
-   * @param \Drupal\Driver\Database\sqlsrv\TransactionSettings $settings
-   *   Transaction settings.
-   *
-   * @throws \Drupal\Core\Database\TransactionNameNonUniqueException
+   * Using SQL Server query syntax.
    */
-  public function pushTransaction($name, TransactionSettings $settings = NULL) {
-    if ($settings == NULL) {
-      $settings = TransactionSettings::GetBetterDefaults();
-    }
-    if (!$this->supportsTransactions()) {
+  public function pushTransaction($name) {
+   if (!$this->supportsTransactions()) {
       return;
     }
     if (isset($this->transactionLayers[$name])) {
-      throw new DatabaseTransactionNameNonUniqueException($name . " is already in use.");
+      throw new TransactionNameNonUniqueException($name . " is already in use.");
     }
-    $started = FALSE;
-    // If we're already in a transaction.
-    // TODO: Transaction scope Options is not working properly
-    // for first level transactions. It assumes that - always - a first level
-    // transaction must be started.
+    // If we're already in a transaction then we want to create a savepoint
+    // rather than try to create another transaction.
     if ($this->inTransaction()) {
-      switch ($settings->Get_ScopeOption()) {
-        case DatabaseTransactionScopeOption::RequiresNew():
-          $this->query_direct('SAVE TRANSACTION ' . $name);
-          $started = TRUE;
-          break;
-
-        case DatabaseTransactionScopeOption::Required():
-          // We are already in a transaction, do nothing.
-          break;
-
-        case DatabaseTransactionScopeOption::Supress():
-          // The only way to supress the ambient transaction is to use a new
-          // connection during the scope of this transaction, a bit messy to
-          // implement.
-          throw new Exception('DatabaseTransactionScopeOption::Supress not implemented.');
-      }
+      $this->queryDirect('SAVE TRANSACTION ' . $name);
     }
     else {
-      if ($settings->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) {
-        $current_isolation_level = strtoupper($this->schema()->UserOptions()['isolation level']);
-        // Se what isolation level was requested.
-        $level = $settings->Get_IsolationLevel()->__toString();
-        if (strcasecmp($current_isolation_level, $level) !== 0) {
-          $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
-        }
-      }
-      // In order to start a transaction current statement cursors
-      // must be closed.
-      foreach ($this->statementCache as $statement) {
-        $statement->closeCursor();
-      }
       $this->connection->beginTransaction();
     }
-    // Store the name and settings in the stack.
-    $this->transactionLayers[$name] = [
-      'settings' => $settings,
-      'active' => TRUE,
-      'name' => $name,
-      'started' => $started,
-    ];
+    $this->transactionLayers[$name] = $name;
   }
 
   /**
-   * Decreases the depth of transaction nesting.
+   * Commit all the transaction layers that can commit.
    *
-   * If we pop off the last transaction layer, then we either commit or roll
-   * back the transaction as necessary. If no transaction is active, we return
-   * because the transaction may have manually been rolled back.
-   *
-   * @param string $name
-   *   The name of the savepoint.
-   *
-   * @throws \Drupal\Core\Database\TransactionNoActiveException
-   * @throws \Drupal\Core\Database\TransactionCommitFailedException
-   *
-   * @see DatabaseTransaction
-   */
-  public function popTransaction($name) {
-    if (!$this->supportsTransactions()) {
-      return;
-    }
-    // The transaction has already been committed earlier. There is nothing we
-    // need to do. If this transaction was part of an earlier out-of-order
-    // rollback, an exception would already have been thrown by
-    // Database::rollback().
-    if (!isset($this->transactionLayers[$name])) {
-      return;
-    }
-
-    // Mark this layer as committable.
-    $this->transactionLayers[$name]['active'] = FALSE;
-    $this->popCommittableTransactions();
-  }
-
-  /**
-   * Internal function: commit all the transaction layers that can commit.
+   * @internal
    */
   protected function popCommittableTransactions() {
     // Commit all the committable layers.
-    foreach (array_reverse($this->transactionLayers) as $name => $state) {
+    foreach (array_reverse($this->transactionLayers) as $name => $active) {
       // Stop once we found an active transaction.
-      if ($state['active']) {
+      if ($active) {
         break;
       }
       // If there are no more layers left then we should commit.
       unset($this->transactionLayers[$name]);
       if (empty($this->transactionLayers)) {
-        try {
-          // PDO::commit() can either return FALSE or throw an exception itself.
-          if (!$this->connection->commit()) {
-            throw new DatabaseTransactionCommitFailedException();
-          }
-        }
-        finally {
-          // Restore original transaction isolation level.
-          if ($level = $this->driver_settings->GetDefaultTransactionIsolationLevelInStatement()) {
-            if ($state['settings']->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) {
-              if ($level != $state['settings']->Get_IsolationLevel()->__toString()) {
-                $this->query_direct("SET TRANSACTION ISOLATION LEVEL {$level}");
-              }
-            }
-          }
-        }
+        $this->doCommit();
       }
       else {
-        // Savepoints cannot be commited, only rolled back.
+        // Nothing to do in SQL Server.
       }
     }
   }

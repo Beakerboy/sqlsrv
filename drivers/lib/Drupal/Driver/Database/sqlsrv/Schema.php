@@ -206,8 +206,7 @@ class Schema extends DatabaseSchema {
       $this->ensureNotNullPrimaryKey($keys_new['primary key'], [$field => $spec]);
     }
 
-    /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
+    $transaction = $this->connection->startTransaction();
 
     // Prepare the specifications.
     $spec = $this->processField($spec);
@@ -277,8 +276,6 @@ class Schema extends DatabaseSchema {
     if (isset($spec['description'])) {
       $this->connection->queryDirect($this->createCommentSql($spec['description'], $table, $field));
     }
-    // Commit.
-    $transaction->commit();
   }
 
   /**
@@ -586,7 +583,7 @@ class Schema extends DatabaseSchema {
     // here and pray for the best.
 
     /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
+    $transaction = $this->connection->startTransaction();
 
     // Prepare the specifications.
     $spec = $this->processField($spec);
@@ -692,9 +689,6 @@ class Schema extends DatabaseSchema {
 
     // Add the new keys.
     $this->recreateTableKeys($table, $keys_new);
-
-    // Commit.
-    $transaction->commit();
   }
 
   /**
@@ -896,8 +890,7 @@ class Schema extends DatabaseSchema {
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
 
-    /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
+    $transaction = $this->connection->startTransaction();
 
     // Create the table with a default technical primary key.
     // $this->createTableSql already prefixes the table name, and we must
@@ -938,10 +931,8 @@ class Schema extends DatabaseSchema {
        $this->connection->queryDirect($this->createCommentSql($table['description'], $name));
     }
 
-    // Commit changes until now.
-    $transaction->commit();
-    
-   
+    unset($transaction);
+
     // Create the indexes but ignore any error during the creation. We do that
     // do avoid pulling the carpet under modules that try to implement indexes
     // with invalid data types (long columns), before we come up with a better
@@ -1569,16 +1560,13 @@ EOF
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
 
-    /** @var Transaction $transaction */
-    $transaction = $this->connection->startTransaction(NULL, TransactionSettings::GetDDLCompatibleDefaults());
+    $transaction = $this->connection->startTransaction();
 
     // Clear current Primary Key.
     $this->cleanUpPrimaryKey($table);
 
     // Recreate the Primary Key with the given limit size.
     $this->createPrimaryKey($table, $primary_key_fields, $limit);
-
-    $transaction->commit();
 
     // Refresh introspection for this table.
     $this->queryColumnInformation($table, TRUE);
