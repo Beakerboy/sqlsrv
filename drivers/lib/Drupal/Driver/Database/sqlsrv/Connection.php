@@ -937,6 +937,48 @@ class Connection extends DatabaseConnection {
     }
     $this->transactionLayers[$name] = $name;
   }
+
+  /**
+   * Commit all the transaction layers that can commit.
+   *
+   * @internal
+   */
+  protected function popCommittableTransactions() {
+    // Commit all the committable layers.
+    foreach (array_reverse($this->transactionLayers) as $name => $active) {
+      // Stop once we found an active transaction.
+      if ($active) {
+        break;
+      }
+      // If there are no more layers left then we should commit.
+      unset($this->transactionLayers[$name]);
+      if (empty($this->transactionLayers)) {
+        $this->doCommit();
+      }
+      else {
+        // Nothing to do in SQL Server.
+      }
+    }
+  }
+  /**
+   * Do the actual commit, invoke post-commit callbacks.
+   *
+   * @internal
+   */
+  protected function doCommit() {
+    $success = $this->connection->commit();
+    if (!empty($this->rootTransactionEndCallbacks)) {
+      $callbacks = $this->rootTransactionEndCallbacks;
+      $this->rootTransactionEndCallbacks = [];
+      foreach ($callbacks as $callback) {
+        call_user_func($callback, $success);
+      }
+    }
+    if (!$success) {
+      throw new TransactionCommitFailedException();
+    }
+  }
+
 }
 
 /**
