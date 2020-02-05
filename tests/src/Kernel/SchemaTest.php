@@ -61,25 +61,4 @@ class SchemaTest extends KernelTestBase {
     $this->assertEquals('New Comment', $comment);
   }
 
-  public function testDatabaseSpecificTypes() {
-    // Use database specific data type and ensure that table is created.
-    $table_specification = [
-      'description' => 'Schema table description.',
-      'fields' => [
-        'timestamp'  => [
-          'mysql_type' => 'timestamp',
-          'pgsql_type' => 'timestamp',
-          'sqlite_type' => 'datetime',
-          'not null' => FALSE,
-          'default' => NULL,
-        ],
-      ],
-    ];
-    //try {
-      $this->schema->createTable('test_timestamp', $table_specification);
-   // }
-   // catch (\Exception $e) {
-  //  }
-    $this->assertTrue($this->schema->tableExists('test_timestamp'), 'Table with database specific datatype was created.');
-  }
 }
