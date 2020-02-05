@@ -120,7 +120,6 @@ class Schema extends DatabaseSchema {
       'blob:big' => 'varbinary(max)',
       'blob:normal' => 'varbinary(max)',
 
-      'datetime:normal' => 'timestamp',
       'date:normal'     => 'date',
       'datetime:normal' => 'datetime2(0)',
       'time:normal'     => 'time(0)',
