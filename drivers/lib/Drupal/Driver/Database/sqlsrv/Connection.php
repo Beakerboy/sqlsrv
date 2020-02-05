@@ -921,55 +921,21 @@ class Connection extends DatabaseConnection {
    * Using SQL Server query syntax.
    */
   public function pushTransaction($name) {
-    //if ($settings == NULL) {
-      $settings = TransactionSettings::GetBetterDefaults();
-    //}
-    if (!$this->supportsTransactions()) {
+   if (!$this->supportsTransactions()) {
       return;
     }
     if (isset($this->transactionLayers[$name])) {
-      throw new DatabaseTransactionNameNonUniqueException($name . " is already in use.");
+      throw new TransactionNameNonUniqueException($name . " is already in use.");
     }
-    $started = FALSE;
-    // If we're already in a transaction.
-    // TODO: Transaction scope Options is not working properly
-    // for first level transactions. It assumes that - always - a first level
-    // transaction must be started.
+    // If we're already in a transaction then we want to create a savepoint
+    // rather than try to create another transaction.
     if ($this->inTransaction()) {
-      switch ($settings->Get_ScopeOption()) {
-        case DatabaseTransactionScopeOption::RequiresNew():
-          $this->queryDirect('SAVE TRANSACTION ' . $name);
-          $started = TRUE;
-          break;
-
-        case DatabaseTransactionScopeOption::Required():
-          // We are already in a transaction, do nothing.
-          break;
-
-        case DatabaseTransactionScopeOption::Supress():
-          // The only way to supress the ambient transaction is to use a new connection
-          // during the scope of this transaction, a bit messy to implement.
-          throw new Exception('DatabaseTransactionScopeOption::Supress not implemented.');
-      }
+      $this->queryDirect('SAVE TRANSACTION ' . $name);
     }
     else {
-      if ($settings->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) {
-        $current_isolation_level = strtoupper($this->schema()->UserOptions()['isolation level']);
-        // Se what isolation level was requested.
-        $level = $settings->Get_IsolationLevel()->__toString();
-        if (strcasecmp($current_isolation_level, $level) !== 0) {
-          $this->queryDirect("SET TRANSACTION ISOLATION LEVEL {$level}");
-        }
-      }
-      // In order to start a transaction current statement cursors
-      // must be closed.
-      foreach ($this->statementCache as $statement) {
-        $statement->closeCursor();
-      }
       $this->connection->beginTransaction();
     }
-    // Store the name and settings in the stack.
-    $this->transactionLayers[$name] = ['settings' => $settings, 'active' => TRUE, 'name' => $name, 'started' => $started];
+    $this->transactionLayers[$name] = $name;
   }
 }
 
