@@ -66,7 +66,7 @@ class Select extends QuerySelect {
       $replacement_expression .= substr($sub_expression, 0, $pos1 + 4) . '(' . $inner . ')*1.0)';
       
       if (strlen($sub_expression) > $pos2 + 1) {
-        $sub_expression = substring($sub_expression, $pos2 + 1);
+        $sub_expression = substr($sub_expression, $pos2 + 1);
       }
       else {
         $sub_expression = '';
