@@ -230,10 +230,8 @@ class Select extends QuerySelect {
   /**
    * {@inheritdoc}
    *
-   * Overridden to support SQL Server Range Query syntax.
+   * Overridden to support SQL Server Range Query syntax and CROSS APPLY
    *
-   * Would it be better to remove the range, allow the parent to render it,
-   * then modify the string?
    */
   public function __toString() {
     // For convenience, we compile the query ourselves if the caller forgot
@@ -329,7 +327,7 @@ class Select extends QuerySelect {
 
     // FROM - We presume all queries have a FROM, as any query that doesn't
     // won't need the query builder anyway.
-    $query .= "\nFROM ";
+    $query .= "\nFROM";
     foreach ($this->tables as $alias => $table) {
       $query .= "\n";
       if (isset($table['join type'])) {
