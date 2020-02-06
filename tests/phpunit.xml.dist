@@ -56,6 +56,7 @@
       <file>tests/Drupal/KernelTests/Core/Database/InsertTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/InvalidDataTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/LargeQueryTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/LoggingTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/MergeTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/NextIdTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/PrefixInfoTest.php</file>
@@ -67,6 +68,7 @@
       <file>tests/Drupal/KernelTests/Core/Database/SelectCloneTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectComplexTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectOrderedTest.php</file>
+      <file>tests/Drupal/KernelTests/Core/Database/SelectTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SerializeQueryTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/TaggingTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/TransactionTest.php</file>
@@ -76,10 +78,8 @@
       <file>tests/Drupal/KernelTests/Core/Database/UpsertTest.php</file>
     </testsuite>
     <testsuite name="failing_database">
-      <file>tests/Drupal/KernelTests/Core/Database/LoggingTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SchemaTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/SelectTest.php</file>
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
