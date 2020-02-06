@@ -16,6 +16,8 @@ class Select extends QuerySelect {
 
   /**
    * {@inheritdoc}
+   *
+   * Overridden to include our custom Condition class.
    */
   public function __construct($table, $alias, Connection $connection, $options = []) {
     parent::__construct($table, $alias, $connection, $options);
@@ -227,6 +229,11 @@ class Select extends QuerySelect {
 
   /**
    * {@inheritdoc}
+   *
+   * Overridden to support SQL Server Range Query syntax.
+   *
+   * Would it be better to remove the range, allow the parent to render it,
+   * then modify the string?
    */
   public function __toString() {
     // For convenience, we compile the query ourselves if the caller forgot
