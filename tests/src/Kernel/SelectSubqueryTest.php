@@ -18,7 +18,7 @@ class SelectSubqueryTest extends DatabaseTestBase {
     $this->assertEqual($average, '26.5');
   }
   
-  public function testIntegerAverage() {
+  public function testMultipleIntegerAverage() {
     // Create a subquery, which is just a normal query object.
     $query = $this->connection->select('test', 't2');
     $query->addExpression('AVG(t2.age) + AVG(t2.age + 1)');
