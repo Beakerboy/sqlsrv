@@ -84,7 +84,7 @@ class Select extends QuerySelect {
   private function findParenMatch($string, $start_paren) {
     $str_array = str_split(substr($string, $start_paren + 1));
     $paren_num = 1;
-    foreach($str_array as $index => $char) {
+    foreach($str_array as $i => $char) {
       if ($char == '(') {
         $paren_num++;
       }
