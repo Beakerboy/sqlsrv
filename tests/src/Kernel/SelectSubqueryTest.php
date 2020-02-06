@@ -15,7 +15,7 @@ class SelectSubqueryTest extends DatabaseTestBase {
     $query = $this->connection->select('test', 't2');
     $query->addExpression('AVG(t2.age)');
     $average = $query->execute()->fetchField();
-    $this->assertEqual($average, '27');
+    $this->assertEqual($average, '26.5');
   }
   
 }
