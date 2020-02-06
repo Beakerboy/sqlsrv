@@ -36,6 +36,10 @@ class Select extends QuerySelect {
    * Overriden with an aditional exclude parameter that tells not to include
    * this expression (by default) in the select list.
    *
+   * Drupal expects the AVG() function to return a decimal number. SQL Server will
+   * return the FLOOR instead. We multiply the expression by 1.0 to force a cast
+   * inside the AVG function. `AVG(m.id)` becomes `AVG(m.id * 1.0)`.
+   *
    * @param string $expression
    *   The expression string. May contain placeholders.
    * @param string $alias
