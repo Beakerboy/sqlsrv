@@ -57,8 +57,6 @@ class Select extends QuerySelect {
    *   The unique alias that was assigned for this expression.
    */
   public function addExpression($expression, $alias = NULL, $arguments = [], $exclude = FALSE, $expand = TRUE) {
-    // Should really find the matching parens in case the expression is:
-    // AVG(id) + COUNT(id)
     $sub_expression = $expression;
     $replacement_expression = '';
     while (strlen($sub_expression) > 5 && (($pos1 = stripos($sub_expression, 'AVG(')) !== FALSE)) {
@@ -83,6 +81,14 @@ class Select extends QuerySelect {
 
   /**
    * Given a string find the matching parenthesis after the given point.
+   *
+   * @param string $string
+   *   The input string.
+   * @param int $start_paren
+   *   The 0 indexed position of the open-paren, for which we would like
+   *   to find the matching closing-paren.
+   * @return int
+   *   The 0 indexed position of the close paren.
    */
   private function findParenMatch($string, $start_paren) {
     $str_array = str_split(substr($string, $start_paren + 1));
