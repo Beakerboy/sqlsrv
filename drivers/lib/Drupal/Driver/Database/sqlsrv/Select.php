@@ -454,7 +454,8 @@ class Select extends QuerySelect {
     // The ORDER BY clause is invalid in views, inline functions, derived
     // tables, subqueries, and common table expressions, unless TOP or FOR XML
     // is also specified.
-    if ($this->order && (empty($this->inSubQuery) || !empty($this->range))) {
+    $add_order_by = $this->order && (empty($this->inSubQuery) || !empty($this->range));
+    if ($add_order_by) {
       $query .= "\nORDER BY ";
       $fields = [];
       foreach ($this->order as $field => $direction) {
@@ -465,7 +466,7 @@ class Select extends QuerySelect {
 
     // RANGE.
     if (!empty($this->range)) {
-      if (empty($this->order)) {
+      if (!$add_order_by) {
         $query .= " ORDER BY (SELECT NULL)";
       }
       $query .= " OFFSET {$this->range['start']} ROWS FETCH NEXT {$this->range['length']} ROWS ONLY";
