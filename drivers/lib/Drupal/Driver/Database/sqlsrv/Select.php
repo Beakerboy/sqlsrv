@@ -65,9 +65,8 @@ class Select extends QuerySelect {
     $replacement_expression = '';
     while (strlen($sub_expression) > 5 && (($pos1 = stripos($sub_expression, 'AVG(')) !== FALSE)) {
       $pos2 = $this->findParenMatch($sub_expression, $pos1 + 3);
-      $inner = substr($sub_expression, $pos1 + 4, $pos2 - 4);
-      $expression = 'AVG((' . $inner . ') * 1.0)';
-      $replacement_expression .= substr($sub_expression, 0, $pos1 + 4) . '(' . $inner . ')*1.0)';
+      $inner = substr($sub_expression, $pos1 + 4, $pos2 - 4 - $pos1);
+      $replacement_expression .= substr($sub_expression, 0, $pos1 + 4) . '(' . $inner . ') * 1.0)';
       
       if (strlen($sub_expression) > $pos2 + 1) {
         $sub_expression = substr($sub_expression, $pos2 + 1);
