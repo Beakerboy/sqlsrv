@@ -856,26 +856,10 @@ class Connection extends DatabaseConnection {
       $query = preg_replace('/^\s*SELECT(\s*DISTINCT)?/Dsi', 'SELECT$1 TOP(' . $count . ')', $query);
     }
     else {
-      if ($this->schema()->EngineVersionNumber() >= 11) {
-        // As of SQL Server 2012 there is an easy (and faster!) way to page
-        // results. SQL Server requires an ORDER BY if OFFSET is specified.
-        if (strpos($query, "ORDER BY") === FALSE) {
-          $query .= " ORDER BY (SELECT NULL)";
-        }
-        $query = $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
+      if (strpos($query, "ORDER BY") === FALSE) {
+        $query .= " ORDER BY (SELECT NULL)";
       }
-      else {
-        // More complex case: use a TOP query to retrieve $from + $count rows,
-        // and filter out the first $from rows using a window function.
-        $query = preg_replace('/^\s*SELECT(\s*DISTINCT)?/Dsi', 'SELECT$1 TOP(' . ($from + $count) . ') ', $query);
-        $query = '
-          SELECT * FROM (
-            SELECT sub2.*, ROW_NUMBER() OVER(ORDER BY sub2.__line2) AS __line3 FROM (
-              SELECT sub1.*, 1 AS __line2 FROM (' . $query . ') AS sub1
-            ) as sub2
-          ) AS sub3
-          WHERE __line3 BETWEEN ' . ($from + 1) . ' AND ' . ($from + $count);
-      }
+      $query = $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
     }
 
     return $query;
