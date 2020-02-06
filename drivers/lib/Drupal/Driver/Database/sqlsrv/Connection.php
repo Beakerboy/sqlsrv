@@ -847,21 +847,12 @@ class Connection extends DatabaseConnection {
    *
    * This cannot be set protected because it is used in other parts of the
    * database engine.
-   *
-   * @status tested
    */
-  public function addRangeToQuery($query, $from, $count) {
-    if ($from == 0) {
-      // Easy case: just use a TOP query if we don't have to skip any rows.
-      $query = preg_replace('/^\s*SELECT(\s*DISTINCT)?/Dsi', 'SELECT$1 TOP(' . $count . ')', $query);
+  private function addRangeToQuery($query, $from, $count) {
+    if (strpos($query, "ORDER BY") === FALSE) {
+      $query .= " ORDER BY (SELECT NULL)";
     }
-    else {
-      if (strpos($query, "ORDER BY") === FALSE) {
-        $query .= " ORDER BY (SELECT NULL)";
-      }
-      $query = $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
-    }
-
+    $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
     return $query;
   }
 
