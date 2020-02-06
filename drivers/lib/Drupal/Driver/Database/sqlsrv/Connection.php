@@ -1013,6 +1013,20 @@ class Connection extends DatabaseConnection {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   *
+   * Adding schema to the connection URL
+   */
+  public static function createConnectionOptionsFromUrl($url, $root) {
+    $database = parent::createConnectionOptionsFromUrl($url, $root);
+    $url_components = parse_url($url);
+    if (isset($url_components['query'])) {
+      $database['schema'] = $url_components['query'];
+    }
+    return $database;
+  }
+
 }
 
 /**
