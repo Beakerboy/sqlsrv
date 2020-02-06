@@ -295,6 +295,11 @@ class Select extends QuerySelect {
     if ($this->distinct) {
       $query .= 'DISTINCT ';
     }
+    $used_range = FALSE;
+    if (!empty($this->range) && $this->range['start'] == 0 && !$this->union) {
+      $query .= ' TOP ' . $this->range['length'] . ' ';
+      $used_range = TRUE;
+    }
 
     // FIELDS and EXPRESSIONS.
     $fields = [];
@@ -465,7 +470,7 @@ class Select extends QuerySelect {
     }
 
     // RANGE.
-    if (!empty($this->range)) {
+    if (!empty($this->range) && !$used_range) {
       if (!$add_order_by) {
         $query .= " ORDER BY (SELECT NULL)";
       }
