@@ -59,16 +59,43 @@ class Select extends QuerySelect {
   public function addExpression($expression, $alias = NULL, $arguments = [], $exclude = FALSE, $expand = TRUE) {
     // Should really find the matching parens in case the expression is:
     // AVG(id) + COUNT(id)
-    if (strtoupper(substr($expression, 0, 4)) == 'AVG(') {
-      $inner = substr($expression, 4, -1);
-      $expression = 'AVG((' . $inner . ')*1.0)';
+    $sub_expression = $expression;
+    $replacement_expression = '';
+    while (strlen($sub_expression) > 5 && $pos1 = stripos($sub_expression, 'AVG(')) {
+      $pos2 = $this->findParenMatch($sub_expression, $pos1 + 3);
+      $inner = substr($sub_expression, $pos1 + 4, $pos2 - 4);
+      $expression = 'AVG((' . $inner . ') * 1.0)';
+      $replacement_expression .= substr($sub_expression, 0, $pos1 + 4) . '(' . $inner . ')*1.0)';
+      
+      if (strlen($sub_expression) > $pos2 + 1) {
+        $sub_expression = substring($sub_expression, $pos2 + 1);
+      }                     
     }
+    $replacement_expression .= $sub_expression;
     $alias = parent::addExpression($expression, $alias, $arguments);
     $this->expressions[$alias]['exclude'] = $exclude;
     $this->expressions[$alias]['expand'] = $expand;
     return $alias;
   }
 
+  /**
+   * Given a string find the matching parenthesis after the given point.
+   */
+  private function findParenMatch($string, $start_paren) {
+    $str_array = str_split(substr($string, $start_paren + 1));
+    $paren_num = 1;
+    foreach($str_array as $index => $char) {
+      if ($char == '(') {
+        $paren_num++;
+      }
+      elseif ($char == ')') {
+        $paren--;
+      }
+      if ($paren_num == 0) {
+        return $i + 4;
+      }
+    }
+  }
   /**
    * {@inheritdoc}
    */
