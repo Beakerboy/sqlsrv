@@ -57,6 +57,12 @@ class Select extends QuerySelect {
    *   The unique alias that was assigned for this expression.
    */
   public function addExpression($expression, $alias = NULL, $arguments = [], $exclude = FALSE, $expand = TRUE) {
+    // Should really find the matching parens in case the expression is:
+    // AVG(id) + COUNT(id)
+    if (strtoupper(substr($expression, 0, 4)) == 'AVG(') {
+      $inner = substr($expression, 4, -1);
+      $expression = 'AVG((' . $inner . ')*1.0)';
+    }
     $alias = parent::addExpression($expression, $alias, $arguments);
     $this->expressions[$alias]['exclude'] = $exclude;
     $this->expressions[$alias]['expand'] = $expand;
