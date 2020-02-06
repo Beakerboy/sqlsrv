@@ -708,15 +708,9 @@ class Schema extends DatabaseSchema {
       'MD5',
       'LPAD',
       'GROUP_CONCAT',
-      'CONCAT',
       'IF',
       'CONNECTION_ID',
     ];
-    // Since SQL Server 2012 (11), there
-    // is a native CONCAT implementation.
-    if ($this->EngineVersionNumber() >= 11) {
-      $functions = array_diff($functions, ['CONCAT']);
-    }
     return $functions;
   }
 
