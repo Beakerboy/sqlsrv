@@ -691,6 +691,19 @@ class Schema extends DatabaseSchema {
   }
 
   /**
+   * {@inheritdoc}
+   *
+   * Adding abilty to pass schema in configuration.
+   */
+  public function __construct($connection) {
+    parent::__construct($connection);
+    $options = $connection->getConnectionOptions();
+    if (isset($options['schema'])) {
+      $this->defaultSchema = $options['schema'];
+    }
+  }
+
+  /**
    * Drupal specific functions.
    *
    * Returns a list of functions that are not available by default on SQL
