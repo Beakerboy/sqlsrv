@@ -69,7 +69,10 @@ class Select extends QuerySelect {
       
       if (strlen($sub_expression) > $pos2 + 1) {
         $sub_expression = substring($sub_expression, $pos2 + 1);
-      }                     
+      }
+      else {
+        $sub_expression = '';
+      }
     }
     $replacement_expression .= $sub_expression;
     $alias = parent::addExpression($replacement_expression, $alias, $arguments);
