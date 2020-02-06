@@ -95,7 +95,7 @@ class Select extends QuerySelect {
         $paren_num--;
       }
       if ($paren_num == 0) {
-        return $i + 4;
+        return $i + $start_paren + 1;
       }
     }
   }
