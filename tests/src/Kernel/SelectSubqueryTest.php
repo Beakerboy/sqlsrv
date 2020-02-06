@@ -17,3 +17,5 @@ class SelectSubqueryTest extends DatabaseTestBase {
     $average = $query->execute()->fetchField();
     $this->assertEqual($average, '27');
   }
+  
+}
