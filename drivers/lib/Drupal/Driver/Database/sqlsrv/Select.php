@@ -72,7 +72,7 @@ class Select extends QuerySelect {
       }                     
     }
     $replacement_expression .= $sub_expression;
-    $alias = parent::addExpression($expression, $alias, $arguments);
+    $alias = parent::addExpression($replacement_expression, $alias, $arguments);
     $this->expressions[$alias]['exclude'] = $exclude;
     $this->expressions[$alias]['expand'] = $expand;
     return $alias;
