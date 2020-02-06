@@ -89,7 +89,7 @@ class Select extends QuerySelect {
         $paren_num++;
       }
       elseif ($char == ')') {
-        $paren--;
+        $paren_num--;
       }
       if ($paren_num == 0) {
         return $i + 4;
