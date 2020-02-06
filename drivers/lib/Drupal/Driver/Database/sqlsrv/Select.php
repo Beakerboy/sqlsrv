@@ -420,7 +420,10 @@ class Select extends QuerySelect {
 
     // RANGE.
     if (!empty($this->range)) {
-      $query = $this->connection->addRangeToQuery($query, $this->range['start'], $this->range['length']);
+      if (empty($this->order)) {
+        $query .= " ORDER BY (SELECT NULL)";
+      }
+      $query .= " OFFSET {$this->range['start']} ROWS FETCH NEXT {$this->range['length']} ROWS ONLY";
     }
 
     return $query;
