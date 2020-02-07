@@ -56,13 +56,6 @@ class Connection extends DatabaseConnection {
   const DATABASE_NOT_FOUND = 28000;
 
   /**
-   * Summary of $cache.
-   *
-   * @var FastCache
-   */
-  public $cache;
-
-  /**
    * Prepared PDO statements only makes sense if we cache them...
    *
    * @var mixed
@@ -297,9 +290,6 @@ class Connection extends DatabaseConnection {
     $this->OS = strtoupper(substr(PHP_OS, 0, 3));
     // Initialize settings.
     $this->driver_settings = DriverSettings::instanceFromSettings();
-
-    // Initialize cache.
-    $this->cache = new FastCache($connection_options['prefix']['default']);
 
     // Needs to happen before parent construct.
     $this->statementClass = Statement::class;
