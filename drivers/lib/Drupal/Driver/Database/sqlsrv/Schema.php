@@ -48,8 +48,7 @@ class Schema extends DatabaseSchema {
   // Name for the technical column used for computed key sor technical primary
   // key.
   // IMPORTANT: They both start with "__" because the statement class will
-  // remove those columns from the final result set. This should be constants,
-  // but we are using variable to ease their use in inline strings.
+  // remove those columns from the final result set.
 
   /**
    * Computed primary key name.
