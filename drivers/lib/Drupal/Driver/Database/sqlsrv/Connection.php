@@ -286,9 +286,7 @@ class Connection extends DatabaseConnection {
    * @var array
    */
   protected static $sqlsrvConditionOperatorMap = [
-    'LIKE' => [],
     'LIKE BINARY' => ['operator' => 'LIKE'],
-    'NOT LIKE' => [],
   ];
 
   /**
