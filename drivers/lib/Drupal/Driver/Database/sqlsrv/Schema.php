@@ -48,29 +48,28 @@ class Schema extends DatabaseSchema {
   // Name for the technical column used for computed key sor technical primary
   // key.
   // IMPORTANT: They both start with "__" because the statement class will
-  // remove those columns from the final result set. This should be constants,
-  // but we are using variable to ease their use in inline strings.
+  // remove those columns from the final result set.
 
   /**
    * Computed primary key name.
    *
    * @var string
    */
-  public $COMPUTED_PK_COLUMN_NAME = '__pkc';
+  const COMPUTED_PK_COLUMN_NAME = '__pkc';
 
   /**
    * Computed primary key index.
    *
    * @var string
    */
-  public $COMPUTED_PK_COLUMN_INDEX = '__ix_pkc';
+  const COMPUTED_PK_COLUMN_INDEX = '__ix_pkc';
 
   /**
    * Technical primary key name.
    *
    * @var string
    */
-  public $TECHNICAL_PK_COLUMN_NAME = '__pk';
+  const TECHNICAL_PK_COLUMN_NAME = '__pk';
 
   /**
    * Version information for the SQL Server engine.
@@ -393,7 +392,7 @@ class Schema extends DatabaseSchema {
     }
     $this->cleanUpPrimaryKey($table);
     $this->createTechnicalPrimaryColumn($table);
-    $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$this->TECHNICAL_PK_COLUMN_NAME})");
+    $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")");
     return TRUE;
   }
 
@@ -445,7 +444,7 @@ class Schema extends DatabaseSchema {
     // values with the globally unique identifier generated previously.
     // This is (very) unlikely to result in a collision with any actual value
     // in the columns of the unique key.
-    $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$this->TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
+    $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST(" . self::TECHNICAL_PK_COLUMN_NAME . " AS varbinary(max)))) AS varbinary(16))");
     $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON {{$table}} (__unique_{$name})");
   }
 
@@ -1257,8 +1256,8 @@ EOF
 
     if ($nullable || $size >= $limit) {
       // Use a computed column instead, and create a custom index.
-      $result[] = "{$this->COMPUTED_PK_COLUMN_NAME} AS (CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT('',{$csv_fields})), 2)) PERSISTED NOT NULL";
-      $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$this->COMPUTED_PK_COLUMN_NAME})";
+      $result[] = self::COMPUTED_PK_COLUMN_NAME . " AS (CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT('',{$csv_fields})), 2)) PERSISTED NOT NULL";
+      $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED (" . self::COMPUTED_PK_COLUMN_NAME . ")";
       $index = TRUE;
     }
     else {
@@ -1270,7 +1269,7 @@ EOF
     // If we relied on a computed column for the Primary Key,
     // at least index the fields with a regular index.
     if ($index) {
-      $this->addIndex($table, $this->COMPUTED_PK_COLUMN_INDEX, $fields);
+      $this->addIndex($table, self::COMPUTED_PK_COLUMN_INDEX, $fields);
     }
   }
 
@@ -1288,8 +1287,8 @@ EOF
    */
   private function createTechnicalPrimaryKeyIndexSql($table) {
     $result = [];
-    $result[] = "{$this->TECHNICAL_PK_COLUMN_NAME} UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL";
-    $result[] = "CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$this->TECHNICAL_PK_COLUMN_NAME})";
+    $result[] = self::TECHNICAL_PK_COLUMN_NAME . " UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL";
+    $result[] = "CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")";
     return implode(' ', $result);
   }
 
@@ -1707,7 +1706,7 @@ EOF;
     $result = [];
     $index = $data['indexes'][$data['primary_key_index']];
     foreach ($index['columns'] as $column) {
-      if ($column['name'] != $this->COMPUTED_PK_COLUMN_NAME) {
+      if ($column['name'] != self::COMPUTED_PK_COLUMN_NAME) {
         $result[$column['name']] = $column['name'];
       }
       // Get full column definition.
@@ -1784,7 +1783,7 @@ EOF;
 
     // If this column is part of a computed primary key, drop the key.
     $data = $this->queryColumnInformation($table, TRUE);
-    if (isset($data['columns'][$this->COMPUTED_PK_COLUMN_NAME]['dependencies'][$field])) {
+    if (isset($data['columns'][self::COMPUTED_PK_COLUMN_NAME]['dependencies'][$field])) {
       $this->cleanUpPrimaryKey($table);
     }
   }
@@ -1820,8 +1819,8 @@ EOF;
    *   Table name.
    */
   protected function createTechnicalPrimaryColumn($table) {
-    if (!$this->fieldExists($table, $this->TECHNICAL_PK_COLUMN_NAME)) {
-      $this->connection->query("ALTER TABLE {{$table}} ADD {$this->TECHNICAL_PK_COLUMN_NAME} UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL");
+    if (!$this->fieldExists($table, self::TECHNICAL_PK_COLUMN_NAME)) {
+      $this->connection->query("ALTER TABLE {{$table}} ADD " . self::TECHNICAL_PK_COLUMN_NAME . " UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL");
     }
   }
 
@@ -1839,10 +1838,10 @@ EOF;
     }
     // We are using computed columns to store primary keys,
     // try to remove it if it exists.
-    if ($this->fieldExists($table, $this->COMPUTED_PK_COLUMN_NAME)) {
+    if ($this->fieldExists($table, self::COMPUTED_PK_COLUMN_NAME)) {
       // The TCPK has compensation indexes that need to be cleared.
-      $this->dropIndex($table, $this->COMPUTED_PK_COLUMN_INDEX);
-      $this->dropField($table, $this->COMPUTED_PK_COLUMN_NAME);
+      $this->dropIndex($table, self::COMPUTED_PK_COLUMN_INDEX);
+      $this->dropField($table, self::COMPUTED_PK_COLUMN_NAME);
     }
     // Try to get rid of the TPC.
     $this->cleanUpTechnicalPrimaryColumn($table);
@@ -1865,7 +1864,7 @@ EOF;
     $unique_indexes = $this->connection->query('SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1 AND is_primary_key = 0', [':table' => $this->connection->prefixTables('{' . $table . '}')])->fetchField();
     $primary_key_is_technical = $this->isTechnicalPrimaryKey($this->primaryKeyName($table));
     if (!$unique_indexes && !$primary_key_is_technical) {
-      $this->dropField($table, $this->TECHNICAL_PK_COLUMN_NAME);
+      $this->dropField($table, self::TECHNICAL_PK_COLUMN_NAME);
     }
   }
 
