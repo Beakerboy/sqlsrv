@@ -48,7 +48,7 @@ install:
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
   - cd $TRAVIS_BUILD_DIR/../drupal-project
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist web/core/phpunit.xml
-  - phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
+  #- phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
   - cd web
   # Install core patches
   - wget https://www.drupal.org/files/issues/2019-05-28/2867788-53.patch
