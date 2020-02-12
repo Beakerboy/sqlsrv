@@ -392,7 +392,7 @@ class Schema extends DatabaseSchema {
     }
     $this->cleanUpPrimaryKey($table);
     $this->createTechnicalPrimaryColumn($table);
-    $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$self::TECHNICAL_PK_COLUMN_NAME})");
+    $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")");
     return TRUE;
   }
 
@@ -1256,8 +1256,8 @@ EOF
 
     if ($nullable || $size >= $limit) {
       // Use a computed column instead, and create a custom index.
-      $result[] = "{$self::COMPUTED_PK_COLUMN_NAME} AS (CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT('',{$csv_fields})), 2)) PERSISTED NOT NULL";
-      $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$self::COMPUTED_PK_COLUMN_NAME})";
+      $result[] = self::COMPUTED_PK_COLUMN_NAME . " AS (CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT('',{$csv_fields})), 2)) PERSISTED NOT NULL";
+      $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED (" . self::COMPUTED_PK_COLUMN_NAME . ")";
       $index = TRUE;
     }
     else {
@@ -1287,8 +1287,8 @@ EOF
    */
   private function createTechnicalPrimaryKeyIndexSql($table) {
     $result = [];
-    $result[] = "{$self::TECHNICAL_PK_COLUMN_NAME} UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL";
-    $result[] = "CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED ({$self::TECHNICAL_PK_COLUMN_NAME})";
+    $result[] = self::TECHNICAL_PK_COLUMN_NAME . " UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL";
+    $result[] = "CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")";
     return implode(' ', $result);
   }
 
