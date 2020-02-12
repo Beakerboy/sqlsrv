@@ -55,21 +55,21 @@ class Schema extends DatabaseSchema {
    *
    * @var string
    */
-  const $COMPUTED_PK_COLUMN_NAME = '__pkc';
+  const COMPUTED_PK_COLUMN_NAME = '__pkc';
 
   /**
    * Computed primary key index.
    *
    * @var string
    */
-  const $COMPUTED_PK_COLUMN_INDEX = '__ix_pkc';
+  const COMPUTED_PK_COLUMN_INDEX = '__ix_pkc';
 
   /**
    * Technical primary key name.
    *
    * @var string
    */
-  const $TECHNICAL_PK_COLUMN_NAME = '__pk';
+  const TECHNICAL_PK_COLUMN_NAME = '__pk';
 
   /**
    * Version information for the SQL Server engine.
