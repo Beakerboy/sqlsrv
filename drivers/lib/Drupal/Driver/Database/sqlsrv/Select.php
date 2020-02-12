@@ -297,7 +297,7 @@ class Select extends QuerySelect {
     }
     $used_range = FALSE;
     if (!empty($this->range) && $this->range['start'] == 0 && !$this->union && isset($this->range['length'])) {
-      $query .= 'TOP ' . $this->range['length'] . ' ';
+      $query .= 'TOP (' . $this->range['length'] . ') ';
       $used_range = TRUE;
     }
 
