@@ -444,7 +444,7 @@ class Schema extends DatabaseSchema {
     // values with the globally unique identifier generated previously.
     // This is (very) unlikely to result in a collision with any actual value
     // in the columns of the unique key.
-    $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST({$self::TECHNICAL_PK_COLUMN_NAME} AS varbinary(max)))) AS varbinary(16))");
+    $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST(" . self::TECHNICAL_PK_COLUMN_NAME . " AS varbinary(max)))) AS varbinary(16))");
     $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON {{$table}} (__unique_{$name})");
   }
 
