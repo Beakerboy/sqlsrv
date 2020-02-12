@@ -18,7 +18,7 @@ before_install:
   - export ACCEPT_EULA=Y
   - export MSSQL_PID=Evaluation
   - sudo /opt/mssql/bin/mssql-conf setup
-  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q 'CREATE DATABASE mydrupalsite'
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q 'CREATE DATABASE mydrupalsite COLLATE Latin1_General_CI_AI '
   # Install the pdo_sqlsrv extension
   - sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev gcc g++ make autoconf libc-dev pkg-config
   - pecl install sqlsrv
