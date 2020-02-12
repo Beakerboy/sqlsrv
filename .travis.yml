@@ -39,13 +39,13 @@ install:
   - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
   - drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
   # Install REGEX CLR
-  #- sudo apt-get install -qq mono-complete
+  - sudo apt-get install -qq mono-complete
   - cd $TRAVIS_BUILD_DIR/tests
-  #- mcs -reference:System.Data.dll -target:library -out:RegEx.dll regex.cs
-  #- sudo mv RegEx.dll /var/opt/mssql/data/
-  #- /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
-  #- /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE ASSEMBLY Regex from '/var/opt/mssql/data/RegEx.dll' WITH PERMISSION_SET = SAFE"
-  #- /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
+  - mcs -reference:System.Data.dll -target:library -out:RegEx.dll regex.cs
+  - sudo mv RegEx.dll /var/opt/mssql/data/
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE ASSEMBLY Regex from '/var/opt/mssql/data/RegEx.dll' WITH PERMISSION_SET = SAFE"
+  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
   - cd $TRAVIS_BUILD_DIR/../drupal-project
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist web/core/phpunit.xml
   #- phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
