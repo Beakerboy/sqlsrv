@@ -1819,7 +1819,7 @@ EOF;
    *   Table name.
    */
   protected function createTechnicalPrimaryColumn($table) {
-    if (!$this->fieldExists($table, $self::TECHNICAL_PK_COLUMN_NAME)) {
+    if (!$this->fieldExists($table, self::TECHNICAL_PK_COLUMN_NAME)) {
       $this->connection->query("ALTER TABLE {{$table}} ADD {self::TECHNICAL_PK_COLUMN_NAME} UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL");
     }
   }
