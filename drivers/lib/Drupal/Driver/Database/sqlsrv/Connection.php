@@ -182,7 +182,7 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function escapeLike($string) {
-    return preg_replace('/([\\[\\]%_])/', '[$1]', $string);
+    return preg_replace('/([\\[\\]%_\\\\])/', '[$1]', $string);
   }
 
   /**
