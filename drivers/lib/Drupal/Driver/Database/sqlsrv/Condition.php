@@ -28,6 +28,15 @@ class Condition extends QueryCondition {
           $condition['operator'] = NULL;
           $condition['value'] = [$placeholder => $condition['value']];
         }
+        elseif ($condition['operator'] == 'LIKE' || $condition['operator'] == 'NOT LIKE') {
+          $condition['value'] = strtr($condition['value'], [
+            '[' => '[[]',
+            ']' => '[]]',
+            '\%' => '[%]',
+            '\_' => '[_]',
+            '\\\\' => '\\',
+          ]);
+        }
       }
     }
     parent::compile($connection, $queryPlaceholder);
