@@ -4,11 +4,11 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
-class SelectTest extends DatabaseTestBase {
+class ConditionTest extends DatabaseTestBase {
 
-  // Testing custom Condition class in where already happens in core.
+  // Testing custom Condition class in select where already happens in core.
 
-  // Test custom Condition class in having.
+  // Test custom Condition class in select having.
 
   /**
    * Confirms that we can properly nest custom conditional clauses.
@@ -26,4 +26,11 @@ class SelectTest extends DatabaseTestBase {
     $job = $query->execute()->fetchField();
     $this->assertEqual($job, 'Songwriter', 'Correct data retrieved.');
   }
+
+  // Test custom Condition class in delete where.
+
+  // Test custom Condition class in merge.
+
+  // Test custom Condition class in update where.
+
 }
