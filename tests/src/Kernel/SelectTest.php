@@ -22,7 +22,7 @@ class SelectTest extends DatabaseTestBase {
     $query = $this->connection->select('test');
     $query->addField('test', 'job');
     $query->condition('name', 'Paul');
-    $query->condition(($this->connection->condition('OR'))->condition('name', '^P', 'REGEX')->condition('age', 27));
+    $query->condition(($this->connection->condition('OR'))->condition('name', '^P', 'REGEXP')->condition('age', 27));
 
     $job = $query->execute()->fetchField();
     $this->assertEqual($job, 'Songwriter', 'Correct data retrieved.');
