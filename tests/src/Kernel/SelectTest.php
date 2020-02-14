@@ -6,7 +6,7 @@ use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 class SelectTest extends DatabaseTestBase {
 
-  // Test custom Condition class in where.
+  // Testing custom Condition class in where already happens in core.
 
   // Test custom Condition class in having.
 
