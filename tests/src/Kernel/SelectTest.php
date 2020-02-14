@@ -10,9 +10,8 @@ class SelectTest extends DatabaseTestBase {
 
   // Test custom Condition class in having.
 
-  // Test custom Condition class on nested conditions.
   /**
-   * Confirms that we can properly nest conditional clauses.
+   * Confirms that we can properly nest custom conditional clauses.
    */
   public function testNestedConditions() {
     // This query should translate to:
