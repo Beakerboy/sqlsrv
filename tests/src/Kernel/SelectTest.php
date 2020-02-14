@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\KernelTestBase;
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
-class SelectTest extends KernelTestBase {
+class SelectTest extends DatabaseTestBase {
 
   // Test custom Condition class in where.
 
