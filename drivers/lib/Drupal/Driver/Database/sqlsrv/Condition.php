@@ -28,14 +28,14 @@ class Condition extends QueryCondition {
           $condition['operator'] = NULL;
           $condition['value'] = [$placeholder => $condition['value']];
         }
-        if ($condition['operator'] == 'LIKE' || $condition['operator'] == 'NOT LIKE') {
+        elseif ($condition['operator'] == 'LIKE' || $condition['operator'] == 'NOT LIKE') {
           $condition['value'] = strtr($condition['value'], [
             '[' => '[[]',
             ']' => '[]]',
             '\%' => '[%]',
             '\_' => '[_]',
             '\\\\' => '\\',
-           ]);
+          ]);
         }
       }
     }
