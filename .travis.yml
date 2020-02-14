@@ -52,9 +52,9 @@ install:
   - cd web
   # Install core patches
   - wget https://www.drupal.org/files/issues/2019-05-28/2867788-53.patch
-  - wget https://www.drupal.org/files/issues/2020-02-14/drupal-3113403-Make_condition_driver_overridable-11.patch
+  - wget https://www.drupal.org/files/issues/2020-02-14/drupal-3113403-Make_condition_driver_overridable-14.patch
   - git apply 2867788-53.patch
-  - git apply drupal-3113403-Make_condition_driver_overridable-11.patch
+  - git apply drupal-3113403-Make_condition_driver_overridable-14.patch
   # Install patches for tests
   - wget https://www.drupal.org/files/issues/2020-01-30/drupal-3108540-deprecationErrors-3.patch
   - wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
