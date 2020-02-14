@@ -452,7 +452,7 @@ class Select extends QuerySelect {
       $query .= "\nORDER BY ";
       $fields = [];
       foreach ($this->order as $field => $direction) {
-        $fields[] = $field . ' ' . $direction;
+        $fields[] = $this->connection->escapeField($field) . ' ' . $direction;
       }
       $query .= implode(', ', $fields);
     }
