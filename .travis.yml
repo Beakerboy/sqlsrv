@@ -27,7 +27,7 @@ before_install:
 install:
   # Create a Drupal Site
   - cd ..
-  - composer -n create-project drupal/recommended-project:^9.0@dev my-project
+  - composer -n create-project drupal/recommended-project:^9.0@dev drupal
   - cd drupal
   - export COMPOSER_MEMORY_LIMIT=-1
   - cp -r $TRAVIS_BUILD_DIR/drivers ./drivers
