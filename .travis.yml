@@ -27,9 +27,8 @@ before_install:
 install:
   # Create a Drupal Site
   - cd ..
-  - git clone https://git.drupalcode.org/project/drupal.git
+  - composer require drupal/recommended-project:9.0-dev
   - cd drupal
-  - git checkout 9.0.x
   - export COMPOSER_MEMORY_LIMIT=-1
   - cp -r $TRAVIS_BUILD_DIR/drivers ./drivers
   - rm -rf ./modules/sqlsrv
