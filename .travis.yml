@@ -32,7 +32,7 @@ install:
   - composer require drush/drush
   - export COMPOSER_MEMORY_LIMIT=-1
   - cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
-  - ls -al
+  - ls -al ./web
   - cp -rf $TRAVIS_BUILD_DIR ./web/modules/sqlsrv
   - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal/vendor/bin
   - drush site:install --db-url sqlsrv://sa:Password12!@localhost/mydrupalsite --db-su sa --db-su-pw Password12! -n
