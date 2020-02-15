@@ -29,6 +29,7 @@ install:
   - cd ..
   - composer -n create-project drupal/recommended-project:^9.0@dev drupal
   - cd drupal
+  - composer install drush/drush
   - export COMPOSER_MEMORY_LIMIT=-1
   - cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
   - ls -al
