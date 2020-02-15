@@ -29,7 +29,7 @@ install:
   - cd ..
   - git clone https://git.drupalcode.org/project/drupal.git
   - cd drupal
-  - git checkout 9.x
+  - git checkout 9.0.x
   - export COMPOSER_MEMORY_LIMIT=-1
   - cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
   - rm -rf ./web/modules/contrib/sqlsrv
