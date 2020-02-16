@@ -35,7 +35,7 @@ install:
   - ls -al ./web
   - cp -rf $TRAVIS_BUILD_DIR ./web/modules/sqlsrv
   - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal/vendor/bin
-  - drush site:install standard --db-url=sqlsrv://sa:Password12!@localhost/mydrupalsite -n
+  - drush site:install standard --db-url=sqlsrv://sa:Password12!@localhost/mydrupalsite -vvv -n
   # Install REGEX CLR
   - sudo apt-get install -qq mono-complete
   - cd $TRAVIS_BUILD_DIR/tests
