@@ -2,9 +2,10 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\KernelTestBase;
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
-class ParameterTest extends KernelTestBase {
+
+class ParameterTest extends DatabaseTestBase {
 
   /**
    * Test the 2100 parameter limit per query.
