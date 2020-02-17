@@ -3,6 +3,7 @@
 namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
+use Drupal\Driver\Database\sqlsrv\Condition;
 /**
  * Test behavior that is unique to the Sql Server Driver.
  *
@@ -156,11 +157,14 @@ class SqlsrvTest extends DatabaseTestBase {
     // Test expected escaped characters
     $string = 't[e%s]t_\\';
     $query = $this->connection->select('test_task', 't');
-    $conditions = $query->condition('t', 'task', $string, 'LIKE')->conditions();
-    $arguments = $conditions[0]->compile($this->connection, $query)->arguments();
+    $conditions = new Condition('AND');
+    $condition->condition('t', 'task', $string, 'LIKE');
+    $condition->compile($this->connection, $query);
+    $arguments = $condition->conditions();
+    $argument = $arguments[0];
     
     $expected = 't[[]e[%]s[]]t[_]\\';
-    $actual = $arguments['value'];
+    $actual = $argument['value'];
     $this->assertEqual($actual, $expected, 'Properly escaped LIKE statement wildcards.');
 
     $this->connection->insert('test_task')
