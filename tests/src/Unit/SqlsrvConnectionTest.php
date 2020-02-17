@@ -99,7 +99,8 @@ class SqlsrvConnectionTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::escapeTable
+   * Test that tables are properly escaped.
+   *
    * @dataProvider providerEscapeTables
    */
   public function testEscapeTable($expected, $name) {
@@ -109,7 +110,8 @@ class SqlsrvConnectionTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::escapeField
+   * Test that fields are properly escaped.
+   *
    * @dataProvider providerEscapeFields
    */
   public function testEscapeField($expected, $name) {
