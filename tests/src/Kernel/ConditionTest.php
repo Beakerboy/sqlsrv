@@ -39,7 +39,7 @@ class ConditionTest extends DatabaseTestBase {
   public function testPdoBugExists() {
     // Extend Connection with new $sqlsrvConditionOperatorMap array
     $connection = $this->connection;
-    $reflection = new ReflectionClass($connection);
+    $reflection = new \ReflectionClass($connection);
     $reflection_property = $reflection->getProperty('sqlsrvConditionOperatorMap');
     $reflection_property->setAccessible(true);
     $desired_operator_map = ['LIKE' => ['postfix' => " ESCAPE '\\'"]];
@@ -49,7 +49,7 @@ class ConditionTest extends DatabaseTestBase {
     $condition = new CoreCondition('AND');
     
     $select = new Select($reflection, 'test', 't');
-    $query = new ReflectionClass($select);
+    $query = new \ReflectionClass($select);
     $reflection_property = $reflection->getProperty('condition');
     $reflection_property->setAccessible(true);
     $reflection_property->setValue($query, $condition);
