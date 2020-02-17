@@ -39,6 +39,7 @@ class AliasTest extends DatabaseTestBase {
       'Task: sleep' => 2,
       'Task: code' => 1,
       'Task: found new band' => 1,
+      'Task: sing' => 1,
       'Task: perform at superbowl' => 1,
     ];
 
