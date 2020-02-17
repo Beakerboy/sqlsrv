@@ -62,7 +62,7 @@ class ConditionTest extends DatabaseTestBase {
 
     // Expect exception when executing query;
     // Should specify what type.
-    $this->expectException(\PDOException::class);
+    $this->expectException(\Exception::class);
     
     // Create and execute buggy query
     $query->addField('t', 'job');
