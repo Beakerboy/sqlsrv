@@ -148,7 +148,7 @@ class SqlsrvTest extends DatabaseTestBase {
 
     // db_select->where: Test escaped wildcard.
     $query = $this->connection->select('test_task', 't');
-    $query->where('t.task LIKE :task', [':task' => $this->connectionescapeLike('_leep')]);
+    $query->where('t.task LIKE :task', [':task' => $this->connection->escapeLike('_leep')]);
     $query->fields('t');
     $result = $query->execute()->fetchAll();
     $this->assertEqual(count($result), 0, t('db_select returned the correct number of total rows.'));
