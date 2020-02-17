@@ -7,7 +7,9 @@ use Drupal\Driver\Database\sqlsrv\Condition;
 use Drupal\Tests\Core\Database\Stub\StubConnection;
 
 /**
- * Test the behavior of the custom Condition class
+ * Test the behavior of the custom Condition class.
+ *
+ * These tests are not expected to pass on other database drivers.
  */
 class ConditionTest {
   public function setUp() {
