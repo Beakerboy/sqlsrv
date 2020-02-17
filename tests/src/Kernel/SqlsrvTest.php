@@ -109,7 +109,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $this->connection->schema()->dropTable($table);
     
     // The table should not exist now.
-    $this->assertFALSE($this->schema->tableExists($table), 'The temporary table does not exists.');
+    $this->assertFALSE($this->connection->schema()->tableExists($table), 'The temporary table does not exists.');
   }
   
   /**
@@ -119,7 +119,7 @@ class SqlsrvTest extends DatabaseTestBase {
     // Test expected escaped characters
     $string = 't[e%s]t_\\';
     $query = $this->connection->select('test_task', 't');
-    $conditions = new Condition('AND');
+    $condition = new Condition('AND');
     $condition->condition('t', 'task', $string, 'LIKE');
     $condition->compile($this->connection, $query);
     $arguments = $condition->conditions();
