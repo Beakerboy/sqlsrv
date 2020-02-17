@@ -48,7 +48,7 @@ class ConditionTest extends DatabaseTestBase {
     // Set Condition to use parent::compile()
     $condition = new CoreCondition('AND');
     
-    $select = new Select($reflection, 'test', 't');
+    $select = new Select('test', 't', $reflection);
     $query = new \ReflectionClass($select);
     $reflection_property = $reflection->getProperty('condition');
     $reflection_property->setAccessible(true);
