@@ -11,19 +11,19 @@ class SqlsrvTestBase extends DatabaseTestBase {
    */
   public function setUp() {
     
-    $table_spec = array(
-        'fields' => array(
-          'id'  => array(
+    $table_spec = [
+        'fields' => [
+          'id'  => [
             'type' => 'serial',
             'not null' => TRUE,
-          ),
-          'task' => array(
+          ],
+          'task' => [
             'type' => 'varchar',
             'length' => 255,
             'not null' => TRUE,
-          ),
-        ),
-      );
+          ],
+        ],
+      ];
 
     $this->connection->schema()->createTable('test_task', $table_spec);
     $this->connection->insert('test_task')->fields(['task' => 'eat'])->execute();
@@ -130,7 +130,7 @@ class SqlsrvTestBase extends DatabaseTestBase {
       // The regular expandArguments implementation will fail to
       // properly expand the associative array with weird keys, OH, and actually
       // you can perform some SQL Injection through the array keys.
-      $result = db_query('SELECT COUNT(*) FROM USERS WHERE USERS.UID IN (:nids)', $params)->execute()->fetchField();
+      $result = db_query('SELECT COUNT(*) FROM users WHERE users.uid IN (:nids)', $params)->execute()->fetchField();
     } 
     catch (\Exception $err) {
       // Regular drupal will fail with
