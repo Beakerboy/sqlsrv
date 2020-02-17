@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 use Drupal\Core\Database\Query\Condition as CoreCondition;
 use Drupal\Driver\Database\sqlsrv\Select;
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 class ConditionTest extends DatabaseTestBase {
 
@@ -38,7 +38,7 @@ class ConditionTest extends DatabaseTestBase {
   // Test that multiple LIKE statements throws exception when escaped by backslash. 
   public function testPdoBugExists() {
     // Extend Connection with new $sqlsrvConditionOperatorMap array
-    $connection = Database::getConnection();
+    $connection = $this->connection;
     $reflection = new ReflectionClass($connection);
     $reflection_property = $reflection->getProperty('sqlsrvConditionOperatorMap');
     $reflection_property->setAccessible(true);
