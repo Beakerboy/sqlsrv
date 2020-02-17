@@ -143,7 +143,7 @@ class SqlsrvTest extends DatabaseTestBase {
     // $this->assertEqual(count($data1[0]), count($data2[0]), 'Temporary table has the same number of columns.');
     
     // Drop the table.
-    $this->schema->dropTable($table);
+    $this->connection->schema()->dropTable($table);
     
     // The table should not exist now.
     $this->assertFALSE($this->schema->tableExists($table), 'The temporary table does not exists.');
