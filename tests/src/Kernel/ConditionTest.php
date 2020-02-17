@@ -35,7 +35,13 @@ class ConditionTest extends DatabaseTestBase {
 
   // Test custom Condition class in update->where.
   
-  // Test that multiple LIKE statements throws exception when escaped by backslash. 
+  /**
+   * Test that multiple LIKE statements throws exception when escaped by backslash.
+   *
+   * This tests will throw an exception while the PDO bug exists. When it is fixed,
+   * the LIKE operator can safely use "ESCAPE '\'" and custom code within the
+   * Condition class can be removed.
+   */
   public function testPdoBugExists() {
     // Extend Connection with new $sqlsrvConditionOperatorMap array
     $connection = $this->connection;
