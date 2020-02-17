@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\DatabaseTestBase;
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 class SqlsrvTestBase extends DatabaseTestBase {
 
