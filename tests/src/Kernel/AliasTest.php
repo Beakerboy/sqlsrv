@@ -31,6 +31,7 @@ class AliasTest extends DatabaseTestBase {
       $this->assertTrue($record->$count_field >= $last_count, 'Results returned in correct order.');
       $last_count = $record->$count_field;
       $records[$record->$task_field] = $record->$count_field;
+      fwrite(STDOUT, print_r($record, TRUE));
     }
 
     $correct_results = [
@@ -44,8 +45,7 @@ class AliasTest extends DatabaseTestBase {
     foreach ($correct_results as $task => $count) {
       $this->assertEqual($records[$task], $count, "Correct number of '@task' records found.");
     }
-
-    $this->assertEqual($num_records, 5, 'Returned the correct number of total rows.' . print_r($result, TRUE));
+    $this->assertEqual($num_records, 5, 'Returned the correct number of total rows.');
   }
   
 }
