@@ -38,7 +38,7 @@ class ConditionTest extends DatabaseTestBase {
   /**
    * Test that multiple LIKE statements throws exception when escaped by backslash.
    *
-   * This tests will throw an exception while the PDO bug exists. When it is fixed,
+   * This test will throw an exception while the PDO bug exists. When it is fixed,
    * the LIKE operator can safely use "ESCAPE '\'" and custom code within the
    * Condition class can be removed.
    */
@@ -62,7 +62,7 @@ class ConditionTest extends DatabaseTestBase {
 
     // Expect exception when executing query;
     // Should specify what type.
-    // $this->expectException(\Exception:class);
+    $this->expectException(\Exception:class);
     
     // Create and execute buggy query
     $query->addField('t', 'job');
@@ -70,4 +70,26 @@ class ConditionTest extends DatabaseTestBase {
     $query->condition('name', '%o%', 'LIKE');
     $query->execute();
   }
+
+  /**
+   * Ensure that the sqlsrv driver can execute queries with multiple escapes.
+   *
+   * Core tests already do this, but good to double check.
+   */
+  public function testPdoBugFix() {
+    $connection = $this->connection;
+    
+    $query = new Select('test', 't', $connection);
+    
+    // Create and execute buggy query
+    $query->addField('t', 'job');
+    $query->condition('job', '%i%', 'LIKE');
+    $query->condition('name', '%o%', 'LIKE');
+    $result = $query->execute();
+
+    // Asserting that no exception is thrown. Is there a better way?
+    // Should actually review results.
+    $this->assertTrue(TRUE);
+  }
+  
 }
