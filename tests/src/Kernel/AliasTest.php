@@ -45,7 +45,7 @@ class AliasTest extends DatabaseTestBase {
       $this->assertEqual($records[$task], $count, "Correct number of '@task' records found.");
     }
 
-    $this->assertEqual($num_records, 5, 'Returned the correct number of total rows.');
+    $this->assertEqual($num_records, 5, 'Returned the correct number of total rows.' . print_r($result, TRUE));
   }
   
 }
