@@ -59,9 +59,9 @@ class ConditionTest extends DatabaseTestBase {
     // $this->expectException(\Exception:class);
     
     // Create and execute buggy query
-    $results = $query->addField('t', 'job')
-      ->condition('job', '%i%', 'LIKE')
-      ->condition('name', '%o%', 'LIKE')
-      ->execute();
+    $query->addField('t', 'job');
+    $query->condition('job', '%i%', 'LIKE');
+    $query->condition('name', '%o%', 'LIKE');
+    $query->execute();
   }
 }
