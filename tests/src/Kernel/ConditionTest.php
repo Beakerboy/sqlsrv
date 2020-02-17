@@ -3,12 +3,14 @@
 namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
+use Drupal\Core\Database\Query\Condition as CoreCondition;
+use Drupal\Driver\Database\sqlsrv\Select;
 
 class ConditionTest extends DatabaseTestBase {
 
-  // Testing custom Condition class in select where already happens in core.
+  // Testing of custom Condition class in select->where already happens in core.
 
-  // Test custom Condition class in select having.
+  // Test custom Condition class in select->having.
 
   /**
    * Confirms that we can properly nest custom conditional clauses.
@@ -27,10 +29,39 @@ class ConditionTest extends DatabaseTestBase {
     $this->assertEqual($job, 'Songwriter', 'Correct data retrieved.');
   }
 
-  // Test custom Condition class in delete where.
+  // Test custom Condition class in delete->where.
 
   // Test custom Condition class in merge.
 
-  // Test custom Condition class in update where.
+  // Test custom Condition class in update->where.
+  
+  // Test that multiple LIKE statements throws exception when escaped by backslash. 
+  public function testPdoBugExists() {
+    // Extend Connection with new $sqlsrvConditionOperatorMap array
+    $connection = Database::getConnection();
+    $reflection = new ReflectionClass($connection);
+    $reflection_property = $reflection->getProperty('sqlsrvConditionOperatorMap');
+    $reflection_property->setAccessible(true);
+    $desired_operator_map = ['LIKE' => ['postfix' => " ESCAPE '\\'"]];
+    $reflection_property->setValue($connection, $desired_operator_map);
+    
+    // Set Condition to use parent::compile()
+    $condition = new CoreCondition('AND');
+    
+    $select = new Select($reflection, 'test', 't');
+    $query = new ReflectionClass($select);
+    $reflection_property = $reflection->getProperty('condition');
+    $reflection_property->setAccessible(true);
+    $reflection_property->setValue($query, $condition);
 
+    // Expect exception when executing query;
+    // Should specify what type.
+    // $this->expectException(\Exception:class);
+    
+    // Create and execute buggy query
+    $results = $query->addFields('t', ['job'])
+      ->condition('job', '%i%', 'LIKE')
+      ->condition('name', '%o%', 'LIKE')
+      ->execute();
+  }
 }
