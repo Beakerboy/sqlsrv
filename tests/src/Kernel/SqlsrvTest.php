@@ -15,13 +15,13 @@ class SqlsrvTest extends DatabaseTestBase {
    * Test the 2100 parameter limit per query.
    */
   public function testParameterLimit() {
-    $values = array();
+    $values = [];
     for ($x = 0; $x < 2200; $x ++) {
       $values[] = uniqid($x, TRUE);
     }
     $query = $this->connection->select('test_task', 't');
     $query->addExpression('COUNT(task)', 'num');
-    $query->where('t.task IN (:data)', array(':data' => $values));
+    $query->where('t.task IN (:data)', [':data' => $values]);
     $result = NULL;
     // If > 2100 we can get SQL Exception! The driver must handle that.
     try {
@@ -43,7 +43,7 @@ class SqlsrvTest extends DatabaseTestBase {
   public function testDuplicatePlaceholders() {
     $query = $this->connection->select('test_task', 't');
     $query->addExpression('COUNT(task)', 'num');
-    $query->where('t.task IN (:data0, :data0)', array(':data0' => 'sleep'));
+    $query->where('t.task IN (:data0, :data0)', [':data0' => 'sleep']);
     $result = NULL;
     // If > 2100 we can get SQL Exception! The driver must handle that.
     try {
@@ -148,27 +148,27 @@ class SqlsrvTest extends DatabaseTestBase {
 
     // db_select->where: Test unescaped wildcard.
     $query = $this->connection->select('test_task', 't');
-    $query->where('t.task LIKE :task', array(':task' => '[s]leep'));
+    $query->where('t.task LIKE :task', [':task' => '[s]leep']);
     $query->fields('t');
     $result = $query->execute()->fetchAll();
     $this->assertEqual(count($result), 2, t('db_select returned the correct number of total rows.'));
 
     // db_select->where: Test escaped wildcard.
     $query = $this->connection->select('test_task', 't');
-    $query->where('t.task LIKE :task', array(':task' => $this->connectionescapeLike('[s]leep')));
+    $query->where('t.task LIKE :task', [':task' => $this->connectionescapeLike('[s]leep')]);
     $query->fields('t');
     $result = $query->execute()->fetchAll();
     $this->assertEqual(count($result), 0, t('db_select returned the correct number of total rows.'));
 
     // db_query: Test unescaped wildcard.
     $query = $this->connection->query('SELECT COUNT(*) FROM {test_task} WHERE task LIKE :task',
-      array(':task' => '[s]leep'));
+      [':task' => '[s]leep']);
     $result = $query->fetchField();
     $this->assertEqual($result, 2, t('db_query returned the correct number of total rows.'));
 
     // db_query: Test escaped wildcard.
     $query = $this->connection->query('SELECT COUNT(*) FROM {test_task} WHERE task LIKE :task',
-      array(':task' => $this->connection->escapeLike('[s]leep')));
+      [':task' => $this->connection->escapeLike('[s]leep')]);
     $result = $query->fetchField();
     $this->assertEqual($result, 0, t('db_query returned the correct number of total rows.'));
   }
