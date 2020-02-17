@@ -95,7 +95,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $escaped_string = $this->connection->escapeLike($string); //'t[e\%s]t\_\\\\'
     $query = $this->connection->select('test_task', 't');
     $condition = new Condition('AND');
-    $condition->condition('task', $string, 'LIKE');
+    $condition->condition('task', $escaped_string, 'LIKE');
     $condition->compile($this->connection, $query);
     $arguments = $condition->conditions();
     $argument = $arguments[0];
