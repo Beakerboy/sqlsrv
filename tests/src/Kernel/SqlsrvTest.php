@@ -94,7 +94,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $string = 't[e%s]t_\\';
     $query = $this->connection->select('test_task', 't');
     $condition = new Condition('AND');
-    $condition->condition('t', 'task', $string, 'LIKE');
+    $condition->condition('task', $string, 'LIKE');
     $condition->compile($this->connection, $query);
     $arguments = $condition->conditions();
     $argument = $arguments[0];
