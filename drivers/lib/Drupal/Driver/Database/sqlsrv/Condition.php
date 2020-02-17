@@ -28,6 +28,7 @@ class Condition extends QueryCondition {
           $condition['operator'] = NULL;
           $condition['value'] = [$placeholder => $condition['value']];
         }
+        // This can be removed if https://bugs.php.net/bug.php?id=79276 is fixed
         elseif ($condition['operator'] == 'LIKE' || $condition['operator'] == 'NOT LIKE') {
           $condition['value'] = strtr($condition['value'], [
             '[' => '[[]',
