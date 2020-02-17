@@ -49,7 +49,7 @@ class ConditionTest extends DatabaseTestBase {
     $condition = new CoreCondition('AND');
     
     $query = new Select('test', 't', $connection);
-    $reflection = new \ReflectionClass($select);
+    $reflection = new \ReflectionClass($query);
     $reflection_property = $reflection->getProperty('condition');
     $reflection_property->setAccessible(true);
     $reflection_property->setValue($query, $condition);
