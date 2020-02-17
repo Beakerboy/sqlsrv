@@ -145,7 +145,7 @@ class SqlsrvTestBase extends SqlsrvTestBase {
     $this->schema->dropTable($table);
     
     // The table should not exist now.
-    $this->assertFALSE(this->schema->tableExists($table), 'The temporary table does not exists.');
+    $this->assertFALSE($this->schema->tableExists($table), 'The temporary table does not exists.');
   }
   
   /**
