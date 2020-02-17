@@ -6,11 +6,14 @@ use Drupal\KernelTests\Core\DatabaseTestBase;
 
 class SqlsrvTestBase extends DatabaseTestBase {
 
+  protected $schema;
+
   /**
    * {@inheritdoc}
    */
   public function setUp() {
     parent::setUp();
+    $this->schema = $this->connection->schema();
     $table_spec = [
         'fields' => [
           'id'  => [
