@@ -2,12 +2,13 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 /**
  * Test behavior that is unique to the Sql Server Driver.
  *
  * These tests may not pass on other drivers.
  */
-class SqlsrvTest extends SqlsrvTestBase {
+class SqlsrvTest extends DatabaseTestBase {
 
   /**
    * Checks that invalid sort directions in ORDER BY get converted to ASC.
