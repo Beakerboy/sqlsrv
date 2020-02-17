@@ -7,7 +7,7 @@ namespace Drupal\Tests\sqlsrv\Kernel;
  *
  * These tests may not pass on other drivers.
  */
-class SqlsrvTestBase extends SqlsrvTestBase {
+class SqlsrvTest extends SqlsrvTestBase {
 
   /**
    * Checks that invalid sort directions in ORDER BY get converted to ASC.
