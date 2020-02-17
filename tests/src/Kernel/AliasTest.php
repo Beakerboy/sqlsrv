@@ -31,7 +31,6 @@ class AliasTest extends DatabaseTestBase {
       $this->assertTrue($record->$count_field >= $last_count, 'Results returned in correct order.');
       $last_count = $record->$count_field;
       $records[$record->$task_field] = $record->$count_field;
-      fwrite(STDOUT, print_r($record, TRUE));
     }
 
     $correct_results = [
