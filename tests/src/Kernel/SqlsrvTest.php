@@ -92,6 +92,7 @@ class SqlsrvTest extends DatabaseTestBase {
   public function testEscapeLike() {
     // Test expected escaped characters
     $string = 't[e%s]t_\\';
+    $escaped_string = $this->connection->escapeLike($string); //'t[e\%s]t\_\\\\'
     $query = $this->connection->select('test_task', 't');
     $condition = new Condition('AND');
     $condition->condition('task', $string, 'LIKE');
