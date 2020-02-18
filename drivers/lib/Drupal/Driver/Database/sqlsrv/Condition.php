@@ -28,6 +28,9 @@ class Condition extends QueryCondition {
           $condition['operator'] = NULL;
           $condition['value'] = [$placeholder => $condition['value']];
         }
+        // Drupal expects all LIKE expressions to be escaped with a backslash. Due to a PDO bug
+        // sqlsrv uses its default escaping behavior.
+        // This can be removed if https://bugs.php.net/bug.php?id=79276 is fixed.
         elseif ($condition['operator'] == 'LIKE' || $condition['operator'] == 'NOT LIKE') {
           $condition['value'] = strtr($condition['value'], [
             '[' => '[[]',

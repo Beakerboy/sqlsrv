@@ -279,6 +279,8 @@ class Connection extends DatabaseConnection {
    * @var array
    */
   protected static $sqlsrvConditionOperatorMap = [
+    // These can be changed to 'LIKE' => ['postfix' => " ESCAPE '\\'"],
+    // if https://bugs.php.net/bug.php?id=79276 is fixed
     'LIKE' => [],
     'NOT LIKE' => [],
     'LIKE BINARY' => ['operator' => 'LIKE'],

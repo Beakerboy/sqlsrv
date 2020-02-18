@@ -6,8 +6,9 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\Driver\Database\sqlsrv\Connection;
 
 /**
- * @coversDefaultClass \Drupal\Driver\Database\sqlsrv\Connection
- * @group Database
+ * Test the behavior of the Connection class.
+ *
+ * These tests are not expected to pass on other database drivers.
  */
 class SqlsrvConnectionTest extends UnitTestCase {
 
@@ -69,17 +70,6 @@ class SqlsrvConnectionTest extends UnitTestCase {
   public function providerEscapeTables() {
     return [
       ['nocase', 'nocase'],
-      // ['"camelCase"', 'camelCase'],.
-      // ['"camelCase"', '"camelCase"'],.
-      // ['"camelCase"', 'camel/Case'],.
-      // Sometimes, table names are following the pattern database.schema.table.
-      // ['"camelCase".nocase.nocase', 'camelCase.nocase.nocase'],.
-      // ['nocase."camelCase".nocase', 'nocase.camelCase.nocase'],.
-      // ['nocase.nocase."camelCase"', 'nocase.nocase.camelCase'],.
-      // [
-      // '"camelCase"."camelCase"."camelCase"',
-      // 'camelCase.camelCase.camelCase',
-      // ],
     ];
   }
 
@@ -98,41 +88,43 @@ class SqlsrvConnectionTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::escapeTable
+   * Test that tables are properly escaped.
+   *
    * @dataProvider providerEscapeTables
    */
   public function testEscapeTable($expected, $name) {
-    $pgsql_connection = new Connection($this->mockPdo, $this->options);
+    $connection = new Connection($this->mockPdo, $this->options);
 
-    $this->assertEquals($expected, $pgsql_connection->escapeTable($name));
+    $this->assertEquals($expected, $connection->escapeTable($name));
   }
 
   /**
-   * @covers ::escapeField
+   * Test that fields are properly escaped.
+   *
    * @dataProvider providerEscapeFields
    */
   public function testEscapeField($expected, $name) {
-    $sqlsvr_connection = new Connection($this->mockPdo, $this->options);
+    $connection = new Connection($this->mockPdo, $this->options);
 
-    $this->assertEquals($expected, $sqlsvr_connection->escapeField($name));
+    $this->assertEquals($expected, $connection->escapeField($name));
   }
 
   /**
    * Test that the connection returns the correct driver string.
    */
   public function testDriverString() {
-    $sqlsvr_connection = new Connection($this->mockPdo, $this->options);
+    $connection = new Connection($this->mockPdo, $this->options);
 
-    $this->assertEquals('sqlsrv', $sqlsvr_connection->driver());
+    $this->assertEquals('sqlsrv', $connection->driver());
   }
 
   /**
    * Test that the connection returns the correct database type string.
    */
   public function testDatabaseType() {
-    $sqlsvr_connection = new Connection($this->mockPdo, $this->options);
+    $connection = new Connection($this->mockPdo, $this->options);
 
-    $this->assertEquals('sqlsrv', $sqlsvr_connection->databaseType());
+    $this->assertEquals('sqlsrv', $connection->databaseType());
   }
 
 }
