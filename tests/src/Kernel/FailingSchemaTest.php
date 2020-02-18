@@ -40,7 +40,7 @@ class FailingSchemaTest extends SchemaTest {
   /**
    * {@inhertidoc}
    *
-   * @dataprovider dataProviderForDefaultInitial
+   * @dataProvider dataProviderForDefaultInitial
    */
   public function testSchemaChangeFieldDefaultInitial($old_spec=[], $new_spec=[]) {
     // Note if the serialized data contained an object this would fail on
