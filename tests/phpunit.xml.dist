@@ -90,6 +90,30 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Http</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/HttpKernel</directory>
     </testsuite>
+    <testsuite name="KernelTestI">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Image</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Installer</directory>
+    </testsuite>
+    <testsuite name="KernelTestK">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/KeyValueStore</directory>
+    </testsuite>
+    <testsuite name="KernelTestL">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Layout</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Lock</directory>
+    </testsuite>
+    <testsuite name="KernelTestM">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Menu</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Messenger</directory>
+    </testsuite>
+    <testsuite name="KernelTestP">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Pager</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/ParamConverter</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Path</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Plugin</directory>
+    </testsuite>
+    <testsuite name="KernelTestQ">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Queue</directory>
+    </testsuite>
     <testsuite name="passing_database">
       <file>tests/Drupal/KernelTests/Core/Database/AlterTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/BasicSyntaxTest.php</file>
