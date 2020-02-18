@@ -3,6 +3,7 @@ env:
   - TEST_SUITE=KernelTestA,KernelTestB,KernelTestC,KernelTestD
   - TEST_SUITE=KernelTestE,KernelTestF
   - TEST_SUITE=sqlsrv,passing_database
+  - TEST_SUITE=failing_database
 
 php:
   - '7.2'
