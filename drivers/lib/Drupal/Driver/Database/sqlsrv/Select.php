@@ -302,8 +302,10 @@ class Select extends QuerySelect {
           $info = $this->connection->schema()->queryColumnInformation($table['table']);
           // Some fields need to be "transparent" to Drupal, including technical
           // primary keys or custom computed columns.
-          foreach ($info['columns_clean'] as $column) {
-            $fields[] = $this->connection->escapeTable($alias) . '.' . $column['name'];
+          if (isset($info['columns_clean'])) {
+            foreach ($info['columns_clean'] as $column) {
+              $fields[] = $this->connection->escapeTable($alias) . '.' . $column['name'];
+            }
           }
         }
       }
