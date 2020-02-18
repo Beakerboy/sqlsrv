@@ -60,13 +60,13 @@ class FailingSchemaTest extends SchemaTest {
       'varchar_ascii-blob' => [$varchar_ascii, $blob],
       'varchar-varchar_ascii' => [$varchar, $varchar_ascii],
       'varchar-text' => [$varchar, $text],
-      'varchar-blob' => [$varchar, $blob],
+      //'varchar-blob' => [$varchar, $blob],
       'text-varchar_ascii' => [$text, $varchar_ascii],
       'text-varchar' => [$text, $varchar],
-      'text-blob' => [$text, $blob],
+      //'text-blob' => [$text, $blob],
       'blob-varchar_ascii' => [$blob, $varchar_ascii],
-      'blob-varchar' => [$blob, $varchar],
-      'blob-text' => [$blob, $text],
+      //'blob-varchar' => [$blob, $varchar],
+      //'blob-text' => [$blob, $text],
     ];
   }
 
