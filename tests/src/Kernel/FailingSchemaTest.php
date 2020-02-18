@@ -9,7 +9,7 @@ class FailingSchemaTest extends SchemaTest {
    * @dataProvider providerTestSchemaCreateTablePrimaryKey
    */
   public function testSchemaChangePrimaryKey(array $initial_primary_key, array $renamed_primary_key) {
-    parent::testSchemaChangePrimaryKey(initial_primary_key, $renamed_primary_key);
+    parent::testSchemaChangePrimaryKey($initial_primary_key, $renamed_primary_key);
   }
 
   public function testSchemaChangeFieldDefaultInitialNumeric() {
