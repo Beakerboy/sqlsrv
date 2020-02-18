@@ -7,7 +7,7 @@ before_install:
   # Use pcov instead of xdebug
   - phpenv config-rm xdebug.ini
   - pecl channel-update pecl.php.net
-  #- pecl install pcov
+  - pecl install pcov
   # Install SQL Server for Linux
   - wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
   - sudo add-apt-repository "$(wget -qO- https://packages.microsoft.com/config/ubuntu/16.04/mssql-server-2019.list)"
@@ -62,10 +62,9 @@ install:
   - git apply drupal-3111134-database_specific_types-3.patch
   - cd ..
 script:
-  #- pcov clobber
+  - pcov clobber
   - cd web
-  - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=sqlsrv
-  # --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
+  - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=sqlsrv --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
   #- phpcs --standard=Drupal  modules/contrib/sqlsrv
 after_success:
   - cd $TRAVIS_BUILD_DIR
