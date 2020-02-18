@@ -114,6 +114,32 @@
     <testsuite name="KernelTestQ">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Queue</directory>
     </testsuite>
+    <testsuite name="KernelTestR">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Render</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/RouteProcessor</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Routing</directory>
+    </testsuite>
+    <testsuite name="KernelTestS">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/ServiceProvider</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Session</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Site</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/StreamWrapper</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/StringTranslation</directory>
+    </testsuite>
+    <testsuite name="KernelTestT">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TempStore</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Test</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Theme</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TypesData</directory>
+    </testsuite>
+    <testsuite name="KernelTestU">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Update</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Updater</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Url</directory>
+    </testsuite>
+    <testsuite name="KernelTestV">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Validation</directory>
+    </testsuite>
     <testsuite name="passing_database">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
       <exclude>tests/Drupal/KernelTests/Core/Database/SchemaTest.php</exclude>
