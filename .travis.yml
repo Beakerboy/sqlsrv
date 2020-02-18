@@ -32,7 +32,7 @@ install:
   - cd drupal-project
   - composer config repositories.drupal composer https://packages.drupal.org/8
   - composer require drupal/sqlsrv:dev-1.x@dev symfony/psr-http-message-bridge:1.1.x-dev php-coveralls/php-coveralls:^2.0
-  #- composer require pcov/clobber --dev
+  - composer require pcov/clobber --dev
   - cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
   - rm -rf ./web/modules/contrib/sqlsrv
   - cp -rf $TRAVIS_BUILD_DIR ./web/modules/contrib/sqlsrv
