@@ -53,6 +53,18 @@ class ConditionTest {
         '\%',
         '[%]',
       ],
+      [
+        '\_',
+        '[_]',
+      ],
+      [
+        '\\\\',
+        '\\',
+      ],
+      [
+        '[\%]',
+        '[[][%][]]',
+      ],
     ];
   }
     
@@ -60,7 +72,20 @@ class ConditionTest {
    * Test the REGEXP operator string replacement
    */
   //public function testRegexp() {
-  
+    //$pattern = "^P;
+    //$field_name = 'name';
+    //$operator = 'REGEXP';
+    //$schema = 'dbo';
+    //condition = new Condition('AND');
+    // Mocked Connection needs to be able to
+    // escape fields, and return a schema with
+    // a defaultSchema
+    //$condition->condition('name', $pattern, $operator);
+    //$condition->compile($this->connection, $select);
+    //$conditions = $condition->conditions();
+    //$field = $conditions[0]['field'];
+    //$expected = "dbo.REGEXP(:db_condition_placeholder_1, {$field_name}) = 1";
+    //$this->assertEqual($field, , "Test that the driver escapes REGEXP parameters correctly");
   //}
 
 }
