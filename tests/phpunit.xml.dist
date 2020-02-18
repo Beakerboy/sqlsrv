@@ -146,11 +146,12 @@
       <exclude>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</exclude>
     </testsuite>
     <testsuite name="failing_database">
-      <file>tests/Drupal/KernelTests/Core/Database/SchemaTest.php</file>
+      <file>../modules/contrib/sqlsrv/tests/src/Kernel/FailingSchemaTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
+      <exclude>../modules/contrib/sqlsrv/tests/src/Kernel/FailingSchemaTest.php</exclude>
     </testsuite>
   </testsuites>
   <listeners>
