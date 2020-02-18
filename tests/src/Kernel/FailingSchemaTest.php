@@ -5,6 +5,11 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 use Drupal\KernelTests\Core\Database\SchemaTest;
 
 class FailingSchemaTest extends SchemaTest {
+  
+  public function testFindPrimaryKeyColumns() {
+    parent::testFindPrimaryKeyColumns();
+  }
+
   /**
    * @dataProvider providerTestSchemaCreateTablePrimaryKey
    */
