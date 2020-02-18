@@ -31,31 +31,31 @@ class FailingSchemaTest extends SchemaTest {
    *
    * @dataprovider dataProviderForDefaultInitial
    */
-  public function testSchemaChangeFieldDefaultInitial($old_spec) {
-    $field_specs = [
-      ['type' => 'varchar_ascii', 'length' => '255'],
-      ['type' => 'varchar', 'length' => '255'],
-      ['type' => 'text'],
-      ['type' => 'blob', 'size' => 'big'],
-    ];
-    foreach ($field_specs as $new_spec) {
-      if ($old_spec['type'] == $new_spec['type']) {
-        // Do not change a field into itself.
-        continue;
-      }
-      // Note if the serialized data contained an object this would fail on
-      // Postgres.
-      // @see https://www.drupal.org/node/1031122
-      $this->assertFieldChange($old_spec, $new_spec, serialize(['string' => "This \n has \\\\ some backslash \"*string action.\\n"]));
-    }
+  public function testSchemaChangeFieldDefaultInitial($old_spec, $new_spec) {
+    // Note if the serialized data contained an object this would fail on
+    // Postgres.
+    // @see https://www.drupal.org/node/1031122
+    $this->assertFieldChange($old_spec, $new_spec, serialize(['string' => "This \n has \\\\ some backslash \"*string action.\\n"]));
   }
 
   public function dataProviderForDefaultInital() {
+    $varchar_ascii = ['type' => 'varchar_ascii', 'length' => '255'];
+    $varchar = ['type' => 'varchar', 'length' => '255'];
+    $text = ['type' => 'text'];
+    $blob = ['type' => 'blob', 'size' => 'big'];
     return [
-      'varchar_ascii' => [['type' => 'varchar_ascii', 'length' => '255']],
-      'varchar' => [['type' => 'varchar', 'length' => '255']],
-      'text' => [['type' => 'text']],
-      'blob' => [['type' => 'blob', 'size' => 'big']],
+      'varchar_ascii-varchar' => [$varchar_ascii, $varchar],
+      'varchar_ascii-text' => [$varchar_ascii, $text],
+      'varchar_ascii-blob' => [$varchar_ascii, $blob],
+      'varchar-varchar_ascii' => [$varchar, $varchar_ascii],
+      'varchar-text' => [$varchar, $text],
+      'varchar-blob' => [$varchar, $blob],
+      'text-varchar_ascii' => [$text, $varchar_ascii],
+      'text-varchar' => [$text, $varchar],
+      'text-blob' => [$text, $blob],
+      'blob-varchar_ascii' => [$blob, $varchar_ascii],
+      'blob-varchar' => [$blob, $varchar],
+      'blob-text' => [$blob, $text],
     ];
   }
 
