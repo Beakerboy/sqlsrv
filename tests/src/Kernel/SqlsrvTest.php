@@ -167,7 +167,7 @@ class SqlsrvTest extends DatabaseTestBase {
 
     // query: Test escaped wildcard.
     $query = $this->connection->query('SELECT COUNT(*) FROM {test_task} WHERE task LIKE :task',
-      [':task' => $this->connection->escapeLike('[s]leep')]);
+      [':task' => $this->connection->escapeLike('[[]s[]]leep')]);
     $result = $query->fetchField();
     $this->assertEqual($result, 0, t('db_query returned the correct number of total rows.'));
   }
