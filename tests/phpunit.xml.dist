@@ -115,40 +115,9 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Queue</directory>
     </testsuite>
     <testsuite name="passing_database">
-      <file>tests/Drupal/KernelTests/Core/Database/AlterTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/BasicSyntaxTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/CaseSensitivityTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/ConnectionTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/ConnectionUnitTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/DatabaseExceptionWrapperTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/DatabaseLegacyTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/DeleteTruncateTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/FetchTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/InsertDefaultsTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/InsertLobTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/InsertTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/InvalidDataTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/LargeQueryTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/LoggingTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/MergeTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/NextIdTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/PrefixInfoTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/QueryTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/RangeQueryTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/RegressionTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/ReplicaKillSwitchTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/SchemaLegacyTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/SelectCloneTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/SelectComplexTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/SelectOrderedTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/SelectTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/SerializeQueryTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/TaggingTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/TransactionTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/UpdateComplexTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/UpdateLobTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/UpdateTest.php</file>
-      <file>tests/Drupal/KernelTests/Core/Database/UpsertTest.php</file>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
+      <exclude>tests/Drupal/KernelTests/Core/Database/SchemaTest.php</exclude>
+      <exclude>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</exclude>
     </testsuite>
     <testsuite name="failing_database">
       <file>tests/Drupal/KernelTests/Core/Database/SchemaTest.php</file>
@@ -156,9 +125,6 @@
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
-    </testsuite>
-    <testsuite name="entity">
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Entity</directory>
     </testsuite>
   </testsuites>
   <listeners>
