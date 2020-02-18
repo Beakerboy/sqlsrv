@@ -31,7 +31,7 @@ class FailingSchemaTest extends SchemaTest {
    *
    * @dataprovider dataProviderForDefaultInitial
    */
-  public function testSchemaChangeFieldDefaultInitial($old_spec, $new_spec) {
+  public function testSchemaChangeFieldDefaultInitial($old_spec=[], $new_spec=[]) {
     // Note if the serialized data contained an object this would fail on
     // Postgres.
     // @see https://www.drupal.org/node/1031122
