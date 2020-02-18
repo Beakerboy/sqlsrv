@@ -2,7 +2,7 @@ language: php
 env:
   - TEST_SUITE=KernelTestA,KernelTestB,KernelTestC,KernelTestD
   - TEST_SUITE=KernelTestE,KernelTestF
-  - TEST_SUITE=sqlsrv
+  - TEST_SUITE=sqlsrv,passing_database
 
 php:
   - '7.2'
