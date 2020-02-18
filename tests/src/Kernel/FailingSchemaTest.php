@@ -49,7 +49,7 @@ class FailingSchemaTest extends SchemaTest {
     $this->assertFieldChange($old_spec, $new_spec, serialize(['string' => "This \n has \\\\ some backslash \"*string action.\\n"]));
   }
 
-  public function dataProviderForDefaultInital() {
+  public function dataProviderForDefaultInitial() {
     $varchar_ascii = ['type' => 'varchar_ascii', 'length' => '255'];
     $varchar = ['type' => 'varchar', 'length' => '255'];
     $text = ['type' => 'text'];
