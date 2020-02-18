@@ -76,6 +76,16 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Datetime</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/DrupalKernel</directory>
     </testsuite>
+    <testsuite name="KernelTestE">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Element</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Entity</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Extension</directory>
+    </testsuite>
+    <testsuite name="KernelTestF">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Field</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/File</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Form</directory>
+    </testsuite>
     <testsuite name="passing_database">
       <file>tests/Drupal/KernelTests/Core/Database/AlterTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/BasicSyntaxTest.php</file>
