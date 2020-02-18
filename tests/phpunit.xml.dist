@@ -72,7 +72,7 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Config</directory>
     </testsuite>
     <testsuite name="KernelTestD">
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
+      <!-- <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory> -->
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Datetime</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/DrupalKernel</directory>
     </testsuite>
