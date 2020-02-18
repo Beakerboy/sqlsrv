@@ -86,6 +86,10 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/File</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Form</directory>
     </testsuite>
+    <testsuite name="KernelTestH">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Http</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/HttpKernel</directory>
+    </testsuite>
     <testsuite name="passing_database">
       <file>tests/Drupal/KernelTests/Core/Database/AlterTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/BasicSyntaxTest.php</file>
