@@ -125,43 +125,49 @@ class SqlsrvTest extends DatabaseTestBase {
     $result = $query->execute()->fetchAll();
     $this->assertEqual(count($result), 1, t('db_select returned the correct number of total rows.'));
 
-    // db_select: Test unescaped wildcard.
+    // Using the condition function required that only % and _ can be used as wildcards
+    // select->condition: Test unescaped wildcard.
     $query = $this->connection->select('test_task', 't');
     $query->condition('t.task', '_leep', 'LIKE');
     $query->fields('t');
     $result = $query->execute()->fetchAll();
     $this->assertEqual(count($result), 2, t('db_select returned the correct number of total rows.'));
 
-    // db_select: Test escaped wildcard.
+    // select->condition: Test escaped wildcard.
     $query = $this->connection->select('test_task', 't');
     $query->condition('t.task', $this->connection->escapeLike('_leep'), 'LIKE');
     $query->fields('t');
     $result = $query->execute()->fetchAll();
     $this->assertEqual(count($result), 0, t('db_select returned the correct number of total rows.'));
 
-    // db_select->where: Test unescaped wildcard.
+    // Using the where function requires that database-specific notation be used.
+    // This means we can use the SQL Server bracket notation, but these queries will not be
+    // valid on other databases.
+    // select->where: Test unescaped wildcard.
     $query = $this->connection->select('test_task', 't');
-    $query->where('t.task LIKE :task', [':task' => '_leep']);
+    $query->where('t.task LIKE :task', [':task' => '[s]leep']);
     $query->fields('t');
     $result = $query->execute()->fetchAll();
     $this->assertEqual(count($result), 2, t('db_select returned the correct number of total rows.'));
 
-    // db_select->where: Test escaped wildcard.
+    // select->where: Test escaped wildcard.
     $query = $this->connection->select('test_task', 't');
-    $query->where('t.task LIKE :task', [':task' => $this->connection->escapeLike('_leep')]);
+    $query->where('t.task LIKE :task', [':task' => $this->connection->escapeLike('[[]s[]]leep')]);
     $query->fields('t');
     $result = $query->execute()->fetchAll();
     $this->assertEqual(count($result), 0, t('db_select returned the correct number of total rows.'));
 
-    // db_query: Test unescaped wildcard.
+    // Using a static query also allows us to use database-specific syntax. Again, queries
+    // may not run on other databases.
+    // query: Test unescaped wildcard.
     $query = $this->connection->query('SELECT COUNT(*) FROM {test_task} WHERE task LIKE :task',
-      [':task' => '_leep']);
+      [':task' => '[s]leep']);
     $result = $query->fetchField();
     $this->assertEqual($result, 2, t('db_query returned the correct number of total rows.'));
 
-    // db_query: Test escaped wildcard.
+    // query: Test escaped wildcard.
     $query = $this->connection->query('SELECT COUNT(*) FROM {test_task} WHERE task LIKE :task',
-      [':task' => $this->connection->escapeLike('_leep')]);
+      [':task' => $this->connection->escapeLike('[[]s[]]leep')]);
     $result = $query->fetchField();
     $this->assertEqual($result, 0, t('db_query returned the correct number of total rows.'));
   }

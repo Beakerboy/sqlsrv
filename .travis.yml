@@ -2,9 +2,7 @@ language: php
 env:
   - TEST_SUITE=KernelTestA,KernelTestB,KernelTestC,KernelTestD
   - TEST_SUITE=KernelTestE,KernelTestF,KernelTestH,KernelTestI
-  - TEST_SUITE=KernelTestK,KernelTestL,KernelTestM,KernelTestP
-  - TEST_SUITE=KernelTestQ,KernelTestR,KernelTestS,KernelTestT
-  - TEST_SUITE=KernelTestU,KernelTestV
+  - TEST_SUITE=KernelTestK,KernelTestL,KernelTestM,KernelTestP,KernelTestQ,KernelTestR,KernelTestS,KernelTestT,KernelTestU,KernelTestV
   - TEST_SUITE=sqlsrv,passing_database
   - TEST_SUITE=failing_database
 
