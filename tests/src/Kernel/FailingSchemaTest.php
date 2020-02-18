@@ -30,6 +30,7 @@ class FailingSchemaTest extends SchemaTest {
    * {@inhertidoc}
    *
    * @dataprovider dataProviderForDefaultInitial
+   */
   public function testSchemaChangeFieldDefaultInitial($old_spec) {
     $field_specs = [
       ['type' => 'varchar_ascii', 'length' => '255'],
@@ -37,7 +38,7 @@ class FailingSchemaTest extends SchemaTest {
       ['type' => 'text'],
       ['type' => 'blob', 'size' => 'big'],
     ];
-    foreach ($field_specs as $j => $new_spec) {
+    foreach ($field_specs as $new_spec) {
       if ($old_spec['type'] == $new_spec['type']) {
         // Do not change a field into itself.
         continue;
@@ -51,10 +52,10 @@ class FailingSchemaTest extends SchemaTest {
 
   public function dataProviderForDefaultInital() {
     return [
-      [['type' => 'varchar_ascii', 'length' => '255']],
-      [['type' => 'varchar', 'length' => '255']],
-      [['type' => 'text']],
-      [['type' => 'blob', 'size' => 'big']],
+      'varchar_ascii' => [['type' => 'varchar_ascii', 'length' => '255']],
+      'varchar' => [['type' => 'varchar', 'length' => '255']],
+      'text' => [['type' => 'text']],
+      'blob' => [['type' => 'blob', 'size' => 'big']],
     ];
   }
 
