@@ -4,6 +4,7 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\Database;
 use Drupal\KernelTests\KernelTestBase;
+
 /**
  * Tests table creation and modification via the schema API.
  *
@@ -34,6 +35,9 @@ class SchemaTest extends KernelTestBase {
     $this->schema = $this->connection->schema();
   }
 
+  /**
+   * Verify that comments are dropped when the table is dropped.
+   */
   public function testDropTableComment() {
     $name = 'test_comment_table';
     $table = [
