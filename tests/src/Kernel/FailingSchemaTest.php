@@ -2,8 +2,14 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
+/**
+ * Tests from core SchemaTest that currently fail.
+ */
 class FailingSchemaTest extends PassingSchemaTest {
 
+  /**
+   * Failing cases.
+   */
   public function dataProviderForDefaultInitial() {
     $varchar_ascii = ['type' => 'varchar_ascii', 'length' => '255'];
     $varchar = ['type' => 'varchar', 'length' => '255'];
