@@ -12,14 +12,14 @@ use Drupal\Tests\UnitTestCase;
  * @group Database
  */
 class OrderByTest extends UnitTestCase {
-  
+
   /**
    * The select query object to test.
    *
    * @var \Drupal\Core\Database\Query\Select
    */
   protected $query;
-  
+
   /**
    * {@inheritdoc}
    */
@@ -50,4 +50,5 @@ class OrderByTest extends UnitTestCase {
     $sql = $this->query->__toString();
     $this->assertStringEndsWith('ORDER BY xDROPtablenode ASC', $sql, 'Order by field is escaped correctly.');
   }
+
 }
