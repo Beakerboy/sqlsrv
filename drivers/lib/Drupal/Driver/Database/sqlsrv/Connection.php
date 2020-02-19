@@ -20,9 +20,6 @@ use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransacti
 use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
 use Drupal\Driver\Database\sqlsrv\Context as DatabaseContext;
 
-use PDO as PDO;
-use Exception as Exception;
-
 /**
  * @addtogroup database
  * @{
@@ -259,7 +256,7 @@ class Connection extends DatabaseConnection {
       try {
         $this->query_direct('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', [':existing' => $existing]);
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         // Doesn't matter if this fails, it just means that this value is
         // already present in the table.
       }
@@ -439,7 +436,7 @@ class Connection extends DatabaseConnection {
       // Transact-SQL code.
       // Never use this when you need special column binding.
       // THIS ONLY WORKS IF SET AT THE STATEMENT LEVEL.
-      $pdo_options[PDO::ATTR_EMULATE_PREPARES] = TRUE;
+      $pdo_options[\PDO::ATTR_EMULATE_PREPARES] = TRUE;
     }
 
     // We run the statements in "direct mode" because the way PDO prepares
@@ -454,17 +451,17 @@ class Connection extends DatabaseConnection {
     // True. For example, if you use temporary tables in your queries,
     // PDO::SQLSRV_ATTR_DIRECT_QUERY must be set to True.
     if ($this->driver_settings->GetStatementCachingMode() != 'always' || $options['direct_query'] == TRUE) {
-      $pdo_options[PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
+      $pdo_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
 
     // It creates a cursor for the query, which allows you to iterate over the
     // result set without fetching the whole result at once. A scrollable
     // cursor, specifically, is one that allows iterating backwards.
     // https://msdn.microsoft.com/en-us/library/hh487158%28v=sql.105%29.aspx
-    $pdo_options[PDO::ATTR_CURSOR] = PDO::CURSOR_SCROLL;
+    $pdo_options[\PDO::ATTR_CURSOR] = \PDO::CURSOR_SCROLL;
 
     // Lets you access rows in any order. Creates a client-side cursor query.
-    $pdo_options[PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = PDO::SQLSRV_CURSOR_BUFFERED;
+    $pdo_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
 
     // Endregion
     // Call our overriden prepare.
