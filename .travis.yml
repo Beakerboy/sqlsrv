@@ -3,7 +3,7 @@ env:
   - TEST_SUITE=KernelTestA,KernelTestB,KernelTestC,KernelTestD
   - TEST_SUITE=KernelTestE,KernelTestF,KernelTestH,KernelTestI
   - TEST_SUITE=KernelTestK,KernelTestL,KernelTestM,KernelTestP,KernelTestQ,KernelTestR,KernelTestS,KernelTestT,KernelTestU,KernelTestV
-  - TEST_SUITE=sqlsrv,passing_database
+  - TEST_SUITE=sqlsrv,passing_database DRUPAL=yes CODE_SNIFF=yes
   - TEST_SUITE=failing_database
 
 php:
@@ -44,7 +44,9 @@ install:
   - cp -rf $TRAVIS_BUILD_DIR ./web/modules/contrib/sqlsrv
   - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
   - mkdir ./web/sites/simpletest
-  #- drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+  - |
+    if [ -z "$DRUPAL" ]
+    then drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
   # Install REGEX CLR
   - sudo apt-get install -qq mono-complete
   - cd $TRAVIS_BUILD_DIR/tests
@@ -55,7 +57,7 @@ install:
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
   - cd $TRAVIS_BUILD_DIR/../drupal-project
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist web/core/phpunit.xml
-  #- phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
+  - phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
   - cd web
   # Install core patches
   - wget https://www.drupal.org/files/issues/2019-05-28/2867788-53.patch
@@ -72,10 +74,11 @@ script:
   - pcov clobber
   - cd web
   - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
-  #- phpcs --standard=Drupal  modules/contrib/sqlsrv
 after_success:
+  - |
+    if [ -z "$CODE_SNIFF" ]
+    then phpcs --standard=Drupal modules/contrib/sqlsrv
   - cd $TRAVIS_BUILD_DIR
-  #- cat ./build/logs/clover.xml
   - sed -i 's/drupal\-project\/web\/modules\/contrib\///g' ./build/logs/clover.xml
   - sed -i 's/drupal\-project\/web/sqlsrv/g' ./build/logs/clover.xml
   - php-coveralls -v
