@@ -24,3 +24,12 @@ Drupal core allows module developers to use regular expressions within SQL state
  * Drupal 8.8.0
  * SQL Server 2012
  * pdo_sqlsrv 5.8.0
+
+Usage
+-----
+
+This driver has a couple peculiarities worth knowing about.
+
+### LIKE expressions
+
+Drupal and the core databases use only two wildcards, `%` and `_`, both of which are escaped by backslashes. This driver currently uses the default SQL Server behavior behind-the-scenes, that of escaping the wildcard characters by enclosing them in brackets `[%]` and `[_]`. When using the `Select::condition()` function with a LIKE operator, you must use standard Drupal format with backslash escapes. If you need sqlsrv-specific behavior, you can use `Select::where()`. Note that there is a PDO bug that prevents multiple `field LIKE :placeholder_x ESCAPE '\'` statements from appearing in one SQL statement.
