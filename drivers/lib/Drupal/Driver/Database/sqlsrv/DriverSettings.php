@@ -4,8 +4,6 @@ namespace Drupal\Driver\Database\sqlsrv;
 
 use Drupal\Core\Site\Settings;
 
-use PDO as PDO;
-
 /**
  * Global settings for the driver.
  */
@@ -157,11 +155,11 @@ class DriverSettings {
 
     $this->defaultIsolationLevel = $this->CheckValid('default_isolation_level', $configuration['default_isolation_level'], [
       FALSE,
-      PDO::SQLSRV_TXN_READ_UNCOMMITTED,
-      PDO::SQLSRV_TXN_READ_COMMITTED,
-      PDO::SQLSRV_TXN_REPEATABLE_READ,
-      PDO::SQLSRV_TXN_SNAPSHOT,
-      PDO::SQLSRV_TXN_SERIALIZABLE,
+      \PDO::SQLSRV_TXN_READ_UNCOMMITTED,
+      \PDO::SQLSRV_TXN_READ_COMMITTED,
+      \PDO::SQLSRV_TXN_REPEATABLE_READ,
+      \PDO::SQLSRV_TXN_SNAPSHOT,
+      \PDO::SQLSRV_TXN_SERIALIZABLE,
     ]);
 
     $true_false = [TRUE, FALSE];
