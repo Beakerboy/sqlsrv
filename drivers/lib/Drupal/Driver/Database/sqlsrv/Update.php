@@ -6,8 +6,6 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Database\Query\Update as QueryUpdate;
 
-use Drupal\Driver\Database\sqlsrv\Utils as DatabaseUtils;
-
 /**
  * Sqlsvr implementation of \Drupal\Core\Database\Query\Update.
  */
@@ -54,13 +52,13 @@ class Update extends QueryUpdate {
     // This is necessary because the PDO will otherwise messes up with
     // references.
     $blobs = [];
-    DatabaseUtils::BindValues($stmt, $fields, $blobs, ':db_update_placeholder_', $columnInformation);
+    Utils::BindValues($stmt, $fields, $blobs, ':db_update_placeholder_', $columnInformation);
 
     // Add conditions.
     if (count($this->condition)) {
       $this->condition->compile($this->connection, $this);
       $arguments = $this->condition->arguments();
-      DatabaseUtils::BindArguments($stmt, $arguments);
+      Utils::BindArguments($stmt, $arguments);
     }
 
     $options = $this->queryOptions;
