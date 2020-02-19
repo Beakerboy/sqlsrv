@@ -168,7 +168,7 @@ class Connection extends DatabaseConnection {
     'value',
     'variable',
     'view',
-    'without'
+    'without',
   ];
 
   /**
@@ -347,7 +347,7 @@ class Connection extends DatabaseConnection {
     $connection_options['pdo'] += [
       \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
     ];
-    
+
     // Set a Statement class, unless the driver opted out.
     // $connection_options['pdo'][PDO::ATTR_STATEMENT_CLASS] =
     // array(Statement::class, array(Statement::class));.
@@ -562,7 +562,7 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   protected function quoteIdentifier($identifier) {
-     if (strpos($identifier, '.') !== FALSE) {
+    if (strpos($identifier, '.') !== FALSE) {
       list($table, $identifier) = explode('.', $identifier, 2);
     }
     if (in_array(strtolower($identifier), $this->reservedKeyWords, TRUE)) {
@@ -674,7 +674,7 @@ class Connection extends DatabaseConnection {
       // value will be the same as for static::query().
       return $this->handleQueryException($e, $query, $args, $options);
     }
-  } 
+  }
 
   /**
    * Like query but with no insecure detection or query preprocessing.
@@ -934,7 +934,7 @@ class Connection extends DatabaseConnection {
    * Using SQL Server query syntax.
    */
   public function pushTransaction($name) {
-   if (!$this->supportsTransactions()) {
+    if (!$this->supportsTransactions()) {
       return;
     }
     if (isset($this->transactionLayers[$name])) {
@@ -977,7 +977,7 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    *
-   * Adding schema to the connection URL
+   * Adding schema to the connection URL.
    */
   public static function createConnectionOptionsFromUrl($url, $root) {
     $database = parent::createConnectionOptionsFromUrl($url, $root);
