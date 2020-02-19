@@ -249,7 +249,7 @@ class Schema extends DatabaseSchema {
         ->fields([$field => $spec['initial']])
         ->execute();
     }
-  
+
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
       // There is no warranty that the old data did not have NULL values, we
@@ -260,7 +260,7 @@ class Schema extends DatabaseSchema {
         $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
         $this->connection->queryDirect($sql);
       }
-    
+  
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
       $field_sql = $this->createFieldSql($table, $field, $spec, TRUE);
@@ -290,10 +290,10 @@ class Schema extends DatabaseSchema {
       $this->cleanUpPrimaryKey($table);
       $this->createTechnicalPrimaryColumn($table);
     }
-  
+
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
-  
+
     // Drop field comments.
     if ($this->getComment($table, $field) !== FALSE) {
       $this->connection->queryDirect($this->deleteCommentSql($table, $field));
