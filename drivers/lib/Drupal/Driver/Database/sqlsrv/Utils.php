@@ -4,8 +4,6 @@ namespace Drupal\Driver\Database\sqlsrv;
 
 use Symfony\Component\Yaml\Parser;
 
-use PDO as PDO;
-
 /**
  * Utility function for the SQL Server driver.
  */
@@ -21,7 +19,7 @@ class Utils {
    */
   public static function bindArguments(\PDOStatement $stmt, array &$values) {
     foreach ($values as $key => &$value) {
-      $stmt->bindParam($key, $value, PDO::PARAM_STR);
+      $stmt->bindParam($key, $value, \PDO::PARAM_STR);
     }
   }
 
@@ -61,7 +59,7 @@ class Utils {
         }
       }
       else {
-        $stmt->bindParam($key, $value['arguments'], PDO::PARAM_STR);
+        $stmt->bindParam($key, $value['arguments'], \PDO::PARAM_STR);
       }
     }
   }
@@ -99,12 +97,12 @@ class Utils {
         $blobs[$blob_key] = fopen('php://memory', 'a');
         fwrite($blobs[$blob_key], $field_value);
         rewind($blobs[$blob_key]);
-        $stmt->bindParam($placeholder, $blobs[$blob_key], PDO::PARAM_LOB, 0, PDO::SQLSRV_ENCODING_BINARY);
+        $stmt->bindParam($placeholder, $blobs[$blob_key], \PDO::PARAM_LOB, 0, \PDO::SQLSRV_ENCODING_BINARY);
       }
       else {
         // Even though not a blob, make sure we retain a copy of these values.
         $blobs[$blob_key] = $field_value;
-        $stmt->bindParam($placeholder, $blobs[$blob_key], PDO::PARAM_STR);
+        $stmt->bindParam($placeholder, $blobs[$blob_key], \PDO::PARAM_STR);
       }
     }
   }
