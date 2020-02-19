@@ -45,7 +45,7 @@ install:
   - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
   - mkdir ./web/sites/simpletest
   - |
-    if [ ! -z "$DRUPAL" ]
+    if ! [ -z "$DRUPAL" ]
     then drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
     fi
   # Install REGEX CLR
@@ -75,7 +75,7 @@ script:
   - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
 after_success:
   - |
-    if [ ! -z "$CODE_SNIFF" ]
+    if ! [ -z "$CODE_SNIFF" ]
     then
     phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
     phpcs --standard=Drupal modules/contrib/sqlsrv
