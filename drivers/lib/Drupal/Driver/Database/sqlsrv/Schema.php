@@ -260,7 +260,7 @@ class Schema extends DatabaseSchema {
         $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
         $this->connection->queryDirect($sql);
       }
-  
+
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
       $field_sql = $this->createFieldSql($table, $field, $spec, TRUE);
