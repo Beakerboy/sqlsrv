@@ -6,6 +6,9 @@ use Drupal\Core\Database\Query\Condition as CoreCondition;
 use Drupal\Driver\Database\sqlsrv\Select;
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
+/**
+ * Test the functions of the custom Condition class.
+ */
 class ConditionTest extends DatabaseTestBase {
 
   // Testing of custom Condition class in select->where already happens in core.
