@@ -85,7 +85,7 @@ class Update extends QueryUpdate {
         $data['expression']->compile($this->connection, $this);
         $data['expression'] = ' (' . $data['expression'] . ')';
       }
-      
+
       $update_fields[] = $this->connection->escapeField($field) . '=' . $data['expression'];
       unset($fields[$field]);
     }
