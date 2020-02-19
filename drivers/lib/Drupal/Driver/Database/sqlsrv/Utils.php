@@ -24,9 +24,10 @@ class Utils {
   }
 
   /**
-   * Bind Expressions
+   * Bind Expressions.
    *
-   * If an expression and a field share a name, we remove it from the field list.
+   * If an expression and a field share a name, we remove it from the field
+   * list.
    * There seems to be a bug when an expression contains a subselect.
    *
    * @param \PDOStatement $stmt
@@ -34,9 +35,9 @@ class Utils {
    * @param array $values
    *   Argument values.
    * @param array $fields
-   *   an array of fields.
+   *   An array of fields.
    * @param mixed $connection
-   *   Database connection
+   *   Database connection.
    */
   public static function bindExpressions(\PDOStatement $stmt, array &$values, array &$fields, $connection = NULL) {
     foreach ($values as $key => $value) {
@@ -47,7 +48,7 @@ class Utils {
       if ($value['expression'] instanceof SelectInterface) {
         $value['expression']->compile($connection, $stmt);
         foreach ($value['expression']->arguments() as $placeholder => $argument) {
-           $stmt->bindParam($placeholder, $argument);
+          $stmt->bindParam($placeholder, $argument);
         }
       }
       elseif (is_array($value['arguments'])) {
