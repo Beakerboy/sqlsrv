@@ -4,6 +4,9 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
+/**
+ * Test aliases within GROUP BY and ORDER BY.
+ */
 class AliasTest extends DatabaseTestBase {
 
   /**
@@ -18,7 +21,7 @@ class AliasTest extends DatabaseTestBase {
     // driver expands the aliases properly.
     $query = $this->connection->select('test_task', 't');
     $count_field = $query->addExpression('COUNT(task)', 'num');
-    $task_field = $query->addExpression('CONCAT(:prefix, t.task)', 'task', array(':prefix' => 'Task: '));
+    $task_field = $query->addExpression('CONCAT(:prefix, t.task)', 'task', [':prefix' => 'Task: ']);
     $query->orderBy($count_field);
     $query->groupBy($task_field);
     $result = $query->execute();
@@ -47,5 +50,5 @@ class AliasTest extends DatabaseTestBase {
     }
     $this->assertEqual($num_records, 6, 'Returned the correct number of total rows.');
   }
-  
+
 }
