@@ -4,8 +4,18 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\KernelTests\Core\Database\SchemaTest;
 
+/**
+ * Passing tests from SchemaTest.php
+ *
+ * There are failing tests within the SchemaTest Kernel test.
+ * This class separates the passing tests from the failing tests
+ * to allow the dev team to work on the issues.
+ */
 class PassingSchemaTest extends SchemaTest {
-  
+
+  /**
+   * {@inheritdoc}
+   */
   public function testFindPrimaryKeyColumns() {
     parent::testFindPrimaryKeyColumns();
   }
@@ -17,6 +27,9 @@ class PassingSchemaTest extends SchemaTest {
     parent::testSchemaChangePrimaryKey($initial_primary_key, $renamed_primary_key);
   }
 
+  /**
+   * Change default value with numeric values
+   */
   public function testSchemaChangeFieldDefaultInitialNumeric() {
     $field_specs = [
       ['type' => 'int', 'size' => 'normal', 'not null' => FALSE],
@@ -60,13 +73,9 @@ class PassingSchemaTest extends SchemaTest {
       'varchar_ascii-blob' => [$varchar_ascii, $blob],
       'varchar-varchar_ascii' => [$varchar, $varchar_ascii],
       'varchar-text' => [$varchar, $text],
-      //'varchar-blob' => [$varchar, $blob],
       'text-varchar_ascii' => [$text, $varchar_ascii],
       'text-varchar' => [$text, $varchar],
-      //'text-blob' => [$text, $blob],
       'blob-varchar_ascii' => [$blob, $varchar_ascii],
-      //'blob-varchar' => [$blob, $varchar],
-      //'blob-text' => [$blob, $text],
     ];
   }
 
