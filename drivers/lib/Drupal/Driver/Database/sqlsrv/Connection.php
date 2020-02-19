@@ -16,10 +16,6 @@ use Drupal\Core\Database\TransactionCommitFailedException;
 use Drupal\Core\Database\TransactionOutOfOrderException;
 use Drupal\Core\Database\TransactionNameNonUniqueException;
 
-use Drupal\Driver\Database\sqlsrv\TransactionIsolationLevel as DatabaseTransactionIsolationLevel;
-use Drupal\Driver\Database\sqlsrv\TransactionScopeOption as DatabaseTransactionScopeOption;
-use Drupal\Driver\Database\sqlsrv\Context as DatabaseContext;
-
 /**
  * @addtogroup database
  * @{
@@ -707,7 +703,7 @@ class Connection extends DatabaseConnection {
     try {
 
       // Bypass query preprocessing and use direct queries.
-      $ctx = new DatabaseContext($this, TRUE, TRUE);
+      $ctx = new Context($this, TRUE, TRUE);
 
       $stmt = $this->prepareQuery($query, $options);
       $stmt->execute($args, $options);
