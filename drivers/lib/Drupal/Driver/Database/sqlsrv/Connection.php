@@ -2,17 +2,12 @@
 
 namespace Drupal\Driver\Database\sqlsrv;
 
+use Drupal\Core\Database\Connection as DatabaseConnection;
 use Drupal\Core\Database\Database;
-use Drupal\Core\Database\StatementInterface;
-use Drupal\Core\Database\IntegrityConstraintViolationException;
-use Drupal\Core\Database\DatabaseExceptionWrapper;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\DatabaseNotFoundException;
-
-use Drupal\Core\Database\Connection as DatabaseConnection;
-
+use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Database\TransactionNoActiveException;
-use Drupal\Core\Database\TransactionCommitFailedException;
 use Drupal\Core\Database\TransactionOutOfOrderException;
 use Drupal\Core\Database\TransactionNameNonUniqueException;
 
@@ -94,6 +89,8 @@ class Connection extends DatabaseConnection {
 
   /**
    * The list of SQLServer reserved key words.
+   *
+   * @var array
    */
   private $reservedKeyWords = [
     'action',
@@ -273,7 +270,7 @@ class Connection extends DatabaseConnection {
    */
   protected static $sqlsrvConditionOperatorMap = [
     // These can be changed to 'LIKE' => ['postfix' => " ESCAPE '\\'"],
-    // if https://bugs.php.net/bug.php?id=79276 is fixed
+    // if https://bugs.php.net/bug.php?id=79276 is fixed.
     'LIKE' => [],
     'NOT LIKE' => [],
     'LIKE BINARY' => ['operator' => 'LIKE'],
