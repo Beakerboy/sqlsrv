@@ -2,8 +2,6 @@
 
 namespace Drupal\Driver\Database\sqlsrv;
 
-use Drupal\Component\Utility\Unicode;
-
 use Drupal\Core\Database\Schema as DatabaseSchema;
 use Drupal\Core\Database\SchemaObjectDoesNotExistException;
 use Drupal\Core\Database\SchemaObjectExistsException;
@@ -251,7 +249,7 @@ class Schema extends DatabaseSchema {
         ->fields([$field => $spec['initial']])
         ->execute();
     }
-        
+  
     // Switch to NOT NULL now.
     if ($fixnull === TRUE) {
       // There is no warranty that the old data did not have NULL values, we
@@ -262,7 +260,7 @@ class Schema extends DatabaseSchema {
         $sql = "UPDATE {{$table}} SET {$field}={$default_expression} WHERE {$field} IS NULL";
         $this->connection->queryDirect($sql);
       }
-      
+    
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
       $field_sql = $this->createFieldSql($table, $field, $spec, TRUE);
@@ -292,13 +290,13 @@ class Schema extends DatabaseSchema {
       $this->cleanUpPrimaryKey($table);
       $this->createTechnicalPrimaryColumn($table);
     }
-    
+  
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
-    
-    // Drop field comments
+  
+    // Drop field comments.
     if ($this->getComment($table, $field) !== FALSE) {
-     $this->connection->queryDirect($this->deleteCommentSql($table, $field));
+      $this->connection->queryDirect($this->deleteCommentSql($table, $field));
     }
 
     $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
@@ -528,7 +526,7 @@ class Schema extends DatabaseSchema {
       'indexes' => [],
     ];
     $column_information = $this->queryColumnInformation($table);
-    foreach($column_information['indexes'] as $key => $values) {
+    foreach ($column_information['indexes'] as $key => $values) {
       if ($values['is_primary_key'] !== 1 && $values['data_space_id'] == 1 && $values['is_unique'] == 0) {
         foreach ($values['columns'] as $num => $stats) {
           $index_schema['indexes'][substr($key, 0, -4)][] = $stats['name'];
@@ -537,7 +535,6 @@ class Schema extends DatabaseSchema {
     }
     foreach ($column_information['columns'] as $name => $spec) {
       if (substr($name, 0, 9) == '__unique_' && $column_information['indexes'][substr($name, 9) . '_unique']['is_unique'] == 1) {
-        //$index_schema['unique'][] = substr($name, 9);
         $definition = $spec['definition'];
         $matches = [];
         preg_match_all("/CONVERT\(\[varbinary\]\(max\),\[([a-zA-Z0-9_]*)\]/", $definition, $matches);
@@ -571,10 +568,10 @@ class Schema extends DatabaseSchema {
     if (isset($keys_new['primary key']) && in_array($field_new, $keys_new['primary key'], TRUE)) {
       $this->ensureNotNullPrimaryKey($keys_new['primary key'], [$field_new => $spec]);
     }
-    // Check if we need to drop field comments
+    // Check if we need to drop field comments.
     $drop_field_comment = FALSE;
     if ($this->getComment($table, $field) !== FALSE) {
-      $drop_field_comment = TRUE;     
+      $drop_field_comment = TRUE;
     }
 
     // SQL Server supports transactional DDL, so we can just start a transaction
@@ -617,10 +614,10 @@ class Schema extends DatabaseSchema {
     // Drop the related objects.
     $this->dropFieldRelatedObjects($table, $field);
 
-    if ($drop_field_comment) {  
+    if ($drop_field_comment) {
       $this->connection->queryDirect($this->deleteCommentSql($table, $field));
     }
-    
+
     // Start by renaming the current column.
     $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
       ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
@@ -641,7 +638,7 @@ class Schema extends DatabaseSchema {
     $this->addField($table, $field_new, $spec);
 
     // Don't need to do this if there is no data
-    // Cannot do this it column is serial
+    // Cannot do this it column is serial.
     if ($spec['type'] != 'serial') {
       $new_data_type = $this->createDataType($table, $field_new, $spec);
       // Migrate the data over.
@@ -670,7 +667,8 @@ class Schema extends DatabaseSchema {
     // Recreate the primary key if no new primary key has been sent along with
     // the change field.
     if (in_array($field, $primary_key_fields) && (!isset($keys_new['primary keys']) || empty($keys_new['primary keys']))) {
-      // The new primary key needs to have the new column name, and be in the same order.
+      // The new primary key needs to have the new column name, and be in the
+      // same order.
       if ($field !== $field_new) {
         $primary_key_fields[array_search($field, $primary_key_fields)] = $field_new;
       }
@@ -894,7 +892,6 @@ class Schema extends DatabaseSchema {
 
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
-
     $transaction = $this->connection->startTransaction();
 
     // Create the table with a default technical primary key.
@@ -904,10 +901,10 @@ class Schema extends DatabaseSchema {
     // literals with braces.
     $this->connection->queryDirect($this->createTableSql($name, $table), [], ['prefix_tables' => FALSE]);
 
-    // Create Field Comments
+    // Create Field Comments.
     foreach ($table['fields'] as $field_name => $field) {
       if (isset($field['description'])) {
-         $this->connection->queryDirect($this->createCommentSQL($field['description'], $name, $field_name));
+        $this->connection->queryDirect($this->createCommentSQL($field['description'], $name, $field_name));
       }
     }
     // If the spec had a primary key, set it now after all fields have been
@@ -931,9 +928,9 @@ class Schema extends DatabaseSchema {
         $this->addUniqueKey($name, $key_name, $key);
       }
     }
-     // Add table comment.
+    // Add table comment.
     if (!empty($table['description'])) {
-       $this->connection->queryDirect($this->createCommentSql($table['description'], $name));
+      $this->connection->queryDirect($this->createCommentSql($table['description'], $name));
     }
 
     unset($transaction);
@@ -1344,12 +1341,12 @@ EOF
     $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
     $sql = $this->connection->escapeField($name) . ' ';
-    
+
     $sql .= $this->createDataType($table, $name, $spec);
 
     $sqlsrv_type = $spec['sqlsrv_type'];
     $sqlsrv_type_native = $spec['sqlsrv_type_native'];
-    
+
     $is_text = in_array($sqlsrv_type_native, [
       'char',
       'varchar',
@@ -1383,7 +1380,7 @@ EOF
   }
 
   /**
-   * Create the data type from a field specification
+   * Create the data type from a field specification.
    */
   protected function createDataType($table, $name, $spec) {
     $sqlsrv_type = $spec['sqlsrv_type'];
@@ -1568,7 +1565,6 @@ EOF
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
-
     $transaction = $this->connection->startTransaction();
 
     // Clear current Primary Key.
@@ -1909,7 +1905,7 @@ EOF;
   }
 
   /**
-   * Create an SQL statement to delete a comment
+   * Create an SQL statement to delete a comment.
    */
   protected function deleteCommentSql($table = NULL, $column = NULL) {
     $schema = $this->getDefaultSchema();
@@ -1925,12 +1921,12 @@ EOF;
   }
 
   /**
-   * Create the SQL statement to add a new comment
+   * Create the SQL statement to add a new comment.
    */
   protected function createCommentSql($value, $table = NULL, $column = NULL) {
     $schema = $this->getDefaultSchema();
     $value = $this->connection->quote($value);
-    
+
     $sql = "EXEC sp_addextendedproperty @name=N'MS_Description', @value={$value}";
     $sql .= ",@level0type = N'Schema', @level0name = '{$schema}'";
     if (isset($table)) {
@@ -1941,7 +1937,7 @@ EOF;
     }
     return $sql;
   }
-  
+
   /**
    * Retrieve a table or column comment.
    */
