@@ -47,6 +47,7 @@ install:
   - |
     if [ -z "$DRUPAL" ]
     then drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+    fi
   # Install REGEX CLR
   - sudo apt-get install -qq mono-complete
   - cd $TRAVIS_BUILD_DIR/tests
@@ -55,10 +56,7 @@ install:
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE ASSEMBLY Regex from '/var/opt/mssql/data/RegEx.dll' WITH PERMISSION_SET = SAFE"
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
-  - cd $TRAVIS_BUILD_DIR/../drupal-project
-  - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist web/core/phpunit.xml
-  - phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
-  - cd web
+  - cd $TRAVIS_BUILD_DIR/../drupal-project/web
   # Install core patches
   - wget https://www.drupal.org/files/issues/2019-05-28/2867788-53.patch
   - wget https://www.drupal.org/files/issues/2020-02-14/drupal-3113403-Make_condition_driver_overridable-14.patch
@@ -71,13 +69,17 @@ install:
   - git apply drupal-3111134-database_specific_types-3.patch
   - cd ..
 script:
+  - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/web/core/phpunit.xml
   - pcov clobber
   - cd web
   - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
 after_success:
   - |
     if [ -z "$CODE_SNIFF" ]
-    then phpcs --standard=Drupal modules/contrib/sqlsrv
+    then
+    phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
+    phpcs --standard=Drupal modules/contrib/sqlsrv
+    fi
   - cd $TRAVIS_BUILD_DIR
   - sed -i 's/drupal\-project\/web\/modules\/contrib\///g' ./build/logs/clover.xml
   - sed -i 's/drupal\-project\/web/sqlsrv/g' ./build/logs/clover.xml
