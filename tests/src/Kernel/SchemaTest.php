@@ -33,17 +33,13 @@ class SchemaTest extends KernelTestBase {
     parent::setUp();
     $this->connection = Database::getConnection();
     $this->schema = $this->connection->schema();
-  }
-
-  /**
-   * Verify that comments are dropped when the table is dropped.
-   */
-  public function testDropTableComment() {
+    
     $name = 'test_comment_table';
     $table = [
       'description' => 'Original Comment',
       'fields' => [
         'id'  => [
+          'description' => 'Original field comment',
           'type' => 'int',
           'default' => NULL,
         ],
@@ -51,6 +47,12 @@ class SchemaTest extends KernelTestBase {
     ];
     // Create table with description.
     $this->schema->createTable($name, $table);
+  }
+
+  /**
+   * Verify that comments are dropped when the table is dropped.
+   */
+  public function testDropTableComment() {
 
     // Drop table and ensure comment does not exist.
     $this->schema->dropTable($name);
@@ -65,4 +67,26 @@ class SchemaTest extends KernelTestBase {
     $this->assertEquals('New Comment', $comment);
   }
 
+  /**
+   * Verify that comments are dropped when the field is dropped.
+   */
+  public function testDropFieldComment() {
+
+    // Drop field and ensure comment does not exist.
+
+    // Add field with different description.
+
+    // Verify comment is correct.
+
+  }
+
+  /**
+   * Verify that comments are changed when the field is altered.
+   */
+  public function testChangeFieldComment() {
+
+    // Alter table and change field description
+
+    // Verify comment is correct.
+  }
 }
