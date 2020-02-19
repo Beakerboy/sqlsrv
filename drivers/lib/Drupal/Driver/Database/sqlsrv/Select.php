@@ -24,9 +24,9 @@ class Select extends QuerySelect {
    * Overriden with an aditional exclude parameter that tells not to include
    * this expression (by default) in the select list.
    *
-   * Drupal expects the AVG() function to return a decimal number. SQL Server will
-   * return the FLOOR instead. We multiply the expression by 1.0 to force a cast
-   * inside the AVG function. `AVG(m.id)` becomes `AVG(m.id * 1.0)`.
+   * Drupal expects the AVG() function to return a decimal number. SQL Server
+   * will return the FLOOR instead. We multiply the expression by 1.0 to force
+   * a cast inside the AVG function. `AVG(m.id)` becomes `AVG(m.id * 1.0)`.
    *
    * @param string $expression
    *   The expression string. May contain placeholders.
@@ -55,7 +55,7 @@ class Select extends QuerySelect {
       $pos2 = $this->findParenMatch($sub_expression, $pos1 + 3);
       $inner = substr($sub_expression, $pos1 + 4, $pos2 - 4 - $pos1);
       $replacement_expression .= substr($sub_expression, 0, $pos1 + 4) . '(' . $inner . ') * 1.0)';
-      
+
       if (strlen($sub_expression) > $pos2 + 1) {
         $sub_expression = substr($sub_expression, $pos2 + 1);
       }
@@ -78,13 +78,14 @@ class Select extends QuerySelect {
    * @param int $start_paren
    *   The 0 indexed position of the open-paren, for which we would like
    *   to find the matching closing-paren.
+   *
    * @return int
    *   The 0 indexed position of the close paren.
    */
   private function findParenMatch($string, $start_paren) {
     $str_array = str_split(substr($string, $start_paren + 1));
     $paren_num = 1;
-    foreach($str_array as $i => $char) {
+    foreach ($str_array as $i => $char) {
       if ($char == '(') {
         $paren_num++;
       }
@@ -96,6 +97,7 @@ class Select extends QuerySelect {
       }
     }
   }
+
   /**
    * {@inheritdoc}
    */
@@ -263,8 +265,7 @@ class Select extends QuerySelect {
   /**
    * {@inheritdoc}
    *
-   * Overridden to support SQL Server Range Query syntax and CROSS APPLY
-   *
+   * Overridden to support SQL Server Range Query syntax and CROSS APPLY.
    */
   public function __toString() {
     // For convenience, we compile the query ourselves if the caller forgot
@@ -504,7 +505,7 @@ class Select extends QuerySelect {
   }
 
   /**
-   * prepare a count query.
+   * Prepare a count query.
    *
    * This is like the default prepareCountQuery, but does not optimize field (or
    * expressions) that are being used in conditions. (Why not?)
@@ -564,7 +565,7 @@ class Select extends QuerySelect {
       // fields.
       $count->distinct = FALSE;
     }
-    
+
     return $count;
   }
 
