@@ -12,7 +12,6 @@ use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 class ConditionTest extends DatabaseTestBase {
 
   // Testing of custom Condition class in select->where already happens in core.
-
   // Test custom Condition class in select->having.
 
   /**
@@ -20,7 +19,7 @@ class ConditionTest extends DatabaseTestBase {
    */
   public function testNestedConditions() {
     // This query should translate to:
-    // "SELECT job FROM {test} WHERE name = 'Paul' AND (name REGEX '^P' OR age = 27)"
+    // SELECT job FROM {test} WHERE name='Paul' AND (name REGEX '^P' OR age=27)
     // That should find only one record. Yes it's a non-optimal way of writing
     // that query but that's not the point!
     $query = $this->connection->select('test');
@@ -33,41 +32,40 @@ class ConditionTest extends DatabaseTestBase {
   }
 
   // Test custom Condition class in delete->where.
-
   // Test custom Condition class in merge.
-
   // Test custom Condition class in update->where.
-  
+
   /**
-   * Test that multiple LIKE statements throws exception when escaped by backslash.
+   * Test that multiple LIKE statements throws exception when escaped by 
+   * backslash.
    *
-   * This test will throw an exception while the PDO bug exists. When it is fixed,
-   * the LIKE operator can safely use "ESCAPE '\'" and custom code within the
-   * Condition class can be removed.
+   * This test will throw an exception while the PDO bug exists. When it is
+   * fixed, the LIKE operator can safely use "ESCAPE '\'" and custom code within
+   * the Condition class can be removed.
    */
   public function testPdoBugExists() {
-    // Extend Connection with new $sqlsrvConditionOperatorMap array
+    // Extend Connection with new $sqlsrvConditionOperatorMap array.
     $connection = $this->connection;
     $reflection = new \ReflectionClass($connection);
     $reflection_property = $reflection->getProperty('sqlsrvConditionOperatorMap');
-    $reflection_property->setAccessible(true);
+    $reflection_property->setAccessible(TRUE);
     $desired_operator_map = ['LIKE' => ['postfix' => " ESCAPE '\\'"]];
     $reflection_property->setValue($connection, $desired_operator_map);
-    
+
     // Set Condition to use parent::compile()
     $condition = new CoreCondition('AND');
-    
+
     $query = new Select('test', 't', $connection);
     $reflection = new \ReflectionClass($query);
     $reflection_property = $reflection->getProperty('condition');
-    $reflection_property->setAccessible(true);
+    $reflection_property->setAccessible(TRUE);
     $reflection_property->setValue($query, $condition);
 
     // Expect exception when executing query;
     // Should specify what type.
     $this->expectException(\Exception::class);
     
-    // Create and execute buggy query
+    // Create and execute buggy query.
     $query->addField('t', 'job');
     $query->condition('job', '%i%', 'LIKE');
     $query->condition('name', '%o%', 'LIKE');
@@ -81,10 +79,10 @@ class ConditionTest extends DatabaseTestBase {
    */
   public function testPdoBugFix() {
     $connection = $this->connection;
-    
+
     $query = new Select('test', 't', $connection);
-    
-    // Create and execute buggy query
+
+    // Create and execute buggy query.
     $query->addField('t', 'job');
     $query->condition('job', '%i%', 'LIKE');
     $query->condition('name', '%o%', 'LIKE');
@@ -94,5 +92,5 @@ class ConditionTest extends DatabaseTestBase {
     // Should actually review results.
     $this->assertTrue(TRUE);
   }
-  
+
 }
