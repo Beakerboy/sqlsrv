@@ -55,7 +55,7 @@ class SchemaTest extends KernelTestBase {
   public function testDropTableComment() {
     // I should probably replace this with a schema installation.
     $name = $this->name;
-    $table - $this->table;
+    $table = $this->table;
     // Drop table and ensure comment does not exist.
     $this->schema->dropTable($name);
     $this->assertFalse($this->schema->getComment($name));
