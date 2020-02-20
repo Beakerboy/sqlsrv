@@ -45,6 +45,7 @@ install:
   - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
   - mkdir $TRAVIS_BUILD_DIR/../drupal-project/web/sites/simpletest
   # Install patches
+  - cd $TRAVIS_BUILD_DIR/../drupal-project/web
   - wget https://www.drupal.org/files/issues/2019-05-28/2867788-53.patch
   - wget https://www.drupal.org/files/issues/2020-02-14/drupal-3113403-Make_condition_driver_overridable-14.patch
   - git apply 2867788-53.patch
