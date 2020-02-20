@@ -34,26 +34,39 @@ install:
   # Create a Drupal Site
   - cd ..
   - export COMPOSER_MEMORY_LIMIT=-1
-  - composer create-project -n drupal-composer/drupal-project:8.x-dev
-  - cd drupal-project
-  - composer config repositories.drupal composer https://packages.drupal.org/8
-  - composer require drupal/sqlsrv:dev-1.x@dev symfony/psr-http-message-bridge:1.1.x-dev php-coveralls/php-coveralls:^2.0
-  - composer require pcov/clobber --dev
-  - cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
-  - rm -rf ./web/modules/contrib/sqlsrv
-  - cp -rf $TRAVIS_BUILD_DIR ./web/modules/contrib/sqlsrv
-  - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
-  - mkdir $TRAVIS_BUILD_DIR/../drupal-project/web/sites/simpletest
-  # Install patches
-  - cd $TRAVIS_BUILD_DIR/../drupal-project/web
-  - wget https://www.drupal.org/files/issues/2019-05-28/2867788-53.patch
-  - wget https://www.drupal.org/files/issues/2020-02-14/drupal-3113403-Make_condition_driver_overridable-14.patch
-  - git apply 2867788-53.patch
-  - git apply drupal-3113403-Make_condition_driver_overridable-14.patch
-  - wget https://www.drupal.org/files/issues/2020-01-30/drupal-3108540-deprecationErrors-3.patch
-  - wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
-  - git apply drupal-3108540-deprecationErrors-3.patch
-  - git apply drupal-3111134-database_specific_types-3.patch
+  - |
+    if [ "${DRUPAL_VERSION}" == "9.0" ]; then
+      composer -n create-project drupal/recommended-project:^9.0@dev drupal-project
+      cd drupal-project
+      composer require drush/drush phpunit/phpunit:^8
+      mkdir ./web/modules/contrib
+      cd $TRAVIS_BUILD_DIR/../drupal-project/web
+      wget https://www.drupal.org/files/issues/2020-02-11/2867788-71.patch
+      git apply 2867788-71.patch
+    else
+      composer create-project -n drupal-composer/drupal-project:8.x-dev
+      cd drupal-project
+      composer config repositories.drupal composer https://packages.drupal.org/8
+      composer require drupal/sqlsrv:dev-1.x@dev symfony/psr-http-message-bridge:1.1.x-dev php-coveralls/php-coveralls:^2.0
+      composer require pcov/clobber --dev
+      cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
+      rm -rf ./web/modules/contrib/sqlsrv
+      cp -rf $TRAVIS_BUILD_DIR ./web/modules/contrib/sqlsrv
+      PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
+      mkdir $TRAVIS_BUILD_DIR/../drupal-project/web/sites/simpletest
+      # Install patches
+      cd $TRAVIS_BUILD_DIR/../drupal-project/web
+      wget https://www.drupal.org/files/issues/2019-05-28/2867788-53.patch
+      wget https://www.drupal.org/files/issues/2020-02-14/drupal-3113403-Make_condition_driver_overridable-14.patch
+      git apply 2867788-53.patch
+      git apply drupal-3113403-Make_condition_driver_overridable-14.patch
+      wget https://www.drupal.org/files/issues/2020-01-30/drupal-3108540-deprecationErrors-3.patch
+      wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
+      git apply drupal-3108540-deprecationErrors-3.patch
+      git apply drupal-3111134-database_specific_types-3.patch
+      cd ..
+      pcov clobber
+    fi
   - |
     if ! [ -z "$DRUPAL" ]; then
       drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
@@ -69,7 +82,6 @@ install:
   - cd $TRAVIS_BUILD_DIR/../drupal-project
 script:
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/web/core/phpunit.xml
-  - pcov clobber
   - cd $TRAVIS_BUILD_DIR/../drupal-project/web
   - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
 after_success:
