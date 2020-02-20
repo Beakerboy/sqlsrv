@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/Beakerboy/sqlsrv.svg?branch=8.x-1.x)](https://travis-ci.org/Beakerboy/sqlsrv)
 [![Build status](https://ci.appveyor.com/api/projects/status/xk6gh0rtta8d24hg/branch/8.x-1.x?svg=true)](https://ci.appveyor.com/project/Beakerboy/sqlsrv/branch/8.x-1.x)
 [![Coverage Status](https://coveralls.io/repos/github/Beakerboy/sqlsrv/badge.svg?branch=8.x-1.x)](https://coveralls.io/github/Beakerboy/sqlsrv?branch=8.x-1.x)
+
 SQL Server Driver for Drupal
 =====================
 
