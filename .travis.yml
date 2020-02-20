@@ -8,12 +8,12 @@ env:
 
 php:
   - '7.2'
+  - '7.3'
 
 before_install:
   # Use pcov instead of xdebug
   - phpenv config-rm xdebug.ini
   - pecl channel-update pecl.php.net
-  - pecl install pcov
   # Install SQL Server for Linux
   - wget -qO- https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
   - sudo add-apt-repository "$(wget -qO- https://packages.microsoft.com/config/ubuntu/16.04/mssql-server-2019.list)"
@@ -24,11 +24,11 @@ before_install:
   - export ACCEPT_EULA=Y
   - export MSSQL_PID=Evaluation
   - sudo /opt/mssql/bin/mssql-conf setup
+  - sleep 15
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q 'CREATE DATABASE mydrupalsite COLLATE Latin1_General_CI_AI '
   # Install the pdo_sqlsrv extension
   - sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev gcc g++ make autoconf libc-dev pkg-config
-  - pecl install sqlsrv
-  - pecl install pdo_sqlsrv
+  - pecl install pcov sqlsrv pdo_sqlsrv
   - phpenv config-add install/travis-7.x.ini
 install:
   # Create a Drupal Site
@@ -43,10 +43,19 @@ install:
   - rm -rf ./web/modules/contrib/sqlsrv
   - cp -rf $TRAVIS_BUILD_DIR ./web/modules/contrib/sqlsrv
   - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
-  - mkdir ./web/sites/simpletest
+  - mkdir $TRAVIS_BUILD_DIR/../drupal-project/web/sites/simpletest
+  # Install patches
+  - wget https://www.drupal.org/files/issues/2019-05-28/2867788-53.patch
+  - wget https://www.drupal.org/files/issues/2020-02-14/drupal-3113403-Make_condition_driver_overridable-14.patch
+  - git apply 2867788-53.patch
+  - git apply drupal-3113403-Make_condition_driver_overridable-14.patch
+  - wget https://www.drupal.org/files/issues/2020-01-30/drupal-3108540-deprecationErrors-3.patch
+  - wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
+  - git apply drupal-3108540-deprecationErrors-3.patch
+  - git apply drupal-3111134-database_specific_types-3.patch
   - |
-    if ! [ -z "$DRUPAL" ]
-    then drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
+    if ! [ -z "$DRUPAL" ]; then
+      drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
     fi
   # Install REGEX CLR
   - sudo apt-get install -qq mono-complete
@@ -56,29 +65,17 @@ install:
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE ASSEMBLY Regex from '/var/opt/mssql/data/RegEx.dll' WITH PERMISSION_SET = SAFE"
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
-  - cd $TRAVIS_BUILD_DIR/../drupal-project/web
-  # Install core patches
-  - wget https://www.drupal.org/files/issues/2019-05-28/2867788-53.patch
-  - wget https://www.drupal.org/files/issues/2020-02-14/drupal-3113403-Make_condition_driver_overridable-14.patch
-  - git apply 2867788-53.patch
-  - git apply drupal-3113403-Make_condition_driver_overridable-14.patch
-  # Install patches for tests
-  - wget https://www.drupal.org/files/issues/2020-01-30/drupal-3108540-deprecationErrors-3.patch
-  - wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
-  - git apply drupal-3108540-deprecationErrors-3.patch
-  - git apply drupal-3111134-database_specific_types-3.patch
-  - cd ..
+  - cd $TRAVIS_BUILD_DIR/../drupal-project
 script:
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/web/core/phpunit.xml
   - pcov clobber
-  - cd web
+  - cd $TRAVIS_BUILD_DIR/../drupal-project/web
   - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
 after_success:
   - |
-    if ! [ -z "$CODE_SNIFF" ]
-    then
-    phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
-    phpcs --standard=Drupal modules/contrib/sqlsrv
+    if ! [ -z "$CODE_SNIFF" ]; then
+      phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
+      phpcs --standard=Drupal modules/contrib/sqlsrv
     fi
   - cd $TRAVIS_BUILD_DIR
   - sed -i 's/drupal\-project\/web\/modules\/contrib\///g' ./build/logs/clover.xml
