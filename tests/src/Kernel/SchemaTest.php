@@ -33,7 +33,7 @@ class SchemaTest extends KernelTestBase {
     parent::setUp();
     $this->connection = Database::getConnection();
     $this->schema = $this->connection->schema();
-    
+
     $this->name = 'test_comment_table';
     $this->table = [
       'description' => 'Original Comment',
@@ -75,11 +75,8 @@ class SchemaTest extends KernelTestBase {
   public function testDropFieldComment() {
 
     // Drop field and ensure comment does not exist.
-
     // Add field with different description.
-
     // Verify comment is correct.
-
   }
 
   /**
@@ -87,8 +84,8 @@ class SchemaTest extends KernelTestBase {
    */
   public function testChangeFieldComment() {
 
-    // Alter table and change field description
-
+    // Alter table and change field description.
     // Verify comment is correct.
   }
+
 }
