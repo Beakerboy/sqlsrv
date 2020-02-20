@@ -34,8 +34,8 @@ class SchemaTest extends KernelTestBase {
     $this->connection = Database::getConnection();
     $this->schema = $this->connection->schema();
     
-    $name = 'test_comment_table';
-    $table = [
+    $this->name = 'test_comment_table';
+    $this->table = [
       'description' => 'Original Comment',
       'fields' => [
         'id'  => [
@@ -53,7 +53,9 @@ class SchemaTest extends KernelTestBase {
    * Verify that comments are dropped when the table is dropped.
    */
   public function testDropTableComment() {
-
+    // I should probably replace this with a schema installation.
+    $name = $this->name;
+    $table - $this->table;
     // Drop table and ensure comment does not exist.
     $this->schema->dropTable($name);
     $this->assertFalse($this->schema->getComment($name));
