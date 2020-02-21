@@ -284,8 +284,6 @@ class Connection extends DatabaseConnection {
     // Initialize settings.
     $this->driver_settings = DriverSettings::instanceFromSettings();
 
-    // Needs to happen before parent construct.
-    $this->statementClass = Statement::class;
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
     parent::__construct($connection, $connection_options);
 
