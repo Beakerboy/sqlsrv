@@ -31,7 +31,7 @@ class Schema extends DatabaseSchema {
    *
    * @var string
    */
-  const DEFAULT_COLLATION_CI = 'Latin1_General_CI_AI';
+  const DEFAULT_COLLATION_CI = 'LATIN1_GENERAL_100_CI_AS_SC_UTF8';
 
   /**
    * Default case-sensitive collation.
@@ -84,15 +84,15 @@ class Schema extends DatabaseSchema {
     // it much easier for modules (such as schema.module) to map
     // database types back into schema types.
     return [
-      'varchar:normal' => 'nvarchar',
+      'varchar:normal' => 'varchar',
       'char:normal' => 'nchar',
       'varchar_ascii:normal' => 'varchar(255)',
 
-      'text:tiny' => 'nvarchar(255)',
-      'text:small' => 'nvarchar(255)',
-      'text:medium' => 'nvarchar(max)',
-      'text:big' => 'nvarchar(max)',
-      'text:normal' => 'nvarchar(max)',
+      'text:tiny' => 'varchar(255)',
+      'text:small' => 'varchar(255)',
+      'text:medium' => 'varchar(max)',
+      'text:big' => 'varchar(max)',
+      'text:normal' => 'varchar(max)',
 
       'serial:tiny'     => 'smallint',
       'serial:small'    => 'smallint',
@@ -1394,7 +1394,13 @@ EOF
     ]);
 
     if (!empty($spec['length']) && $lengthable) {
-      return $sqlsrv_type_native . '(' . $spec['length'] . ')';
+      if (is_int($spec['length'])) {
+        $length = 3 * $spec['length'];
+      }
+      else {
+        $length = $spec['length'];
+      }
+      return $sqlsrv_type_native . "({$length})";
     }
     elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
       // Maximum precision for SQL Server 2008 or greater is 38.
