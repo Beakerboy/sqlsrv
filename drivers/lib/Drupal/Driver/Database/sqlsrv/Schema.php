@@ -31,7 +31,7 @@ class Schema extends DatabaseSchema {
    *
    * @var string
    */
-  const DEFAULT_COLLATION_CI = 'Latin1_General_CI_AI';
+  const DEFAULT_COLLATION_CI = 'LATIN1_GENERAL_100_CI_AS_SC_UTF';
 
   /**
    * Default case-sensitive collation.
