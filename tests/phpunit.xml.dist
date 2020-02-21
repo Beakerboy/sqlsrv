@@ -142,16 +142,13 @@
     </testsuite>
     <testsuite name="passing_database">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
-      <exclude>tests/Drupal/KernelTests/Core/Database/SchemaTest.php</exclude>
       <exclude>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</exclude>
     </testsuite>
     <testsuite name="failing_database">
-      <file>../modules/contrib/sqlsrv/tests/src/Kernel/FailingSchemaTest.php</file>
       <file>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
-      <exclude>../modules/contrib/sqlsrv/tests/src/Kernel/FailingSchemaTest.php</exclude>
     </testsuite>
   </testsuites>
   <listeners>
