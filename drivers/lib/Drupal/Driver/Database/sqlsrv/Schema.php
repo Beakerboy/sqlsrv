@@ -1394,7 +1394,7 @@ EOF
     ]);
 
     if (!empty($spec['length']) && $lengthable) {
-      if (is_int()) {
+      if (is_int($spec['length'])) {
         $length = 3 * $spec['length'];
       }
       else {
