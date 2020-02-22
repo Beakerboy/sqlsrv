@@ -5,13 +5,21 @@ namespace Drupal\Tests\sqlsrv\Unit;
 use Drupal\Driver\Database\sqlsrv\Select;
 use Drupal\Driver\Database\sqlsrv\Condition;
 use Drupal\Tests\Core\Database\Stub\StubConnection;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * Test the behavior of the custom Condition class.
  *
  * These tests are not expected to pass on other database drivers.
+ *
+ * @group Database
  */
-class ConditionTest {
+class SqlsrvConditionTest extends UnitTestCase {
+
+  protected $connection;
+
+  protected $select;
+
   public function setUp() {
     $mock_pdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
     $this->connection = new StubConnection($mock_pdo, []);
