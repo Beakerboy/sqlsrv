@@ -21,6 +21,7 @@ class SqlsrvConditionTest extends UnitTestCase {
   protected $select;
 
   public function setUp() {
+    parent::setup();
     $mock_pdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
     $this->connection = new StubConnection($mock_pdo, []);
     $this->select = new Select('table', 't', $this->connection);
