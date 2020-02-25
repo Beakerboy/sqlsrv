@@ -56,22 +56,16 @@
     <testsuite name="database">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
     </testsuite>
-    <testsuite name="KernelTestA">
+    <testsuite name="KernelTestAD">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Action</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Ajax</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Asset</directory>
-    </testsuite>
-    <testsuite name="KernelTestB">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Block</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Bootstrap</directory>
-    </testsuite>
-    <testsuite name="KernelTestC">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Cache</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Command</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Common</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Config</directory>
-    </testsuite>
-    <testsuite name="KernelTestD">
       <!-- <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory> -->
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Datetime</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/DrupalKernel</directory>
