@@ -36,8 +36,9 @@ class ConditionTest extends DatabaseTestBase {
   // Test custom Condition class in update->where.
 
   /**
-   * Test that multiple LIKE statements throws exception when escaped by 
-   * backslash.
+   * Test presence of PDO Bug.
+   *
+   * @link https://bugs.php.net/bug.php?id=79276 Bug Report. @endlink
    *
    * This test will throw an exception while the PDO bug exists. When it is
    * fixed, the LIKE operator can safely use "ESCAPE '\'" and custom code within
@@ -64,7 +65,7 @@ class ConditionTest extends DatabaseTestBase {
     // Expect exception when executing query;
     // Should specify what type.
     $this->expectException(\Exception::class);
-    
+
     // Create and execute buggy query.
     $query->addField('t', 'job');
     $query->condition('job', '%i%', 'LIKE');
