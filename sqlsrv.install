@@ -212,7 +212,7 @@ function sqlsrv_directory_checksum($directory) {
  * Get some info about extensions...
  *
  * @param mixed $name
- *   I don't know what this is.
+ *   Extension name.
  *
  * @return array
  *   Extension information.
