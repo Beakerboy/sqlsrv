@@ -6,9 +6,7 @@
  */
 
 use Drupal\Core\Database\Database;
-
 use Drupal\Driver\Database\sqlsrv\Connection;
-use Drupal\Driver\Database\sqlsrv\Utils;
 use Drupal\sqlsrv\Indexes\IndexManager;
 
 /**
@@ -17,7 +15,7 @@ use Drupal\sqlsrv\Indexes\IndexManager;
  * Remove cache directory if module is uninstalled.
  */
 function sqlsrv_uninstall() {
-  
+  // Remove cache directory if module is uninstalled.
 }
 
 /**
@@ -27,7 +25,7 @@ function sqlsrv_uninstall() {
  */
 function sqlsrv_requirements($phase) {
 
-  $requirements = array();
+  $requirements = [];
 
   if ($phase == 'runtime') {
 
@@ -36,7 +34,7 @@ function sqlsrv_requirements($phase) {
 
     // Nothing to do if we are not running on MSSQL.
     if ($connection->driver() !== 'sqlsrv') {
-      return array();
+      return [];
     }
 
     $options = $connection->getConnectionOptions();
@@ -44,41 +42,43 @@ function sqlsrv_requirements($phase) {
     $collation = $schema->getCollation();
     $version = $schema->EngineVersion();
 
-    $extensiondata = Utils::ExtensionData('pdo_sqlsrv');
+    $extensiondata = sqlsrv_extensionData('pdo_sqlsrv');
 
     // Report database engine version
     $uinfo = $schema->UserOptions();
     $uinfo_parts = array_map(function($a, $b) { $a = strtoupper($a); $b = strtoupper($b); return "$a=$b"; }, array_keys($uinfo), $uinfo);
-    $requirements['sqlsrv_edition'] = array(
+    $arguments = [
+      '@version' => $version['VERSION'],
+      '@level' => $version['LEVEL'],
+      '@edition' => $version['EDITION'],
+      '@name' => $options['database'],
+    ];
+    $requirements['sqlsrv_edition'] = [
       'title' => t('MSSQL Server'),
       'severity' => REQUIREMENT_INFO,
       'description' => implode(' | ', $uinfo_parts),
-      'value' => t('@version @level @ @edition | @name', 
-        array('@version' => $version['VERSION'],
-               '@level' => $version['LEVEL'],
-               '@edition' => $version['EDITION'],
-               '@name' => $options['database'])),
-    );
+      'value' => t('@version @level @ @edition | @name', $arguments),
+    ];
 
     // Report database name and size.
     $size = $schema->getSizeInfo();
     $size_db = format_size($size->RowSizeMB * 1024 * 1024);
-    $requirements['sqlsrv_database'] = array(
+    $requirements['sqlsrv_database'] = [
       'title' => t('MSSQL Server Database'),
       'severity' => REQUIREMENT_OK,
       'value' => "{$options['database']} ({$size_db})",
-    );
+    ];
 
     // Make sure enough size is set for buffered queries
     $buffer_size = $extensiondata['getINIEntries']['pdo_sqlsrv.client_buffer_max_kb_size'];
     $buffer_size_min = (12240 * 2);
     $buffer_size_ok = $buffer_size >= $buffer_size_min;
-    $requirements['sqlsrv_client_buffer_size'] = array(
+    $requirements['sqlsrv_client_buffer_size'] = [
       'title' => t('MSSQL Server client buffer size'),
       'severity' => $buffer_size_ok ? REQUIREMENT_OK : REQUIREMENT_WARNING,
       'value' => "{$buffer_size} Kb",
       'description' => "pdo_sqlsrv.client_buffer_max_kb_size setting must be of at least {$buffer_size_min}Kb. Currently {$buffer_size}Kb.",
-    );
+    ];
 
     // Is this a windows server?
 	  // Probably yes, because this is the MS SQL Server driver!
@@ -206,4 +206,34 @@ function sqlsrv_directory_checksum($directory) {
     $names .= $file->name;
   }
   return $checksum . '-' . md5($names);
+}
+
+/**
+ * Get some info about extensions...
+ *
+ * @param mixed $name
+ *   I don't know what this is.
+ *
+ * @return array
+ *   Extension information.
+ */
+public function sqlsrv_extensionData($name) {
+
+  $re = new \ReflectionExtension($name);
+
+  $_data = [];
+
+  $_data['getName'] = $re->getName() ?: NULL;
+  $_data['getVersion'] = $re->getVersion() ?: NULL;
+  $_data['getClassName'] = PHP_EOL . implode(", ", $re->getClassNames()) ?: NULL;
+  foreach ($re->getConstants() as $key => $value) {
+    $_data['getConstants'] .= "\n{$key}:={$value}";
+  }
+  $_data['getDependencies'] = $re->getDependencies() ?: NULL;
+  $_data['getFunctions'] = PHP_EOL . implode(", ", array_keys($re->getFunctions())) ?: NULL;
+  $_data['getINIEntries'] = $re->getINIEntries() ?: NULL;
+  $_data['isPersistent'] = $re->isPersistent() ?: NULL;
+  $_data['isTemporary'] = $re->isTemporary() ?: NULL;
+
+  return $_data;
 }
