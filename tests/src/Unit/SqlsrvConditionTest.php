@@ -2,21 +2,19 @@
 
 namespace Drupal\Tests\sqlsrv\Unit;
 
-use Drupal\Driver\Database\sqlsrv\Select;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\PlaceholderInterface;
 use Drupal\Driver\Database\sqlsrv\Condition;
-use Drupal\Tests\Core\Database\Stub\StubConnection;
+use Drupal\Driver\Database\sqlsrv\Schema;
+use Drupal\Tests\UnitTestCase;
+use Prophecy\Argument;
 
 /**
  * Test the behavior of the custom Condition class.
  *
  * These tests are not expected to pass on other database drivers.
  */
-class ConditionTest {
-  public function setUp() {
-    $mock_pdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
-    $this->connection = new StubConnection($mock_pdo, []);
-    $this->select = new Select('table', 't', $this->connection);
-  }
+class SqlsrvConditionTest extends UnitTestCase {
 
   /**
    * Test the escaping strategy of the LIKE operator.
@@ -24,25 +22,45 @@ class ConditionTest {
    * Mysql, Postgres, and sqlite all use '\' to escape '%' and '_'
    * in the LIKE statement. SQL Server can also use a backslash with the syntax.
    * field LIKE :text ESCAPE '\'.
-   * However, due to a bug in PDO (https://bugs.php.net/bug.php?id=79276), if a SQL
-   * statement has multiple LIKE statements, parameters are not correctly replaced
-   * if they are located between a pair of backslashes:
+   * However, due to a bug in PDO (https://bugs.php.net/bug.php?id=79276), if a
+   * SQL statement has multiple LIKE statements, parameters are not correctly
+   * replaced if they are located between a pair of backslashes:
+   *
    * "field1 LIKE :text1 ESCAPE '\' AND field2 LIKE :text2 ESCAPE '\'"
    * :text2 will not be replaced.
    *
    * If the PDO bug is fixed, this test and the LIKE customization within the
    * Condition class can be removed
+   *
+   * @dataProvider dataProviderForTestLike
    */
-  public function testLike($given, $reescaped) {
-   
+  public function testLike($given, $expected) {
+    $connection = $this->prophesize(Connection::class);
+    $connection->escapeField(Argument::any())->will(function ($args) {
+      return preg_replace('/[^A-Za-z0-9_.]+/', '', $args[0]);
+    });
+    $connection->mapConditionOperator(Argument::any())->willReturn([]);
+    $connection = $connection->reveal();
+    $query_placeholder = $this->prophesize(PlaceholderInterface::class);
+
+    $counter = 0;
+    $query_placeholder->nextPlaceholder()->will(function () use (&$counter) {
+      return $counter++;
+    });
+
+    $query_placeholder->uniqueIdentifier()->willReturn(4);
+    $query_placeholder = $query_placeholder->reveal();
+
     $condition = new Condition('AND');
     $condition->condition('name', $given, 'LIKE');
-    $condition->compile($this->connection, $select);
-    $conditions = $condition->conditions();
-    $reescaped = $conditions[0]['value'];
-    $this->assertEqual($reescaped, $expected, "Test that the driver escapes LIKE parameters correctly");
+    $condition->compile($connection, $query_placeholder);
+    $this->assertEquals('name LIKE :db_condition_placeholder_0', $condition->__toString());
+    $this->assertEquals([':db_condition_placeholder_0' => $expected], $condition->arguments());
   }
 
+  /**
+   * Data Provider.
+   */
   public function dataProviderForTestLike() {
     return [
       [
@@ -67,25 +85,75 @@ class ConditionTest {
       ],
     ];
   }
-    
+
   /**
-   * Test the REGEXP operator string replacement
+   * Test the REGEXP operator string replacement.
+   *
+   * @dataProvider dataProviderForTestRegexp
    */
-  //public function testRegexp() {
-    //$pattern = "^P;
-    //$field_name = 'name';
-    //$operator = 'REGEXP';
-    //$schema = 'dbo';
-    //condition = new Condition('AND');
-    // Mocked Connection needs to be able to
-    // escape fields, and return a schema with
-    // a defaultSchema
-    //$condition->condition('name', $pattern, $operator);
-    //$condition->compile($this->connection, $select);
-    //$conditions = $condition->conditions();
-    //$field = $conditions[0]['field'];
-    //$expected = "dbo.REGEXP(:db_condition_placeholder_1, {$field_name}) = 1";
-    //$this->assertEqual($field, , "Test that the driver escapes REGEXP parameters correctly");
-  //}
+  public function testRegexp($expected, $field_name, $operator, $schema_name, $pattern) {
+    $schema = $this->prophesize(Schema::class);
+    $schema->getDefaultSchema()->willReturn($schema_name);
+    $schema = $schema->reveal();
+    $connection = $this->prophesize(Connection::class);
+    $connection->escapeField($field_name)->will(function ($args) {
+      return preg_replace('/[^A-Za-z0-9_.]+/', '', $args[0]);
+    });
+    $connection->mapConditionOperator($operator)->willReturn(['operator' => $operator]);
+    $connection->schema()->willReturn($schema);
+    $connection = $connection->reveal();
+
+    $query_placeholder = $this->prophesize(PlaceholderInterface::class);
+
+    $counter = 0;
+    $query_placeholder->nextPlaceholder()->will(function () use (&$counter) {
+      return $counter++;
+    });
+    $query_placeholder->uniqueIdentifier()->willReturn(4);
+    $query_placeholder = $query_placeholder->reveal();
+
+    $condition = new Condition('AND');
+    $condition->condition($field_name, $pattern, $operator);
+    $condition->compile($connection, $query_placeholder);
+
+    $this->assertEquals($expected, $condition->__toString());
+    $this->assertEquals([':db_condition_placeholder_0' => $pattern], $condition->arguments());
+  }
+
+  /**
+   * Provides a list of known operations and the expected output.
+   */
+  public function dataProviderForTestRegexp() {
+    return [
+      [
+        '(dbo.REGEXP(:db_condition_placeholder_0, name) = 1)',
+        'name',
+        'REGEXP',
+        'dbo',
+        '^P',
+      ],
+      [
+        '(db.REGEXP(:db_condition_placeholder_0, name123) = 1)',
+        'name-123',
+        'REGEXP',
+        'db',
+        's$',
+      ],
+      [
+        '(odb.REGEXP(:db_condition_placeholder_0, name) = 0)',
+        'name',
+        'NOT REGEXP',
+        'odb',
+        '^\$[a-z][a-zA-Z_]$',
+      ],
+      [
+        '(dbo.REGEXP(:db_condition_placeholder_0, name123) = 0)',
+        'name-123',
+        'NOT REGEXP',
+        'dbo',
+        '^[a-z].*$',
+      ],
+    ];
+  }
 
 }
