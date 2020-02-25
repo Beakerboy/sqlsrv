@@ -35,7 +35,7 @@ class SqlsrvTest extends DatabaseTestBase {
   }
 
   /**
-   *  Test duplicate placeholders in queries.
+   * Test duplicate placeholders in queries.
    *
    * Although per official documentation you cannot send
    * duplicate placeholders in same query, this works in mySQL
