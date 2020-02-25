@@ -142,9 +142,9 @@ class SqlsrvTest extends DatabaseTestBase {
     $result = $query->execute()->fetchAll();
     $this->assertEqual(count($result), 0, t('db_select returned the correct number of total rows.'));
 
-    // Using the where function requires that database-specific notation be used.
-    // This means we can use the SQL Server bracket notation, but these queries
-    // will not be valid on other databases.
+    // Using the where function requires that database-specific notation be
+    // used. This means we can use the SQL Server bracket notation, but these
+    // queries will not be valid on other databases.
     // select->where: Test unescaped wildcard.
     $query = $this->connection->select('test_task', 't');
     $query->where('t.task LIKE :task', [':task' => '[s]leep']);
