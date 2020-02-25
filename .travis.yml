@@ -89,7 +89,7 @@ after_success:
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
       phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
-      phpcs --standard=Drupal modules/contrib/sqlsrv
+      phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/contrib/sqlsrv
     fi
   - cd $TRAVIS_BUILD_DIR
   - sed -i 's/drupal\-project\/web\/modules\/contrib\///g' ./build/logs/clover.xml
