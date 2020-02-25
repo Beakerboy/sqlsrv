@@ -43,6 +43,11 @@ class SchemaTest extends KernelTestBase {
           'type' => 'int',
           'default' => NULL,
         ],
+        'name'  => [
+          'description' => 'Original name comment',
+          'type' => 'varchar',
+          'length' => 50,
+        ],
       ],
     ];
     // Create table with description.
@@ -73,10 +78,19 @@ class SchemaTest extends KernelTestBase {
    * Verify that comments are dropped when the field is dropped.
    */
   public function testDropFieldComment() {
-
+    
     // Drop field and ensure comment does not exist.
+    $this->schema->dropField('test_comment_table', 'name');
+    $this->assertFalse($this->schema->getComment('test_comment_table', 'name'));
+    
     // Add field with different description.
+    $spec = $this->table['fields']['name'];
+    $spec['description'] = 'New name comment';
+    $this->schema->addField('test_comment_table', 'name', $spec);
+    
     // Verify comment is correct.
+    $comment = $this->schema->getComment('test_comment_table', 'name');
+    $this->assertEquals('New name comment', $comment);
   }
 
   /**
