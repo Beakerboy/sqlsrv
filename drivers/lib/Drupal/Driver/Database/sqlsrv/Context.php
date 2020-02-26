@@ -50,7 +50,7 @@ class Context {
 
     // Retain a copy of the setting and connections.
     $this->connection = $connection ? $connection : Database::getConnection();
-    $this->settings = $this->connection->driver_settings;
+    $this->settings = $this->connection->driverSettings;
 
     // Override our custom settings.
     $configuration = $this->settings->exportConfiguration();
@@ -68,7 +68,7 @@ class Context {
     }
 
     $settings = DriverSettings::instanceFromData($configuration);
-    $this->connection->driver_settings = $settings;
+    $this->connection->driverSettings = $settings;
   }
 
   /**
@@ -76,7 +76,7 @@ class Context {
    */
   public function __destruct() {
     // Restore previous driver configuration.
-    $this->connection->driver_settings = $this->settings;
+    $this->connection->driverSettings = $this->settings;
   }
 
 }
