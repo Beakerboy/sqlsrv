@@ -230,7 +230,7 @@ class SchemaTest extends DatabaseTestBase {
    */
   public function testIntroscpectSchemaException() {
     $this->expectException(SchemaObjectDoesNotExistException::class);
-    $this->schema->introspectSchema('test_new');
+    $this->schema->introspectIndexSchema('test_new');
   }
 
   /**
