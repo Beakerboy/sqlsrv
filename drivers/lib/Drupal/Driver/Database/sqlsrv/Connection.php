@@ -312,7 +312,7 @@ class Connection extends DatabaseConnection {
   public static function open(array &$connection_options = []) {
 
     // Get driver settings.
-    $driver_settings = DriverSettings::instanceFromSettings();
+    $driverSettings = DriverSettings::instanceFromSettings();
 
     // Build the DSN.
     $options = [];
@@ -325,7 +325,7 @@ class Connection extends DatabaseConnection {
     }
 
     // Set isolation level if specified.
-    if ($level = $driver_settings->GetDefaultIsolationLevel()) {
+    if ($level = $driverSettings->GetDefaultIsolationLevel()) {
       $options['TransactionIsolation'] = $level;
     }
 
@@ -376,7 +376,7 @@ class Connection extends DatabaseConnection {
     $options = array_merge([
       'insecure' => FALSE,
       'statement_caching' => $this->driver_settings->GetStatementCachingMode(),
-      'direct_query' => $this->driver_settings->GetDefaultDirectQueries(),
+      'direct_query' => $this->driverSettings->GetDefaultDirectQueries(),
       'prefix_tables' => TRUE,
     ], $options);
 
@@ -484,7 +484,7 @@ class Connection extends DatabaseConnection {
   public function pdoPrepare($query, array $options = []) {
 
     // Preprocess the query.
-    if (!$this->driver_settings->GetDeafultBypassQueryPreprocess()) {
+    if (!$this->driverSettings->GetDeafultBypassQueryPreprocess()) {
       $query = $this->preprocessQuery($query);
     }
 
