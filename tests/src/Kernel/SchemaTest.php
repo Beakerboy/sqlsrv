@@ -123,7 +123,7 @@ class SchemaTest extends KernelTestBase {
   /**
    * Exception thrown when table exists.
    */
-  public function testAddNotDefaultException() {
+  public function testCreateTableExists() {
     $this->expectException(SchemaObjectExistsException::class);
     $this->schema->createTable('test_comment_table', $this->table);
   }
