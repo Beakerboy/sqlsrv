@@ -375,7 +375,7 @@ class Connection extends DatabaseConnection {
     // the global configuration if set to different than NULL.
     $options = array_merge([
       'insecure' => FALSE,
-      'statement_caching' => $this->driver_settings->GetStatementCachingMode(),
+      'statement_caching' => $this->driverSettings->GetStatementCachingMode(),
       'direct_query' => $this->driverSettings->GetDefaultDirectQueries(),
       'prefix_tables' => TRUE,
     ], $options);
@@ -441,7 +441,7 @@ class Connection extends DatabaseConnection {
     // you should execute your queries with PDO::SQLSRV_ATTR_DIRECT_QUERY set to
     // True. For example, if you use temporary tables in your queries,
     // PDO::SQLSRV_ATTR_DIRECT_QUERY must be set to True.
-    if ($this->driver_settings->GetStatementCachingMode() != 'always' || $options['direct_query'] == TRUE) {
+    if ($this->driverSettings->GetStatementCachingMode() != 'always' || $options['direct_query'] == TRUE) {
       $pdo_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
 
