@@ -3,6 +3,8 @@
 namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\Database\SchemaObjectDoesNotExistException;
+use Drupal\Core\Database\SchemaObjectExistsException;
 use Drupal\KernelTests\KernelTestBase;
 
 /**
@@ -100,6 +102,47 @@ class SchemaTest extends KernelTestBase {
 
     // Alter table and change field description.
     // Verify comment is correct.
+  }
+
+  /**
+   * Exception thrown when field does not exist.
+   */
+  public function testAddDefaultException() {
+    $this->expectException(SchemaObjectDoesNotExistException::class);
+    $this->schema->fieldSetDefault('test_comment_table', 'noname', 'Elvis');
+  }
+
+  /**
+   * Exception thrown when field does not exist.
+   */
+  public function testAddNotDefaultException() {
+    $this->expectException(SchemaObjectDoesNotExistException::class);
+    $this->schema->fieldSetNotDefault('test_comment_table', 'noname');
+  }
+
+  /**
+   * Exception thrown when table exists.
+   */
+  public function testAddNotDefaultException() {
+    $this->expectException(SchemaObjectExistsException::class);
+    $this->schema->createTable('test_comment_table', $this->table);
+  }
+
+  /**
+   * Test getDefaultSchema with no default.
+   *
+   * Should this be done in isolation to ensure the correct value
+   * is returned if the test server is configured with a different
+   * value for the schema?
+   */
+  public function testGetDefaultSchemaNoDefault() {
+    $schema = new \ReflectionClass('\Drupal\Drivers\sqlsrv\Schema');
+    $property = $class->getProperty("defaultSchema");
+    $property->setAccessible(TRUE);
+    $property->setValue($this->schema, NULL);
+
+    $schema_name = $this->schema->getDefaultSchema();
+    $this->assertEquals($schema_name, 'dbo');
   }
 
 }
