@@ -5,36 +5,20 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\SchemaObjectDoesNotExistException;
 use Drupal\Core\Database\SchemaObjectExistsException;
-use Drupal\KernelTests\KernelTestBase;
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Tests table creation and modification via the schema API.
  *
  * @group Database
  */
-class SchemaTest extends KernelTestBase {
-
-  /**
-   * Connection to the database.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
-   * Database schema instance.
-   *
-   * @var \Drupal\Core\Database\Schema
-   */
-  protected $schema;
+class SchemaTest extends DatabaseTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
-    $this->connection = Database::getConnection();
-    $this->schema = $this->connection->schema();
     $this->table = [
       'description' => 'New Comment',
       'fields' => [
