@@ -249,17 +249,17 @@ class SchemaTest extends KernelTestBase {
   }
 
   /**
-   * Exception thrown when table does not exist.
+   * Exception thrown when field does not exist.
    */
-  public function testPrimaryKeyTableDoesNotExist() {
+  public function testFieldDoesNotExistException() {
     $this->expectException(SchemaObjectDoesNotExistException::class);
-    $this->schema->addPrimaryKey('test', 'age1', 'age2', $this->table['fields']['age']);
+    $this->schema->changeField('test', 'age1', 'age2', $this->table['fields']['age']);
   }
 
   /**
-   * Exception thrown when primary key already exists.
+   * Exception thrown when field already exists.
    */
-  public function testPrimaryKeyExists() {
+  public function testFieldExistsException() {
     $this->expectException(SchemaObjectExistsException::class);
     $this->schema->changeField('test', 'age', 'name', $this->table['fields']['age']);
   }
