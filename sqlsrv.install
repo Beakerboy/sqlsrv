@@ -44,7 +44,7 @@ function sqlsrv_requirements($phase) {
 
     // Report database engine version.
     $uinfo = $schema->UserOptions();
-    $inline_function = function($a, $b) {
+    $inline_function = function ($a, $b) {
       $a = strtoupper($a);
       $b = strtoupper($b);
       return "$a=$b";
