@@ -1,8 +1,7 @@
 language: php
 env:
-  - DBVERSION=2019 TEST_SUITE=KernelTestA,KernelTestB,KernelTestC,KernelTestD,sqlsrv,passing_database DRUPAL=yes CODE_SNIFF=yes
+  - DBVERSION=2019 TEST_SUITE=KernelTestAD,KernelTestKZ,sqlsrv,passing_database DRUPAL=yes CODE_SNIFF=yes
   - DBVERSION=2019 TEST_SUITE=KernelTestE,KernelTestF,KernelTestH,KernelTestI
-  - DBVERSION=2019 TEST_SUITE=KernelTestK,KernelTestL,KernelTestM,KernelTestP,KernelTestQ,KernelTestR,KernelTestS,KernelTestT,KernelTestU,KernelTestV
   - DBVERSION=2019 TEST_SUITE=failing_database
 
 php:
@@ -89,7 +88,7 @@ after_success:
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
       phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
-      phpcs --standard=Drupal modules/contrib/sqlsrv
+      phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/contrib/sqlsrv
     fi
   - cd $TRAVIS_BUILD_DIR
   - sed -i 's/drupal\-project\/web\/modules\/contrib\///g' ./build/logs/clover.xml

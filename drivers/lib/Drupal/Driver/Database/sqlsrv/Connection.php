@@ -34,7 +34,7 @@ class Connection extends DatabaseConnection {
    *
    * @var \Drupal\Driver\Database\sqlsrv\DriverSettings
    */
-  public $driver_settings = NULL;
+  public $driverSettings = NULL;
 
   /**
    * Error code for Login Failed.
@@ -282,7 +282,7 @@ class Connection extends DatabaseConnection {
   public function __construct(\PDO $connection, array $connection_options) {
     $this->OS = strtoupper(substr(PHP_OS, 0, 3));
     // Initialize settings.
-    $this->driver_settings = DriverSettings::instanceFromSettings();
+    $this->driverSettings = DriverSettings::instanceFromSettings();
 
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
     parent::__construct($connection, $connection_options);
@@ -312,7 +312,7 @@ class Connection extends DatabaseConnection {
   public static function open(array &$connection_options = []) {
 
     // Get driver settings.
-    $driver_settings = DriverSettings::instanceFromSettings();
+    $driverSettings = DriverSettings::instanceFromSettings();
 
     // Build the DSN.
     $options = [];
@@ -325,7 +325,7 @@ class Connection extends DatabaseConnection {
     }
 
     // Set isolation level if specified.
-    if ($level = $driver_settings->GetDefaultIsolationLevel()) {
+    if ($level = $driverSettings->GetDefaultIsolationLevel()) {
       $options['TransactionIsolation'] = $level;
     }
 
@@ -375,8 +375,8 @@ class Connection extends DatabaseConnection {
     // the global configuration if set to different than NULL.
     $options = array_merge([
       'insecure' => FALSE,
-      'statement_caching' => $this->driver_settings->GetStatementCachingMode(),
-      'direct_query' => $this->driver_settings->GetDefaultDirectQueries(),
+      'statement_caching' => $this->driverSettings->GetStatementCachingMode(),
+      'direct_query' => $this->driverSettings->GetDefaultDirectQueries(),
       'prefix_tables' => TRUE,
     ], $options);
 
@@ -441,7 +441,7 @@ class Connection extends DatabaseConnection {
     // you should execute your queries with PDO::SQLSRV_ATTR_DIRECT_QUERY set to
     // True. For example, if you use temporary tables in your queries,
     // PDO::SQLSRV_ATTR_DIRECT_QUERY must be set to True.
-    if ($this->driver_settings->GetStatementCachingMode() != 'always' || $options['direct_query'] == TRUE) {
+    if ($this->driverSettings->GetStatementCachingMode() != 'always' || $options['direct_query'] == TRUE) {
       $pdo_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
 
@@ -484,7 +484,7 @@ class Connection extends DatabaseConnection {
   public function pdoPrepare($query, array $options = []) {
 
     // Preprocess the query.
-    if (!$this->driver_settings->GetDeafultBypassQueryPreprocess()) {
+    if (!$this->driverSettings->GetDeafultBypassQueryPreprocess()) {
       $query = $this->preprocessQuery($query);
     }
 
@@ -493,7 +493,7 @@ class Connection extends DatabaseConnection {
     // backtrace plus other details that aid in debugging deadlocks
     // or long standing locks. Use in combination with MSSQL profiler.
     global $conf;
-    if ($this->driver_settings->GetAppendCallstackComment()) {
+    if ($this->driverSettings->GetAppendCallstackComment()) {
       $oUser = \Drupal::currentUser();
       $uid = NULL;
       if ($oUser != NULL) {
