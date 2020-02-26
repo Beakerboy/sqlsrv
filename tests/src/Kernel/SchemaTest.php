@@ -117,7 +117,7 @@ class SchemaTest extends KernelTestBase {
    */
   public function testAddNotDefaultException() {
     $this->expectException(SchemaObjectDoesNotExistException::class);
-    $this->schema->fieldSetNotDefault('test_comment_table', 'noname');
+    $this->schema->fieldSetNoDefault('test_comment_table', 'noname');
   }
 
   /**
