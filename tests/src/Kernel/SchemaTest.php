@@ -137,7 +137,7 @@ class SchemaTest extends KernelTestBase {
    */
   public function testGetDefaultSchemaNoDefault() {
     $schema = new \ReflectionClass('\Drupal\Driver\Database\sqlsrv\Schema');
-    $property = $class->getProperty("defaultSchema");
+    $property = $schema->getProperty("defaultSchema");
     $property->setAccessible(TRUE);
     $property->setValue($this->schema, NULL);
 
