@@ -48,7 +48,7 @@ function sqlsrv_requirements($phase) {
       $a = strtoupper($a);
       $b = strtoupper($b);
       return "$a=$b";
-    }
+    };
     $uinfo_parts = array_map($inline_function, array_keys($uinfo), $uinfo);
     $arguments = [
       '@version' => $version['VERSION'],
