@@ -19,6 +19,7 @@ class SchemaTest extends DatabaseTestBase {
    */
   protected function setUp() {
     parent::setUp();
+    $this->schema = $this->connection->schema();
     $this->table = [
       'description' => 'New Comment',
       'fields' => [
