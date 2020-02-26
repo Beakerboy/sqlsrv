@@ -84,7 +84,7 @@ function sqlsrv_requirements($phase) {
     // Is this a windows server?
 	  // Probably yes, because this is the MS SQL Server driver!
     $is_windows = Utils::WindowsOS();
-    
+
     if ($is_windows) {
       $wincache_module = \Drupal::moduleHandler()->moduleExists('wincachedrupal');
       $requirements['sqlsrv_wincache_extension'] = [
@@ -102,7 +102,7 @@ function sqlsrv_requirements($phase) {
         'description' => $fastcache_enabled ? NULL : t('MSSQL Server / Wincache integration is not available.'),
       ];
     }
-    
+
     // Report encoding for database.
     $collation = $schema->getCollation();
     $case_insensitive = stripos($collation, '_CI') !== FALSE;
@@ -121,7 +121,7 @@ function sqlsrv_requirements($phase) {
       'value' => t('@level', ['@level' => $extensiondata['getVersion']]),
       'description' => t('Use at least the 3.2.0.0 version of the MSSQL PDO driver.')
     ];
-    
+
     // TODO: Report install function availability (SUBSTRING, CONCAT, IF, MD5, etc...)
     $schema = $connection->schema();
     $functions = $schema->DrupalSpecificFunctions();
@@ -135,7 +135,7 @@ function sqlsrv_requirements($phase) {
     $exists = $schema->CLREnabled();
     $error = $exists === FALSE ? TRUE : $error;
     $briefing[] = 'CLREnabled' . ':' . ($exists === TRUE ? 'YES' : 'NO');
-    
+
     $requirements['sqlsrv_custom_functions'] = [
       'title' => t('MSSQL Server Custom Functions'),
       'description' => $error === TRUE ? t('Some custom functions are not available. Make sure you deploy them.') : t('All custom functions available.'),
@@ -163,9 +163,7 @@ function sqlsrv_requirements($phase) {
         'description' => $deployed_ok === TRUE ? t('Deployed driver matches module version.') : t('The deployed driver files do not match the module driver.'),
       ];
     }
-    
   }
-
   return $requirements;
 }
 
