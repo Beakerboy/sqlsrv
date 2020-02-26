@@ -163,7 +163,7 @@ class SchemaTest extends KernelTestBase {
   /**
    * Exception thrown when table does not exist
    */
-  public function testRenameTableAlreadyExists() {
+  public function testRenameTableAlreadyExistsException() {
     $this->expectException(SchemaObjectExistsException::class);
     $this->schema->renameTable('tabledoesnotexist', 'test_new');
   }
@@ -171,7 +171,7 @@ class SchemaTest extends KernelTestBase {
   /**
    * Exception thrown when table already exists.
    */
-  public function testRenameTableDoesNotExist() {
+  public function testRenameTableDoesNotExistException() {
     $this->expectException(SchemaObjectDoesNotExistException::class);
     $this->schema->renameTable('test_people', 'test');
   }
@@ -179,7 +179,7 @@ class SchemaTest extends KernelTestBase {
   /**
    * Exception thrown when field already exists.
    */
-  public function testNewFieldExists() {
+  public function testNewFieldExistsException() {
     $this->expectException(SchemaObjectExistsException::class);
     $this->schema->addField('test', 'name', $this->table['fields']['name']);
   }
@@ -187,7 +187,7 @@ class SchemaTest extends KernelTestBase {
   /**
    * Exception thrown when table does not exist.
    */
-  public function testPrimaryKeyTableDoesNotExist() {
+  public function testPrimaryKeyTableDoesNotExistException() {
     $this->expectException(SchemaObjectDoesNotExistException::class);
     $this->schema->addPrimaryKey('test_new', 'name');
   }
@@ -195,7 +195,7 @@ class SchemaTest extends KernelTestBase {
   /**
    * Exception thrown when primary key already exists.
    */
-  public function testPrimaryKeyExists() {
+  public function testPrimaryKeyExistsException() {
     $this->expectException(SchemaObjectExistsException::class);
     $this->schema->addPrimaryKey('test', 'name');
   }
@@ -205,7 +205,7 @@ class SchemaTest extends KernelTestBase {
    *
    * Verify that the function parameters after 'name' are correct.
    */
-  public function testUniqueKeyTableDoesNotExist() {
+  public function testUniqueKeyTableDoesNotExistException() {
     $this->expectException(SchemaObjectDoesNotExistException::class);
     $this->schema->addUniqueKey('test_new', 'name', $this->table['fields']);
   }
@@ -215,7 +215,7 @@ class SchemaTest extends KernelTestBase {
    *
    * Verify that the function parameters after 'name' are correct.
    */
-  public function testUniqueKeyExists() {
+  public function testUniqueKeyExistsException() {
     $this->expectException(SchemaObjectExistsException::class);
     $this->schema->addUniqueKey('test', 'name', $this->table['fields']);
   }
@@ -225,7 +225,7 @@ class SchemaTest extends KernelTestBase {
    *
    * Verify that the function parameters after 'name' are correct.
    */
-  public function testIndexTableDoesNotExist() {
+  public function testIndexTableDoesNotExistException() {
     $this->expectException(SchemaObjectDoesNotExistException::class);
     $this->schema->addIndex('test_new', 'name', $this->table['fields'], $this->table);
   }
@@ -235,7 +235,7 @@ class SchemaTest extends KernelTestBase {
    *
    * Verify that the function parameters after 'age' are correct.
    */
-  public function testUniqueKeyExists() {
+  public function testIndexExistsException() {
     $this->expectException(SchemaObjectExistsException::class);
     $this->schema->addindex('test', 'age', $this->table['fields'], $this->table);
   }
