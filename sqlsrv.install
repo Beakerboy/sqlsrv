@@ -15,9 +15,6 @@ use Drupal\sqlsrv\Indexes\IndexManager;
  *
  * Remove cache directory if module is uninstalled.
  */
-function sqlsrv_uninstall() {
-  // Remove cache directory if module is uninstalled.
-}
 
 /**
  * Implements hook_requirements().
@@ -30,7 +27,7 @@ function sqlsrv_requirements($phase) {
 
   if ($phase == 'runtime') {
 
-    /** @var Connection $connection */
+    /** @var \Drupal\Core\Database\Connection $connection */
     $connection = Database::getConnection();
 
     // Nothing to do if we are not running on MSSQL.
@@ -45,9 +42,14 @@ function sqlsrv_requirements($phase) {
 
     $extensiondata = sqlsrv_extension_data('pdo_sqlsrv');
 
-    // Report database engine version
+    // Report database engine version.
     $uinfo = $schema->UserOptions();
-    $uinfo_parts = array_map(function($a, $b) { $a = strtoupper($a); $b = strtoupper($b); return "$a=$b"; }, array_keys($uinfo), $uinfo);
+    $inline_function = function($a, $b) {
+      $a = strtoupper($a);
+      $b = strtoupper($b);
+      return "$a=$b";
+    }
+    $uinfo_parts = array_map($inline_function, array_keys($uinfo), $uinfo);
     $arguments = [
       '@version' => $version['VERSION'],
       '@level' => $version['LEVEL'],
@@ -70,7 +72,7 @@ function sqlsrv_requirements($phase) {
       'value' => "{$options['database']} ({$size_db})",
     ];
 
-    // Make sure enough size is set for buffered queries
+    // Make sure enough size is set for buffered queries.
     $buffer_size = $extensiondata['getINIEntries']['pdo_sqlsrv.client_buffer_max_kb_size'];
     $buffer_size_min = (12240 * 2);
     $buffer_size_ok = $buffer_size >= $buffer_size_min;
@@ -82,7 +84,7 @@ function sqlsrv_requirements($phase) {
     ];
 
     // Is this a windows server?
-	  // Probably yes, because this is the MS SQL Server driver!
+    // Probably yes, because this is the MS SQL Server driver!
     $is_windows = Utils::WindowsOS();
 
     if ($is_windows) {
@@ -114,47 +116,48 @@ function sqlsrv_requirements($phase) {
     ];
 
     // Report PDO version, and require at lest 3.2 version.
-    $version_ok = version_compare($extensiondata['getVersion'] , '3.2') >= 0;
+    $version_ok = version_compare($extensiondata['getVersion'], '3.2') >= 0;
     $requirements['sqlsrv_pdo'] = [
       'title' => t('MSSQL Server PDO extension'),
       'severity' => $version_ok ? REQUIREMENT_OK : REQUIREMENT_ERROR,
       'value' => t('@level', ['@level' => $extensiondata['getVersion']]),
-      'description' => t('Use at least the 3.2.0.0 version of the MSSQL PDO driver.')
+      'description' => t('Use at least the 3.2.0.0 version of the MSSQL PDO driver.'),
     ];
 
-    // TODO: Report install function availability (SUBSTRING, CONCAT, IF, MD5, etc...)
+    // TODO: Report install function availability
+    // (SUBSTRING, CONCAT, IF, MD5, etc...)
     $schema = $connection->schema();
     $functions = $schema->DrupalSpecificFunctions();
     $briefing = [];
     $error = FALSE;
-    foreach($functions as $function) {
+    foreach ($functions as $function) {
       $exists = $schema->functionExists($function);
       $error = $exists === FALSE ? TRUE : $error;
       $briefing[] = $function . ':' . ($exists === TRUE ? 'YES' : 'NO');
     }
     $exists = $schema->CLREnabled();
     $error = $exists === FALSE ? TRUE : $error;
-    $briefing[] = 'CLREnabled' . ':' . ($exists === TRUE ? 'YES' : 'NO');
+    $briefing[] = 'CLREnabled:' . ($exists === TRUE ? 'YES' : 'NO');
 
     $requirements['sqlsrv_custom_functions'] = [
       'title' => t('MSSQL Server Custom Functions'),
       'description' => $error === TRUE ? t('Some custom functions are not available. Make sure you deploy them.') : t('All custom functions available.'),
       'severity' => $error === TRUE ? REQUIREMENT_ERROR : REQUIREMENT_OK,
-      'value' => implode( ' | ', $briefing),
+      'value' => implode(' | ', $briefing),
     ];
 
     // TODO:// Move this to a better place!
     $manager = new IndexManager($connection);
     $manager->DeployNew();
 
-    // Redeploy functions
+    // Redeploy functions.
     Utils::DeployCustomFunctions($connection, TRUE);
 
-    // Make sure that the module's driver code is the same one as the effectively
-    // deployed driver code....
-    // TODO:// Nicer than just showing the error, 
+    // Make sure that the module's driver code is the same one as the
+    // effectively deployed driver code.
+    // TODO:// Nicer than just showing the error,
     // would be to offer the option to autodploy the driver...
-    if ($connection->driver_settings->GetMonitorDriverStatus()){
+    if ($connection->driver_settings->GetMonitorDriverStatus()) {
       $deployed_ok = sqlsrv_verify_driver();
       $requirements['sqlsrv_deployed_files'] = [
         'title' => t('MSSQL Server Deployed Driver'),
@@ -172,7 +175,7 @@ function sqlsrv_requirements($phase) {
  *
  * Verify that the deployed driver is the same one as the module
  * version.
- * 
+ *
  * @return bool
  *   Drivers match.
  */
@@ -195,10 +198,10 @@ function sqlsrv_verify_driver() {
  *
  * Calculate a unique identifier for a directory and it's contents
  * based on file sizes and names.
- * 
+ *
  * TODO:// This thing will not notice files being moved around in directories
  * as long as they keep same name and size.
- * 
+ *
  * @param string $directory
  *   Directory.
  *
