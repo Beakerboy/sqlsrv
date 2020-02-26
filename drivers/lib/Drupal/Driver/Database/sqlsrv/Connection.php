@@ -34,7 +34,7 @@ class Connection extends DatabaseConnection {
    *
    * @var \Drupal\Driver\Database\sqlsrv\DriverSettings
    */
-  public $driver_settings = NULL;
+  public $driverSettings = NULL;
 
   /**
    * Error code for Login Failed.
@@ -282,7 +282,7 @@ class Connection extends DatabaseConnection {
   public function __construct(\PDO $connection, array $connection_options) {
     $this->OS = strtoupper(substr(PHP_OS, 0, 3));
     // Initialize settings.
-    $this->driver_settings = DriverSettings::instanceFromSettings();
+    $this->driverSettings = DriverSettings::instanceFromSettings();
 
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
     parent::__construct($connection, $connection_options);
@@ -493,7 +493,7 @@ class Connection extends DatabaseConnection {
     // backtrace plus other details that aid in debugging deadlocks
     // or long standing locks. Use in combination with MSSQL profiler.
     global $conf;
-    if ($this->driver_settings->GetAppendCallstackComment()) {
+    if ($this->driverSettings->GetAppendCallstackComment()) {
       $oUser = \Drupal::currentUser();
       $uid = NULL;
       if ($oUser != NULL) {
