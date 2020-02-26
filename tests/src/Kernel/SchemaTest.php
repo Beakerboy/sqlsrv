@@ -35,44 +35,59 @@ class SchemaTest extends KernelTestBase {
     parent::setUp();
     $this->connection = Database::getConnection();
     $this->schema = $this->connection->schema();
-
-    $this->name = 'test_comment_table';
     $this->table = [
-      'description' => 'Original Comment',
+      'description' => 'New Comment',
       'fields' => [
-        'id'  => [
-          'description' => 'Original field comment',
-          'type' => 'int',
-          'default' => NULL,
+        'id' => [
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
         ],
-        'name'  => [
-          'description' => 'Original name comment',
+        'name' => [
+          'description' => "A person's name",
+          'type' => 'varchar_ascii',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+          'binary' => TRUE,
+        ],
+        'age' => [
+          'description' => "The person's age",
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'job' => [
+          'description' => "The person's job",
           'type' => 'varchar',
-          'length' => 50,
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => 'Undefined',
         ],
       ],
+      'primary key' => ['id'],
+      'unique keys' => [
+        'name' => ['name'],
+      ],
+      'indexes' => [
+        'ages' => ['age'],
+      ],
     ];
-    // Create table with description.
-    $this->schema->createTable($this->name, $this->table);
   }
 
   /**
    * Verify that comments are dropped when the table is dropped.
    */
   public function testDropTableComment() {
-    // I should probably replace this with a schema installation.
-    $name = $this->name;
-    $table = $this->table;
     // Drop table and ensure comment does not exist.
-    $this->schema->dropTable($name);
-    $this->assertFalse($this->schema->getComment($name));
+    $this->schema->dropTable('test');
+    $this->assertFalse($this->schema->getComment('test'));
 
-    // Create table with different description.
-    $table['description'] = 'New Comment';
-    $this->schema->createTable($name, $table);
+    $this->schema->createTable('test', $this->table);
 
     // Verify comment is correct.
-    $comment = $this->schema->getComment($name);
+    $comment = $this->schema->getComment('test');
     $this->assertEquals('New Comment', $comment);
   }
 
@@ -82,8 +97,8 @@ class SchemaTest extends KernelTestBase {
   public function testDropFieldComment() {
 
     // Drop field and ensure comment does not exist.
-    $this->schema->dropField('test_comment_table', 'name');
-    $this->assertFalse($this->schema->getComment('test_comment_table', 'name'));
+    $this->schema->dropField('test', 'name');
+    $this->assertFalse($this->schema->getComment('test', 'name'));
 
     // Add field with different description.
     $spec = $this->table['fields']['name'];
@@ -109,7 +124,7 @@ class SchemaTest extends KernelTestBase {
    */
   public function testAddDefaultException() {
     $this->expectException(SchemaObjectDoesNotExistException::class);
-    $this->schema->fieldSetDefault('test_comment_table', 'noname', 'Elvis');
+    $this->schema->fieldSetDefault('test', 'noname', 'Elvis');
   }
 
   /**
@@ -117,7 +132,7 @@ class SchemaTest extends KernelTestBase {
    */
   public function testAddNotDefaultException() {
     $this->expectException(SchemaObjectDoesNotExistException::class);
-    $this->schema->fieldSetNoDefault('test_comment_table', 'noname');
+    $this->schema->fieldSetNoDefault('test', 'noname');
   }
 
   /**
@@ -125,7 +140,7 @@ class SchemaTest extends KernelTestBase {
    */
   public function testCreateTableExists() {
     $this->expectException(SchemaObjectExistsException::class);
-    $this->schema->createTable('test_comment_table', $this->table);
+    $this->schema->createTable('test', $this->table);
   }
 
   /**
@@ -143,6 +158,110 @@ class SchemaTest extends KernelTestBase {
 
     $schema_name = $this->schema->getDefaultSchema();
     $this->assertEquals($schema_name, 'dbo');
+  }
+
+  /**
+   * Exception thrown when table does not exist
+   */
+  public function testRenameTableAlreadyExists() {
+    $this->expectException(SchemaObjectExistsException::class);
+    $this->schema->renameTable('tabledoesnotexist', 'test_new');
+  }
+
+  /**
+   * Exception thrown when table already exists.
+   */
+  public function testRenameTableDoesNotExist() {
+    $this->expectException(SchemaObjectDoesNotExistException::class);
+    $this->schema->renameTable('test_people', 'test');
+  }
+
+  /**
+   * Exception thrown when field already exists.
+   */
+  public function testNewFieldExists() {
+    $this->expectException(SchemaObjectExistsException::class);
+    $this->schema->addField('test', 'name', $this->table['fields']['name']);
+  }
+
+  /**
+   * Exception thrown when table does not exist.
+   */
+  public function testPrimaryKeyTableDoesNotExist() {
+    $this->expectException(SchemaObjectDoesNotExistException::class);
+    $this->schema->addPrimaryKey('test_new', 'name');
+  }
+
+  /**
+   * Exception thrown when primary key already exists.
+   */
+  public function testPrimaryKeyExists() {
+    $this->expectException(SchemaObjectExistsException::class);
+    $this->schema->addPrimaryKey('test', 'name');
+  }
+
+  /**
+   * Exception thrown when table does not exist.
+   *
+   * Verify that the function parameters after 'name' are correct.
+   */
+  public function testUniqueKeyTableDoesNotExist() {
+    $this->expectException(SchemaObjectDoesNotExistException::class);
+    $this->schema->addUniqueKey('test_new', 'name', $this->table['fields']);
+  }
+
+  /**
+   * Exception thrown when unique key already exists.
+   *
+   * Verify that the function parameters after 'name' are correct.
+   */
+  public function testUniqueKeyExists() {
+    $this->expectException(SchemaObjectExistsException::class);
+    $this->schema->addUniqueKey('test', 'name', $this->table['fields']);
+  }
+
+  /**
+   * Exception thrown when table does not exist.
+   *
+   * Verify that the function parameters after 'name' are correct.
+   */
+  public function testIndexTableDoesNotExist() {
+    $this->expectException(SchemaObjectDoesNotExistException::class);
+    $this->schema->addIndex('test_new', 'name', $this->table['fields'], $this->table);
+  }
+
+  /**
+   * Exception thrown when unique key already exists.
+   *
+   * Verify that the function parameters after 'age' are correct.
+   */
+  public function testUniqueKeyExists() {
+    $this->expectException(SchemaObjectExistsException::class);
+    $this->schema->addindex('test', 'age', $this->table['fields'], $this->table);
+  }
+
+  /**
+   * Exception thrown when table does not exist.
+   */
+  public function testIntroscpectSchemaException() {
+    $this->expectException(SchemaObjectDoesNotExistException::class);
+    $this->schema->introspectSchema('test_new');
+  }
+
+  /**
+   * Exception thrown when table does not exist.
+   */
+  public function testPrimaryKeyTableDoesNotExist() {
+    $this->expectException(SchemaObjectDoesNotExistException::class);
+    $this->schema->addPrimaryKey('test', 'age1', 'age2', $this->table['fields']['age']);
+  }
+
+  /**
+   * Exception thrown when primary key already exists.
+   */
+  public function testPrimaryKeyExists() {
+    $this->expectException(SchemaObjectExistsException::class);
+    $this->schema->changeField('test', 'age', 'name', $this->table['fields']['age']);
   }
 
 }
