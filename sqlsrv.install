@@ -7,6 +7,7 @@
 
 use Drupal\Core\Database\Database;
 use Drupal\Driver\Database\sqlsrv\Connection;
+use Drupal\Driver\Database\sqlsrv\FastCache;
 use Drupal\sqlsrv\Indexes\IndexManager;
 
 /**
@@ -42,7 +43,7 @@ function sqlsrv_requirements($phase) {
     $collation = $schema->getCollation();
     $version = $schema->EngineVersion();
 
-    $extensiondata = sqlsrv_extensionData('pdo_sqlsrv');
+    $extensiondata = sqlsrv_extension_data('pdo_sqlsrv');
 
     // Report database engine version
     $uinfo = $schema->UserOptions();
@@ -93,7 +94,7 @@ function sqlsrv_requirements($phase) {
         'description' => $wincache_module ? NULL : t('Enabling wincache integration can greatly improve system performance. See <a href="https://www.drupal.org/project/wincachedrupal/">Wincache Drupal</a> for more details.'),
       ];
 
-      $fastcache_enabled = (new \Drupal\Driver\Database\sqlsrv\FastCache(''))->Enabled() && $wincache_module;
+      $fastcache_enabled = (new FastCache(''))->Enabled() && $wincache_module;
       $requirements['sqlsrv_wincache_integration'] = [
         'title' => t('MSSQL Server Wincache integration'),
         'value' => $fastcache_enabled ? t('Available') : t('Not available'),
@@ -169,10 +170,13 @@ function sqlsrv_requirements($phase) {
 }
 
 /**
+ * Verify Deployed Driver.
+ *
  * Verify that the deployed driver is the same one as the module
  * version.
  * 
  * @return bool
+ *   Drivers match.
  */
 function sqlsrv_verify_driver() {
 
@@ -189,14 +193,19 @@ function sqlsrv_verify_driver() {
 }
 
 /**
+ * Directory Checksum.
+ *
  * Calculate a unique identifier for a directory and it's contents
  * based on file sizes and names.
  * 
  * TODO:// This thing will not notice files being moved around in directories
  * as long as they keep same name and size.
  * 
- * @param string $directory 
+ * @param string $directory
+ *   Directory.
+ *
  * @return string
+ *   Checksum.
  */
 function sqlsrv_directory_checksum($directory) {
   $files = file_scan_directory($directory, '/\.*/i');
@@ -218,7 +227,7 @@ function sqlsrv_directory_checksum($directory) {
  * @return array
  *   Extension information.
  */
-function sqlsrv_extensionData($name) {
+function sqlsrv_extension_data($name) {
 
   $re = new \ReflectionExtension($name);
 
