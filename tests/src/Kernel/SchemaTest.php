@@ -103,10 +103,10 @@ class SchemaTest extends KernelTestBase {
     // Add field with different description.
     $spec = $this->table['fields']['name'];
     $spec['description'] = 'New name comment';
-    $this->schema->addField('test_comment_table', 'name', $spec);
+    $this->schema->addField('test', 'name', $spec);
 
     // Verify comment is correct.
-    $comment = $this->schema->getComment('test_comment_table', 'name');
+    $comment = $this->schema->getComment('test', 'name');
     $this->assertEquals('New name comment', $comment);
   }
 
@@ -164,7 +164,7 @@ class SchemaTest extends KernelTestBase {
    * Exception thrown when table does not exist
    */
   public function testRenameTableAlreadyExistsException() {
-    $this->expectException(SchemaObjectExistsException::class);
+    $this->expectException(SchemaObjectDoesNotExistException::class);
     $this->schema->renameTable('tabledoesnotexist', 'test_new');
   }
 
@@ -172,7 +172,7 @@ class SchemaTest extends KernelTestBase {
    * Exception thrown when table already exists.
    */
   public function testRenameTableDoesNotExistException() {
-    $this->expectException(SchemaObjectDoesNotExistException::class);
+    $this->expectException(SchemaObjectExistsException::class);
     $this->schema->renameTable('test_people', 'test');
   }
 
