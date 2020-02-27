@@ -222,7 +222,7 @@ class SchemaTest extends DatabaseTestBase {
    */
   public function testIndexExistsException() {
     $this->expectException(SchemaObjectExistsException::class);
-    $this->schema->addindex('test', 'ages', $this->table['fields'], $this->table);
+    $this->schema->addIndex('test', 'ages', $this->table['fields'], $this->table);
   }
 
   /**
