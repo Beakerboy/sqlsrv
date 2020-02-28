@@ -1355,9 +1355,14 @@ EOF
       'nvarchar',
       'ntext',
     ]);
-    // When binary is true, case sensitivity is requested.
-    if ($is_text === TRUE && isset($spec['binary']) && $spec['binary'] === TRUE) {
-      $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
+    // Let's default to CS collation unless otherwise specified, like SQLite.
+    if (is_text === TRUE) {
+      if (isset($spec['binary']) && $spec['binary'] === FALSE) {
+        $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
+      }
+      else {
+        $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
+      }
     }
 
     if (isset($spec['not null']) && $spec['not null']) {
