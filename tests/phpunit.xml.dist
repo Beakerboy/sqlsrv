@@ -70,21 +70,15 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Datetime</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/DrupalKernel</directory>
     </testsuite>
-    <testsuite name="KernelTestE">
+    <testsuite name="KernelTestEI">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Element</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Entity</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Extension</directory>
-    </testsuite>
-    <testsuite name="KernelTestF">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Field</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/File</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Form</directory>
-    </testsuite>
-    <testsuite name="KernelTestH">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Http</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/HttpKernel</directory>
-    </testsuite>
-    <testsuite name="KernelTestI">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Image</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Installer</directory>
     </testsuite>
