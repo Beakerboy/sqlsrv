@@ -66,7 +66,7 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Command</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Common</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Config</directory>
-      <!-- <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory> -->
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Datetime</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/DrupalKernel</directory>
     </testsuite>
@@ -101,7 +101,7 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Queue</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Render</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/RouteProcessor</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Routing</directory>
+     <--! <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Routing</directory> -->
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/ServiceProvider</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Session</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Site</directory>
@@ -116,12 +116,8 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Url</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Validation</directory>
     </testsuite>
-    <testsuite name="passing_database">
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
-      <exclude>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</exclude>
-    </testsuite>
-    <testsuite name="failing_database">
-      <file>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
+    <testsuite name="failing">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Routing</directory>
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
