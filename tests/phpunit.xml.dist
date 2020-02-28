@@ -101,7 +101,7 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Queue</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Render</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/RouteProcessor</directory>
-     <--! <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Routing</directory> -->
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Routing</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/ServiceProvider</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Session</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Site</directory>
@@ -115,9 +115,12 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Updater</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Url</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Validation</directory>
+      <exclude>
+        <file>./tests/Drupal/KernelTests/Core/Routing/RouteProviderTest.php</file>
+      </exclude>
     </testsuite>
     <testsuite name="failing">
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Routing</directory>
+      <file>./tests/Drupal/KernelTests/Core/Routing/RouteProviderTest.php</file>
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
