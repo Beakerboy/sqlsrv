@@ -41,7 +41,7 @@ class Schema extends DatabaseSchema {
    *
    * @var string
    */
-  const DEFAULT_COLLATION_CS = 'Latin1_General_CS_AI';
+  const DEFAULT_COLLATION_CS = 'LATIN1_GENERAL_100_CS_AS_SC_UTF8';
 
   // Name for the technical column used for computed key sor technical primary
   // key.
