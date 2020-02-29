@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\Core\Database\Database;
 use Drupal\Core\Database\SchemaObjectDoesNotExistException;
 use Drupal\Core\Database\SchemaObjectExistsException;
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
@@ -146,7 +145,7 @@ class SchemaTest extends DatabaseTestBase {
   }
 
   /**
-   * Exception thrown when table does not exist
+   * Exception thrown when table does not exist.
    */
   public function testRenameTableAlreadyExistsException() {
     $this->expectException(SchemaObjectDoesNotExistException::class);
