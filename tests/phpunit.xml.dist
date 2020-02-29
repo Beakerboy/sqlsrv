@@ -109,9 +109,6 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Updater</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Url</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Validation</directory>
-     </testsuite>
-    <testsuite name="failing">
-      <file>./tests/Drupal/KernelTests/Core/Routing/RouteProviderTest.php</file>
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
