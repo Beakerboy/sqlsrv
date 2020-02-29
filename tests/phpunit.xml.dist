@@ -66,25 +66,19 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Command</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Common</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Config</directory>
-      <!-- <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory> -->
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Datetime</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/DrupalKernel</directory>
     </testsuite>
-    <testsuite name="KernelTestE">
+    <testsuite name="KernelTestEI">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Element</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Entity</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Extension</directory>
-    </testsuite>
-    <testsuite name="KernelTestF">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Field</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/File</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Form</directory>
-    </testsuite>
-    <testsuite name="KernelTestH">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Http</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/HttpKernel</directory>
-    </testsuite>
-    <testsuite name="KernelTestI">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Image</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Installer</directory>
     </testsuite>
@@ -115,13 +109,9 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Updater</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Url</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Validation</directory>
-    </testsuite>
-    <testsuite name="passing_database">
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
-      <exclude>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</exclude>
-    </testsuite>
-    <testsuite name="failing_database">
-      <file>tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
+     </testsuite>
+    <testsuite name="failing">
+      <file>./tests/Drupal/KernelTests/Core/Routing/RouteProviderTest.php</file>
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
