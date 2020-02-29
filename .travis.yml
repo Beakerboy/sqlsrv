@@ -1,8 +1,7 @@
 language: php
 env:
-  - DBVERSION=2019 TEST_SUITE=KernelTestAD,KernelTestKZ,sqlsrv,passing_database DRUPAL=yes CODE_SNIFF=yes
-  - DBVERSION=2019 TEST_SUITE=KernelTestE,KernelTestF,KernelTestH,KernelTestI
-  - DBVERSION=2019 TEST_SUITE=failing_database
+  - DBVERSION=2019 TEST_SUITE=KernelTestAD,KernelTestKZ,sqlsrv DRUPAL=yes CODE_SNIFF=yes
+  - DBVERSION=2019 TEST_SUITE=KernelTestEI
 
 php:
   - '7.2'
