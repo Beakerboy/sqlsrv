@@ -54,3 +54,11 @@ backslash escapes. If you need sqlsrv-specific behavior, you can use
 `field LIKE :placeholder_x ESCAPE '\'` expressions from appearing in one SQL
 statement. A different escape character can be chosen if you need a custom
 escape character multiple times. This bug just affects the backslash.
+
+Outstanding Issues
+-----
+The 8.x-1.x branch is not able to pass all Drupal tests due to limitation in
+SQL server before SQL Server 2019. These earlier vesions do not natively
+support UTF8 character encoding. This means most string data is stored in the
+database as an `nvarchar`. Converting nvarchar to varbinary and back leads to
+data corruption.
