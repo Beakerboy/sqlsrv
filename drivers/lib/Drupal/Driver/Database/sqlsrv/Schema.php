@@ -31,7 +31,7 @@ class Schema extends DatabaseSchema {
    *
    * @var string
    */
-  const DEFAULT_COLLATION_CI = 'LATIN1_GENERAL_100_CI_AS_SC_UTF8';
+  const DEFAULT_COLLATION_CI = 'Latin1_General_CI_AI';
 
   /**
    * Default case-sensitive collation.
@@ -41,7 +41,7 @@ class Schema extends DatabaseSchema {
    *
    * @var string
    */
-  const DEFAULT_COLLATION_CS = 'LATIN1_GENERAL_100_CS_AS_SC_UTF8';
+  const DEFAULT_COLLATION_CS = 'Latin1_General_CS_AI';
 
   // Name for the technical column used for computed key sor technical primary
   // key.
@@ -1355,12 +1355,9 @@ EOF
       'nvarchar',
       'ntext',
     ]);
-    // Let's default to CS collation unless otherwise specified, like SQLite.
+    // Let's default to CI collation unless otherwise specified, like MySQL.
     if ($is_text === TRUE) {
-      if (isset($spec['binary']) && $spec['binary'] === FALSE) {
-        $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
-      }
-      else {
+      if (isset($spec['binary']) && $spec['binary'] === TRUE) {
         $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
       }
     }
