@@ -180,7 +180,7 @@ function sqlsrv_verify_driver() {
   $driver_dir = dirname($reflector->getFileName());
 
   // Location for the module's driver.
-  $patch_array = ['drivers', 'lib', 'drupal', 'driver', 'database', 'sqlsrv'];
+  $path_array = ['drivers', 'lib', 'drupal', 'driver', 'database', 'sqlsrv'];
   $module_dir = dirname(__FILE__) . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $path_array);
 
   return sqlsrv_directory_checksum($driver_dir) === sqlsrv_directory_checksum($module_dir);
