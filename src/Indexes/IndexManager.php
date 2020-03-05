@@ -43,7 +43,7 @@ class IndexManager {
 
       $schema = $this->connection->schema();
 
-      if (!$schema->_ExistsIndex($index->GetTable(), $index->GetName())) {
+      if (!$schema->indexExists($index->GetTable(), $index->GetName())) {
         try {
           // TODO: Consider the need to prefix the tables...
           $this->connection->query($index->GetCode());
