@@ -96,13 +96,6 @@ function sqlsrv_requirements($phase) {
         'description' => $wincache_module ? NULL : t('Enabling wincache integration can greatly improve system performance. See <a href="https://www.drupal.org/project/wincachedrupal/">Wincache Drupal</a> for more details.'),
       ];
 
-      $fastcache_enabled = (new FastCache(''))->Enabled() && $wincache_module;
-      $requirements['sqlsrv_wincache_integration'] = [
-        'title' => t('MSSQL Server Wincache integration'),
-        'value' => $fastcache_enabled ? t('Available') : t('Not available'),
-        'severity' => $fastcache_enabled ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-        'description' => $fastcache_enabled ? NULL : t('MSSQL Server / Wincache integration is not available.'),
-      ];
     }
 
     // Report encoding for database.
