@@ -150,7 +150,7 @@ function sqlsrv_requirements($phase) {
     // effectively deployed driver code.
     // TODO:// Nicer than just showing the error,
     // would be to offer the option to autodploy the driver...
-    if ($connection->driver_settings->GetMonitorDriverStatus()) {
+    if (DriverSettings::instanceFromSettings()->GetMonitorDriverStatus()) {
       $deployed_ok = sqlsrv_verify_driver();
       $requirements['sqlsrv_deployed_files'] = [
         'title' => t('MSSQL Server Deployed Driver'),
