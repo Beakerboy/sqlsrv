@@ -85,7 +85,7 @@ class Schema extends DatabaseSchema {
     // database types back into schema types.
     return [
       'varchar:normal' => 'varchar',
-      'char:normal' => 'nchar',
+      'char:normal' => 'char',
       'varchar_ascii:normal' => 'varchar(255)',
 
       'text:tiny' => 'varchar(255)',
