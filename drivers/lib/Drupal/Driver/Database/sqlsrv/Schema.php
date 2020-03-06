@@ -142,7 +142,7 @@ class Schema extends DatabaseSchema {
       throw new \PDOException(t('Cannot rename a table across schema.'));
     }
 
-    $this->connection->query_direct('EXEC sp_rename :old, :new', [
+    $this->connection->queryDirect('EXEC sp_rename :old, :new', [
       ':old' => $old_table_info['schema'] . '.' . $old_table_info['table'],
       ':new' => $new_table_info['table'],
     ]);
@@ -150,7 +150,7 @@ class Schema extends DatabaseSchema {
     // Constraint names are global in SQL Server, so we need to rename them
     // when renaming the table. For some strange reason, indexes are local to
     // a table.
-    $objects = $this->connection->query_direct('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', [':table' => $new_table_info['schema'] . '.' . $new_table_info['table']]);
+    $objects = $this->connection->queryDirect('SELECT name FROM sys.objects WHERE parent_object_id = OBJECT_ID(:table)', [':table' => $new_table_info['schema'] . '.' . $new_table_info['table']]);
     foreach ($objects as $object) {
       if (preg_match('/^' . preg_quote($old_table_info['table']) . '_(.*)$/', $object->name, $matches)) {
         $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
@@ -361,7 +361,7 @@ class Schema extends DatabaseSchema {
     if ($primary_key_name = $this->primaryKeyName($table)) {
       if ($this->isTechnicalPrimaryKey($primary_key_name)) {
         // Destroy the existing technical primary key.
-        $this->connection->query_direct('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
+        $this->connection->queryDirect('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
         $this->cleanUpTechnicalPrimaryColumn($table);
       }
       else {
@@ -656,7 +656,7 @@ class Schema extends DatabaseSchema {
       if (!empty($spec['default'])) {
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
         $sql = "UPDATE {{$table}} SET {$field_new} = {$default_expression} WHERE {$field_new} IS NULL";
-        $this->connection->query_direct($sql);
+        $this->connection->queryDirect($sql);
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
@@ -729,7 +729,7 @@ class Schema extends DatabaseSchema {
    */
   public function getDefaultSchema() {
     if (!isset($this->defaultSchema)) {
-      $result = $this->connection->query_direct("SELECT SCHEMA_NAME()")->fetchField();
+      $result = $this->connection->queryDirect("SELECT SCHEMA_NAME()")->fetchField();
       $this->defaultSchema = $result;
     }
     return $this->defaultSchema;
@@ -814,7 +814,7 @@ class Schema extends DatabaseSchema {
     }
 
     // Don't use {} around system tables.
-    $result = $this->connection->query_direct('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', [':table' => $table_info['schema'] . '.' . $table_info['table']]);
+    $result = $this->connection->queryDirect('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', [':table' => $table_info['schema'] . '.' . $table_info['table']]);
     unset($column);
     $info['identities'] = [];
     $info['identity'] = NULL;
@@ -1053,7 +1053,7 @@ class Schema extends DatabaseSchema {
   public function engineVersion() {
     if (!isset($this->engineVersion)) {
       $this->engineVersion = $this->connection
-        ->query_direct(<<< EOF
+        ->queryDirect(<<< EOF
           SELECT CONVERT (varchar,SERVERPROPERTY('productversion')) AS VERSION,
           CONVERT (varchar,SERVERPROPERTY('productlevel')) AS LEVEL,
           CONVERT (varchar,SERVERPROPERTY('edition')) AS EDITION
@@ -1692,7 +1692,7 @@ EOF;
     $params[':schema'] = $this->getDefaultSchema();
     $params[':table'] = $table;
     $params[':column'] = $column;
-    $result = $this->connection->query_direct($sql, $params)->fetchObject();
+    $result = $this->connection->queryDirect($sql, $params)->fetchObject();
     return $result->COLLATION_NAME;
   }
 
