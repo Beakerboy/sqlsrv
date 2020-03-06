@@ -128,7 +128,7 @@ class Tasks extends InstallTasks {
         $this->fail(t('The %driver database must use UTF8 encoding (recomended %encoding) to work with Drupal. Recreate the database with %encoding encoding. See !link for more details.', [
           '%encoding' => Schema::DEFAULT_COLLATION_CS,
           '%driver' => $this->name(),
-          '!link' => '<a href="INSTALL.sqlsrv.txt">INSTALL.sqlsrv.txt</a>',
+          ':link' => '<a href="INSTALL.sqlsrv.txt">INSTALL.sqlsrv.txt</a>',
         ]));
       }
     }
