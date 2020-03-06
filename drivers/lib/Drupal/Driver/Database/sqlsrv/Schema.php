@@ -1363,7 +1363,6 @@ EOF
       else {
         $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
       }
-      }
     }
 
     if (isset($spec['not null']) && $spec['not null']) {
