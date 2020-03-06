@@ -1402,7 +1402,7 @@ EOF
     ]);
 
     if (!empty($spec['length']) && $lengthable) {
-      return $sqlsrv_type_native . "({$length})";
+      return $sqlsrv_type_native . '(' . $spec['length'] . ')';
     }
     elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
       // Maximum precision for SQL Server 2008 or greater is 38.
