@@ -31,7 +31,7 @@ class Schema extends DatabaseSchema {
    *
    * @var string
    */
-  const DEFAULT_COLLATION_CI = 'LATIN1_GENERAL_100_CI_AS_SC_UTF8';
+  const DEFAULT_COLLATION_CI = 'Latin1_General_CI_AI';
 
   /**
    * Default case-sensitive collation.
@@ -41,7 +41,7 @@ class Schema extends DatabaseSchema {
    *
    * @var string
    */
-  const DEFAULT_COLLATION_CS = 'LATIN1_GENERAL_100_CS_AS_SC_UTF8';
+  const DEFAULT_COLLATION_CS = 'Latin1_General_CS_AI';
 
   // Name for the technical column used for computed key sor technical primary
   // key.
@@ -84,15 +84,15 @@ class Schema extends DatabaseSchema {
     // it much easier for modules (such as schema.module) to map
     // database types back into schema types.
     return [
-      'varchar:normal' => 'varchar',
+      'varchar:normal' => 'nvarchar',
       'char:normal' => 'nchar',
       'varchar_ascii:normal' => 'varchar(255)',
 
-      'text:tiny' => 'varchar(255)',
-      'text:small' => 'varchar(255)',
-      'text:medium' => 'varchar(max)',
-      'text:big' => 'varchar(max)',
-      'text:normal' => 'varchar(max)',
+      'text:tiny' => 'nvarchar(255)',
+      'text:small' => 'nvarchar(255)',
+      'text:medium' => 'nvarchar(max)',
+      'text:big' => 'nvarchar(max)',
+      'text:normal' => 'nvarchar(max)',
 
       'serial:tiny'     => 'smallint',
       'serial:small'    => 'smallint',
@@ -1355,13 +1355,16 @@ EOF
       'nvarchar',
       'ntext',
     ]);
-    // Let's default to CS collation unless otherwise specified, like SQLite.
     if ($is_text === TRUE) {
-      if (isset($spec['binary']) && $spec['binary'] === FALSE) {
-        $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
-      }
-      else {
-        $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
+      // If collation is set in the spec array, use it.
+      // Otherwise use the database default.
+      if (isset($spec['binary'])) {
+        if ($spec['binary'] === TRUE) {
+          $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
+        }
+        elseif ($spec['binary'] === FALSE) {
+          $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
+        }
       }
     }
 
@@ -1399,13 +1402,7 @@ EOF
     ]);
 
     if (!empty($spec['length']) && $lengthable) {
-      if (is_int($spec['length'])) {
-        $length = 3 * $spec['length'];
-      }
-      else {
-        $length = $spec['length'];
-      }
-      return $sqlsrv_type_native . "({$length})";
+      return $sqlsrv_type_native . '(' . $spec['length'] . ')';
     }
     elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
       // Maximum precision for SQL Server 2008 or greater is 38.

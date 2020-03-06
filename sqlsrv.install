@@ -108,13 +108,13 @@ function sqlsrv_requirements($phase) {
       'value' => t('@collation', ['@collation' => $collation]),
     ];
 
-    // Report PDO version, and require at lest 3.2 version.
-    $version_ok = version_compare($extensiondata['getVersion'], '3.2') >= 0;
+    // Report PDO version, and require at lest 5.8.0 version.
+    $version_ok = version_compare($extensiondata['getVersion'], '5.8') >= 0;
     $requirements['sqlsrv_pdo'] = [
       'title' => t('MSSQL Server PDO extension'),
       'severity' => $version_ok ? REQUIREMENT_OK : REQUIREMENT_ERROR,
       'value' => t('@level', ['@level' => $extensiondata['getVersion']]),
-      'description' => t('Use at least the 3.2.0.0 version of the MSSQL PDO driver.'),
+      'description' => t('Use at least the 5.8.0 version of the MSSQL PDO driver.'),
     ];
 
     // TODO: Report install function availability
