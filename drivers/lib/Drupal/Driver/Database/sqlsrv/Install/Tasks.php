@@ -121,13 +121,13 @@ class Tasks extends InstallTasks {
       $database = Database::getConnection();
       $schema = $database->schema();
       $collation = $schema->getCollation();
-      if ($collation == Schema::DEFAULT_COLLATION_CS || stristr($collation, '_UT') !== FALSE) {
+      if ($collation == Schema::DEFAULT_COLLATION_CI || stristr($collation, '_UT') !== FALSE) {
         $this->pass(t('Database is encoded in UTF8 collation: $collation'));
       }
       else {
         $this->fail(t('The %driver database is using %current collation, but must use UTF8 encoding (recomended %encoding) to work with Drupal. Recreate the database with %encoding encoding. See !link for more details.', [
           '%current' => $collation,
-          '%encoding' => Schema::DEFAULT_COLLATION_CS,
+          '%encoding' => Schema::DEFAULT_COLLATION_CI,
           '%driver' => $this->name(),
           ':link' => '<a href="INSTALL.sqlsrv.txt">INSTALL.sqlsrv.txt</a>',
         ]));
