@@ -178,7 +178,7 @@ class Schema extends DatabaseSchema {
    */
   public function fieldExists($table, $field) {
     return $this->connection
-      ->query('SELECT 1 FROM INFORMATION_SCHEMA.columns WHERE table_name = :table AND column_name = :name', [
+      ->query('SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = :table AND column_name = :name', [
         ':table' => $this->connection->prefixTables('{' . $table . '}'),
         ':name' => $field,
       ])
@@ -1009,7 +1009,7 @@ class Schema extends DatabaseSchema {
       $query = "SELECT 1 FROM tempdb.sys.tables WHERE name like '" . $this->connection->prefixTables('{' . $table . '}') . "%'";
     }
     else {
-      $query = "SELECT 1 FROM INFORMATION_SCHEMA.tables WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'";
+      $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'";
     }
 
     $exists = $this->connection
