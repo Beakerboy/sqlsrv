@@ -121,11 +121,11 @@ class Tasks extends InstallTasks {
       $database = Database::getConnection();
       $schema = $database->schema();
       $collation = $schema->getCollation();
-      if ($collation == Schema::DEFAULT_COLLATION_CI || stristr($collation, '_CI') !== FALSE) {
-        $this->pass(t('Database is encoded in case insensitive collation: $collation'));
+      if ($collation == Schema::DEFAULT_COLLATION_CI || stristr($collation, '_UTF8') !== FALSE) {
+        $this->pass(t('Database is encoded in UTF8 collation: $collation'));
       }
       else {
-        $this->fail(t('The %driver database must use case insensitive encoding (recomended %encoding) to work with Drupal. Recreate the database with %encoding encoding. See !link for more details.', [
+        $this->fail(t('The %driver database must use UTF8 encoding (recomended %encoding) to work with Drupal. Recreate the database with %encoding encoding. See !link for more details.', [
           '%encoding' => Schema::DEFAULT_COLLATION_CI,
           '%driver' => $this->name(),
           '!link' => '<a href="INSTALL.sqlsrv.txt">INSTALL.sqlsrv.txt</a>',
