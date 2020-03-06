@@ -1356,15 +1356,13 @@ EOF
       'ntext',
     ]);
     if ($is_text === TRUE) {
-      // If collation is set in the spec array, use it.
-      // Otherwise use the database default.
-      if (isset($spec['binary'])) {
-        if ($spec['binary'] === TRUE) {
-          $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
-        }
-        elseif ($spec['binary'] === FALSE) {
-          $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
-        }
+      // default to CS collation, unless specified otherwise.
+      if (isset($spec['binary']) && $spec['binary'] === FALSE) {
+        $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
+      }
+      else {
+        $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
+      }
       }
     }
 
