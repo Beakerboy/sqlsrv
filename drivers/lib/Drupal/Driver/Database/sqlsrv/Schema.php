@@ -1358,7 +1358,7 @@ EOF
     if ($is_text === TRUE) {
       // If collation is set in the spec array, use it.
       // Otherwise use the database default.
-      if (isset($spec['binary']) {
+      if (isset($spec['binary'])) {
         if ($spec['binary'] === TRUE) {
           $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
         }
