@@ -1355,13 +1355,16 @@ EOF
       'nvarchar',
       'ntext',
     ]);
-    // Let's default to CS collation unless otherwise specified, like SQLite.
     if ($is_text === TRUE) {
-      if (isset($spec['binary']) && $spec['binary'] === FALSE) {
-        $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
-      }
-      else {
-        $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
+      // If collation is set in the spec array, use it.
+      // Otherwise use the database default.
+      if (isset($spec['binary']) {
+        if ($spec['binary'] === TRUE) {
+          $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
+        }
+        elseif ($spec['binary'] === FALSE) {
+          $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
+        }
       }
     }
 
