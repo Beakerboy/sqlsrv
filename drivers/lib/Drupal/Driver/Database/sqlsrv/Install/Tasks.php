@@ -121,7 +121,7 @@ class Tasks extends InstallTasks {
       $database = Database::getConnection();
       $schema = $database->schema();
       $collation = $schema->getCollation();
-      if ($collation == Schema::DEFAULT_COLLATION_CS || stristr($collation, '_UTF8') !== FALSE) {
+      if ($collation == Schema::DEFAULT_COLLATION_CS || stristr($collation, '_UT') !== FALSE) {
         $this->pass(t('Database is encoded in UTF8 collation: $collation'));
       }
       else {
