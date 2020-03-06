@@ -1356,7 +1356,7 @@ EOF
       'ntext',
     ]);
     if ($is_text === TRUE) {
-      // default to CS collation, unless specified otherwise.
+      // Default to CS collation, unless specified otherwise.
       if (isset($spec['binary']) && $spec['binary'] === FALSE) {
         $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
       }
