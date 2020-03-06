@@ -1355,10 +1355,16 @@ EOF
       'nvarchar',
       'ntext',
     ]);
-    // Let's default to CI collation unless otherwise specified, like MySQL.
     if ($is_text === TRUE) {
-      if (isset($spec['binary']) && $spec['binary'] === TRUE) {
-        $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
+      // If collation is set in the spec array, use it.
+      // Otherwise use the database default.
+      if (isset($spec['binary']) {
+        if ($spec['binary'] === TRUE) {
+          $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
+        }
+        elseif ($spec['binary'] === FALSE) {
+          $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
+        }
       }
     }
 
@@ -1396,12 +1402,6 @@ EOF
     ]);
 
     if (!empty($spec['length']) && $lengthable) {
-      if (is_int($spec['length'])) {
-        $length = 3 * $spec['length'];
-      }
-      else {
-        $length = $spec['length'];
-      }
       return $sqlsrv_type_native . "({$length})";
     }
     elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
