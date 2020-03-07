@@ -54,9 +54,9 @@ install:
       # Install patches
       cd $TRAVIS_BUILD_DIR/../drupal-project/web
       wget https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
-      wget https://www.drupal.org/files/issues/2020-02-14/drupal-3113403-Make_condition_driver_overridable-14.patch
+      wget http://beakerboy.com/~kevin/3113403-24.patch
       git apply 2867788-79.patch
-      git apply drupal-3113403-Make_condition_driver_overridable-14.patch
+      git apply drupal-3113403-24.patch
       wget https://www.drupal.org/files/issues/2020-01-30/drupal-3108540-deprecationErrors-3.patch
       wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
