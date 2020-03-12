@@ -77,6 +77,24 @@ install:
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE ASSEMBLY Regex from '/var/opt/mssql/data/RegEx.dll' WITH PERMISSION_SET = SAFE"
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
   - cd $TRAVIS_BUILD_DIR/../drupal-project
+before_script:
+  - |
+    if ! [ -z "$APACHE" ]; then
+       sudo apt-get update
+       sudo apt-get install apache2 libapache2-mod-fastcgi
+       # enable php-fpm
+       sudo cp ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf.default ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
+       sudo a2enmod rewrite actions fastcgi alias
+       echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+       sudo sed -i -e "s,www-data,travis,g" /etc/apache2/envvars
+       sudo chown -R travis:travis /var/lib/apache2/fastcgi
+       ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
+       # configure apache virtual hosts
+       sudo cp -f $TRAVIS_BUILD_DIR/install/travis-ci-apache /etc/apache2/sites-available/000-default.conf
+       cd $TRAVIS_BUILD_DIR/../drupal-project/web
+       sudo sed -e "s?%TRAVIS_WEB_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
+       sudo service apache2 restart
+     fi
 script:
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/web/core/phpunit.xml
   - cd $TRAVIS_BUILD_DIR/../drupal-project/web
