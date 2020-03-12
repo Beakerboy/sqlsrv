@@ -94,6 +94,7 @@ before_script:
        sudo cp -f $TRAVIS_BUILD_DIR/install/travis-ci-apache /etc/apache2/sites-available/000-default.conf
        cd $TRAVIS_BUILD_DIR/../drupal-project/web
        sudo sed -e "s?%TRAVIS_WEB_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
+       sed -e "s?WEB_DIR?$(pwd)?g" --in-place $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist
        sudo service apache2 restart
      fi
 script:
