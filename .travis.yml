@@ -51,6 +51,7 @@ install:
       cp -rf $TRAVIS_BUILD_DIR ./web/modules/contrib/sqlsrv
       PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
       mkdir $TRAVIS_BUILD_DIR/../drupal-project/web/sites/simpletest
+      mkdir $TRAVIS_BUILD_DIR/../drupal-project/web/sites/simpletest/browser_output
       # Install patches
       cd $TRAVIS_BUILD_DIR/../drupal-project/web
       wget https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
