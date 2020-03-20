@@ -2,9 +2,9 @@ language: php
 env:
   - DBVERSION=2017 TEST_SUITE=KernelTestAD,KernelTestKZ,sqlsrv DRUPAL=yes CODE_SNIFF=yes
   - DBVERSION=2017 TEST_SUITE=KernelTestEI
+  - DBVERSION=2017 TEST_SUITE=passing_unit APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
 
 php:
-  - '7.2'
   - '7.3'
 
 before_install:
@@ -31,29 +31,35 @@ install:
   # Create a Drupal Site
   - cd ..
   - export COMPOSER_MEMORY_LIMIT=-1
+  - git clone https://git.drupalcode.org/project/drupal.git -b $DRUPAL_VERSION
+  - mv drupal drupal-project
+  - cd drupal-project
+  - composer install
+  - cp -r $TRAVIS_BUILD_DIR/drivers ./drivers
+  - mkdir ./modules/contrib
+  - cp -rf $TRAVIS_BUILD_DIR ./modules/contrib/sqlsrv
+  - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
+  - mkdir $TRAVIS_BUILD_DIR/../drupal-project/sites/simpletest
+  - mkdir $TRAVIS_BUILD_DIR/../drupal-project/sites/simpletest/browser_output
+  - cd $TRAVIS_BUILD_DIR/../drupal-project
+  - sed -e "s?WEB_DIR?$(pwd)?g" --in-place $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist
   - |
-      composer create-project -n drupal-composer/drupal-project:8.x-dev
-      cd drupal-project
-      composer config repositories.drupal composer https://packages.drupal.org/8
-      composer require drupal/sqlsrv:dev-1.x@dev symfony/psr-http-message-bridge:1.1.x-dev php-coveralls/php-coveralls:^2.0
-      composer require pcov/clobber --dev
-      cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
-      rm -rf ./web/modules/contrib/sqlsrv
-      cp -rf $TRAVIS_BUILD_DIR ./web/modules/contrib/sqlsrv
-      PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
-      mkdir $TRAVIS_BUILD_DIR/../drupal-project/web/sites/simpletest
+    if [ "${DRUPAL_VERSION}" == "9.0.x" ]; then
+      wget beakerboy.com/~kevin/3113403-69.patch
+      git apply 3113403-69.patch
+    else
+      composer require --dev symfony/phpunit-bridge drupal/console doctrine/annotations:~1.8 phpunit/phpunit-mock-objects
+      composer update phpunit/phpunit symfony/phpunit-bridge phpspec/prophecy symfony/yaml --with-dependencies
       # Install patches
-      cd $TRAVIS_BUILD_DIR/../drupal-project/web
       wget https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
-      wget https://www.drupal.org/files/issues/2020-02-14/drupal-3113403-Make_condition_driver_overridable-14.patch
+      wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
       git apply 2867788-79.patch
-      git apply drupal-3113403-Make_condition_driver_overridable-14.patch
+      git apply 3113403-33.patch
       wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
-      git apply 3108540-11.patch
       git apply drupal-3111134-database_specific_types-3.patch
-      cd ..
-      pcov clobber
+      git apply 3108540-11.patch
+    fi
   - |
     if ! [ -z "$DRUPAL" ]; then
       drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
@@ -67,6 +73,25 @@ install:
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE ASSEMBLY Regex from '/var/opt/mssql/data/RegEx.dll' WITH PERMISSION_SET = SAFE"
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
   - cd $TRAVIS_BUILD_DIR/../drupal-project
+before_script:
+  - |
+    if ! [ -z "$APACHE" ]; then
+       sudo apt-get update
+       sudo apt-get install apache2 libapache2-mod-fastcgi
+       # enable php-fpm
+       sudo cp ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf.default ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
+       sudo a2enmod rewrite actions fastcgi alias
+       echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+       sudo sed -i -e "s,www-data,travis,g" /etc/apache2/envvars
+       sudo chown -R travis:travis /var/lib/apache2/fastcgi
+       ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
+       # configure apache virtual hosts
+       sudo cp -f $TRAVIS_BUILD_DIR/install/travis-ci-apache /etc/apache2/sites-available/000-default.conf
+       cd $TRAVIS_BUILD_DIR/../drupal-project
+       sudo sed -e "s?%TRAVIS_WEB_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
+       sed -e "s?WEB_DIR?$(pwd)?g" --in-place $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist
+       sudo service apache2 restart
+     fi
 script:
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/web/core/phpunit.xml
   - cd $TRAVIS_BUILD_DIR/../drupal-project/web
