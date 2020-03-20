@@ -63,3 +63,7 @@ SQL server before SQL Server 2019. These earlier vesions do not natively
 support UTF8 character encoding. This means most string data is stored in the
 database as an `nvarchar`. Converting nvarchar to varbinary and back leads to
 data corruption.
+
+This branch creates the database with a case-insensitive collation for text
+fields. However, all non-MySQL databases use case-sensitive default. One
+Kernel Test fails due to this default in this driver.
