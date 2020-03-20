@@ -9,7 +9,7 @@ php:
   - '7.3'
 matrix:
   allow_failures:
-    - env: DBVERSION=2017 TEST_SUITE=failing_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
+    - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
 
 before_install:
   # Use pcov instead of xdebug
