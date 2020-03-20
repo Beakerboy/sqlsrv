@@ -66,7 +66,9 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Datetime</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/DrupalKernel</directory>
-    </testsuite>
+      <exclude>./tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</exclude>
+      <exclude>./tests/Drupal/KernelTests/Core/Database/SchemaTest.php</exclude>
+     </testsuite>
     <testsuite name="KernelTestEI">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Element</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Entity</directory>
