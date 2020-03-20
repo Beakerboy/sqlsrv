@@ -52,7 +52,7 @@ install:
       wget beakerboy.com/~kevin/3113403-69.patch
       git apply 3113403-69.patch
     else
-      composer require --dev symfony/phpunit-bridge drupal/console doctrine/annotations:~1.8 phpunit/phpunit-mock-objects
+      composer require --dev symfony/phpunit-bridge drupal/console doctrine/annotations:~1.8
       composer update phpunit/phpunit symfony/phpunit-bridge phpspec/prophecy symfony/yaml --with-dependencies
       # Install patches
       wget https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
