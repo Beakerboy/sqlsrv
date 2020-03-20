@@ -110,11 +110,9 @@
     <testsuite name="passing_unit">
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
       <exclude>./tests/Drupal/Tests/Scripts/TestSiteApplicationTest.php</exclude>
-      <exclude>./tests/Drupal/Tests/Component/Annotation/Doctrine/DocParserTest.php</exclude>
     </testsuite>
     <testsuite name="failing_tests">
       <file>./tests/Drupal/Tests/Scripts/TestSiteApplicationTest.php</file>
-      <file>./tests/Drupal/Tests/Component/Annotation/Doctrine/DocParserTest.php</file>
       <file>./tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
       <file>./tests/Drupal/KernelTests/Core/Database/SchemaTest.php</file>
     </testsuite>
