@@ -3,9 +3,13 @@ env:
   - DBVERSION=2017 TEST_SUITE=KernelTestAD,KernelTestKZ,sqlsrv DRUPAL=yes CODE_SNIFF=yes
   - DBVERSION=2017 TEST_SUITE=KernelTestEI
   - DBVERSION=2017 TEST_SUITE=passing_unit APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
+  - DBVERSION=2017 TEST_SUITE=failing_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
 
 php:
   - '7.3'
+matrix:
+  allow_failures:
+    - env: DBVERSION=2017 TEST_SUITE=failing_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
 
 before_install:
   # Use pcov instead of xdebug
