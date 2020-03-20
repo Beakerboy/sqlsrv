@@ -110,6 +110,11 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Url</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Validation</directory>
     </testsuite>
+    <testsuite name="passing_unit">
+      <directory suffix="Test.php">tests/Drupal/Tests</directory>
+      <exclude>./tests/Drupal/Tests/Scripts/TestSiteApplicationTest.php</exclude>
+      <exclude>./tests/Drupal/Tests/Component/Annotation/Doctrine/DocParserTest.php</exclude>
+    </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
     </testsuite>
