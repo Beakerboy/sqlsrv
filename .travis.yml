@@ -97,8 +97,8 @@ before_script:
        sudo service apache2 restart
      fi
 script:
-  - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/web/core/phpunit.xml
-  - cd $TRAVIS_BUILD_DIR/../drupal-project/web
+  - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
+  - cd $TRAVIS_BUILD_DIR/../drupal-project
   - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
 after_success:
   - |
@@ -107,6 +107,6 @@ after_success:
       phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/contrib/sqlsrv
     fi
   - cd $TRAVIS_BUILD_DIR
-  - sed -i 's/drupal\-project\/web\/modules\/contrib\///g' ./build/logs/clover.xml
-  - sed -i 's/drupal\-project\/web/sqlsrv/g' ./build/logs/clover.xml
+  - sed -i 's/drupal\-project\/modules\/contrib\///g' ./build/logs/clover.xml
+  - sed -i 's/drupal\-project\//sqlsrv/g' ./build/logs/clover.xml
   - php-coveralls -v
