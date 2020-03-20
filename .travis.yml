@@ -32,15 +32,6 @@ install:
   - cd ..
   - export COMPOSER_MEMORY_LIMIT=-1
   - |
-    if [ "${DRUPAL_VERSION}" == "9.0" ]; then
-      composer -n create-project drupal/recommended-project:^9.0@dev drupal-project
-      cd drupal-project
-      composer require drush/drush phpunit/phpunit:^8
-      mkdir ./web/modules/contrib
-      cd $TRAVIS_BUILD_DIR/../drupal-project/web
-      wget https://www.drupal.org/files/issues/2020-02-11/2867788-71.patch
-      git apply 2867788-71.patch
-    else
       composer create-project -n drupal-composer/drupal-project:8.x-dev
       cd drupal-project
       composer config repositories.drupal composer https://packages.drupal.org/8
@@ -63,7 +54,6 @@ install:
       git apply drupal-3111134-database_specific_types-3.patch
       cd ..
       pcov clobber
-    fi
   - |
     if ! [ -z "$DRUPAL" ]; then
       drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
