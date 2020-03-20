@@ -29,7 +29,7 @@ before_install:
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q 'CREATE DATABASE mydrupalsite COLLATE Latin1_General_CI_AI'
   # Install the pdo_sqlsrv extension
   - sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev gcc g++ make autoconf libc-dev pkg-config
-  - pecl install pcov sqlsrv pdo_sqlsrv
+  - pecl install sqlsrv pdo_sqlsrv
   - phpenv config-add install/travis-7.x.ini
 install:
   # Create a Drupal Site
@@ -99,14 +99,10 @@ before_script:
 script:
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
   - cd $TRAVIS_BUILD_DIR/../drupal-project
-  - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
+  - phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE
 after_success:
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
       phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
       phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/contrib/sqlsrv
     fi
-  - cd $TRAVIS_BUILD_DIR
-  - sed -i 's/drupal\-project\/modules\/contrib\///g' ./build/logs/clover.xml
-  - sed -i 's/drupal\-project\//sqlsrv/g' ./build/logs/clover.xml
-  - php-coveralls -v
