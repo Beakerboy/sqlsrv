@@ -99,7 +99,7 @@ before_script:
 script:
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
   - cd $TRAVIS_BUILD_DIR/../drupal-project
-  - phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE
+  - vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE
 after_success:
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
