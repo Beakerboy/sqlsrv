@@ -114,18 +114,18 @@
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
       <exclude>./tests/Drupal/Tests/Scripts/TestSiteApplicationTest.php</exclude>
     </testsuite>
-    <testsuite name="functionalAH">
+    <testsuite name="functionalAI">
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Bootstrap</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Breadcrumb</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Core</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Entity</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/HttpKernel</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Image</directory>
       <exclude>tests/Drupal/FunctionalTests/Hal</exclude>
       <exclude>tests/Drupal/FunctionalTests/Breadcrumb/Breadcrumb404Test.php</exclude>
       <exclude>tests/Drupal/FunctionalTests/Entity/DeleteMultipleFormTest.php</exclude>
     </testsuite>
     <testsuite name="functionalI">
-      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Image</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Installer</directory>
     </testsuite>
     <testsuite name="functionalR">
@@ -142,6 +142,8 @@
       <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonAnonTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonBasicAuthTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonCookieTest.php</file>
+    </testsuite>
+    <testsuite name="failing_functional_tests2">
       <file>./tests/Drupal/FunctionalTests/Hal/DateFormatHalJsonAnonTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/DateFormatHalJsonBasicAuthTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/DateFormatHalJsonCookieTest.php</file>
