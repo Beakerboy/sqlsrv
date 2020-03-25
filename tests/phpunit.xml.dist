@@ -124,7 +124,6 @@
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Routing</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Theme</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Update</directory>
-      <exclude>tests/Drupal/FunctionalTests/Hal</exclude>
       <exclude>tests/Drupal/FunctionalTests/Breadcrumb/Breadcrumb404Test.php</exclude>
       <exclude>tests/Drupal/FunctionalTests/Entity/DeleteMultipleFormTest.php</exclude>
     </testsuite>
