@@ -3,7 +3,6 @@ language: php
 env:
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_kernel,sqlsrv CODE_SNIFF=yes
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional,passing_unit APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
-  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=functionalI APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests2 APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests3 APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
@@ -20,7 +19,6 @@ matrix:
     - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests2 APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
     - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests3 APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
     - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures SIMPLETEST_BASE_URL=http://127.0.0.1
-    - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=functionalI APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
 
 before_install:
   # Use pcov instead of xdebug
