@@ -177,6 +177,13 @@ class Tasks extends InstallTasks {
     if (empty($form['advanced_options']['port']['#default_value'])) {
       $form['advanced_options']['port']['#default_value'] = '1433';
     }
+    $form['advanced_options']['sqlsrv'] = [
+      '#type' => 'textfield',
+      '#title' => t('Schema'),
+      '#default_value' => empty($database['schema']) ? 'dbo' : $database['schema'],
+      '#size' => 10,
+      '#required' => FALSE,
+    ];
     // Make username not required.
     $form['username']['#required'] = FALSE;
     // Add a description for about leaving username blank.
