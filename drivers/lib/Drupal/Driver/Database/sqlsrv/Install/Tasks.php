@@ -177,7 +177,7 @@ class Tasks extends InstallTasks {
     if (empty($form['advanced_options']['port']['#default_value'])) {
       $form['advanced_options']['port']['#default_value'] = '1433';
     }
-    $form['advanced_options']['sqlsrv'] = [
+    $form['advanced_options']['schema'] = [
       '#type' => 'textfield',
       '#title' => t('Schema'),
       '#default_value' => empty($database['schema']) ? 'dbo' : $database['schema'],
