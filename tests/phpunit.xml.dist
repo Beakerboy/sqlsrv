@@ -108,7 +108,6 @@
     </testsuite>
     <testsuite name="passing_unit">
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
-      <exclude>./tests/Drupal/Tests/Scripts/TestSiteApplicationTest.php</exclude>
     </testsuite>
     <testsuite name="passing_functional">
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Bootstrap</directory>
@@ -117,18 +116,12 @@
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Entity</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/HttpKernel</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Image</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Installer</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Routing</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Theme</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Update</directory>
-      <exclude>tests/Drupal/FunctionalTests/Breadcrumb/Breadcrumb404Test.php</exclude>
-      <exclude>tests/Drupal/FunctionalTests/Entity/DeleteMultipleFormTest.php</exclude>
-    </testsuite>
-    <testsuite name="functionalI">
-      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Installer</directory>
     </testsuite>
     <testsuite name="failing_functional_tests">
-      <file>./tests/Drupal/FunctionalTests/Entity/DeleteMultipleFormTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Breadcrumb/Breadcrumb404Test.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonAnonTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonBasicAuthTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonCookieTest.php</file>
@@ -155,7 +148,6 @@
     <testsuite name="failing_tests">
       <file>./tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
       <file>./tests/Drupal/KernelTests/Core/Database/SchemaTest.php</file>
-      <file>./tests/Drupal/Tests/Scripts/TestSiteApplicationTest.php</file>
     </testsuite>
     <testsuite name="intermittent_failures">
       <file>./tests/Drupal/KernelTests/Core/Validation/UniqueFieldConstraintTest.php</file>
