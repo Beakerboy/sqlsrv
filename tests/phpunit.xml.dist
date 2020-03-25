@@ -114,26 +114,22 @@
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
       <exclude>./tests/Drupal/Tests/Scripts/TestSiteApplicationTest.php</exclude>
     </testsuite>
-    <testsuite name="functionalAI">
+    <testsuite name="passing_functional">
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Bootstrap</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Breadcrumb</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Core</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Entity</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/HttpKernel</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Image</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Routing</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Theme</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Update</directory>
       <exclude>tests/Drupal/FunctionalTests/Hal</exclude>
       <exclude>tests/Drupal/FunctionalTests/Breadcrumb/Breadcrumb404Test.php</exclude>
       <exclude>tests/Drupal/FunctionalTests/Entity/DeleteMultipleFormTest.php</exclude>
     </testsuite>
     <testsuite name="functionalI">
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Installer</directory>
-    </testsuite>
-    <testsuite name="functionalR2">
-      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Routing</directory>
-    </testsuite>
-    <testsuite name="functionalTZ">
-      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Theme</directory>
-      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Update</directory>
     </testsuite>
     <testsuite name="failing_functional_tests">
       <file>./tests/Drupal/FunctionalTests/Entity/DeleteMultipleFormTest.php</file>
