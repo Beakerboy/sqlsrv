@@ -7,6 +7,7 @@
 
 use Drupal\Core\Database\Database;
 use Drupal\Driver\Database\sqlsrv\Connection;
+use Drupal\Driver\Database\sqlsrv\DriverSettings;
 use Drupal\Driver\Database\sqlsrv\Utils;
 use Drupal\sqlsrv\Indexes\IndexManager;
 
