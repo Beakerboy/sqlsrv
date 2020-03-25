@@ -1,13 +1,11 @@
 language: php
+# Functional tests require Apache
 env:
-  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=KernelTestAD,KernelTestKZ,sqlsrv CODE_SNIFF=yes
-  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=KernelTestEI
-  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_unit APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_kernel,sqlsrv CODE_SNIFF=yes
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional,passing_unit APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
-  #- DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=functionalAH APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
-  #- DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=functionalIR APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
-  #- DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=functionalRZ APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
-  #- DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures SIMPLETEST_BASE_URL=http://127.0.0.1
 
 php:
   - '7.3'
@@ -15,6 +13,10 @@ php:
 matrix:
   allow_failures:
     - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
+    - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
+    - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests2 APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
+    - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests3 APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
+    - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures SIMPLETEST_BASE_URL=http://127.0.0.1
 
 before_install:
   # Use pcov instead of xdebug
@@ -105,7 +107,6 @@ script:
   - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
   - cd $TRAVIS_BUILD_DIR/../drupal-project
   - vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE
-after_success:
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
       phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
