@@ -128,9 +128,6 @@
     <testsuite name="functionalI">
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Installer</directory>
     </testsuite>
-    <testsuite name="functionalR1">
-      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Rest</directory>
-    </testsuite>
     <testsuite name="functionalR2">
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Routing</directory>
     </testsuite>
