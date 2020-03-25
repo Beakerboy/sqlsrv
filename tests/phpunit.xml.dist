@@ -133,11 +133,8 @@
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Theme</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Update</directory>
     </testsuite>
-    <testsuite name="failing_tests">
+    <testsuite name="failing_functional_tests">
       <file>./tests/Drupal/FunctionalTests/Entity/DeleteMultipleFormTest.php</file>
-      <file>./tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
-      <file>./tests/Drupal/KernelTests/Core/Database/SchemaTest.php</file>
-      <file>./tests/Drupal/Tests/Scripts/TestSiteApplicationTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Breadcrumb/Breadcrumb404Test.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonAnonTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonBasicAuthTest.php</file>
@@ -147,6 +144,13 @@
       <file>./tests/Drupal/FunctionalTests/Hal/DateFormatHalJsonCookieTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/EntityFormDisplayHalJsonAnonTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Hal/EntityFormDisplayHalJsonBasicAuthTest.php</file>
+    </testsuite>
+    <testsuite name="failing_tests">
+      <file>./tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</file>
+      <file>./tests/Drupal/KernelTests/Core/Database/SchemaTest.php</file>
+      <file>./tests/Drupal/Tests/Scripts/TestSiteApplicationTest.php</file>
+    </testsuite>
+    <testsuite name="intermittant_failures">
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
