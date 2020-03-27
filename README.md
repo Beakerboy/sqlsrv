@@ -11,7 +11,8 @@ This contrib module allows the Drupal CMS to connect to Microsoft SQL Server
 databases.
 
 The 8.x-3.x branch is for any new install that meets the minimum criteria.
-Replacing the driver from another branch with this on an existing site is not advised.
+Replacing the driver from another branch with this on an existing site is not
+advised.
 
 Setup
 -----
