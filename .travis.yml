@@ -1,7 +1,8 @@
 language: php
 # Functional tests require Apache
 env:
-  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_kernel,sqlsrv CODE_SNIFF=yes
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_kernel_core,sqlsrv CODE_SNIFF=yes
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_kernel_other
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional,passing_unit APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_tests APACHE=yes SIMPLETEST_BASE_URL=http://127.0.0.1
