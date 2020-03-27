@@ -97,11 +97,16 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TempStore</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Test</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Theme</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TypesData</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TypedData</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Update</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Updater</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Url</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Validation</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Component</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Config</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/RequestProcessing</directory>
+      <file>./tests/Drupal/KernelTests/KernelTestBaseTest.php</file>
+      <file>./tests/Drupal/KernelTests/KernelTestBaseShutdownTest.php</file>
       <exclude>./tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</exclude>
       <exclude>./tests/Drupal/KernelTests/Core/Database/SchemaTest.php</exclude>
       <exclude>./tests/Drupal/KernelTests/Core/Validation/UniqueFieldConstraintTest.php</exclude>
