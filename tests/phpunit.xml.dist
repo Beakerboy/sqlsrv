@@ -110,6 +110,7 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Component</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Config</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/RequestProcessing</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TypedData</directory>
       <file>./tests/Drupal/KernelTests/KernelTestBaseTest.php</file>
       <file>./tests/Drupal/KernelTests/KernelTestBaseShutdownTest.php</file>
     </testsuite>
