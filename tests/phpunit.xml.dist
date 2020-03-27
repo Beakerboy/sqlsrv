@@ -53,7 +53,7 @@
     <testsuite name="build">
       <file>./tests/TestSuites/BuildTestSuite.php</file>
     </testsuite>
-    <testsuite name="passing_kernel">
+    <testsuite name="passing_kernel_core">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Action</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Ajax</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Asset</directory>
@@ -105,6 +105,13 @@
       <exclude>./tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php</exclude>
       <exclude>./tests/Drupal/KernelTests/Core/Database/SchemaTest.php</exclude>
       <exclude>./tests/Drupal/KernelTests/Core/Validation/UniqueFieldConstraintTest.php</exclude>
+    </testsuite>
+    <testsuite name="passing_kernel_other">
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Component</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Config</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/RequestProcessing</directory>
+      <file>./tests/Drupal/KernelTests/KernelTestBaseTest.php</file>
+      <file>./tests/Drupal/KernelTests/KernelTestBaseShutdownTest.php</file>
     </testsuite>
     <testsuite name="passing_unit">
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
