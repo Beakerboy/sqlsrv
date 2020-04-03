@@ -53,10 +53,7 @@
     <testsuite name="build">
       <file>./tests/TestSuites/BuildTestSuite.php</file>
     </testsuite>
-    <testsuite name="database">
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
-    </testsuite>
-    <testsuite name="KernelTestAD">
+    <testsuite name="passing_kernel">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Action</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Ajax</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Asset</directory>
@@ -69,8 +66,6 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Datetime</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/DrupalKernel</directory>
-    </testsuite>
-    <testsuite name="KernelTestEI">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Element</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Entity</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Extension</directory>
@@ -81,8 +76,6 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/HttpKernel</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Image</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Installer</directory>
-    </testsuite>
-    <testsuite name="KernelTestKZ">
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/KeyValueStore</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Layout</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Lock</directory>
@@ -104,11 +97,59 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TempStore</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Test</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Theme</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TypesData</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TypedData</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Update</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Updater</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Url</directory>
       <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Validation</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Component</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/Config</directory>
+      <directory suffix="Test.php">tests/Drupal/KernelTests/RequestProcessing</directory>
+      <file>./tests/Drupal/KernelTests/KernelTestBaseTest.php</file>
+      <file>./tests/Drupal/KernelTests/KernelTestBaseShutdownTest.php</file>
+      <exclude>./tests/Drupal/KernelTests/Core/Validation/UniqueFieldConstraintTest.php</exclude>
+    </testsuite>
+    <testsuite name="passing_unit">
+      <directory suffix="Test.php">tests/Drupal/Tests</directory>
+    </testsuite>
+    <testsuite name="passing_functional">
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Bootstrap</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Breadcrumb</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Core</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Entity</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/HttpKernel</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Image</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Installer</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Routing</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Theme</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Update</directory>
+    </testsuite>
+    <testsuite name="failing_functional_tests">
+      <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/DateFormatHalJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/DateFormatHalJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/DateFormatHalJsonCookieTest.php</file>
+    </testsuite>
+    <testsuite name="failing_functional_tests2">
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormDisplayHalJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormDisplayHalJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormDisplayHalJsonCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormModeHalJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormModeHalJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormModeHalJsonCookieTest.php</file>
+    </testsuite>
+    <testsuite name="failing_functional_tests3">
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewDisplayHalJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewDisplayHalJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewDisplayHalJsonCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewModeHalJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewModeHalJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewModeHalJsonCookieTest.php</file>
+    </testsuite>
+    <testsuite name="intermittent_failures">
+      <file>./tests/Drupal/KernelTests/Core/Validation/UniqueFieldConstraintTest.php</file>
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
