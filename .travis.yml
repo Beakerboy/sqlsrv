@@ -46,6 +46,8 @@ install:
   - composer install
   - |
     if [ "${DRUPAL_VERSION}" == "9.0.x" ]; then
+      wget https://www.drupal.org/files/issues/2020-02-11/2867788-71.patch
+      git apply 2867788-71.patch
     else
       composer require --dev symfony/phpunit-bridge drupal/console
       composer update phpunit/phpunit symfony/phpunit-bridge phpspec/prophecy symfony/yaml --with-dependencies
