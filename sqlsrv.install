@@ -8,6 +8,7 @@
 use Drupal\Core\Database\Database;
 use Drupal\Driver\Database\sqlsrv\Connection;
 use Drupal\sqlsrv\Indexes\IndexManager;
+use Drupal\Driver\Database\sqlsrv\Utils;
 
 /**
  * Implements hook_uninstall().
