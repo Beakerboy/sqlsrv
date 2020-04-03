@@ -1,14 +1,22 @@
 language: php
+# Functional and Unit tests require Apache
 env:
-  - DBVERSION=2019 TEST_SUITE=KernelTestAD,KernelTestKZ,sqlsrv DRUPAL=yes CODE_SNIFF=yes
-  - DBVERSION=2019 TEST_SUITE=KernelTestEI
+  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_kernel,sqlsrv CODE_SNIFF=yes
+  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional APACHE=yes
+  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_unit APACHE=yes
+  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests APACHE=yes
+  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures
 
 php:
-  - '7.2'
   - '7.3'
 
+matrix:
+  allow_failures:
+    - env: DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests APACHE=yes
+    - env: DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures
+
 before_install:
-  # Use pcov instead of xdebug
+  # remove Xdebug to speed up test runner
   - phpenv config-rm xdebug.ini
   - pecl channel-update pecl.php.net
   # Install SQL Server for Linux
@@ -20,55 +28,50 @@ before_install:
   - export MSSQL_SA_PASSWORD=Password12!
   - export ACCEPT_EULA=Y
   - export MSSQL_PID=Evaluation
+  - export SIMPLETEST_BASE_URL=http://127.0.0.1
   - sudo /opt/mssql/bin/mssql-conf setup
   - sleep 15
   - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q 'CREATE DATABASE mydrupalsite COLLATE LATIN1_GENERAL_100_CI_AS_SC_UTF8'
   # Install the pdo_sqlsrv extension
   - sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev gcc g++ make autoconf libc-dev pkg-config
-  - pecl install pcov sqlsrv pdo_sqlsrv
+  - pecl install sqlsrv pdo_sqlsrv
   - phpenv config-add install/travis-7.x.ini
 install:
   # Create a Drupal Site
   - cd ..
   - export COMPOSER_MEMORY_LIMIT=-1
+  - git clone https://git.drupalcode.org/project/drupal.git -b $DRUPAL_VERSION drupal-project
+  - cd drupal-project
+  - composer config -g github-oauth.github.com $GITHUB_OAUTH
+  - composer install
   - |
-    if [ "${DRUPAL_VERSION}" == "9.0" ]; then
-      composer -n create-project drupal/recommended-project:^9.0@dev drupal-project
-      cd drupal-project
-      composer require drush/drush phpunit/phpunit:^8
-      mkdir ./web/modules/contrib
-      cd $TRAVIS_BUILD_DIR/../drupal-project/web
+    if [ "${DRUPAL_VERSION}" == "9.0.x" ]; then
       wget https://www.drupal.org/files/issues/2020-02-11/2867788-71.patch
       git apply 2867788-71.patch
     else
-      composer create-project -n drupal-composer/drupal-project:8.x-dev
-      cd drupal-project
-      composer config repositories.drupal composer https://packages.drupal.org/8
-      composer require drupal/sqlsrv:dev-1.x@dev symfony/psr-http-message-bridge:1.1.x-dev php-coveralls/php-coveralls:^2.0
-      composer require pcov/clobber --dev
-      cp -r $TRAVIS_BUILD_DIR/drivers ./web/drivers
-      rm -rf ./web/modules/contrib/sqlsrv
-      cp -rf $TRAVIS_BUILD_DIR ./web/modules/contrib/sqlsrv
-      PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
-      mkdir $TRAVIS_BUILD_DIR/../drupal-project/web/sites/simpletest
-      mkdir $TRAVIS_BUILD_DIR/../drupal-project/web/sites/simpletest/browser_output
-      # Install patches
-      cd $TRAVIS_BUILD_DIR/../drupal-project/web
+      composer require --dev symfony/phpunit-bridge drupal/console
+      composer update phpunit/phpunit symfony/phpunit-bridge phpspec/prophecy symfony/yaml --with-dependencies
+      # Core patches
       wget https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
-      wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
       git apply 2867788-79.patch
-      git apply 3113403-33.patch
+      # Testing-only patches
       wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
       git apply drupal-3111134-database_specific_types-3.patch
       git apply 3108540-11.patch
-      cd ..
-      pcov clobber
+      if [ "${DRUPAL_VERSION}" == "8.8.x" ]; then
+        wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
+        git apply 3113403-33.patch
+      fi
     fi
-  - |
-    if ! [ -z "$DRUPAL" ]; then
-      drupal site:install standard --langcode="en" --db-type="sqlsrv" --db-host="localhost" --db-name="mydrupalsite" --db-user="sa" --db-pass="Password12!" --db-port="1433" --site-name="SQL Server Drupal Site" --site-mail="admin@example.com" --account-name="admin" --account-mail="admin@example.com" --account-pass="admin" --no-interaction
-    fi
+  - cp -r $TRAVIS_BUILD_DIR/drivers ./drivers
+  - mkdir ./modules/contrib
+  - cp -rf $TRAVIS_BUILD_DIR ./modules/contrib/sqlsrv
+  - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
+  - mkdir $TRAVIS_BUILD_DIR/../drupal-project/sites/simpletest
+  - mkdir $TRAVIS_BUILD_DIR/../drupal-project/sites/simpletest/browser_output
+  - cd $TRAVIS_BUILD_DIR/../drupal-project
+  - sed -e "s?WEB_DIR?$(pwd)?g" --in-place $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist
   # Install REGEX CLR
   - wget https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll
   - sudo mv RegEx.dll /var/opt/mssql/data/
@@ -90,22 +93,16 @@ before_script:
        ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
        # configure apache virtual hosts
        sudo cp -f $TRAVIS_BUILD_DIR/install/travis-ci-apache /etc/apache2/sites-available/000-default.conf
-       cd $TRAVIS_BUILD_DIR/../drupal-project/web
+       cd $TRAVIS_BUILD_DIR/../drupal-project
        sudo sed -e "s?%TRAVIS_WEB_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
-       sed -e "s?WEB_DIR?$(pwd)?g" --in-place $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist
        sudo service apache2 restart
      fi
 script:
-  - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/web/core/phpunit.xml
-  - cd $TRAVIS_BUILD_DIR/../drupal-project/web
-  - ../vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE --coverage-clover $TRAVIS_BUILD_DIR/build/logs/clover.xml
+  - cp $TRAVIS_BUILD_DIR/tests/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
+  - cd $TRAVIS_BUILD_DIR/../drupal-project
+  - vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
       phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
       phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/contrib/sqlsrv
     fi
-after_success:
-  - cd $TRAVIS_BUILD_DIR
-  - sed -i 's/drupal\-project\/web\/modules\/contrib\///g' ./build/logs/clover.xml
-  - sed -i 's/drupal\-project\/web/sqlsrv/g' ./build/logs/clover.xml
-  - php-coveralls -v
