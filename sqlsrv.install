@@ -7,8 +7,9 @@
 
 use Drupal\Core\Database\Database;
 use Drupal\Driver\Database\sqlsrv\Connection;
-use Drupal\sqlsrv\Indexes\IndexManager;
+use Drupal\Driver\Database\sqlsrv\DriverSettings;
 use Drupal\Driver\Database\sqlsrv\Utils;
+use Drupal\sqlsrv\Indexes\IndexManager;
 
 /**
  * Implements hook_uninstall().
@@ -95,6 +96,7 @@ function sqlsrv_requirements($phase) {
         'severity' => $wincache_module ? REQUIREMENT_OK : REQUIREMENT_ERROR,
         'description' => $wincache_module ? NULL : t('Enabling wincache integration can greatly improve system performance. See <a href="https://www.drupal.org/project/wincachedrupal/">Wincache Drupal</a> for more details.'),
       ];
+
     }
 
     // Report encoding for database.
