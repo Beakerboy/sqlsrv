@@ -15,7 +15,7 @@ class Context {
   /**
    * Conection that this context is applied to.
    *
-   * @var Connection
+   * @var \Drupal\Driver\Database\sqlsrv\Connection
    */
   public $connection;
 
@@ -24,7 +24,7 @@ class Context {
    *
    * @var \Drupal\Driver\Database\sqlsrv\DriverSettings
    */
-  public $settings = NULL;
+  public $settings;
 
   /**
    * Constructor.
@@ -49,8 +49,10 @@ class Context {
         $statement_caching = NULL) {
 
     // Retain a copy of the setting and connections.
-    $this->connection = $connection ? $connection : Database::getConnection();
-    $this->settings = $this->connection->driverSettings;
+    /** @var \Drupal\Driver\Database\sqlsrv\Connection $connection */
+    $connection = $connection ? $connection : Database::getConnection();
+    $this->connection = $connection;
+    $this->settings = $connection->driverSettings;
 
     // Override our custom settings.
     $configuration = $this->settings->exportConfiguration();
