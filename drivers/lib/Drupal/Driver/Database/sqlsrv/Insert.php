@@ -15,6 +15,13 @@ use Drupal\Core\Database\Query\Insert as QueryInsert;
 class Insert extends QueryInsert {
 
   /**
+   * Does the insert require setting an identity column?
+   *
+   * @var bool
+   */
+  protected $setIdentity = FALSE;
+
+  /**
    * Max Batch Size.
    *
    * Maximum number of inserts that the driver will perform
@@ -31,7 +38,9 @@ class Insert extends QueryInsert {
     }
 
     // Fetch the list of blobs and sequences used on that table.
-    $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
+    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    $schema = $this->connection->schema();
+    $columnInformation = $schema->queryColumnInformation($this->table);
 
     // Find out if there is an identity field set in this insert.
     $this->setIdentity = !empty($columnInformation['identity']) && in_array($columnInformation['identity'], $this->insertFields);
@@ -45,6 +54,7 @@ class Insert extends QueryInsert {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = [];
 
+      /** @var \Drupal\Core\Database\Statement $stmt */
       $stmt = $this->connection->prepareQuery((string) $this);
 
       // Handle the case of SELECT-based INSERT queries first.
@@ -69,6 +79,8 @@ class Insert extends QueryInsert {
     if (empty($this->fromQuery) && (empty($this->insertFields) || empty($this->insertValues))) {
       // Re-initialize the values array so that we can re-use this query.
       $this->insertValues = [];
+
+      /** @var \Drupal\Core\Database\Statement $stmt */
       $stmt = $this->connection->prepareQuery((string) $this);
 
       // Run the query.
@@ -105,6 +117,7 @@ class Insert extends QueryInsert {
       $query = $this->BuildQuery(count($batch));
 
       // Prepare the query.
+      /** @var \Drupal\Core\Database\Statement $stmt */
       $stmt = $this->connection->prepareQuery($query);
 
       // We use this array to store references to the blob handles.
@@ -188,7 +201,9 @@ class Insert extends QueryInsert {
     }
 
     // Fetch the list of blobs and sequences used on that table.
-    $columnInformation = $this->connection->schema()->queryColumnInformation($this->table);
+    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    $schema = $this->connection->schema();
+    $columnInformation = $schema->queryColumnInformation($this->table);
 
     // Create a sanitized comment string to prepend to the query.
     $prefix = $this->connection->makeComment($this->comments);
@@ -213,12 +228,16 @@ class Insert extends QueryInsert {
 
     // If we're selecting from a SelectQuery, finish building the query and
     // pass it back, as any remaining options are irrelevant.
+    $escapedFields = [];
     if (!empty($this->fromQuery)) {
       if (empty($this->insertFields)) {
         return $prefix . "INSERT INTO {{$this->table}} {$output}" . $this->fromQuery;
       }
       else {
-        $fields_csv = implode(', ', $this->connection->quoteIdentifiers($this->insertFields));
+        foreach ($this->insertFields as $field) {
+          $escapedFields[] = $this->connection->escapeField($field);
+        }
+        $fields_csv = implode(', ', $escapedFields);
         return $prefix . "INSERT INTO {{$this->table}} ({$fields_csv}) {$output} " . $this->fromQuery;
       }
     }
@@ -239,8 +258,11 @@ class Insert extends QueryInsert {
       }
       $placeholders[] = '(' . implode(', ', $batch_placeholders) . ')';
     }
-
-    $sql = $prefix . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $this->connection->quoteIdentifiers($this->insertFields)) . ') ' . $output . ' VALUES ' . PHP_EOL;
+    foreach ($this->insertFields as $field) {
+      $escapedFields[] = $this->connection->escapeField($field);
+    }
+    $fields_csv = implode(', ', $escapedFields);
+    $sql = $prefix . 'INSERT INTO {' . $this->table . '} (' . $fields_csv . ') ' . $output . ' VALUES ' . PHP_EOL;
     $sql .= implode(', ', $placeholders) . PHP_EOL;
     return $sql;
   }
