@@ -13,6 +13,13 @@ use Drupal\Core\Database\SchemaObjectExistsException;
 class Schema extends DatabaseSchema {
 
   /**
+   * The database connection.
+   *
+   * @var \Drupal\Driver\Database\sqlsrv\Connection
+   */
+  protected $connection;
+
+  /**
    * Default schema for SQL Server databases.
    *
    * @var string
@@ -127,10 +134,10 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function renameTable($table, $new_name) {
-    if (!$this->tableExists($table, TRUE)) {
+    if (!$this->tableExists($table)) {
       throw new SchemaObjectDoesNotExistException(t("Cannot rename %table to %table_new: table %table doesn't exist.", ['%table' => $table, '%table_new' => $new_name]));
     }
-    if ($this->tableExists($new_name, TRUE)) {
+    if ($this->tableExists($new_name)) {
       throw new SchemaObjectExistsException(t("Cannot rename %table to %table_new: table %table_new already exists.", ['%table' => $table, '%table_new' => $new_name]));
     }
 
@@ -166,7 +173,7 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function dropTable($table) {
-    if (!$this->tableExists($table, TRUE)) {
+    if (!$this->tableExists($table)) {
       return FALSE;
     }
     $this->connection->queryDirect('DROP TABLE {' . $table . '}');
@@ -354,7 +361,7 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function addPrimaryKey($table, $fields) {
-    if (!$this->tableExists($table, TRUE)) {
+    if (!$this->tableExists($table)) {
       throw new SchemaObjectDoesNotExistException(t("Cannot add primary key to table %table: table doesn't exist.", ['%table' => $table]));
     }
 
@@ -417,7 +424,7 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function addUniqueKey($table, $name, $fields) {
-    if (!$this->tableExists($table, TRUE)) {
+    if (!$this->tableExists($table)) {
       throw new SchemaObjectDoesNotExistException(t("Cannot add unique key %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
     }
     if ($this->uniqueKeyExists($table, $name)) {
@@ -467,7 +474,7 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function addIndex($table, $name, $fields, array $spec = []) {
-    if (!$this->tableExists($table, TRUE)) {
+    if (!$this->tableExists($table)) {
       throw new SchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", ['%table' => $table, '%name' => $name]));
     }
     if ($this->indexExists($table, $name)) {
@@ -886,7 +893,7 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function createTable($name, $table) {
-    if ($this->tableExists($name, FALSE)) {
+    if ($this->tableExists($name)) {
       throw new SchemaObjectExistsException(t('Table %name already exists.', ['%name' => $name]));
     }
 
@@ -1186,16 +1193,6 @@ EOF
     $row_size = $max_fixed_size + $variable_data_size + $null_bitmap + 4;
 
     return $row_size;
-  }
-
-  /**
-   * Change Database recovery model.
-   *
-   * @param string $model
-   *   Recovery model.
-   */
-  public function setRecoveryModel($model) {
-    $this->connection->query("ALTER " . $this->connection->options['name'] . " model SET RECOVERY " . $model);
   }
 
   /**
