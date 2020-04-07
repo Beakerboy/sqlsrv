@@ -126,28 +126,8 @@
     </testsuite>
     <testsuite name="failing_functional_tests">
       <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/BaseFieldOverrideHalJsonCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/DateFormatHalJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/DateFormatHalJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/DateFormatHalJsonCookieTest.php</file>
-    </testsuite>
-    <testsuite name="failing_functional_tests2">
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormDisplayHalJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormDisplayHalJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormDisplayHalJsonCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormModeHalJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormModeHalJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityFormModeHalJsonCookieTest.php</file>
-    </testsuite>
-    <testsuite name="failing_functional_tests3">
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewDisplayHalJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewDisplayHalJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewDisplayHalJsonCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewModeHalJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewModeHalJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Hal/EntityViewModeHalJsonCookieTest.php</file>
-    </testsuite>
+      <file>./tests/Drupal/FunctionalTests/Rest/BaseFieldOverrideJsonAnonTest.php</file>
+      </testsuite>
     <testsuite name="intermittent_failures">
       <file>./tests/Drupal/KernelTests/Core/Validation/UniqueFieldConstraintTest.php</file>
     </testsuite>
