@@ -1,9 +1,9 @@
 language: php
 # Functional and Unit tests require Apache
 env:
-  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_kernel,sqlsrv CODE_SNIFF=yes
+  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_kernel
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional APACHE=yes
-  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_unit APACHE=yes
+  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_unit,sqlsrv CODE_SNIFF=yes APACHE=yes
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests APACHE=yes
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures
 
@@ -49,11 +49,14 @@ install:
       wget https://www.drupal.org/files/issues/2020-02-11/2867788-71.patch
       git apply 2867788-71.patch
     else
-      composer require --dev symfony/phpunit-bridge drupal/console
+      composer require --dev symfony/phpunit-bridge phpstan/extension-installer jangregor/phpstan-prophecy mglaman/phpstan-drupal
       composer update phpunit/phpunit symfony/phpunit-bridge phpspec/prophecy symfony/yaml --with-dependencies
+      composer require --dev phpstan/phpstan-phpunit
       # Core patches
       wget https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
+      wget https://www.drupal.org/files/issues/2020-04-06/3125391-3.patch
       git apply 2867788-79.patch
+      git apply 3125391-3.patch
       # Testing-only patches
       wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
@@ -105,4 +108,5 @@ script:
     if ! [ -z "$CODE_SNIFF" ]; then
       phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
       phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/contrib/sqlsrv
+      vendor/bin/phpstan analyze modules/contrib/sqlsrv --level 5 -c $TRAVIS_BUILD_DIR/phpstan.neon
     fi
