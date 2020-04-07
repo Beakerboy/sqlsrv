@@ -37,6 +37,8 @@ function sqlsrv_requirements($phase) {
     }
 
     $options = $connection->getConnectionOptions();
+
+    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
     $schema = $connection->schema();
     $collation = $schema->getCollation();
     $version = $schema->EngineVersion();
@@ -120,7 +122,6 @@ function sqlsrv_requirements($phase) {
 
     // TODO: Report install function availability
     // (SUBSTRING, CONCAT, IF, MD5, etc...)
-    $schema = $connection->schema();
     $functions = $schema->DrupalSpecificFunctions();
     $briefing = [];
     $error = FALSE;
