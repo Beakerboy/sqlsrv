@@ -14,6 +14,20 @@ use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 class SchemaTest extends DatabaseTestBase {
 
   /**
+   * The table definition.
+   *
+   * @var array
+   */
+  protected $table = [];
+
+  /**
+   * The sqlsrv schema.
+   *
+   * @var \Drupal\Driver\Database\sqlsrv\Schema
+   */
+  protected $schema;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
