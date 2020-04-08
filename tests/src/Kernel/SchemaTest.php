@@ -118,7 +118,7 @@ class SchemaTest extends DatabaseTestBase {
     // Add field with different description.
     $spec = $this->table['fields']['name'];
     $spec['description'] = 'New name comment';
-    $this->schema->changeField('test', 'name', $spec);
+    $this->schema->changeField('test', 'name', 'name', $spec);
 
     // Verify comment is correct.
     $comment = $this->schema->getComment('test', 'name');
