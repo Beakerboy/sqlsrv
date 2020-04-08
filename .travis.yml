@@ -2,8 +2,8 @@ language: php
 # Functional and Unit tests require Apache
 env:
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_kernel
-  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional APACHE=yes
-  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_unit,sqlsrv CODE_SNIFF=yes APACHE=yes
+  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional CODE_SNIFF=yes APACHE=yes
+  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_unit,sqlsrv APACHE=yes
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests APACHE=yes
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures
 
@@ -35,7 +35,7 @@ before_install:
   # Install the pdo_sqlsrv extension
   - sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev gcc g++ make autoconf libc-dev pkg-config
   - pecl install sqlsrv pdo_sqlsrv
-  - phpenv config-add install/travis-7.x.ini
+  - phpenv config-add dev/travis-7.x.ini
 install:
   # Create a Drupal Site
   - cd ..
@@ -95,7 +95,7 @@ before_script:
        sudo chown -R travis:travis /var/lib/apache2/fastcgi
        ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
        # configure apache virtual hosts
-       sudo cp -f $TRAVIS_BUILD_DIR/install/travis-ci-apache /etc/apache2/sites-available/000-default.conf
+       sudo cp -f $TRAVIS_BUILD_DIR/dev/travis-ci-apache /etc/apache2/sites-available/000-default.conf
        cd $TRAVIS_BUILD_DIR/../drupal-project
        sudo sed -e "s?%TRAVIS_WEB_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
        sudo service apache2 restart
@@ -108,5 +108,5 @@ script:
     if ! [ -z "$CODE_SNIFF" ]; then
       phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
       phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/contrib/sqlsrv
-      vendor/bin/phpstan analyze modules/contrib/sqlsrv --level 4 -c $TRAVIS_BUILD_DIR/phpstan.neon
+      vendor/bin/phpstan analyze modules/contrib/sqlsrv --level 4 -c $TRAVIS_BUILD_DIR/dev/phpstan.neon
     fi
