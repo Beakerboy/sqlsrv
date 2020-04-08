@@ -93,13 +93,13 @@ class ConditionTest extends DatabaseTestBase {
     // Should actually review results.
     $this->assertTrue(TRUE);
   }
-  
+
   /**
    * Test that brackets are escaped correctly.
    */
   public function testLikeWithBrackets() {
     $this->connection->insert('test_people')
-      ->values([
+      ->fields([
         'job' => '[Rutles] - Guitar',
         'name' => 'Dirk',
       ])
@@ -111,7 +111,7 @@ class ConditionTest extends DatabaseTestBase {
       ->fetchField();
     $this->assertEqual('Dirk', $name);
     $this->connection->insert('test_people')
-      ->values([
+      ->fields([
         'job' => '[Rutles] - Drummer [Original]',
         'name' => 'Kevin',
       ])
