@@ -119,6 +119,8 @@ class Tasks extends InstallTasks {
   protected function checkEncoding() {
     try {
       $database = Database::getConnection();
+
+      /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
       $schema = $database->schema();
       $collation = $schema->getCollation();
       if ($collation == Schema::DEFAULT_COLLATION_CI || stristr($collation, '_UT') !== FALSE) {
@@ -148,7 +150,7 @@ class Tasks extends InstallTasks {
     // avoid trying to create them again in that case.
     try {
 
-      /** @var \Drupal\Driver\Database\sqlsrv\Connection $database */
+      /** @var \Drupal\Driver\Database\sqlsrv\Connection $connection */
       $connection = Database::getConnection();
 
       Utils::DeployCustomFunctions($connection);

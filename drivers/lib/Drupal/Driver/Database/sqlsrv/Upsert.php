@@ -36,13 +36,14 @@ class Upsert extends QueryUpsert {
           ->execute();
       }
     }
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function __toString() {
-    // Do nothing.
+    return "";
   }
 
 }

@@ -1,0 +1,3 @@
+parameters:
+	ignoreErrors:
+		- '#\Drupal calls should be avoided in classes, use dependency injection instead#'

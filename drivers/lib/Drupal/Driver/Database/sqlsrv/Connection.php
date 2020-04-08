@@ -28,13 +28,29 @@ use Drupal\Core\Database\TransactionNameNonUniqueException;
 class Connection extends DatabaseConnection {
 
   /**
+   * The operating system.
+   *
+   * @var string
+   */
+  protected $OS = '';
+
+  /**
+   * The schema object for this connection.
+   *
+   * Set to NULL when the schema is destroyed.
+   *
+   * @var \Drupal\Driver\Database\sqlsrv\Schema|null
+   */
+  protected $schema = NULL;
+
+  /**
    * Database driver settings.
    *
    * Should be renamed to driverSettings.
    *
    * @var \Drupal\Driver\Database\sqlsrv\DriverSettings
    */
-  public $driverSettings = NULL;
+  public $driverSettings;
 
   /**
    * Error code for Login Failed.
@@ -194,7 +210,9 @@ class Connection extends DatabaseConnection {
 
     // Having comments in the query can be tricky and break the
     // SELECT FROM  -> SELECT INTO conversion.
-    $query = $this->schema()->removeSQLComments($query);
+    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    $schema = $this->schema();
+    $query = $schema->removeSQLComments($query);
 
     // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
     $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
@@ -247,7 +265,10 @@ class Connection extends DatabaseConnection {
     // If an exiting value is passed, for its insertion into the sequence table.
     if ($existing > 0) {
       try {
-        $this->query_direct('SET IDENTITY_INSERT {sequences} ON; INSERT INTO {sequences} (value) VALUES(:existing); SET IDENTITY_INSERT {sequences} OFF', [':existing' => $existing]);
+        $sql = 'SET IDENTITY_INSERT {sequences} ON;';
+        $sql .= ' INSERT INTO {sequences} (value) VALUES(:existing);';
+        $sql .= ' SET IDENTITY_INSERT {sequences} OFF';
+        $this->queryDirect($sql, [':existing' => $existing]);
       }
       catch (\Exception $e) {
         // Doesn't matter if this fails, it just means that this value is
@@ -257,7 +278,7 @@ class Connection extends DatabaseConnection {
 
     // Refactored to use OUTPUT because under high concurrency LAST_INSERTED_ID
     // does not work properly.
-    return $this->query_direct('INSERT INTO {sequences} OUTPUT (Inserted.[value]) DEFAULT VALUES')->fetchField();
+    return $this->queryDirect('INSERT INTO {sequences} OUTPUT (Inserted.[value]) DEFAULT VALUES')->fetchField();
   }
 
   /**
@@ -595,7 +616,7 @@ class Connection extends DatabaseConnection {
   protected function generateTemporaryTableName() {
     static $temp_key;
     if (!isset($temp_key)) {
-      $temp_key = strtoupper(md5(uniqid(rand(), TRUE)));
+      $temp_key = strtoupper(md5(uniqid("", TRUE)));
     }
     return "db_temp_" . $this->temporaryNameIndex++ . '_' . $temp_key;
   }
@@ -771,6 +792,7 @@ class Connection extends DatabaseConnection {
 
     // Drill through everything...
     $success = FALSE;
+    $cache = '';
     if ($this->OS === 'WIN') {
       $cache = wincache_ucache_get($query_signature, $success);
     }
@@ -790,8 +812,10 @@ class Connection extends DatabaseConnection {
     $replacements = [];
 
     // Add prefixes to Drupal-specific functions.
-    $defaultSchema = $this->schema()->GetDefaultSchema();
-    foreach ($this->schema()->DrupalSpecificFunctions() as $function) {
+    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    $schema = $this->schema();
+    $defaultSchema = $schema->GetDefaultSchema();
+    foreach ($schema->DrupalSpecificFunctions() as $function) {
       $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] = "{$defaultSchema}.$1(";
     }
 

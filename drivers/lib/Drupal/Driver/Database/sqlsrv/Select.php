@@ -15,6 +15,13 @@ use Drupal\Core\Database\Query\Condition as DatabaseCondition;
 class Select extends QuerySelect {
 
   /**
+   * Is this statement in a subquery?
+   *
+   * @var bool
+   */
+  protected $inSubQuery = FALSE;
+
+  /**
    * Adds an expression to the list of "fields" to be SELECTed.
    *
    * An expression can be any arbitrary string that is valid SQL. That includes
@@ -37,10 +44,10 @@ class Select extends QuerySelect {
    *   in all cases.
    * @param mixed $arguments
    *   Any placeholder arguments needed for this expression.
-   * @param string $exclude
+   * @param bool $exclude
    *   If set to TRUE, this expression will not be added to the select list.
    *   Useful when you want to reuse expressions in the WHERE part.
-   * @param string $expand
+   * @param bool $expand
    *   If this expression will be expanded as a CROSS_JOIN so it can be consumed
    *   from other parts of the query. TRUE by default. It attempts to detect
    *   expressions that cannot be cross joined (aggregates).
@@ -79,10 +86,13 @@ class Select extends QuerySelect {
    *   The 0 indexed position of the open-paren, for which we would like
    *   to find the matching closing-paren.
    *
-   * @return int
+   * @return int|false
    *   The 0 indexed position of the close paren.
    */
   private function findParenMatch($string, $start_paren) {
+    if ($string[$start_paren] !== '(') {
+      return FALSE;
+    }
     $str_array = str_split(substr($string, $start_paren + 1));
     $paren_num = 1;
     foreach ($str_array as $i => $char) {
@@ -96,6 +106,7 @@ class Select extends QuerySelect {
         return $i + $start_paren + 1;
       }
     }
+    return FALSE;
   }
 
   /**
@@ -196,7 +207,7 @@ class Select extends QuerySelect {
    * @param mixed $needle
    *   Value(s) to look for.
    *
-   * @return int
+   * @return int|false
    *   The position of the first $needle[] in the $haystack.
    */
   private function striposArr($haystack, $needle) {
@@ -300,7 +311,9 @@ class Select extends QuerySelect {
           $fields[] = $this->connection->escapeTable($alias) . '.*';
         }
         else {
-          $info = $this->connection->schema()->queryColumnInformation($table['table']);
+          /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+          $schema = $this->connection->schema();
+          $info = $schema->queryColumnInformation($table['table']);
           // Some fields need to be "transparent" to Drupal, including technical
           // primary keys or custom computed columns.
           if (isset($info['columns_clean'])) {

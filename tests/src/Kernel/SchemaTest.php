@@ -14,11 +14,27 @@ use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 class SchemaTest extends DatabaseTestBase {
 
   /**
+   * The table definition.
+   *
+   * @var array
+   */
+  protected $table = [];
+
+  /**
+   * The sqlsrv schema.
+   *
+   * @var \Drupal\Driver\Database\sqlsrv\Schema
+   */
+  protected $schema;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
-    $this->schema = $this->connection->schema();
+    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    $schema = $this->connection->schema();
+    $this->schema = $schema;
     $this->table = [
       'description' => 'New Comment',
       'fields' => [

@@ -20,7 +20,10 @@ class Condition extends QueryCondition {
     foreach ($this->conditions as &$condition) {
       if (isset($condition['operator'])) {
         if ($condition['operator'] == 'REGEXP' || $condition['operator'] == 'NOT REGEXP') {
-          $schema_name = $connection->schema()->getDefaultSchema();
+
+          /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema*/
+          $schema = $connection->schema();
+          $schema_name = $schema->getDefaultSchema();
           $placeholder = ':db_condition_placeholder_' . $queryPlaceholder->nextPlaceholder();
           $field_fragment = $connection->escapeField($condition['field']);
           $comparison = $condition['operator'] == 'REGEXP' ? '1' : '0';
