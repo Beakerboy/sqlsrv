@@ -18,7 +18,7 @@ class UpdateTest extends DatabaseTestBase {
     $this->expectException(\Exception::class);
     $num_updated = $this->connection->update('test')
       ->fields(['id' => 42, 'name' => 'John'])
-      ->condition('id', 1)
+      ->condition('id', '1')
       ->execute();
   }
 
