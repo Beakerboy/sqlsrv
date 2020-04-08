@@ -97,14 +97,14 @@ class ConditionTest extends DatabaseTestBase {
   /**
    * Test that brackets are escaped correctly.
    */
-  public function likeWithBrackets() {
+  public function testLikeWithBrackets() {
     $this->connection->insert('test_people')
       ->values([
         'job' => '[Rutles] - Guitar',
         'name' => 'Dirk',
       ])
       ->execute();
-    $name = $this->select('test_people', 't')
+    $name = $this->connection->select('test_people', 't')
       ->fields('t', ['name'])
       ->condition('job', '%[Rutles]%', 'LIKE')
       ->execute()
@@ -116,7 +116,7 @@ class ConditionTest extends DatabaseTestBase {
         'name' => 'Kevin',
       ])
       ->execute();
-    $names = $this->select('test_people', 't')
+    $names = $this->connection->select('test_people', 't')
       ->fields('t', ['name'])
       ->condition('job', '%[Rutles]%', 'LIKE')
       ->execute()
