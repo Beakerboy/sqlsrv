@@ -18,7 +18,7 @@ class SqlsrvTest extends DatabaseTestBase {
   public function testParameterLimit() {
     $values = [];
     for ($x = 0; $x < 2200; $x++) {
-      $values[] = uniqid($x, TRUE);
+      $values[] = uniqid(strval($x), TRUE);
     }
     $query = $this->connection->select('test_task', 't');
     $query->addExpression('COUNT(task)', 'num');
