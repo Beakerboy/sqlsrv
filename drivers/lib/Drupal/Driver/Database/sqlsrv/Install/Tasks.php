@@ -150,7 +150,7 @@ class Tasks extends InstallTasks {
     // avoid trying to create them again in that case.
     try {
 
-      /** @var \Drupal\Driver\Database\sqlsrv\Connection $database */
+      /** @var \Drupal\Driver\Database\sqlsrv\Connection $connection */
       $connection = Database::getConnection();
 
       Utils::DeployCustomFunctions($connection);
