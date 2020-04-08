@@ -156,7 +156,6 @@ function sqlsrv_requirements($phase) {
       $deployed_ok = sqlsrv_verify_driver();
       $requirements['sqlsrv_deployed_files'] = [
         'title' => t('MSSQL Server Deployed Driver'),
-        'description' => t('Deployed driver match.'),
         'severity' => $deployed_ok === TRUE ? REQUIREMENT_OK : REQUIREMENT_ERROR,
         'description' => $deployed_ok === TRUE ? t('Deployed driver matches module version.') : t('The deployed driver files do not match the module driver.'),
       ];
