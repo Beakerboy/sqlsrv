@@ -32,7 +32,9 @@ class SchemaTest extends DatabaseTestBase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->schema = $this->connection->schema();
+    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    $schema = $this->connection->schema();
+    $this->schema = $schema;
     $this->table = [
       'description' => 'New Comment',
       'fields' => [
