@@ -93,5 +93,35 @@ class ConditionTest extends DatabaseTestBase {
     // Should actually review results.
     $this->assertTrue(TRUE);
   }
+  
+  /**
+   * Test that brackets are escaped correctly.
+   */
+  public function likeWithBrackets() {
+    $this->connection->insert('test_people')
+      ->values([
+        'job' => '[Rutles] - Guitar',
+        'name' => 'Dirk',
+      ])
+      ->execute();
+    $name = $this->select('test_people', 't')
+      ->fields('t', ['name'])
+      ->condition('job', '%[Rutles]%', 'LIKE')
+      ->execute()
+      ->fetchField();
+    $this->assertEqual('Dirk', $name);
+    $this->connection->insert('test_people')
+      ->values([
+        'job' => '[Rutles] - Drummer [Original]',
+        'name' => 'Kevin',
+      ])
+      ->execute();
+    $names = $this->select('test_people', 't')
+      ->fields('t', ['name'])
+      ->condition('job', '%[Rutles]%', 'LIKE')
+      ->execute()
+      ->fetchAllAssoc('job');
+    $this->assertCount(2, $names);
+  }
 
 }
