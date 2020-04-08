@@ -27,7 +27,8 @@ class Update extends QueryUpdate {
     // Because we filter $fields the same way here and in __toString(), the
     // placeholders will all match up properly.
     /** @var \Drupal\Core\Database\Statement $stmt */
-    $stmt = $this->connection->prepareQuery((string) $this);// Expressions take priority over literal fields, so we process those first
+    $stmt = $this->connection->prepareQuery((string) $this);
+    // Expressions take priority over literal fields, so we process those first
     // and remove any literal fields that conflict.
     $fields = $this->fields;
     foreach ($this->expressionFields as $field => $data) {
