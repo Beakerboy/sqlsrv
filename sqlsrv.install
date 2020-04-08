@@ -237,8 +237,6 @@ function sqlsrv_extension_data($name) {
   $_data['getDependencies'] = $re->getDependencies() ?: NULL;
   $_data['getFunctions'] = PHP_EOL . implode(", ", array_keys($re->getFunctions())) ?: NULL;
   $_data['getINIEntries'] = $re->getINIEntries() ?: NULL;
-  $_data['isPersistent'] = $re->isPersistent() ?: NULL;
-  $_data['isTemporary'] = $re->isTemporary() ?: NULL;
 
   return $_data;
 }
