@@ -102,7 +102,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $arguments = $condition->conditions();
     $argument = $arguments[0];
 
-    $expected = 't[[]e[%]s[]]t[_]\\';
+    $expected = 't[[]e[%]s]t[_]\\';
     $actual = $argument['value'];
     $this->assertEqual($actual, $expected, 'Properly escaped LIKE statement wildcards.');
 
