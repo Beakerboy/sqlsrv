@@ -183,12 +183,32 @@ class Connection extends DatabaseConnection {
     'view',
     'without',
   ];
+  
+/**
+   * A map of condition operators to sqlsrv operators.
+   *
+   * SQL Server doesn't need special escaping for the \ character in a string
+   * literal, because it uses '' to escape the single quote, not \'.
+   *
+   * @var array
+   */
+  protected static $sqlsrvConditionOperatorMap = [
+    // These can be changed to 'LIKE' => ['postfix' => " ESCAPE '\\'"],
+    // if https://bugs.php.net/bug.php?id=79276 is fixed.
+    'LIKE' => [],
+    'NOT LIKE' => [],
+    'LIKE BINARY' => ['operator' => 'LIKE'],
+  ];
 
   /**
    * {@inheritdoc}
    */
   public function queryRange($query, $from, $count, array $args = [], array $options = []) {
     $query = $this->addRangeToQuery($query, $from, $count);
+    if (strpos($query, "ORDER BY") === FALSE) {
+      $query .= " ORDER BY (SELECT NULL)";
+    }
+    $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
     return $this->query($query, $args, $options);
   }
 
@@ -280,22 +300,6 @@ class Connection extends DatabaseConnection {
     // does not work properly.
     return $this->queryDirect('INSERT INTO {sequences} OUTPUT (Inserted.[value]) DEFAULT VALUES')->fetchField();
   }
-
-  /**
-   * A map of condition operators to sqlsrv operators.
-   *
-   * SQL Server doesn't need special escaping for the \ character in a string
-   * literal, because it uses '' to escape the single quote, not \'.
-   *
-   * @var array
-   */
-  protected static $sqlsrvConditionOperatorMap = [
-    // These can be changed to 'LIKE' => ['postfix' => " ESCAPE '\\'"],
-    // if https://bugs.php.net/bug.php?id=79276 is fixed.
-    'LIKE' => [],
-    'NOT LIKE' => [],
-    'LIKE BINARY' => ['operator' => 'LIKE'],
-  ];
 
   /**
    * {@inheritdoc}
@@ -575,7 +579,13 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * {@inheritdoc}
+   * Quotes an identifier if it matches a SQL Server reserved keyword.
+   *
+   * @param string $identifier
+   *   The field to check.
+   *
+   * @return string
+   *   The identifier, quoted if it matches a SQL Server reserved keyword.
    */
   protected function quoteIdentifier($identifier) {
     if (strpos($identifier, '.') !== FALSE) {
@@ -598,20 +608,10 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
-   */
-  public function quoteIdentifiers($identifiers) {
-    return array_map([$this, 'quoteIdentifier'], $identifiers);
-  }
-
-  /**
-   * Generates a temporary table name.
    *
    * Because we are using global temporary tables, these are visible between
    * connections so we need to make sure that their names are as unique as
    * possible to prevent collisions.
-   *
-   * @return string
-   *   A table name.
    */
   protected function generateTemporaryTableName() {
     static $temp_key;
@@ -848,23 +848,9 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Internal function: add range options to a query.
+   * {@inheritdoc}
    *
-   * This cannot be set protected because it is used in other parts of the
-   * database engine.
-   */
-  private function addRangeToQuery($query, $from, $count) {
-    if (strpos($query, "ORDER BY") === FALSE) {
-      $query .= " ORDER BY (SELECT NULL)";
-    }
-    $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
-    return $query;
-  }
-
-  /**
-   * Override DatabaseConnection::escapeTable().
-   *
-   * @status needswork
+   * Includes special handling for temporary tables.
    */
   public function escapeTable($table) {
     // A static cache is better suited for this.
@@ -972,8 +958,6 @@ class Connection extends DatabaseConnection {
 
   /**
    * Commit all the transaction layers that can commit.
-   *
-   * @internal
    */
   protected function popCommittableTransactions() {
     // Commit all the committable layers.
