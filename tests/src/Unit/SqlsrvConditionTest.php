@@ -81,7 +81,7 @@ class SqlsrvConditionTest extends UnitTestCase {
       ],
       [
         '[\%]',
-        '[[][%][]]',
+        '[[][%]]',
       ],
     ];
   }
