@@ -204,8 +204,7 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function queryRange($query, $from, $count, array $args = [], array $options = []) {
-    $query = $this->addRangeToQuery($query, $from, $count);
-    if (strpos($query, "ORDER BY") === FALSE) {
+    if (strpos($query, " ORDER BY ") === FALSE) {
       $query .= " ORDER BY (SELECT NULL)";
     }
     $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
