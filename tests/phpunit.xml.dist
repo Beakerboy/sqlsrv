@@ -128,7 +128,43 @@
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Hal</directory>
     </testsuite>
     <testsuite name="passing_functional3">
-      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Rest</directory>
+      <file>./tests/Drupal/FunctionalTests/Entity/BaseFieldOverrideJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/BaseFieldOverrideJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/BaseFieldOverrideJsonCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/BaseFieldOverrideXmlAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/BaseFieldOverrideXmlBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/BaseFieldOverrideXmlCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/DateFormatJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/DateFormatJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/DateFormatJsonCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/DateFormatXmlAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/DateFormatXmlBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/DateFormatXmlCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormDisplayJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormDisplayJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormDisplayJsonCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormDisplayXmlAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormDisplayXmlBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormDisplayXmlCookieTest.php</file></testsuite>
+    <testsuite name="passing_functional4">
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormModeJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormModeJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormModeJsonCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormModeXmlAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormModeXmlBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityFormModeXmlCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewDisplayJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewDisplayJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewDisplayJsonCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewDisplayXmlAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewDisplayXmlBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewDisplayXmlCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewModeJsonAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewModeJsonBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewModeJsonCookieTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewModeXmlAnonTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewModeXmlBasicAuthTest.php</file>
+      <file>./tests/Drupal/FunctionalTests/Entity/EntityViewModeXmlCookieTest.php</file>
     </testsuite>
     <testsuite name="intermittent_failures">
       <file>./tests/Drupal/KernelTests/Core/Validation/UniqueFieldConstraintTest.php</file>
