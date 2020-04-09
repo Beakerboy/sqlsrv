@@ -4,7 +4,6 @@ env:
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_kernel
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional CODE_SNIFF=yes APACHE=yes
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_unit,sqlsrv APACHE=yes
-  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests APACHE=yes
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures
 
 php:
@@ -12,7 +11,6 @@ php:
 
 matrix:
   allow_failures:
-    - env: DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=failing_functional_tests APACHE=yes
     - env: DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures
 
 before_install:
