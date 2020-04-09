@@ -28,13 +28,6 @@ use Drupal\Core\Database\TransactionNameNonUniqueException;
 class Connection extends DatabaseConnection {
 
   /**
-   * The operating system.
-   *
-   * @var string
-   */
-  protected $OS = '';
-
-  /**
    * The schema object for this connection.
    *
    * Set to NULL when the schema is destroyed.
@@ -304,7 +297,6 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function __construct(\PDO $connection, array $connection_options) {
-    $this->OS = strtoupper(substr(PHP_OS, 0, 3));
     // Initialize settings.
     $this->driverSettings = DriverSettings::instanceFromSettings();
 
@@ -792,7 +784,7 @@ class Connection extends DatabaseConnection {
     // Drill through everything...
     $success = FALSE;
     $cache = '';
-    if ($this->OS === 'WIN') {
+    if (extension_loaded('wincache')) {
       $cache = wincache_ucache_get($query_signature, $success);
     }
     elseif (extension_loaded('apcu') && (PHP_SAPI !== 'cli' || (bool) ini_get('apc.enable_cli'))) {
@@ -836,7 +828,7 @@ class Connection extends DatabaseConnection {
 
     // Store the processed query, and make sure we expire it some time
     // so that scarcely used queries don't stay in the cache forever.
-    if ($this->OS === 'WIN') {
+    if (extension_loaded('wincache')) {
       wincache_ucache_set($query_signature, $query, rand(600, 3600));
     }
     elseif (extension_loaded('apcu') && (PHP_SAPI !== 'cli' || (bool) ini_get('apc.enable_cli'))) {
