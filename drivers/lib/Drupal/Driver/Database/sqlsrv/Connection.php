@@ -977,7 +977,11 @@ class Connection extends DatabaseConnection {
     $database = parent::createConnectionOptionsFromUrl($url, $root);
     $url_components = parse_url($url);
     if (isset($url_components['query'])) {
-      $database['schema'] = $url_components['query'];
+      $query = [];
+      parse_str($url_components['query'], $query);
+      if (isset($query['schema'])) {
+        $database['schema'] = $query['schema'];
+      }
     }
     return $database;
   }
