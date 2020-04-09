@@ -5,8 +5,13 @@
   "minimum-stability": "stable",
   "authors": [
     {
+      "name": "Kevin Nowaczyk",
+      "role": "Lead Developer",
+      "homepage": "https://github.com/Beakerboy"
+    },
+    {
       "name": "David Garcia",
-      "role": "Lead Developer"
+      "role": "Contributor"
     }
   ],
   "autoload": {
@@ -17,7 +22,7 @@
   },
   "require": {
     "php" : "^7.0",
-    "drupal/core" : "^8.6"
+    "drupal/core" : "^8.8"
   },
   "require-dev": {
     "phpunit/phpunit": "^7",
