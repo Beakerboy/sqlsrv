@@ -120,7 +120,7 @@ class ConditionTest extends DatabaseTestBase {
       ->fields('t', ['name'])
       ->condition('job', '%[Rutles%', 'LIKE')
       ->execute()
-      ->fetchAllAssoc('job');
+      ->fetchAllAssoc();
     $this->assertCount(2, $names);
   }
 
