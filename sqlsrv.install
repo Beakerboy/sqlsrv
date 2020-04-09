@@ -19,8 +19,6 @@ use Drupal\sqlsrv\Indexes\IndexManager;
 
 /**
  * Implements hook_requirements().
- *
- * @status: Needs global revision.
  */
 function sqlsrv_requirements($phase) {
 
@@ -28,7 +26,7 @@ function sqlsrv_requirements($phase) {
 
   if ($phase == 'runtime') {
 
-    /** @var \Drupal\Core\Database\Connection $connection */
+    /** @var \Drupal\Driver\Database\sqlsrv\Connection $connection */
     $connection = Database::getConnection();
 
     // Nothing to do if we are not running on MSSQL.
