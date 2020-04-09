@@ -59,7 +59,7 @@ class Insert extends QueryInsert {
 
       // Handle the case of SELECT-based INSERT queries first.
       $arguments = $this->fromQuery->getArguments();
-      Utils::BindArguments($stmt, $arguments);
+      Utils::bindArguments($stmt, $arguments);
 
       // Run the query.
       $this->connection->query($stmt, [], $options);
@@ -114,7 +114,7 @@ class Insert extends QueryInsert {
 
     while (!empty($batch)) {
       // Give me a query with the amount of batch inserts.
-      $query = $this->BuildQuery(count($batch));
+      $query = $this->buildQuery(count($batch));
 
       // Prepare the query.
       /** @var \Drupal\Core\Database\Statement $stmt */
@@ -128,7 +128,7 @@ class Insert extends QueryInsert {
       $max_placeholder = 0;
       foreach ($batch as $insert_index => $insert_values) {
         $values = array_combine($this->insertFields, $insert_values);
-        Utils::BindValues($stmt, $values, $blobs, ':db_insert', $columnInformation, $max_placeholder, $insert_index);
+        Utils::bindValues($stmt, $values, $blobs, ':db_insert', $columnInformation, $max_placeholder, $insert_index);
       }
 
       // Run the query.
@@ -179,7 +179,7 @@ class Insert extends QueryInsert {
    */
   public function __toString() {
     // Default to a query that inserts everything at the same time.
-    return $this->BuildQuery(count($this->insertValues));
+    return $this->buildQuery(count($this->insertValues));
   }
 
   /**
