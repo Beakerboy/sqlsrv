@@ -126,6 +126,8 @@
     </testsuite>
     <testsuite name="passing_functional2">
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Hal</directory>
+    </testsuite>
+    <testsuite name="passing_functional3">
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Rest</directory>
     </testsuite>
     <testsuite name="intermittent_failures">
