@@ -38,7 +38,6 @@ class Condition extends QueryCondition {
         elseif ($condition['operator'] == 'LIKE' || $condition['operator'] == 'NOT LIKE') {
           $condition['value'] = strtr($condition['value'], [
             '[' => '[[]',
-            ']' => '[]]',
             '\%' => '[%]',
             '\_' => '[_]',
             '\\\\' => '\\',
