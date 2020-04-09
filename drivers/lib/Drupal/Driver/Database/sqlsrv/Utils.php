@@ -25,48 +25,6 @@ class Utils {
   }
 
   /**
-   * Bind Expressions.
-   *
-   * If an expression and a field share a name, we remove it from the field
-   * list.
-   * There seems to be a bug when an expression contains a subselect.
-   *
-   * @param \PDOStatement $stmt
-   *   Statement.
-   * @param array $values
-   *   Argument values.
-   * @param array $fields
-   *   An array of fields.
-   * @param mixed $connection
-   *   Database connection.
-   */
-  public static function bindExpressions(\PDOStatement $stmt, array &$values, array &$fields, $connection = NULL) {
-    foreach ($values as $key => $value) {
-      unset($fields[$key]);
-      if (empty($value['arguments'])) {
-        continue;
-      }
-      if ($value['expression'] instanceof SelectInterface) {
-        $value['expression']->compile($connection, $stmt);
-        foreach ($value['expression']->arguments() as $placeholder => $argument) {
-          $stmt->bindParam($placeholder, $argument);
-        }
-      }
-      elseif (is_array($value['arguments'])) {
-        foreach ($value['arguments'] as $placeholder => $argument) {
-          // We assume that an expression will never happen on a BLOB field,
-          // which is a fairly safe assumption to make since in most cases
-          // it would be an invalid query anyway.
-          $stmt->bindParam($placeholder, $argument);
-        }
-      }
-      else {
-        $stmt->bindParam($key, $value['arguments'], \PDO::PARAM_STR);
-      }
-    }
-  }
-
-  /**
    * Binds a set of values to a PDO Statement.
    *
    * Takes care of properly managing binary data.
