@@ -117,10 +117,10 @@ class ConditionTest extends DatabaseTestBase {
       ])
       ->execute();
     $names = $this->connection->select('test_people', 't')
-      ->fields('t', ['name'])
+      ->fields('t', ['name', 'job'])
       ->condition('job', '%[Rutles]%', 'LIKE')
       ->execute()
-      ->fetchAllAssoc();
+      ->fetchAllAssoc('job');
     $this->assertCount(2, $names);
   }
 
