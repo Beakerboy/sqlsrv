@@ -9,7 +9,6 @@ use Drupal\Core\Database\Database;
 use Drupal\Driver\Database\sqlsrv\Connection;
 use Drupal\Driver\Database\sqlsrv\DriverSettings;
 use Drupal\Driver\Database\sqlsrv\Utils;
-use Drupal\sqlsrv\Indexes\IndexManager;
 
 /**
  * Implements hook_uninstall().
@@ -85,8 +84,7 @@ function sqlsrv_requirements($phase) {
     ];
 
     // Is this a windows server?
-    // Probably yes, because this is the MS SQL Server driver!
-    $is_windows = Utils::WindowsOS();
+    $is_windows = strncasecmp(PHP_OS, 'WIN', 3) == 0;
 
     if ($is_windows) {
       $wincache_module = \Drupal::moduleHandler()->moduleExists('wincachedrupal');
@@ -139,12 +137,8 @@ function sqlsrv_requirements($phase) {
       'value' => implode(' | ', $briefing),
     ];
 
-    // TODO:// Move this to a better place!
-    $manager = new IndexManager($connection);
-    $manager->DeployNew();
-
     // Redeploy functions.
-    Utils::DeployCustomFunctions($connection, TRUE);
+    Utils::DeployCustomFunctions($connection);
 
     // Make sure that the module's driver code is the same one as the
     // effectively deployed driver code.
