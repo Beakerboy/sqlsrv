@@ -7,14 +7,9 @@ env:
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional3 APACHE=yes
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional4 APACHE=yes
   - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_unit,sqlsrv APACHE=yes
-  - DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures
 
 php:
   - '7.3'
-
-matrix:
-  allow_failures:
-    - env: DBVERSION=2019 DRUPAL_VERSION=8.8.x TEST_SUITE=intermittent_failures
 
 before_install:
   # remove Xdebug to speed up test runner
