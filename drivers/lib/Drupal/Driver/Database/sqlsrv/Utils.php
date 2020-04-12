@@ -2,7 +2,6 @@
 
 namespace Drupal\Driver\Database\sqlsrv;
 
-use Drupal\Core\Database\Query\SelectInterface;
 use Symfony\Component\Yaml\Parser;
 
 /**
