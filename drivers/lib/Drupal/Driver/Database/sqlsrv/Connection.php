@@ -177,7 +177,7 @@ class Connection extends DatabaseConnection {
     'without',
   ];
   
-/**
+  /**
    * A map of condition operators to sqlsrv operators.
    *
    * SQL Server doesn't need special escaping for the \ character in a string
