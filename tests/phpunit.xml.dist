@@ -107,7 +107,6 @@
       <directory suffix="Test.php">tests/Drupal/KernelTests/RequestProcessing</directory>
       <file>./tests/Drupal/KernelTests/KernelTestBaseTest.php</file>
       <file>./tests/Drupal/KernelTests/KernelTestBaseShutdownTest.php</file>
-      <exclude>./tests/Drupal/KernelTests/Core/Validation/UniqueFieldConstraintTest.php</exclude>
     </testsuite>
     <testsuite name="passing_unit">
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
@@ -165,9 +164,6 @@
       <file>./tests/Drupal/FunctionalTests/Rest/EntityViewModeXmlAnonTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Rest/EntityViewModeXmlBasicAuthTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Rest/EntityViewModeXmlCookieTest.php</file>
-    </testsuite>
-    <testsuite name="intermittent_failures">
-      <file>./tests/Drupal/KernelTests/Core/Validation/UniqueFieldConstraintTest.php</file>
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
