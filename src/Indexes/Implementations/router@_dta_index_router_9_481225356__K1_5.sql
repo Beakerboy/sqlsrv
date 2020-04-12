@@ -1,5 +1,0 @@
-CREATE NONCLUSTERED INDEX [_dta_index_router_9_481225356__K1_5] ON [dbo].[router]
-(
-	[name] ASC
-)
-INCLUDE ( 	[route]) WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF) ON [PRIMARY]
