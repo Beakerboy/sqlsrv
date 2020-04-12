@@ -176,7 +176,7 @@ class Connection extends DatabaseConnection {
     'view',
     'without',
   ];
-  
+
   /**
    * A map of condition operators to sqlsrv operators.
    *
