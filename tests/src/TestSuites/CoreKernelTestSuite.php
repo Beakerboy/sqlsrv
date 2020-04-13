@@ -20,7 +20,7 @@ final class CoreKernelTestSuite extends TestSuiteBase {
   public static function suite() {
     $root = dirname(dirname(dirname(dirname(dirname(dirname(__DIR__))))));
     $suite = new static('kernel');
-    $suite->addCoreKernelTests($root, 'Kernel');
+    $suite->addCoreKernelTests($root);
     return $suite;
   }
 
