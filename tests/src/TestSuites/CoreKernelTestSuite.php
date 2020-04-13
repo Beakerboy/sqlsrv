@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\sqlsrv\TestSuites;
 
+use use Drupal\Core\Test\TestDiscovery;
+
 require_once __DIR__ . '/TestSuiteBase.php';
 
 /**
