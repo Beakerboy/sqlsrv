@@ -53,60 +53,8 @@
     <testsuite name="build">
       <file>./tests/TestSuites/BuildTestSuite.php</file>
     </testsuite>
-    <testsuite name="passing_kernel">
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Action</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Ajax</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Asset</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Block</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Bootstrap</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Cache</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Command</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Common</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Config</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Database</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Datetime</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/DrupalKernel</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Element</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Entity</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Extension</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Field</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/File</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Form</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Http</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/HttpKernel</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Image</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Installer</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/KeyValueStore</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Layout</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Lock</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Menu</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Messenger</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Pager</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/ParamConverter</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Path</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Plugin</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Queue</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Render</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/RouteProcessor</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Routing</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/ServiceProvider</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Session</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Site</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/StreamWrapper</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/StringTranslation</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TempStore</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Test</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Theme</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/TypedData</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Update</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Updater</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Url</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Core/Validation</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Component</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/Config</directory>
-      <directory suffix="Test.php">tests/Drupal/KernelTests/RequestProcessing</directory>
-      <file>./tests/Drupal/KernelTests/KernelTestBaseTest.php</file>
-      <file>./tests/Drupal/KernelTests/KernelTestBaseShutdownTest.php</file>
+    <testsuite name="core-kernel">
+      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreKernelTestSuite.php</file>
     </testsuite>
     <testsuite name="passing_unit">
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
@@ -144,7 +92,8 @@
       <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayJsonCookieTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayXmlAnonTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayXmlBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayXmlCookieTest.php</file></testsuite>
+      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayXmlCookieTest.php</file>
+    </testsuite>
     <testsuite name="passing_functional4">
       <file>./tests/Drupal/FunctionalTests/Rest/EntityFormModeJsonAnonTest.php</file>
       <file>./tests/Drupal/FunctionalTests/Rest/EntityFormModeJsonBasicAuthTest.php</file>
