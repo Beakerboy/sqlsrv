@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\sqlsrv\TestSuites;
 
-use Drupal\Core\Test\TestDiscovery;
 use PHPUnit\Framework\TestSuite;
 
 /**
