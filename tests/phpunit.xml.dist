@@ -56,6 +56,9 @@
     <testsuite name="core-kernel">
       <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreKernelTestSuite.php</file>
     </testsuite>
+    <testsuite name="core-extensions-kernel-1">
+      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions1KernelTestSuite.php</file>
+    </testsuite>
     <testsuite name="passing_unit">
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Installer</directory>
