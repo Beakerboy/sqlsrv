@@ -104,7 +104,7 @@ class Insert extends QueryInsert {
     $transaction = NULL;
 
     // At most we can process in batches of $batch_size.
-    $batch = array_splice($this->insertValues, 0, Insert::MAX_BATCH_SIZE);
+    $batch = array_splice($this->insertValues, 0, min(intdiv(2000, count($this->insertFields)), Insert::MAX_BATCH_SIZE));
 
     // If we are going to need more than one batch for this, start a
     // transaction.
@@ -147,7 +147,7 @@ class Insert extends QueryInsert {
       }
 
       // Fetch the next batch.
-      $batch = array_splice($this->insertValues, 0, Insert::MAX_BATCH_SIZE);
+      $batch = array_splice($this->insertValues, 0, min(intdiv(2000, count($this->insertFields)), Insert::MAX_BATCH_SIZE));
     }
 
     // Re-initialize the values array so that we can re-use this query.
