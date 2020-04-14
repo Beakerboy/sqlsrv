@@ -1399,12 +1399,6 @@ EOF
     ]);
 
     if (!empty($spec['length']) && $lengthable) {
-      if (is_int($spec['length'])) {
-        $length = 3 * $spec['length'];
-      }
-      else {
-        $length = $spec['length'];
-      }
       return $sqlsrv_type_native . "({$length})";
     }
     elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
