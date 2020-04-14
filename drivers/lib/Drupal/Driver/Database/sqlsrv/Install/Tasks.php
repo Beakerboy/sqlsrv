@@ -51,7 +51,7 @@ class Tasks extends InstallTasks {
     // SQL Server 2019 - 15.x - 2025-01-07
     // SQL Server 2017 - 14.x - 2022-10-11
     // SQL Server 2016 - 13.x - 2021-07-13
-    return '15.0';
+    return '13.0';
   }
 
   /**
