@@ -57,6 +57,8 @@ install:
       # Testing-only patches
       wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
+      wget https://www.drupal.org/files/issues/2020-04-14/2966272-9.patch
+      git apply 2966272-9.patch
       git apply drupal-3111134-database_specific_types-3.patch
       git apply 3108540-11.patch
       if [ "${DRUPAL_VERSION}" == "8.8.x" ]; then
