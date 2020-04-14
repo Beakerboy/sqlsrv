@@ -91,15 +91,15 @@ class Schema extends DatabaseSchema {
     // it much easier for modules (such as schema.module) to map
     // database types back into schema types.
     return [
-      'varchar:normal' => 'varchar',
-      'char:normal' => 'char',
+      'varchar:normal' => 'nvarchar',
+      'char:normal' => 'nchar',
       'varchar_ascii:normal' => 'varchar(255)',
 
-      'text:tiny' => 'varchar(255)',
-      'text:small' => 'varchar(255)',
-      'text:medium' => 'varchar(max)',
-      'text:big' => 'varchar(max)',
-      'text:normal' => 'varchar(max)',
+      'text:tiny' => 'nvarchar(255)',
+      'text:small' => 'nvarchar(255)',
+      'text:medium' => 'nvarchar(max)',
+      'text:big' => 'nvarchar(max)',
+      'text:normal' => 'nvarchar(max)',
 
       'serial:tiny'     => 'smallint',
       'serial:small'    => 'smallint',
