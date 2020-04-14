@@ -48,9 +48,9 @@ class Tasks extends InstallTasks {
    * {@inheritdoc}
    */
   public function minimumVersion() {
-    // SQL Server 2019 - 15.x - 2025-01-07
-    // SQL Server 2017 - 14.x - 2022-10-11
-    // SQL Server 2016 - 13.x - 2021-07-13
+    // SQL Server 2019 - 15.x - 2025-01-07.
+    // SQL Server 2017 - 14.x - 2022-10-11.
+    // SQL Server 2016 - 13.x - 2021-07-13.
     return '13.0';
   }
 
