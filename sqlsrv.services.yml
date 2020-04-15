@@ -1,0 +1,5 @@
+services:
+  sqlsrv.views.date_sql:
+    arguments: ['@database']
+    class: Drupal\sqlsrv\Plugin\views\query\SqlDateSql
+    public: true
