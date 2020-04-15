@@ -74,7 +74,7 @@ class SqlDateSql implements DateSqlInterface {
   public function getDateFormat($field, $format) {
     $format = strtr($format, static::$replace);
 
-    return "CAST($field as DATETIME2)";
+    return "FORMAT($field, $format)";
   }
 
   /**
