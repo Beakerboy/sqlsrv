@@ -12,7 +12,7 @@ use Drupal\views\Plugin\views\query\DateSqlInterface;
  *   This class should only be used by the Views SQL query plugin.
  * @see \Drupal\views\Plugin\views\query\Sql
  */
-class SqlDateSql implements DateSqlInterface {
+class SqlsrvDateSql implements DateSqlInterface {
 
   /**
    * The database connection.
