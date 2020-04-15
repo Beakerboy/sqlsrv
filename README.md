@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/Beakerboy/sqlsrv.svg?branch=8.x-3.x)](https://travis-ci.org/Beakerboy/sqlsrv)
-[![Build status](https://ci.appveyor.com/api/projects/status/xk6gh0rtta8d24hg/branch/8.x-3.x?svg=true)](https://ci.appveyor.com/project/Beakerboy/sqlsrv/branch/8.x-1.x)
-[![Coverage Status](https://coveralls.io/repos/github/Beakerboy/sqlsrv/badge.svg?branch=8.x-3.x)](https://coveralls.io/github/Beakerboy/sqlsrv?branch=8.x-1.x)
+[![Build Status](https://travis-ci.org/Beakerboy/sqlsrv.svg?branch=8.x-1.x)](https://travis-ci.org/Beakerboy/sqlsrv)
+[![Build status](https://ci.appveyor.com/api/projects/status/xk6gh0rtta8d24hg/branch/8.x-1.x?svg=true)](https://ci.appveyor.com/project/Beakerboy/sqlsrv/branch/8.x-1.x)
+[![Coverage Status](https://coveralls.io/repos/github/Beakerboy/sqlsrv/badge.svg?branch=8.x-1.x)](https://coveralls.io/github/Beakerboy/sqlsrv?branch=8.x-1.x)
 
 SQL Server Driver for Drupal
 =====================
@@ -10,9 +10,8 @@ SQL Server Driver for Drupal
 This contrib module allows the Drupal CMS to connect to Microsoft SQL Server
 databases.
 
-The 8.x-3.x branch is for any new install that meets the minimum criteria.
-Replacing the driver from another branch with this on an existing site is not
-advised.
+The 8.x-1.x branch will continue to fulfill the needs of site operators who
+are currently using this branch and will not upgrade to Drupal 9.
 
 Setup
 -----
@@ -36,7 +35,7 @@ expressions, a CLR will need to be installed that is equivalent to
 
 ### Minimum Requirements
  * Drupal 8.8.0
- * SQL Server 2019
+ * SQL Server 2014
  * pdo_sqlsrv 5.8.0
 
 Usage
@@ -52,7 +51,27 @@ behavior behind-the-scenes, that of escaping the wildcard characters by
 enclosing them in brackets `[%]` and `[_]`. When using the `Select::condition()`
 function with a LIKE operator, you must use standard Drupal format with
 backslash escapes. If you need sqlsrv-specific behavior, you can use
-`Select::where()`. Note that there is a PDO bug that prevents multiple
+`Select::where()`.
+```php
+// These two statements are equivalent
+$connection->select('test', 't')
+  ->condition('t.route', '%[route]%', 'LIKE');
+$connection->select('test', 't')
+  ->where('t.route LIKE :pattern', [':pattern' => '%[[]route[]]%']);
+```
+Note that there is a PDO bug that prevents multiple
 `field LIKE :placeholder_x ESCAPE '\'` expressions from appearing in one SQL
 statement. A different escape character can be chosen if you need a custom
 escape character multiple times. This bug just affects the backslash.
+
+Outstanding Issues
+-----
+The 8.x-1.x branch is not able to pass all Drupal tests due to limitations in
+SQL server before SQL Server 2019. These earlier vesions do not natively
+support UTF8 character encoding. This means most string data is stored in the
+database as an `nvarchar`. Converting nvarchar to varbinary and back leads to
+data corruption.
+
+This branch creates the database with a case-insensitive collation for text
+fields. However, all non-MySQL databases use case-sensitive default. One
+Kernel Test fails due to this default in this driver.
