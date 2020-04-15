@@ -27,26 +27,26 @@ class SqlsrvDateSql implements DateSqlInterface {
    * @var array
    */
   protected static $replace = [
-    'Y' => '%Y',
-    'y' => '%y',
-    'M' => '%b',
-    'm' => '%m',
-    'n' => '%c',
-    'F' => '%M',
-    'D' => '%a',
-    'd' => '%d',
-    'l' => '%W',
-    'j' => '%e',
-    'W' => '%v',
-    'H' => '%H',
-    'h' => '%h',
-    'i' => '%i',
-    's' => '%s',
-    'A' => '%p',
+    'Y' => 'yyyy',
+    'y' => 'yy',
+    'M' => 'MMM',
+    'm' => 'MM',
+    'n' => 'M',
+    'F' => 'MMMM',
+    'D' => 'ddd',
+    'd' => 'dd',
+    'l' => 'ddd',
+    'j' => 'd',
+    // No week number format.
+    'H' => 'HH',
+    'h' => 'hh',
+    'i' => 'mm',
+    's' => 'ss',
+    'A' => 'tt',
   ];
 
   /**
-   * Constructs the MySQL-specific date sql class.
+   * Constructs the MSSQL-specific date sql class.
    *
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
