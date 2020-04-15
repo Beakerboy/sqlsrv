@@ -57,7 +57,7 @@ backslash escapes. If you need sqlsrv-specific behavior, you can use
 $connection->select('test', 't')
   ->condition('t.route', '%[route]%', 'LIKE');
 $connection->select('test', 't')
-  ->where('t.route LIKE :pattern', [':pattern' => '%[[]route[]]%']);
+  ->where('t.route LIKE :pattern', [':pattern' => '%[[]route]%']);
 ```
 Note that there is a PDO bug that prevents multiple
 `field LIKE :placeholder_x ESCAPE '\'` expressions from appearing in one SQL
