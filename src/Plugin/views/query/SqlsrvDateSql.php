@@ -60,7 +60,7 @@ class SqlsrvDateSql implements DateSqlInterface {
    */
   public function getDateField($field, $string_date) {
     if ($string_date) {
-      return CONVERT(datetime2, $field, 127);
+      return "CONVERT(datetime2, $field, 127)";
     }
 
     // Base date field storage is timestamp, so the date to be returned here is
@@ -89,7 +89,7 @@ class SqlsrvDateSql implements DateSqlInterface {
    */
   public function setFieldTimezoneOffset(&$field, $offset) {
     if (!empty($offset)) {
-      $field = "DATEADD(second, $offset, CONVERT(datetime2, $field, 127))";
+      $field = "DATEADD(second, $offset, $field)";
     }
   }
 
