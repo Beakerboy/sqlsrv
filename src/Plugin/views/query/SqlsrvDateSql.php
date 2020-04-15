@@ -60,7 +60,7 @@ class SqlsrvDateSql implements DateSqlInterface {
    */
   public function getDateField($field, $string_date) {
     if ($string_date) {
-      return $field;
+      return "CONVERT(datetime2, $field, 127)";
     }
 
     // Base date field storage is timestamp, so the date to be returned here is
@@ -73,6 +73,15 @@ class SqlsrvDateSql implements DateSqlInterface {
    */
   public function getDateFormat($field, $format) {
     $format = strtr($format, static::$replace);
+
+    // MS SQL does not have a ISO week substitution string, so it needs special
+    // handling.
+    // @see http://wikipedia.org/wiki/ISO_week_date#Calculation
+    // @see http://stackoverflow.com/a/15511864/1499564
+
+    if ($format === 'W') {
+      return "DATEPART(iso_week, $field)";
+    }
 
     return "FORMAT($field, '$format')";
   }
@@ -89,7 +98,7 @@ class SqlsrvDateSql implements DateSqlInterface {
    */
   public function setFieldTimezoneOffset(&$field, $offset) {
     if (!empty($offset)) {
-      $field = "DATEADD(second, $offset, CONVERT(datetime2, $field, 127))";
+      $field = "DATEADD(second, $offset, $field)";
     }
   }
 
