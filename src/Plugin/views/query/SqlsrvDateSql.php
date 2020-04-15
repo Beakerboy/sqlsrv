@@ -65,7 +65,7 @@ class SqlsrvDateSql implements DateSqlInterface {
 
     // Base date field storage is timestamp, so the date to be returned here is
     // epoch + stored value (seconds from epoch).
-    return "DATE_ADD('19700101', INTERVAL $field SECOND)";
+    return "DATEADD(second, $field, '19700101')";
   }
 
   /**
@@ -74,7 +74,7 @@ class SqlsrvDateSql implements DateSqlInterface {
   public function getDateFormat($field, $format) {
     $format = strtr($format, static::$replace);
 
-    return "FORMAT($field, $format)";
+    return "FORMAT($field, '$format')";
   }
 
   /**
