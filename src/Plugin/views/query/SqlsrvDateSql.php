@@ -73,16 +73,9 @@ class SqlsrvDateSql implements DateSqlInterface {
    */
   public function getDateFormat($field, $format) {
     $format = strtr($format, static::$replace);
-
-    // MS SQL does not have a ISO week substitution string, so it needs special
-    // handling.
-    // @see http://wikipedia.org/wiki/ISO_week_date#Calculation
-    // @see http://stackoverflow.com/a/15511864/1499564
-
     if ($format === 'W') {
       return "DATEPART(iso_week, $field)";
     }
-
     return "FORMAT($field, '$format')";
   }
 
