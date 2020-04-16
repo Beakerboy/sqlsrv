@@ -99,7 +99,7 @@ class Upsert extends QueryUpsert {
    */
   private function buildQuery($batch_size) {
     // Make sure we don't go crazy with this numbers.
-    if ($batch_size > Insert::MAX_BATCH_SIZE) {
+    if ($batch_size > self::MAX_BATCH_SIZE) {
       throw new \Exception("MSSQL Native Batch Insert limited to 250.");
     }
     // Do we to escape fields?
