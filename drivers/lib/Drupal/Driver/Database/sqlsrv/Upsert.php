@@ -15,6 +15,13 @@ class Upsert extends QueryUpsert {
    * {@inheritdoc}
    */
   public function execute() {
+    if (count($this->insertValues) === 1) {
+      $merge = $this->connection->merge($this->table, $this->queryOptions)
+        ->fields($update_fields)
+        ->key($this->key, $condition);
+      $merge->execute();
+      return NULL;
+    }
     if (!$this->preExecute()) {
       return NULL;
     }
