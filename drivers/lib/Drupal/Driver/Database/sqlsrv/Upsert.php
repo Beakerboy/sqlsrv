@@ -9,6 +9,8 @@ use Drupal\Core\Database\Query\Upsert as QueryUpsert;
  */
 class Upsert extends QueryUpsert {
 
+  const MAX_BATCH_SIZE = 200;
+
   /**
    * {@inheritdoc}
    */
@@ -43,33 +45,36 @@ class Upsert extends QueryUpsert {
    * {@inheritdoc}
    */
   public function __toString() {
-    // need to escape fields?
+    // Do we to escape fields?
     $all_fields = array_merge($this->defaultFields, $this->insertFields);
+    $placeholders = [];
+    $row = [];
+    $max_placeholder = -1;
+    foreach ($this->insertValues as $insert_values) {
+      foreach ($insert_values as $value) {
+        $row[] = ':db_upsert_placeholder_' . ++$max_placeholder;
+      }
+      $placeholders[] = '(' . implode(', ', $row) . ')';
+    }
+    $placeholder_list = '(' . implode(', ', $placeholders) . ')';
+    $insert_count = count($this->insertValues);
+    $field_count = count($all_fields);
+
     $insert_fields = [];
     foreach ($all_fields as $field) {
       $insert_fields[] = 'src.' . $field;
     }
-    $insert_list = '(' . implode($insert_fields) . ')';
-    $field_list = '(' . implode($all_fields) . ')';
-    $values_string = 'VALUES ' . $placeholders;
+    $insert_list = '(' . implode(', ', $insert_fields) . ')';
+    $field_list = '(' . implode(', ', $all_fields) . ')';
+    $values_string = 'VALUES ' . $placeholder_list;
     $update_string = 'UPDATE SET ' . $update_fields;
     $insert_string = 'INSERT ' . $field_list . ' VALUES ' . $insert_list;
     $query = 'MERGE {' . $this->table . '} t USING(' . $values_string . ')';
     $query .= ' src ' . $field_list . ' ON t.key = src.key';
     $query .= ' WHEN MATCHED THEN ' . $update_string;
     $query .= ' WHEN NOT MATCHED THEN ' . $insert_string;
-    MERGE tablename trg
-      USING (VALUES ('A','B','C'),
-              ('C','D','E'),
-              ('F','G','H'),
-              ('I','J','K')) src(keycol, col1, col2)
-  ON trg.keycol = src.keycol
-WHEN MATCHED THEN
-   UPDATE SET col1 = src.col1, col2 = src.col2
-WHEN NOT MATCHED THEN
-   INSERT(keycol, col1, col2)
-   VALUES(src.keycol, src.col1, src.col2);
-    return "";
+
+    return $query;
   }
 
 }
