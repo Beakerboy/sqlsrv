@@ -110,8 +110,8 @@ class Upsert extends QueryUpsert {
     $row = [];
     $max_placeholder = -1;
     $field_count = count($this->insertFields);
-    for($i = 0; $i < $batch_size; $i++) {
-      for($j = 0; $j < $field_count; $j++) {
+    for ($i = 0; $i < $batch_size; $i++) {
+      for ($j = 0; $j < $field_count; $j++) {
         $row[] = ':db_upsert_placeholder_' . ++$max_placeholder;
       }
       $placeholders[] = '(' . implode(', ', $row) . ')';
@@ -128,7 +128,7 @@ class Upsert extends QueryUpsert {
       $field = $this->connection->escapeField($field);
       $all_fields_escaped[] = $field;
       $insert_fields[] = 'src.' . $field;
-      $update_fields[] = $field . '=' . 'src.' . $field;
+      $update_fields[] = $field . '=src.' . $field;
     }
     $insert_list = '(' . implode(', ', $insert_fields) . ')';
     $update_list = implode(', ', $update_fields);
@@ -137,7 +137,7 @@ class Upsert extends QueryUpsert {
     $update_string = 'UPDATE SET ' . $update_list;
     $insert_string = 'INSERT ' . $field_list . ' VALUES ' . $insert_list;
     $query = 'MERGE {' . $this->table . '} AS tgt USING(' . $values_string . ')';
-    $query .= ' AS src ' . $field_list . ' ON tgt.' . $key . '=src.'. $key;
+    $query .= ' AS src ' . $field_list . ' ON tgt.' . $key . '=src.' . $key;
     $query .= ' WHEN MATCHED THEN ' . $update_string;
     $query .= ' WHEN NOT MATCHED THEN ' . $insert_string . ';';
 
