@@ -36,7 +36,7 @@ class Upsert extends QueryUpsert {
         $values[':db_upsert_placeholder_' . ++$max_placeholder] = $value;
       }
     }
-    $this->connection->query((string) $this, $values, $this->queryOptions);
+    $this->connection->queryDirect((string) $this, $values, $this->queryOptions);
 
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = [];
