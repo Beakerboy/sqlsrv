@@ -22,7 +22,7 @@ class Upsert extends QueryUpsert {
     $values = [];
     foreach ($this->insertValues as $insert_values) {
       foreach ($insert_values as $value) {
-        $values[':db_insert_placeholder_' . ++$max_placeholder] = $value;
+        $values[':db_upsert_placeholder_' . ++$max_placeholder] = $value;
       }
     }
     $this->connection->query((string) $this, $values, $this->queryOptions);
