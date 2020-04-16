@@ -61,7 +61,7 @@ class Upsert extends QueryUpsert {
       $field = $this->connection->escapeField($field);
       $all_fields_escaped[] = $field;
       $insert_fields[] = 'src.' . $field;
-      $update_fields[] = 't.' . $field . '=' . 'src.' . $field;
+      $update_fields[] = $field . '=' . 'src.' . $field;
     }
     $insert_list = '(' . implode(', ', $insert_fields) . ')';
     $update_list = implode(', ', $update_fields);
