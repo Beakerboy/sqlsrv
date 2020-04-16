@@ -56,13 +56,16 @@ class Upsert extends QueryUpsert {
 
     $insert_fields = [];
     $update_fields = [];
+    $all_fields_escaped = [];
     foreach ($all_fields as $field) {
+      $field = $this->connection->escapeField($field);
+      $all_fields_escaped[] = $field;
       $insert_fields[] = 'src.' . $field;
       $update_fields[] = 't.' . $field . '=' . 'src.' . $field;
     }
     $insert_list = '(' . implode(', ', $insert_fields) . ')';
     $update_list = implode(', ', $update_fields);
-    $field_list = '(' . implode(', ', $all_fields) . ')';
+    $field_list = '(' . implode(', ', $all_fields_escaped) . ')';
     $values_string = 'VALUES ' . $placeholder_list;
     $update_string = 'UPDATE SET ' . $update_list;
     $insert_string = 'INSERT ' . $field_list . ' VALUES ' . $insert_list;
