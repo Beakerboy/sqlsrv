@@ -28,6 +28,7 @@ class Upsert extends QueryUpsert {
     if (!$this->preExecute()) {
       return NULL;
     }
+    $this->queryOptions['allow_delimiter_in_query'] = TRUE;
     $max_placeholder = -1;
     $values = [];
     foreach ($this->insertValues as $insert_values) {
