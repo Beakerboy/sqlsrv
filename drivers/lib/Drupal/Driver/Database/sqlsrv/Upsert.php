@@ -28,6 +28,10 @@ class Upsert extends QueryUpsert {
     if (!$this->preExecute()) {
       return NULL;
     }
+    // Fetch the list of blobs and sequences used on that table.
+    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    $schema = $this->connection->schema();
+    $columnInformation = $schema->queryColumnInformation($this->table);
     $this->queryOptions['allow_delimiter_in_query'] = TRUE;
     $max_placeholder = -1;
     $values = [];
@@ -36,8 +40,27 @@ class Upsert extends QueryUpsert {
         $values[':db_upsert_placeholder_' . ++$max_placeholder] = $value;
       }
     }
-    $this->connection->queryDirect((string) $this, $values, $this->queryOptions);
+    $batch = array_splice($this->insertValues, 0, min(intdiv(2000, count($this->insertFields)), self::MAX_BATCH_SIZE));
+    // Give me a query with the amount of batch inserts.
+    $query = (string)$this;
 
+    // Prepare the query.
+    /** @var \Drupal\Core\Database\Statement $stmt */
+    $stmt = $this->connection->prepareQuery($query);
+
+    // We use this array to store references to the blob handles.
+    // This is necessary because the PDO will otherwise mess up with
+    // references.
+    $blobs = [];
+
+    $max_placeholder = 0;
+    foreach ($batch as $insert_index => $insert_values) {
+      $values = array_combine($this->insertFields, $insert_values);
+      Utils::bindValues($stmt, $values, $blobs, ':db_upsert_placeholder_', $columnInformation, $max_placeholder, $insert_index);
+    }
+
+    // Run the query.
+    $this->connection->queryDirect($stmt, [], $this->options);
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = [];
 
@@ -48,6 +71,25 @@ class Upsert extends QueryUpsert {
    * {@inheritdoc}
    */
   public function __toString() {
+    return $this->buildQuery(count($this->insertValues));
+  }
+
+  /**
+   * The aspect of the query depends on the batch size...
+   *
+   * @param int $batch_size
+   *   The number of inserts to perform on a single statement.
+   *
+   * @throws \Exception
+   *
+   * @return string
+   *   SQL Statement.
+   */
+  private function buildQuery($batch_size) {
+    // Make sure we don't go crazy with this numbers.
+    if ($batch_size > Insert::MAX_BATCH_SIZE) {
+      throw new \Exception("MSSQL Native Batch Insert limited to 250.");
+    }
     // Do we to escape fields?
     $key = $this->connection->escapeField($this->key);
     $all_fields = array_merge($this->defaultFields, $this->insertFields);
@@ -55,8 +97,9 @@ class Upsert extends QueryUpsert {
     $placeholders = [];
     $row = [];
     $max_placeholder = -1;
-    foreach ($this->insertValues as $insert_values) {
-      foreach ($insert_values as $value) {
+    $field_count = count($this->insertFields);
+    for($i = O; $i < $batch_size; $i++) {
+      for($j = 0; $j < $field_count; $j++) {
         $row[] = ':db_upsert_placeholder_' . ++$max_placeholder;
       }
       $placeholders[] = '(' . implode(', ', $row) . ')';
