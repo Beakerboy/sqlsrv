@@ -61,7 +61,7 @@ class Upsert extends QueryUpsert {
       $placeholders[] = '(' . implode(', ', $row) . ')';
       $row = [];
     }
-    $placeholder_list = '(' . implode(', ', $placeholders) . ')';
+    $placeholder_list = implode(', ', $placeholders);
     $insert_count = count($this->insertValues);
     $field_count = count($all_fields);
 
