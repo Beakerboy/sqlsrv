@@ -45,7 +45,7 @@ class Upsert extends QueryUpsert {
    */
   public function __toString() {
     // Do we to escape fields?
-    $key = $this->connection->escapeField($this->key;);
+    $key = $this->connection->escapeField($this->key);
     $all_fields = array_merge($this->defaultFields, $this->insertFields);
 
     $placeholders = [];
