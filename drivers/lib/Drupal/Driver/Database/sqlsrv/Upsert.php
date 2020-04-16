@@ -71,7 +71,7 @@ class Upsert extends QueryUpsert {
       $this->connection->query($stmt, [], $this->queryOptions);
 
       // Fetch the next batch.
-      $batch = array_splice($this->insertValues, 0, min(intdiv(2000, count($this->insertFields)), Insert::MAX_BATCH_SIZE));
+      $batch = array_splice($this->insertValues, 0, min(intdiv(2000, count($this->insertFields)), self::MAX_BATCH_SIZE));
     }
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = [];
