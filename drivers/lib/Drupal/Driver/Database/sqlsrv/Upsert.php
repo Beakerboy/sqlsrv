@@ -43,14 +43,21 @@ class Upsert extends QueryUpsert {
    * {@inheritdoc}
    */
   public function __toString() {
+    // need to escape fields?
+    $all_fields = array_merge($this->defaultFields, $this->insertFields);
+    $insert_fields = [];
+    foreach ($all_fields as $field) {
+      $insert_fields[] = 'src.' . $field;
+    }
+    $insert_list = '(' . implode($insert_fields) . ')';
+    $field_list = '(' . implode($all_fields) . ')';
     $values_string = 'VALUES ' . $placeholders;
     $update_string = 'UPDATE SET ' . $update_fields;
-    $insert_string = 'INSERT ' . $field_list . ' VALUES ';
+    $insert_string = 'INSERT ' . $field_list . ' VALUES ' . $insert_list;
     $query = 'MERGE {' . $this->table . '} t USING(' . $values_string . ')';
-    $query .= ' src ' . $field_list;
-    $query .= ' ON t.key = src.key WHEN MATCHED THEN ' . $update_string;
+    $query .= ' src ' . $field_list . ' ON t.key = src.key';
+    $query .= ' WHEN MATCHED THEN ' . $update_string;
     $query .= ' WHEN NOT MATCHED THEN ' . $insert_string;
-    $query .= ' INSERT ' . $field_list;
     MERGE tablename trg
       USING (VALUES ('A','B','C'),
               ('C','D','E'),
