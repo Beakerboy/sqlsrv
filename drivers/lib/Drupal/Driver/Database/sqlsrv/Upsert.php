@@ -43,6 +43,23 @@ class Upsert extends QueryUpsert {
    * {@inheritdoc}
    */
   public function __toString() {
+    $query = 'MERGE {' . $this->table . '} t USING(VALUES ';
+    $query .= $values . ') src ' . $field_list;
+    $query .= ' ON t.key = src.key';
+    $query .= ' UPDATE SET ';
+    $query .= ' WHEN NOT MATCHED THEN';
+    $query .= ' INSERT ' . $field_list;
+    MERGE tablename trg
+      USING (VALUES ('A','B','C'),
+              ('C','D','E'),
+              ('F','G','H'),
+              ('I','J','K')) src(keycol, col1, col2)
+  ON trg.keycol = src.keycol
+WHEN MATCHED THEN
+   UPDATE SET col1 = src.col1, col2 = src.col2
+WHEN NOT MATCHED THEN
+   INSERT(keycol, col1, col2)
+   VALUES(src.keycol, src.col1, src.col2);
     return "";
   }
 
