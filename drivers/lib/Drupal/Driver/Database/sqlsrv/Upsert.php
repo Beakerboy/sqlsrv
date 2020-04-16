@@ -83,7 +83,7 @@ class Upsert extends QueryUpsert {
     $query = 'MERGE {' . $this->table . '} AS tgt USING(' . $values_string . ')';
     $query .= ' AS src ' . $field_list . ' ON tgt.' . $key . '=src.'. $key;
     $query .= ' WHEN MATCHED THEN ' . $update_string;
-    $query .= ' WHEN NOT MATCHED THEN ' . $insert_string;
+    $query .= ' WHEN NOT MATCHED THEN ' . $insert_string . ';';
 
     return $query;
   }
