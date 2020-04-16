@@ -98,7 +98,7 @@ class Upsert extends QueryUpsert {
     $row = [];
     $max_placeholder = -1;
     $field_count = count($this->insertFields);
-    for($i = O; $i < $batch_size; $i++) {
+    for($i = 0; $i < $batch_size; $i++) {
       for($j = 0; $j < $field_count; $j++) {
         $row[] = ':db_upsert_placeholder_' . ++$max_placeholder;
       }
