@@ -16,6 +16,9 @@ class Upsert extends QueryUpsert {
    */
   public function execute() {
     if (count($this->insertValues) === 1) {
+      $insert_fields = array_merge($this->defaultFields, $this->insertFields);
+      $update_fields = array_combine($insert_fields, array_shift($this->insertValues));
+      $condition = $update_fields[$this->key];
       $merge = $this->connection->merge($this->table, $this->queryOptions)
         ->fields($update_fields)
         ->key($this->key, $condition);
