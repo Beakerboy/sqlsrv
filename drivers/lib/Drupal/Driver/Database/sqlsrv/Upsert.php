@@ -80,8 +80,8 @@ class Upsert extends QueryUpsert {
     $values_string = 'VALUES ' . $placeholder_list;
     $update_string = 'UPDATE SET ' . $update_list;
     $insert_string = 'INSERT ' . $field_list . ' VALUES ' . $insert_list;
-    $query = 'MERGE {' . $this->table . '} AS t USING(' . $values_string . ')';
-    $query .= ' AS src ' . $field_list . ' ON t.' . $key . '=src.'. $key;
+    $query = 'MERGE {' . $this->table . '} AS tgt USING(' . $values_string . ')';
+    $query .= ' AS src ' . $field_list . ' ON tgt.' . $key . '=src.'. $key;
     $query .= ' WHEN MATCHED THEN ' . $update_string;
     $query .= ' WHEN NOT MATCHED THEN ' . $insert_string;
 
