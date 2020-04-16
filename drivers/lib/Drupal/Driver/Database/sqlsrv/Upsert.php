@@ -60,7 +60,7 @@ class Upsert extends QueryUpsert {
     }
 
     // Run the query.
-    $this->connection->queryDirect($stmt, [], $this->queryOptions);
+    $this->connection->query($stmt, [], $this->queryOptions);
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = [];
 
