@@ -41,26 +41,38 @@ class Upsert extends QueryUpsert {
       }
     }
     $batch = array_splice($this->insertValues, 0, min(intdiv(2000, count($this->insertFields)), self::MAX_BATCH_SIZE));
-    // Give me a query with the amount of batch inserts.
-    $query = (string)$this;
 
-    // Prepare the query.
-    /** @var \Drupal\Core\Database\Statement $stmt */
-    $stmt = $this->connection->prepareQuery($query);
-
-    // We use this array to store references to the blob handles.
-    // This is necessary because the PDO will otherwise mess up with
-    // references.
-    $blobs = [];
-
-    $max_placeholder = 0;
-    foreach ($batch as $insert_index => $insert_values) {
-      $values = array_combine($this->insertFields, $insert_values);
-      Utils::bindValues($stmt, $values, $blobs, ':db_upsert_placeholder_', $columnInformation, $max_placeholder, $insert_index);
+    // If we are going to need more than one batch for this, start a
+    // transaction.
+    if (empty($this->queryOptions['sqlsrv_skip_transactions']) && !empty($this->insertValues)) {
+      $transaction = $this->connection->startTransaction();
     }
 
-    // Run the query.
-    $this->connection->query($stmt, [], $this->queryOptions);
+    while (!empty($batch)) {
+      // Give me a query with the amount of batch inserts.
+      $query = $this->buildQuery(count($batch));
+
+      // Prepare the query.
+      /** @var \Drupal\Core\Database\Statement $stmt */
+      $stmt = $this->connection->prepareQuery($query);
+
+      // We use this array to store references to the blob handles.
+      // This is necessary because the PDO will otherwise mess up with
+      // references.
+      $blobs = [];
+
+      $max_placeholder = 0;
+      foreach ($batch as $insert_index => $insert_values) {
+        $values = array_combine($this->insertFields, $insert_values);
+        Utils::bindValues($stmt, $values, $blobs, ':db_upsert_placeholder_', $columnInformation, $max_placeholder, $insert_index);
+      }
+
+      // Run the query.
+      $this->connection->query($stmt, [], $this->queryOptions);
+
+      // Fetch the next batch.
+      $batch = array_splice($this->insertValues, 0, min(intdiv(2000, count($this->insertFields)), Insert::MAX_BATCH_SIZE));
+    }
     // Re-initialize the values array so that we can re-use this query.
     $this->insertValues = [];
 
