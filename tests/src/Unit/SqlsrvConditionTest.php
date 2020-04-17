@@ -13,6 +13,8 @@ use Prophecy\Argument;
  * Test the behavior of the custom Condition class.
  *
  * These tests are not expected to pass on other database drivers.
+ *
+ * @group Database
  */
 class SqlsrvConditionTest extends UnitTestCase {
 
