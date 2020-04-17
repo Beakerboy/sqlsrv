@@ -9,6 +9,8 @@ use Drupal\Driver\Database\sqlsrv\Connection;
  * Test the behavior of the Connection class.
  *
  * These tests are not expected to pass on other database drivers.
+ *
+ * @group Database
  */
 class SqlsrvConnectionTest extends UnitTestCase {
 
