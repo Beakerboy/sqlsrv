@@ -69,6 +69,7 @@
       <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions4KernelTestSuite.php</file>
     </testsuite>
     <testsuite name="passing_unit">
+      <file> ../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensionsUnitTestSuite.php</file>
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Installer</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Routing</directory>
