@@ -9,6 +9,8 @@ use Drupal\Driver\Database\sqlsrv\Condition;
  * Test behavior that is unique to the Sql Server Driver.
  *
  * These tests may not pass on other drivers.
+ *
+ * @group Database
  */
 class SqlsrvTest extends DatabaseTestBase {
 
