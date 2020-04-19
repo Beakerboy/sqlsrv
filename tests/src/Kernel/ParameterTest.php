@@ -6,6 +6,8 @@ use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Tests parameter behavior.
+ *
+ * @group Database
  */
 class ParameterTest extends DatabaseTestBase {
 

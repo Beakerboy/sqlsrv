@@ -6,6 +6,8 @@ use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Test aliases within GROUP BY and ORDER BY.
+ *
+ * @group Database
  */
 class AliasTest extends DatabaseTestBase {
 
