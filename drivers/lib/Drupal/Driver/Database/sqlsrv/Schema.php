@@ -1533,7 +1533,9 @@ EOF
    */
   protected function processField($field) {
     $field['size'] = $field['size'] ?? 'normal';
-
+    if (isset($field['type']) && ($field['type'] == 'serial' || $field['type'] == 'int') && isset($field['unsigned']) && $field['unsigned'] === TRUE && ($field['size'] == 'normal')) {
+      $field['size'] = 'big';
+    }
     // Set the correct database-engine specific datatype.
     // In case one is already provided, force it to lowercase.
     if (isset($field['sqlsrv_type'])) {
@@ -1549,6 +1551,7 @@ EOF
     if (isset($field['type']) && $field['type'] == 'serial') {
       $field['identity'] = TRUE;
     }
+   
     return $field;
   }
 
