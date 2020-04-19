@@ -1549,6 +1549,9 @@ EOF
     if (isset($field['type']) && $field['type'] == 'serial') {
       $field['identity'] = TRUE;
     }
+    if (isset($field['type']) && ($field['type'] == 'serial' || $field['type'] == 'int') && isset($field['unsigned']) && $field['unsigned'] === TRUE && ($field['size'] == 'normal')) {
+      $field['size'] = 'big'
+    }
     return $field;
   }
 
