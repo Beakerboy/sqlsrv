@@ -73,12 +73,12 @@ install:
     fi
   - cp -r $TRAVIS_BUILD_DIR/drivers ./drivers
   - mkdir ./modules/contrib
+  - mv $TRAVIS_BUILD_DIR/dev/travis/TestSuites $TRAVIS_BUILD_DIR/tests/src/
   - cp -rf $TRAVIS_BUILD_DIR ./modules/contrib/sqlsrv
   - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
   - mkdir $TRAVIS_BUILD_DIR/../drupal-project/sites/simpletest
   - mkdir $TRAVIS_BUILD_DIR/../drupal-project/sites/simpletest/browser_output
   - cd $TRAVIS_BUILD_DIR/../drupal-project
-  - mv $TRAVIS_BUILD_DIR/dev/travis/TestSuites $TRAVIS_BUILD_DIR/test/src/
   - sed -e "s?WEB_DIR?$(pwd)?g" --in-place $TRAVIS_BUILD_DIR/dev/travis/phpunit.xml.dist
   # Install REGEX CLR
   - wget https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll
