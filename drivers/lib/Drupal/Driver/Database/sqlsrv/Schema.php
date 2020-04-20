@@ -1551,7 +1551,6 @@ EOF
     if (isset($field['type']) && $field['type'] == 'serial') {
       $field['identity'] = TRUE;
     }
-   
     return $field;
   }
 
