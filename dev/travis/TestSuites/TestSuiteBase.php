@@ -10,19 +10,19 @@ use Drupal\Core\Test\TestDiscovery;
  */
 abstract class TestSuiteBase extends TestSuite {
   protected $failingClasses = [
-      $root . '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
-      $root . '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
-      $root . '/core/modules/dblog/tests/src/Kernel/Migrate/d6/MigrateDblogConfigsTest.php',
-      $root . '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
-      $root . '/core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
-      $root . '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
-      $root . '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
-      $root . '/core/modules/migrate_drupal/tests/src/Kernel/Plugin/migrate/DestinationCategoryTest.php',
-      $root . '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrateDrupal6AuditIdsTest.php',
-      $root . '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrationProcessTest.php',
-      $root . '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
-      $root . '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTermLocalizedTranslationTest.php',
-      $root . '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTermLocalizedTranslationTest.php',
+      '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
+      '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
+      '/core/modules/dblog/tests/src/Kernel/Migrate/d6/MigrateDblogConfigsTest.php',
+      '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
+      '/core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
+      '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
+      '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
+      '/core/modules/migrate_drupal/tests/src/Kernel/Plugin/migrate/DestinationCategoryTest.php',
+      '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrateDrupal6AuditIdsTest.php',
+      '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrationProcessTest.php',
+      '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
+      '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTermLocalizedTranslationTest.php',
+      '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTermLocalizedTranslationTest.php',
     ];
 
   /**
@@ -53,7 +53,10 @@ abstract class TestSuiteBase extends TestSuite {
    *   REGEXP pattern to apply to file name.
    */
   protected function addExtensionTestsBySuiteNamespace($root, $suite_namespace, $pattern) {
-    $failing_classes = $this->failingClasses;
+    $failing_classes = [];
+    foreach ($this->failingClasses as $failing_class) {
+      $failing_classes[] = $root . $failing_class;
+    }
     // Extensions' tests will always be in the namespace
     // Drupal\Tests\$extension_name\$suite_namespace\ and be in the
     // $extension_path/tests/src/$suite_namespace directory. Not all extensions
