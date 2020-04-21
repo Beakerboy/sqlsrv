@@ -39,17 +39,17 @@ abstract class TestSuiteBase extends TestSuite {
    */
   protected function addExtensionTestsBySuiteNamespace($root, $suite_namespace, $pattern) {
     $failing_classes = [
-      $root . 'core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
-      $root . 'core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
-      $root . 'core/modules/dblog/tests/src/Kernel/Migrate/d6/MigrateDblogConfigsTest.php',
-      $root . 'core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
-      $root . 'core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
-      $root . 'core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
-      $root . 'core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
-      $root . 'core/modules/migrate_drupal/tests/src/Kernel/Plugin/migrate/DestinationCategoryTest.php',
-      $root . 'core/modules/migrate_drupal/tests/src/Kernel/d6/MigrateDrupal6AuditIdsTest.php',
-      $root . 'core/modules/migrate_drupal/tests/src/Kernel/d6/MigrationProcessTest.php',
-      $root . 'core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
+      $root . '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
+      $root . '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
+      $root . '/core/modules/dblog/tests/src/Kernel/Migrate/d6/MigrateDblogConfigsTest.php',
+      $root . '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
+      $root . '/core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
+      $root . '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
+      $root . '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
+      $root . '/core/modules/migrate_drupal/tests/src/Kernel/Plugin/migrate/DestinationCategoryTest.php',
+      $root . '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrateDrupal6AuditIdsTest.php',
+      $root . '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrationProcessTest.php',
+      $root . '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
     ];
     // Extensions' tests will always be in the namespace
     // Drupal\Tests\$extension_name\$suite_namespace\ and be in the
