@@ -56,7 +56,7 @@ class Update extends QueryUpdate {
       // This is necessary because the PDO will otherwise messes up with
       // references.
       $blobs = [];
-      Utils::bindValues($stmt, $fields, $blobs, ':db_update_placeholder_', $blobFields);
+      Utils::bindValuesNew($stmt, $fields, $blobs, ':db_update_placeholder_', $blobFields);
 
       // Add conditions.
       if (count($this->condition)) {
