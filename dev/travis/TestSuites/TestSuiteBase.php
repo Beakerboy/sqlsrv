@@ -23,6 +23,11 @@ abstract class TestSuiteBase extends TestSuite {
       '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
       '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTermLocalizedTranslationTest.php',
       '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTermLocalizedTranslationTest.php',
+      '/core/modules/views/tests/src/Kernel/Handler/SortDateTest.php',
+      '/core/modules/views/tests/src/Kernel/Handler/FilterNumericTest.php',
+      '/core/modules/views/tests/src/Kernel/Handler/ArgumentDateTest.php',
+      '/core/modules/views/tests/src/Kernel/Handler/FilterCombineTest.php',
+      '/core/modules/workspaces/tests/src/Kernel/WorkspaceTestTrait.php',
     ];
 
   /**
