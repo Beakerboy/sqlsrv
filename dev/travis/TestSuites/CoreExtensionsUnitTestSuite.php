@@ -25,14 +25,9 @@ final class CoreExtensionsUnitTestSuite extends TestSuiteBase {
   }
 
   /**
-   * Find and add tests to the suite for core and any extensions.
-   *
-   * @param string $root
-   *   Path to the root of the Drupal installation.
-   * @param string $suite_namespace
-   *   SubNamespace used to separate test suite. Examples: Unit, Functional.
+   * {@inheritdoc}
    */
-  protected function addExtensionTestsBySuiteNamespace($root, $suite_namespace) {
+  protected function addExtensionTestsBySuiteNamespace($root, $suite_namespace, $pattern = '') {
     foreach ($this->findExtensionDirectories($root) as $extension_name => $dir) {
       $test_path = "$dir/tests/src/$suite_namespace";
       if (is_dir($test_path)) {
