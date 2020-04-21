@@ -3,6 +3,7 @@
 namespace Drupal\Tests\sqlsrv\TestSuites;
 
 use PHPUnit\Framework\TestSuite;
+use Drupal\Core\Test\TestDiscovery;
 
 /**
  * Base class for Drupal test suites.
