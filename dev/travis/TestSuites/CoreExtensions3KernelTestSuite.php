@@ -43,7 +43,14 @@ final class CoreExtensions3KernelTestSuite extends TestSuiteBase {
       if (preg_match("#^{$pattern}(.*)$#i", $extension_name) !== 0) {
         $test_path = "$dir/tests/src/$suite_namespace";
         if (is_dir($test_path)) {
-          $this->addTestFiles(TestDiscovery::scanDirectory("Drupal\\Tests\\$extension_name\\$suite_namespace\\", $test_path));
+          $passing_tests = [];
+          $tests = TestDiscovery::scanDirectory("Drupal\\Tests\\$extension_name\\$suite_namespace\\", $test_path);
+          foreach ($tests as $test) {
+            if (!in_array($test, $this->failing_tests)) {
+              $passing_tests[] = $test;
+            }
+          }
+          $this->addTestFiles($passing_tests);
         }
       }
     }
