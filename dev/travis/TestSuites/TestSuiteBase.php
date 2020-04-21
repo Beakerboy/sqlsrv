@@ -21,6 +21,8 @@ abstract class TestSuiteBase extends TestSuite {
       '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrateDrupal6AuditIdsTest.php',
       '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrationProcessTest.php',
       '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
+      '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTaxonomyVocabularyTranslationTest.php',
+      '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTaxonomyTermTranslationTest.php',
       '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTermLocalizedTranslationTest.php',
       '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTermLocalizedTranslationTest.php',
       '/core/modules/views/tests/src/Kernel/Handler/SortDateTest.php',
