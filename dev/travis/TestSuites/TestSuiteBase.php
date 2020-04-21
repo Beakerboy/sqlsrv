@@ -27,7 +27,7 @@ abstract class TestSuiteBase extends TestSuite {
     return array_reduce($extension_directories, 'array_merge', []);
   }
 
-    /**
+  /**
    * Find and add tests to the suite for core and any extensions.
    *
    * @param string $root
@@ -63,8 +63,6 @@ abstract class TestSuiteBase extends TestSuite {
           $tests = TestDiscovery::scanDirectory("Drupal\\Tests\\$extension_name\\$suite_namespace\\", $test_path);
           foreach ($tests as $test) {
             if (!in_array($test, $failing_classes)) {
-              fwrite(STDOUT, $test);
-              fwrite(STDOUT, $failing_classes[2]);
               $passing_tests[] = $test;
             }
           }
