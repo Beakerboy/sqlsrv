@@ -759,7 +759,7 @@ class Schema extends DatabaseSchema {
     $sql = "SELECT sysc.name, TYPE_NAME(sysc.user_type_id) as type FROM sys.columns AS sysc WHERE sysc.object_id = OBJECT_ID(:table)";
     $args = [':table' => $table_info['schema'] . '.' . $table_info['table']];
     $result = $this->connection->queryDirect($sql, $args);
-
+    $info = [];
     foreach ($result as $column) {
       if ($column->type == 'varbinary') {
         $info[$column->name] = TRUE;
