@@ -53,7 +53,7 @@ final class CoreExtensions3KernelTestSuite extends TestSuiteBase {
           $passing_tests = [];
           $tests = TestDiscovery::scanDirectory("Drupal\\Tests\\$extension_name\\$suite_namespace\\", $test_path);
           foreach ($tests as $test) {
-            if (!in_array($test, $failing_tests)) {
+            if (!in_array($test, $failing_classes)) {
               $passing_tests[] = $test;
             }
           }
