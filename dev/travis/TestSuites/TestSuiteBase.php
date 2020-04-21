@@ -63,6 +63,7 @@ abstract class TestSuiteBase extends TestSuite {
           $tests = TestDiscovery::scanDirectory("Drupal\\Tests\\$extension_name\\$suite_namespace\\", $test_path);
           foreach ($tests as $test) {
             if (!in_array($test, $failing_classes)) {
+              fwrite(STDOUT, $test);
               $passing_tests[] = $test;
             }
           }
