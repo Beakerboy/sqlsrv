@@ -38,6 +38,49 @@ class Utils {
    *   track of the original references to data.
    * @param mixed $placeholder_prefix
    *   Prefix to use for generating the query placeholders.
+   * @param array $blobFields
+   *   Blob fields.
+   * @param mixed $max_placeholder
+   *   Placeholder count, if NULL will start with 0.
+   * @param mixed $blob_suffix
+   *   Suffix for the blob key.
+   */
+  public static function bindValuesNew(\PDOStatement $stmt, array &$values, array &$blobs, $placeholder_prefix, array $blobFields, &$max_placeholder = NULL, $blob_suffix = NULL) {
+    if (empty($max_placeholder)) {
+      $max_placeholder = 0;
+    }
+    foreach ($values as $field_name => &$field_value) {
+      $placeholder = $placeholder_prefix . $max_placeholder++;
+      $blob_key = $placeholder . $blob_suffix;
+      if (isset($blobFields[$field_name])) {
+        $blobs[$blob_key] = fopen('php://memory', 'a');
+        fwrite($blobs[$blob_key], $field_value);
+        rewind($blobs[$blob_key]);
+        $stmt->bindParam($placeholder, $blobs[$blob_key], \PDO::PARAM_LOB, 0, \PDO::SQLSRV_ENCODING_BINARY);
+      }
+      else {
+        // Even though not a blob, make sure we retain a copy of these values.
+        $blobs[$blob_key] = $field_value;
+        $stmt->bindParam($placeholder, $blobs[$blob_key], \PDO::PARAM_STR);
+      }
+    }
+  }
+
+  /**
+   * Binds a set of values to a PDO Statement.
+   *
+   * Takes care of properly managing binary data.
+   *
+   * @param \PDOStatement $stmt
+   *   PDOStatement to bind the values to.
+   * @param array $values
+   *   Values to bind. It's an array where the keys are column
+   *   names and the values what is going to be inserted.
+   * @param array $blobs
+   *   When sending binary data to the PDO driver, we need to keep
+   *   track of the original references to data.
+   * @param mixed $placeholder_prefix
+   *   Prefix to use for generating the query placeholders.
    * @param array $columnInformation
    *   Column information.
    * @param mixed $max_placeholder
@@ -65,7 +108,7 @@ class Utils {
       }
     }
   }
-
+  
   /**
    * Returns the spec for a MSSQL data type definition.
    *
