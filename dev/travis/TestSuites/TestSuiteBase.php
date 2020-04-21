@@ -9,14 +9,6 @@ use PHPUnit\Framework\TestSuite;
  */
 abstract class TestSuiteBase extends TestSuite {
 
-  protected $failing_classes = [
-    'core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
-    'core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
-    'core/modules/dblog/tests/src/Kernel/Migrate/d6/MigrateDblogConfigsTest.php',
-    'core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
-    'core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
-  ];
-
   /**
    * Finds extensions in a Drupal installation.
    *
