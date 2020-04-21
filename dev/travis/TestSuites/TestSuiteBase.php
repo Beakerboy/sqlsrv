@@ -44,6 +44,12 @@ abstract class TestSuiteBase extends TestSuite {
       'core/modules/dblog/tests/src/Kernel/Migrate/d6/MigrateDblogConfigsTest.php',
       'core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
       'core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
+      'core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
+      'core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
+      'core/modules/migrate_drupal/tests/src/Kernel/Plugin/migrate/DestinationCategoryTest.php',
+      'core/modules/migrate_drupal/tests/src/Kernel/d6/MigrateDrupal6AuditIdsTest.php',
+      'core/modules/migrate_drupal/tests/src/Kernel/d6/MigrationProcessTest.php',
+      'core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
     ];
     // Extensions' tests will always be in the namespace
     // Drupal\Tests\$extension_name\$suite_namespace\ and be in the
