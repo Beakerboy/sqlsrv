@@ -743,6 +743,31 @@ class Schema extends DatabaseSchema {
   }
 
   /**
+   * Get a list of fields to be treated as blobs
+   *
+   * @param string $table
+   *   Table name.
+   * @return array
+   *   List of field names.
+   */
+  public function getBlobFields($table) {
+    if (empty($table) || !$this->tableExists($table)) {
+      return [];
+    }
+    // Don't use {} around information_schema.columns table.
+    $sql = "SELECT TYPE_NAME(sysc.user_type_id) as type FROM sys.columns AS sysc WHERE sysc.object_id = OBJECT_ID(:table)";
+    $args = [':table' => $table_info['schema'] . '.' . $table_info['table']];
+    $result = $this->connection->queryDirect($sql, $args);
+
+    foreach ($result as $column) {
+      if ($column->type == 'varbinary') {
+        $info[$column->name] = TRUE;
+      }
+    }
+    return $info;
+  }
+
+  /**
    * Database introspection: fetch technical information about a table.
    *
    * @return array
