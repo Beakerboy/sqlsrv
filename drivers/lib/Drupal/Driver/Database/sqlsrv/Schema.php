@@ -756,7 +756,7 @@ class Schema extends DatabaseSchema {
     }
     $table_info = $this->getPrefixInfo($table);
     // Don't use {} around information_schema.columns table.
-    $sql = "SELECT TYPE_NAME(sysc.user_type_id) as type FROM sys.columns AS sysc WHERE sysc.object_id = OBJECT_ID(:table)";
+    $sql = "SELECT sysc.name, TYPE_NAME(sysc.user_type_id) as type FROM sys.columns AS sysc WHERE sysc.object_id = OBJECT_ID(:table)";
     $args = [':table' => $table_info['schema'] . '.' . $table_info['table']];
     $result = $this->connection->queryDirect($sql, $args);
 
