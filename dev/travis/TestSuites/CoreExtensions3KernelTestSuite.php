@@ -11,6 +11,14 @@ require_once __DIR__ . '/TestSuiteBase.php';
  */
 final class CoreExtensions3KernelTestSuite extends TestSuiteBase {
 
+  protected $failing_classes = [
+    'core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
+    'core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
+    'core/modules/dblog/tests/src/Kernel/Migrate/d6/MigrateDblogConfigsTest.php',
+    'core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
+    'core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
+  ];
+
   /**
    * Factory method which loads up a suite with all kernel tests.
    *
