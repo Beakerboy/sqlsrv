@@ -70,42 +70,4 @@ class Update extends QueryUpdate {
     return $this->connection->query($stmt, [], $options);
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function __toString() {
-    // Create a sanitized comment string to prepend to the query.
-    $prefix = $this->connection->makeComment($this->comments);
-
-    // Expressions take priority over literal fields, so we process those first
-    // and remove any literal fields that conflict.
-    $fields = $this->fields;
-    $update_fields = [];
-    foreach ($this->expressionFields as $field => $data) {
-      if ($data['expression'] instanceof SelectInterface) {
-        // Compile and cast expression subquery to a string.
-        $data['expression']->compile($this->connection, $this);
-        $data['expression'] = ' (' . $data['expression'] . ')';
-      }
-
-      $update_fields[] = $this->connection->escapeField($field) . '=' . $data['expression'];
-      unset($fields[$field]);
-    }
-
-    $max_placeholder = 0;
-    foreach ($fields as $field => $value) {
-      $update_fields[] = $this->connection->escapeField($field) . '=:db_update_placeholder_' . ($max_placeholder++);
-    }
-
-    $query = $prefix . 'UPDATE {' . $this->connection->escapeTable($this->table) . '} SET ' . implode(', ', $update_fields);
-
-    if (count($this->condition)) {
-      $this->condition->compile($this->connection, $this);
-      // There is an implicit string cast on $this->condition.
-      $query .= "\nWHERE " . $this->condition;
-    }
-
-    return $query;
-  }
-
 }
