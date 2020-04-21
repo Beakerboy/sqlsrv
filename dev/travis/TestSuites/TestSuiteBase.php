@@ -64,6 +64,7 @@ abstract class TestSuiteBase extends TestSuite {
           foreach ($tests as $test) {
             if (!in_array($test, $failing_classes)) {
               fwrite(STDOUT, $test);
+              fwrite(STDOUT, $failing_classes[2]);
               $passing_tests[] = $test;
             }
           }
