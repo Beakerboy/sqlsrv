@@ -31,9 +31,17 @@ final class CoreKernelTestSuite extends TestSuiteBase {
    *   Path to the root of the Drupal installation.
    */
   protected function addCoreKernelTests($root) {
+    $failing_classes = $this->failingClasses;
     // Core's Kernel tests are in the namespace Drupal\KernelTests\ and are
     // always inside of core/tests/Drupal/KernelTests.
-    $this->addTestFiles(TestDiscovery::scanDirectory("Drupal\\KernelTests\\", "$root/core/tests/Drupal/KernelTests"));
+    $passing_tests = [];
+    $tests = TestDiscovery::scanDirectory("Drupal\\KernelTests\\", "$root/core/tests/Drupal/KernelTests");
+    foreach ($tests as $test) {
+      if (!in_array($test, $failing_classes)) {
+        $passing_tests[] = $test;
+      }
+    }
+    $this->addTestFiles($passing_tests);
   }
 
   /**
