@@ -20,14 +20,14 @@ final class CoreExtensionsUnitTestSuite extends TestSuiteBase {
   public static function suite() {
     $root = dirname(dirname(dirname(dirname(dirname(dirname(__DIR__))))));
     $suite = new static('unit');
-    $suite->addExtensionTestsBySuiteNamespace($root, 'Unit');
+    $suite->addExtensionTestsBySuiteNamespace($root, 'Unit', '');
     return $suite;
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function addExtensionTestsBySuiteNamespace($root, $suite_namespace, $pattern = '') {
+  protected function addExtensionTestsBySuiteNamespace($root, $suite_namespace, $pattern) {
     foreach ($this->findExtensionDirectories($root) as $extension_name => $dir) {
       $test_path = "$dir/tests/src/$suite_namespace";
       if (is_dir($test_path)) {
