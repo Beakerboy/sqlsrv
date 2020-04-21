@@ -20,6 +20,8 @@ class Update extends QueryUpdate {
     $schema = $this->connection->schema();
     $blobFields = $schema->getBlobFields($this->table);
     if (count($blobFields) === 0) {
+      //  Emulate prepares.
+      $this->queryOptions['insecure'] = TRUE;
       return parent::execute();
     }
     else {
