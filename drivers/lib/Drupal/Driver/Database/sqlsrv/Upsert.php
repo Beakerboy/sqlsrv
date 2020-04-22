@@ -15,6 +15,24 @@ class Upsert extends QueryUpsert {
    * {@inheritdoc}
    */
   public function execute() {
+    // Fetch the list of blobs used on that table.
+    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    $schema = $this->connection->schema();
+    $blobFields = $schema->getBlobFields($this->table);
+    if (count($blobFields) === 0) {
+      //  Emulate prepares.
+      $this->queryOptions['insecure'] = TRUE;
+      $this->queryOptions['allow_delimiter_in_query'] = TRUE;
+      $max_placeholder = -1;
+      $values = [];
+      foreach ($this->insertValues as $insert_values) {
+        foreach ($insert_values as $value) {
+          $values[':db_upsert_placeholder_' . ++$max_placeholder] = $value;
+        }
+      }
+      $this->connection->query((string)$this, $values, $this->queryOptions);
+      return NULL;
+    }
     if (count($this->insertValues) === 1) {
       $insert_fields = array_merge($this->defaultFields, $this->insertFields);
       $update_fields = array_combine($insert_fields, array_shift($this->insertValues));
@@ -28,18 +46,9 @@ class Upsert extends QueryUpsert {
     if (!$this->preExecute()) {
       return NULL;
     }
-    // Fetch the list of blobs and sequences used on that table.
-    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
-    $schema = $this->connection->schema();
-    $columnInformation = $schema->queryColumnInformation($this->table);
+   
     $this->queryOptions['allow_delimiter_in_query'] = TRUE;
-    $max_placeholder = -1;
-    $values = [];
-    foreach ($this->insertValues as $insert_values) {
-      foreach ($insert_values as $value) {
-        $values[':db_upsert_placeholder_' . ++$max_placeholder] = $value;
-      }
-    }
+   
     $batch = array_splice($this->insertValues, 0, min(intdiv(2000, count($this->insertFields)), self::MAX_BATCH_SIZE));
 
     // If we are going to need more than one batch for this, start a
@@ -64,7 +73,7 @@ class Upsert extends QueryUpsert {
       $max_placeholder = 0;
       foreach ($batch as $insert_index => $insert_values) {
         $values = array_combine($this->insertFields, $insert_values);
-        Utils::bindValues($stmt, $values, $blobs, ':db_upsert_placeholder_', $columnInformation, $max_placeholder, $insert_index);
+        Utils::bindValuesNew($stmt, $values, $blobs, ':db_upsert_placeholder_', $blobFields, $max_placeholder, $insert_index);
       }
 
       // Run the query.
