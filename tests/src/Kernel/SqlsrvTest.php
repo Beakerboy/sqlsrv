@@ -182,7 +182,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $create_sql = "CREATE TABLE $prefixed_table (id int NOT NULL PRIMARY KEY, name varchar(20))";
     $dbh = new \PDO("sqlsrv:Server=localhost;Database=mydrupalsite", "sa", "Password12!");
     $dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-    $sql = "INSERT INTO $prefixed_table (name) VALUES (:placeholder_0, :placeholder_1), (:placeholder_2, :placeholder_3)";
+    $sql = "INSERT INTO $prefixed_table (id, name) VALUES (:placeholder_0, :placeholder_1), (:placeholder_2, :placeholder_3)";
     $args = [
       ':placeholder_0' => 0,
       ':placeholder_1' => 'Paul',
