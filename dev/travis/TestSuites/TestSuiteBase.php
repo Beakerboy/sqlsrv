@@ -9,28 +9,34 @@ use Drupal\Core\Test\TestDiscovery;
  * Base class for Drupal test suites.
  */
 abstract class TestSuiteBase extends TestSuite {
+
+  /**
+   * The failing test files.
+   *
+   * @var array
+   */
   protected $failingClasses = [
-      '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
-      '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
-      '/core/modules/dblog/tests/src/Kernel/Migrate/d6/MigrateDblogConfigsTest.php',
-      '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
-      '/core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
-      '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
-      '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
-      '/core/modules/migrate_drupal/tests/src/Kernel/Plugin/migrate/DestinationCategoryTest.php',
-      '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrateDrupal6AuditIdsTest.php',
-      '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrationProcessTest.php',
-      '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
-      '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTaxonomyVocabularyTranslationTest.php',
-      '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTaxonomyTermTranslationTest.php',
-      '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTermLocalizedTranslationTest.php',
-      '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTermLocalizedTranslationTest.php',
-      '/core/modules/views/tests/src/Kernel/Handler/SortDateTest.php',
-      '/core/modules/views/tests/src/Kernel/Handler/FilterNumericTest.php',
-      '/core/modules/views/tests/src/Kernel/Handler/ArgumentDateTest.php',
-      '/core/modules/views/tests/src/Kernel/Handler/FilterCombineTest.php',
-      '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
-    ];
+    '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
+    '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
+    '/core/modules/dblog/tests/src/Kernel/Migrate/d6/MigrateDblogConfigsTest.php',
+    '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
+    '/core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
+    '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
+    '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
+    '/core/modules/migrate_drupal/tests/src/Kernel/Plugin/migrate/DestinationCategoryTest.php',
+    '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrateDrupal6AuditIdsTest.php',
+    '/core/modules/migrate_drupal/tests/src/Kernel/d6/MigrationProcessTest.php',
+    '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
+    '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTaxonomyVocabularyTranslationTest.php',
+    '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTaxonomyTermTranslationTest.php',
+    '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTermLocalizedTranslationTest.php',
+    '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTermLocalizedTranslationTest.php',
+    '/core/modules/views/tests/src/Kernel/Handler/SortDateTest.php',
+    '/core/modules/views/tests/src/Kernel/Handler/FilterNumericTest.php',
+    '/core/modules/views/tests/src/Kernel/Handler/ArgumentDateTest.php',
+    '/core/modules/views/tests/src/Kernel/Handler/FilterCombineTest.php',
+    '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
+  ];
 
   /**
    * Finds extensions in a Drupal installation.
