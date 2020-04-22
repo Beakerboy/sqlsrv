@@ -186,7 +186,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $args = [
       ':placeholder_0' => 0,
       ':placeholder_1' => 'Paul',
-      ':placeholder_2' => 1
+      ':placeholder_2' => 1,
       ':placeholder_3' => 'John',
     ];
     $dbh->exec($create_sql);
