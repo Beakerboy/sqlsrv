@@ -176,4 +176,24 @@ class SqlsrvTest extends DatabaseTestBase {
     $this->assertEqual($result, 0, t('db_query returned the correct number of total rows.'));
   }
 
+  public function testStraightPrepared() {
+    $prefix = 'test7472525';
+    $prefixed_table = $prefix . 'tablename';
+    $create_sql = "CREATE TABLE $prefixed_table (id int NOT NULL PRIMARY KEY, name varchar(20))";
+    $dbh = new \PDO("sqlsrv:Server=localhost;Database=mydrupalsite", "sa", "Password12!");
+    $dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+    $sql = "INSERT INTO $prefixed_table (name) VALUES (:placeholder_0), (:placeholder_1)";
+    $args = [
+      ':placeholder_0' => 'Paul',
+      ':placeholder_1' => 'John',
+    ];
+    $dbh->exec($create_sql);
+    $sth = $dbh->prepare($sql);
+    $sth->execute($args);
+
+    $sql = "MERGE INTO";
+    $sth = $dbh->prepare($sql);
+    $sth->execute($args);
+  }
+
 }
