@@ -190,10 +190,21 @@ class SqlsrvTest extends DatabaseTestBase {
     $dbh->exec($create_sql);
     $sth = $dbh->prepare($sql);
     $sth->execute($args);
-
-    $sql = "MERGE INTO";
+    $select_sql = "SELECT * FROM $prefixed_table";
+    $res = $dbh->query($select_sql)->fetchAll();
+    fwrite(STDOUT, print_r($res, TRUE));
+    $sql = "MERGE $prefixed_table AS tgt USING(VALUES (:db_upsert_placeholder_0, :db_upsert_placeholder_1), (:db_upsert_placeholder_2, :db_upsert_placeholder_3)) AS src (id, name) ON tgt.id=src.id WHEN MATCHED THEN UPDATE SET name=src.name WHEN NOT MATCHED THEN INSERT (name) VALUES (src.name);";
     $sth = $dbh->prepare($sql);
+    $args = [
+      ':placeholder_0' => 0,
+      ':placeholder_1' => 'Ringo',
+      ':placeholder_2' => 3,
+      ':placeholder_3' => 'George',
+    ];
     $sth->execute($args);
+    $res = $dbh->query($select_sql)->fetchAll();
+    fwrite(STDOUT, print_r($res, TRUE));
+    $this->assertTrue(FALSE);
   }
 
 }
