@@ -29,7 +29,7 @@ abstract class TestSuiteBase extends TestSuite {
       '/core/modules/views/tests/src/Kernel/Handler/FilterNumericTest.php',
       '/core/modules/views/tests/src/Kernel/Handler/ArgumentDateTest.php',
       '/core/modules/views/tests/src/Kernel/Handler/FilterCombineTest.php',
-      '/core/modules/workspaces/tests/src/Kernel/WorkspaceTestTrait.php',
+      '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
     ];
 
   /**
