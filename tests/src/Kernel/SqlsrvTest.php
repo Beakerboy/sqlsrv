@@ -70,7 +70,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $table = $this->connection->queryTemporary((string) $query);
 
     // First assert that the table exists.
-    $this->assertTRUE(db_table_exists($table), 'The temporary table exists.');
+    $this->assertTRUE($thia->connection->schema()->tableExists($table), 'The temporary table exists.');
 
     $query2 = $this->connection->select($table, 't');
     $query2->fields('t');
