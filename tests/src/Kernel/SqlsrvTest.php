@@ -285,9 +285,7 @@ class SqlsrvTest extends DatabaseTestBase {
         [],
       ],
       'Emulate' => [
-        [
-          ['insecure' => TRUE],
-        ],
+        ['insecure' => TRUE],
       ],
     ];
   }
