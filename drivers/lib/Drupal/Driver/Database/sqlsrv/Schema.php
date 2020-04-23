@@ -1009,6 +1009,7 @@ class Schema extends DatabaseSchema {
    *   True if the table exists, false otherwise.
    */
   public function tableExists($table) {
+    // If $table is NULL, then $table[0] will generate a notice.
     if (empty($table)) {
       return FALSE;
     }
