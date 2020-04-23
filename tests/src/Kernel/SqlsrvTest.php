@@ -209,7 +209,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $this->assertTrue(FALSE);
   }
 
-  public function testStraightPrepared() {
+  public function testStraightEmulate() {
     $prefix = 'test7472526';
     $prefixed_table = $prefix . 'tablename';
     $create_sql = "CREATE TABLE $prefixed_table (id int NOT NULL PRIMARY KEY, name varchar(20))";
