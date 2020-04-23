@@ -1923,7 +1923,7 @@ EOF;
    */
   protected function createCommentSql($value, $table = NULL, $column = NULL) {
     $schema = $this->getDefaultSchema();
-    $value = $this->connection->quote($this->prepareComment($value));
+    $value = $this->prepareComment($value);
 
     $sql = "EXEC sp_addextendedproperty @name=N'MS_Description', @value={$value}";
     $sql .= ",@level0type = N'Schema', @level0name = '{$schema}'";
