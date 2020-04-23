@@ -209,4 +209,37 @@ class SqlsrvTest extends DatabaseTestBase {
     $this->assertTrue(FALSE);
   }
 
+  public function testStraightPrepared() {
+    $prefix = 'test7472526';
+    $prefixed_table = $prefix . 'tablename';
+    $create_sql = "CREATE TABLE $prefixed_table (id int NOT NULL PRIMARY KEY, name varchar(20))";
+    $dbh = new \PDO("sqlsrv:Server=localhost;Database=mydrupalsite", "sa", "Password12!");
+    $dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+    $sql = "INSERT INTO $prefixed_table (id, name) VALUES (:placeholder_0, :placeholder_1), (:placeholder_2, :placeholder_3)";
+    $args = [
+      ':placeholder_0' => 0,
+      ':placeholder_1' => 'Paul',
+      ':placeholder_2' => 1,
+      ':placeholder_3' => 'John',
+    ];
+    $dbh->exec($create_sql);
+    $sth = $dbh->prepare($sql);
+    $sth->execute($args);
+    $select_sql = "SELECT * FROM $prefixed_table";
+    $res = $dbh->query($select_sql)->fetchAll();
+    fwrite(STDOUT, print_r($res, TRUE));
+    $sql = "MERGE $prefixed_table AS tgt USING(VALUES (:placeholder_0, :placeholder_1), (:placeholder_2, :placeholder_3)) AS src (id, name) ON tgt.id=src.id WHEN MATCHED THEN UPDATE SET id=src.id, name=src.name WHEN NOT MATCHED THEN INSERT (id, name) VALUES (src.id, src.name);";
+    $sth = $dbh->prepare($sql, [\PDO::ATTR_EMULATE_PREPARES => TRUE]);
+    $args = [
+      ':placeholder_0' => 0,
+      ':placeholder_1' => 'Ringo',
+      ':placeholder_2' => 3,
+      ':placeholder_3' => 'George',
+    ];
+    $sth->execute($args);
+    $res = $dbh->query($select_sql)->fetchAll();
+    fwrite(STDOUT, print_r($res, TRUE));
+    $this->assertTrue(FALSE);
+  }
+
 }
