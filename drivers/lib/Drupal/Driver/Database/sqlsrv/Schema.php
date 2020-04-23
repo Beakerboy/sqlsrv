@@ -1009,7 +1009,9 @@ class Schema extends DatabaseSchema {
    *   True if the table exists, false otherwise.
    */
   public function tableExists($table) {
-
+    if (empty($table)) {
+      return FALSE;
+    }
     // Temporary tables and regular tables cannot be verified in the same way.
     $query = NULL;
     if ($table[0] == '#') {
