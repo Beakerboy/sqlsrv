@@ -18,7 +18,7 @@ final class CoreExtensions3KernelTestSuite extends TestSuiteBase {
   public static function suite() {
     $root = dirname(dirname(dirname(dirname(dirname(dirname(__DIR__))))));
     $suite = new static('kernel');
-    $suite->addExtensionTestsBySuiteNamespace($root, 'Kernel', self::coreExtensionPatterns[2]);
+    $suite->addExtensionTestsBySuiteNamespace($root, 'Kernel', self::$coreExtensionPatterns[2]);
     return $suite;
   }
 
