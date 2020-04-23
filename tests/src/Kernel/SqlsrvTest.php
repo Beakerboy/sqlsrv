@@ -206,7 +206,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $sth->execute($args);
     $res = $dbh->query($select_sql)->fetchAll();
     fwrite(STDOUT, print_r($res, TRUE));
-    assertSame([['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
+    assertArrayEquals([['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
   }
 
   public function testStraightEmulate() {
@@ -239,7 +239,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $sth->execute($args);
     $res = $dbh->query($select_sql)->fetchAll();
     fwrite(STDOUT, print_r($res, TRUE));
-    assertSame([['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
+    assertArrayEquals([['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
   }
 
   public function testDrupalEmulate() {
@@ -269,7 +269,7 @@ class SqlsrvTest extends DatabaseTestBase {
       ->execute();
     $res = $dbh->query($select_sql)->fetchAll();
     fwrite(STDOUT, print_r($res, TRUE));
-    $this->assertSame([['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
+    $this->assertArrayEquals([['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
   }
 
 }
