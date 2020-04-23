@@ -265,6 +265,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $values = [['id' => 0, 'name' => 'Ringo'],['id' => 3, 'name'=> 'George']];
     $this->connection->upsert('tablename')
       ->fields($fields)
+      ->key('id')
       ->values($values[0])
       ->values($values[1])
       ->execute();
