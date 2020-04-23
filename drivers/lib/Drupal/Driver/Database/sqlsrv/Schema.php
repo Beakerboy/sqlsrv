@@ -953,10 +953,9 @@ class Schema extends DatabaseSchema {
         }
         catch (\Exception $e) {
           // Log the exception but do not rollback the transaction.
-          // Figure out how to log this while passing Kernel
-          // Tests. Possibly make dblog a dependency, or check if
-          // a logger is present.
-          // watchdog_exception('database', $e);
+          if ($this->tableExists('watchdog')) {
+            watchdog_exception('database', $e);
+          }
         }
       }
     }
