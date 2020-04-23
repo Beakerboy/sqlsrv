@@ -743,10 +743,11 @@ class Schema extends DatabaseSchema {
   }
 
   /**
-   * Get a list of fields to be treated as blobs
+   * Get a list of fields to be treated as blobs.
    *
    * @param string $table
    *   Table name.
+   *
    * @return array
    *   List of field names.
    */
@@ -1577,7 +1578,7 @@ EOF
     if (isset($field['type']) && $field['type'] == 'serial') {
       $field['identity'] = TRUE;
     }
-   
+
     return $field;
   }
 
