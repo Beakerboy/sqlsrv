@@ -194,7 +194,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $sth->execute($args);
     $select_sql = "SELECT * FROM $prefixed_table";
     $res = $dbh->query($select_sql)->fetchAll();
-    fwrite(STDOUT, print_r($res, TRUE));
+    // fwrite(STDOUT, print_r($res, TRUE));
     $sql = "MERGE $prefixed_table AS tgt USING(VALUES (:placeholder_0, :placeholder_1), (:placeholder_2, :placeholder_3)) AS src (id, name) ON tgt.id=src.id WHEN MATCHED THEN UPDATE SET id=src.id, name=src.name WHEN NOT MATCHED THEN INSERT (id, name) VALUES (src.id, src.name);";
     $sth = $dbh->prepare($sql);
     $args = [
@@ -205,8 +205,8 @@ class SqlsrvTest extends DatabaseTestBase {
     ];
     $sth->execute($args);
     $res = $dbh->query($select_sql)->fetchAll();
-    fwrite(STDOUT, print_r($res, TRUE));
-    assertSame($res, [['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
+    //  fwrite(STDOUT, print_r($res, TRUE));
+    $this->assertSame($res, [['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
   }
 
   public function testStraightEmulate() {
@@ -227,7 +227,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $sth->execute($args);
     $select_sql = "SELECT * FROM $prefixed_table";
     $res = $dbh->query($select_sql)->fetchAll();
-    fwrite(STDOUT, print_r($res, TRUE));
+    // fwrite(STDOUT, print_r($res, TRUE));
     $sql = "MERGE $prefixed_table AS tgt USING(VALUES (:placeholder_0, :placeholder_1), (:placeholder_2, :placeholder_3)) AS src (id, name) ON tgt.id=src.id WHEN MATCHED THEN UPDATE SET id=src.id, name=src.name WHEN NOT MATCHED THEN INSERT (id, name) VALUES (src.id, src.name);";
     $sth = $dbh->prepare($sql, [\PDO::ATTR_EMULATE_PREPARES => TRUE]);
     $args = [
@@ -238,8 +238,8 @@ class SqlsrvTest extends DatabaseTestBase {
     ];
     $sth->execute($args);
     $res = $dbh->query($select_sql)->fetchAll();
-    fwrite(STDOUT, print_r($res, TRUE));
-    assertSame($res, [['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
+    // fwrite(STDOUT, print_r($res, TRUE));
+    $this->assertSame($res, [['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
   }
 
   public function testDrupalEmulate() {
@@ -260,7 +260,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $sth->execute($args);
     $select_sql = "SELECT * FROM $prefixed_table";
     $res = $dbh->query($select_sql)->fetchAll();
-    fwrite(STDOUT, print_r($res, TRUE));
+    // fwrite(STDOUT, print_r($res, TRUE));
     $fields = ['id', 'name'];
     $values = [['id' => 0, 'name' => 'Ringo'],['id' => 3, 'name'=> 'George']];
     $this->connection->upsert('tablename')
@@ -269,7 +269,7 @@ class SqlsrvTest extends DatabaseTestBase {
       ->values($values[1])
       ->execute();
     $res = $dbh->query($select_sql)->fetchAll();
-    fwrite(STDOUT, print_r($res, TRUE));
+    // fwrite(STDOUT, print_r($res, TRUE));
     $this->assertSame($res, [['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
   }
 
