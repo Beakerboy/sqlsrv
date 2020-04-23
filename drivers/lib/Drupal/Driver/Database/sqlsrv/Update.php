@@ -20,20 +20,20 @@ class Update extends QueryUpdate {
     $schema = $this->connection->schema();
     $blobFields = $schema->getBlobFields($this->table);
     if (count($blobFields) === 0) {
-      //  Emulate prepares.
+      // Emulate prepares.
       $this->queryOptions['insecure'] = TRUE;
       return parent::execute();
     }
     else {
       // Retrieve query options.
       $options = $this->queryOptions;
-    
+
       // Because we filter $fields the same way here and in __toString(), the
       // placeholders will all match up properly.
       /** @var \Drupal\Core\Database\Statement $stmt */
       $stmt = $this->connection->prepareQuery((string) $this);
-      // Expressions take priority over literal fields, so we process those first
-      // and remove any literal fields that conflict.
+      // Expressions take priority over literal fields, so we process those
+      // first and remove any literal fields that conflict.
       $fields = $this->fields;
       foreach ($this->expressionFields as $field => $data) {
         if (!empty($data['arguments'])) {
