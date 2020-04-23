@@ -1279,8 +1279,8 @@ EOF
    * @param array $table
    *   A Schema API table definition array.
    *
-   * @return string
-   *   The SQL statement to create the table.
+   * @return array
+   *   A collection of SQL statements to create the table.
    */
   protected function createTableSql($name, array $table) {
     $statements = [];
@@ -1292,7 +1292,7 @@ EOF
       }
     }
 
-    $sql = "CREATE TABLE {$table} (" . PHP_EOL;
+    $sql = "CREATE TABLE {$name} (" . PHP_EOL;
     $sql .= implode("," . PHP_EOL, $sql_fields);
     $sql .= PHP_EOL . ")";
     array_unshift($statements, $sql);
