@@ -1292,10 +1292,7 @@ EOF
       }
     }
 
-    // Use already prefixed table name.
-    $table_prefixed = $this->connection->prefixTables('{' . $name . '}');
-
-    $sql = "CREATE TABLE [{$table_prefixed}] (" . PHP_EOL;
+    $sql = "CREATE TABLE {$table} (" . PHP_EOL;
     $sql .= implode("," . PHP_EOL, $sql_fields);
     $sql .= PHP_EOL . ")";
     array_unshift($statements, $sql);
