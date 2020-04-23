@@ -893,27 +893,13 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function createTable($name, $table) {
-    if ($this->tableExists($name)) {
-      throw new SchemaObjectExistsException(t('Table %name already exists.', ['%name' => $name]));
-    }
 
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
     $transaction = $this->connection->startTransaction();
-
-    // Create the table with a default technical primary key.
-    // $this->createTableSql already prefixes the table name, and we must
-    // inhibit prefixing at the query level because field
-    // default_context_menu_block_active_values definitions can contain string
-    // literals with braces.
-    $this->connection->queryDirect($this->createTableSql($name, $table), [], ['prefix_tables' => FALSE]);
-
-    // Create Field Comments.
-    foreach ($table['fields'] as $field_name => $field) {
-      if (isset($field['description'])) {
-        $this->connection->queryDirect($this->createCommentSQL($field['description'], $name, $field_name));
-      }
-    }
+    
+    parent::createTable($name, $table);
+    
     // If the spec had a primary key, set it now after all fields have been
     // created. We are creating the keys after creating the table so that
     // createPrimaryKey is able to introspect column definition from the
@@ -934,10 +920,6 @@ class Schema extends DatabaseSchema {
       foreach ($table['unique keys'] as $key_name => $key) {
         $this->addUniqueKey($name, $key_name, $key);
       }
-    }
-    // Add table comment.
-    if (!empty($table['description'])) {
-      $this->connection->queryDirect($this->createCommentSql($table['description'], $name));
     }
 
     unset($transaction);
@@ -1301,9 +1283,13 @@ EOF
    *   The SQL statement to create the table.
    */
   protected function createTableSql($name, array $table) {
+    $statements = [];
     $sql_fields = [];
     foreach ($table['fields'] as $field_name => $field) {
       $sql_fields[] = $this->createFieldSql($name, $field_name, $this->processField($field));
+      if (isset($field['description'])) {
+        $statements[] = $this->createCommentSQL($field['description'], $name, $field_name);
+      }
     }
 
     // Use already prefixed table name.
@@ -1312,7 +1298,11 @@ EOF
     $sql = "CREATE TABLE [{$table_prefixed}] (" . PHP_EOL;
     $sql .= implode("," . PHP_EOL, $sql_fields);
     $sql .= PHP_EOL . ")";
-    return $sql;
+    array_unshift($statements, $sql);
+    if (!empty($table['description'])) {
+      $statements[] = $this->createCommentSql($table['description'], $name);
+    }
+    return $statements;
   }
 
   /**
