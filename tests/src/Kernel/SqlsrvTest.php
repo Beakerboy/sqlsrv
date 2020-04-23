@@ -206,7 +206,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $sth->execute($args);
     $res = $dbh->query($select_sql)->fetchAll(\PDO::FETCH_ASSOC);
     //  fwrite(STDOUT, print_r($res, TRUE));
-    $this->assertSame($res, [['id' => 0, 'name' => 'Ringo'],[1, 'John'],['id' => 3, 'name'=> 'George']]);
+    $this->assertSame($res, [['id' => '0', 'name' => 'Ringo'],['id' => '1', 'name' => 'John'],['id' => '3', 'name'=> 'George']]);
   }
 
   public function testStraightEmulate() {
