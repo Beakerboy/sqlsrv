@@ -1292,7 +1292,7 @@ EOF
       }
     }
 
-    $sql = "CREATE TABLE {$name} (" . PHP_EOL;
+    $sql = "CREATE TABLE {{$name}} (" . PHP_EOL;
     $sql .= implode("," . PHP_EOL, $sql_fields);
     $sql .= PHP_EOL . ")";
     array_unshift($statements, $sql);
