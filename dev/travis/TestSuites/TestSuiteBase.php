@@ -11,6 +11,18 @@ use Drupal\Core\Test\TestDiscovery;
 abstract class TestSuiteBase extends TestSuite {
 
   /**
+   * Regex patterns to split up core extensions.
+   *
+   * @var array
+   */
+  protected $coreExtensionPatterns = [
+    '[A-Ea-e]',
+    '[F-Lf-l]',
+    '[M-Rm-r]',
+    '[S-Zs-z]',
+  ];
+
+  /**
    * The failing test files.
    *
    * @var array
