@@ -242,7 +242,12 @@ class SqlsrvTest extends DatabaseTestBase {
     $this->assertSame($res, [['id' => '0', 'name' => 'Ringo'], ['id' => '1', 'name' => 'John'], ['id' => '3', 'name'=> 'George']]);
   }
 
-  public function testDrupalEmulate() {
+  /**
+   * Test upsert.
+   *
+   * @dataProvider dataProviderForTestUpsert
+   */
+  public function testDrupalEmulate($options) {
     // $prefix = 'test7472526';
     $prefixed_table = $this->connection->prefixTables('{tablename}');
     $create_sql = "CREATE TABLE $prefixed_table (id int NOT NULL PRIMARY KEY, name varchar(20))";
@@ -263,7 +268,7 @@ class SqlsrvTest extends DatabaseTestBase {
     // fwrite(STDOUT, print_r($res, TRUE));
     $fields = ['id', 'name'];
     $values = [['id' => '0', 'name' => 'Ringo'], ['id' => '1', 'name' => 'John'], ['id' => '3', 'name'=> 'George']];
-    $this->connection->upsert('tablename')
+    $this->connection->upsert('tablename', $options)
       ->fields($fields)
       ->key('id')
       ->values($values[0])
@@ -274,4 +279,16 @@ class SqlsrvTest extends DatabaseTestBase {
     $this->assertSame($res, [['id' => '0', 'name' => 'Ringo'],['id' => '1', 'name' => 'John'],['id' => '3', 'name'=> 'George']]);
   }
 
+  public function dataProviderForTestUpsert() {
+    return [
+      'Prepared' => [
+        [],
+      ],
+      'Emulate' => [
+        [
+          ['insecure' => TRUE],
+        ],
+      ],
+    ];
+  }
 }
