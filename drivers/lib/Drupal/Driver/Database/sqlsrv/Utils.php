@@ -108,7 +108,7 @@ class Utils {
       }
     }
   }
-  
+
   /**
    * Returns the spec for a MSSQL data type definition.
    *
