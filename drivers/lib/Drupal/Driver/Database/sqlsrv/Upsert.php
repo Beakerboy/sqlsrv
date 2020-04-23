@@ -19,7 +19,7 @@ class Upsert extends QueryUpsert {
     /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
     $schema = $this->connection->schema();
     $blobFields = $schema->getBlobFields($this->table);
-    if (count($blobFields) === 0) {
+    if (count($blobFields) === 0 && $this->queryOptions['insecure'] === TRUE) {
       //  Emulate prepares.
       $this->queryOptions['insecure'] = TRUE;
       $this->queryOptions['allow_delimiter_in_query'] = TRUE;
