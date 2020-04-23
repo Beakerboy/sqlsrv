@@ -20,7 +20,7 @@ class Upsert extends QueryUpsert {
     $schema = $this->connection->schema();
     $blobFields = $schema->getBlobFields($this->table);
     if (count($blobFields) === 0) {
-      //  Emulate prepares.
+      // Emulate prepares.
       $this->queryOptions['insecure'] = TRUE;
       $this->queryOptions['allow_delimiter_in_query'] = TRUE;
       $max_placeholder = -1;
@@ -30,7 +30,7 @@ class Upsert extends QueryUpsert {
           $values[':db_upsert_placeholder_' . ++$max_placeholder] = $value;
         }
       }
-      $this->connection->query((string)$this, $values, $this->queryOptions);
+      $this->connection->query((string) $this, $values, $this->queryOptions);
       return NULL;
     }
     if (count($this->insertValues) === 1) {
@@ -46,9 +46,9 @@ class Upsert extends QueryUpsert {
     if (!$this->preExecute()) {
       return NULL;
     }
-   
+
     $this->queryOptions['allow_delimiter_in_query'] = TRUE;
-   
+
     $batch = array_splice($this->insertValues, 0, min(intdiv(2000, count($this->insertFields)), self::MAX_BATCH_SIZE));
 
     // If we are going to need more than one batch for this, start a
