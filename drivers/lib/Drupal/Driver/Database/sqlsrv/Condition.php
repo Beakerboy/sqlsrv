@@ -55,7 +55,7 @@ class Condition extends QueryCondition {
    * {@inheritdoc}
    *
    * Overridden to replace REGEXP expressions.
-   * Need to add consideration for NOT REGEXP.
+   * Needs to be tested for complex nested expressions.
    */
   public function where($snippet, $args = []) {
     $operator = '';
@@ -73,15 +73,9 @@ class Condition extends QueryCondition {
       /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema*/
       $schema = $connection->schema();
       $schema_name = $schema->getDefaultSchema();
-      $expression = "{$schema_name}.REGEXP({$value}, {$field}) = {$comparison}";
-      $this->conditions[] = [
-        'field' => $expression,
-        'value' => $args,
-        'operator' => NULL,
-      ];
-      $this->changed = TRUE;
+      $snippet = "{$schema_name}.REGEXP({$value}, {$field}) = {$comparison}";
     }
-    return $this;
+    return parent::where($snippet, $args);
   }
 
 }
