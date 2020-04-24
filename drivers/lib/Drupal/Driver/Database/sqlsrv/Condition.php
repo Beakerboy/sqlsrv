@@ -75,7 +75,7 @@ class Condition extends QueryCondition {
       $schema_name = $schema->getDefaultSchema();
       $expression = "{$schema_name}.REGEXP({$value}, {$field}) = {$comparison}";
       $this->conditions[] = [
-        'field' = $expression,
+        'field' => $expression,
         'value' => $args,
         'operator' => NULL,
       ];
