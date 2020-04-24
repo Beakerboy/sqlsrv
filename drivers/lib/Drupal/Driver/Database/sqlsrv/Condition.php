@@ -59,10 +59,10 @@ class Condition extends QueryCondition {
    */
   public function where($snippet, $args = []) {
     $operator = '';
-    if (strpos($snippet, " NOT REGEXP " !== FALSE)) {
+    if (strpos($snippet, " NOT REGEXP ") !== FALSE) {
       $operator = ' NOT REGEXP ';
     }
-    elseif (strpos($snippet, " REGEXP " !== FALSE)) {
+    elseif (strpos($snippet, " REGEXP ") !== FALSE) {
       $operator = ' REGEXP ';
     }
     if ($operator !== '') {
