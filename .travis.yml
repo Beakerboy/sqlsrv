@@ -56,7 +56,7 @@ install:
       wget https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
       wget https://www.drupal.org/files/issues/2020-04-06/3125391-3.patch
       wget https://www.drupal.org/files/issues/2020-04-18/3128761-2.patch
-      wget https://www.drupal.org/files/issues/2020-04-24/3130655-3.patchh
+      wget https://www.drupal.org/files/issues/2020-04-24/3130655-3.patch
       git apply 3128761-2.patch
       git apply 2867788-79.patch
       git apply 3125391-3.patch
