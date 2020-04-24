@@ -935,7 +935,9 @@ class Schema extends DatabaseSchema {
         }
         catch (\Exception $e) {
           // Log the exception but do not rollback the transaction.
-          watchdog_exception('database', $e);
+          if ($this->tableExists('watchdog')) {
+            watchdog_exception('database', $e);
+          }
         }
       }
     }
@@ -1541,7 +1543,6 @@ EOF
     if (isset($field['type']) && $field['type'] == 'serial') {
       $field['identity'] = TRUE;
     }
-   
     return $field;
   }
 

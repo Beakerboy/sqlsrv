@@ -71,7 +71,7 @@ install:
       $cwd = (Get-Location).Path;
       "php $cwd\vendor\drupal\console\bin\drupal " + $([char]37) + "*" | Out-File $cwd/web/drupal.bat -Encoding ASCII
   - cmd: cd /d C:\projects\drupal-project\web
-  - cmd: xcopy "%APPVEYOR_BUILD_FOLDER%\chef" "C:\projects\drupal-project\chef" /r /s /i
+  - cmd: xcopy "%APPVEYOR_BUILD_FOLDER%\dev\appveyor" "C:\projects\drupal-project\chef" /r /s /i
   - ps: Invoke-ChefSelfInstall -Path "c:\chef"
   - ps: Invoke-ChefAppDeployPath "C:\projects\drupal-project" drupal -Install
   - ps: $site = Invoke-ChefAppGetDeployment drupal
