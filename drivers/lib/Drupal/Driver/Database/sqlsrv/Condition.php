@@ -46,6 +46,13 @@ class Condition extends QueryCondition {
             '\\\\' => '\\',
           ]);
         }
+        elseif ($condition['operator'] == 'PREFIX_SCHEMA') {
+          /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema*/
+          $schema = $connection->schema();
+          $schema_name = $schema->getDefaultSchema();
+          $condition['field'] = $schema_name .  '.' . $condition['field'];
+          $condition['operator'] = NULL;
+        }
       }
     }
     parent::compile($connection, $queryPlaceholder);
@@ -58,24 +65,30 @@ class Condition extends QueryCondition {
    * Needs to be tested for complex nested expressions.
    */
   public function where($snippet, $args = []) {
-    $operator = '';
+    $operator = NULl;
     if (strpos($snippet, " NOT REGEXP ") !== FALSE) {
       $operator = ' NOT REGEXP ';
     }
     elseif (strpos($snippet, " REGEXP ") !== FALSE) {
       $operator = ' REGEXP ';
     }
-    if ($operator !== '') {
+    if ($operator !== NULl) {
       $fragments = explode($operator, $snippet);
       $field = $fragments[0];
       $value = $fragments[1];
       $comparison = $operator == ' REGEXP ' ? '1' : '0';
-      /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema*/
-      $schema = $connection->schema();
-      $schema_name = $schema->getDefaultSchema();
-      $snippet = "{$schema_name}.REGEXP({$value}, {$field}) = {$comparison}";
+     
+      $snippet = "REGEXP({$value}, {$field}) = {$comparison}";
+      // We need the connection in order to add the schema.
+      $operator ='PREFIX_SCHEMA',
     }
-    return parent::where($snippet, $args);
+    $this->conditions[] = [
+      'field' => $snippet,
+      'value' => $args,
+      'operator' => $operator,
+    ];
+    $this->changed = TRUE;
+    return $this;
   }
 
 }
