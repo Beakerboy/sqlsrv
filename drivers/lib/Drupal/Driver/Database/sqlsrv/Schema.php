@@ -34,6 +34,27 @@ class Schema extends DatabaseSchema {
   const COMMENT_MAX_BYTES = 7500;
 
   /**
+   * Maximum length of a Primary Key.
+   *
+   * @var int
+   */
+  const PRIMARY_KEY_BYTES = 900;
+  
+  /**
+   * Maximum length of a clustered index.
+   *
+   * @var int
+   */
+  const CLUSTERED_INDEX_BYTES = 900;
+  
+  /**
+   * Maximum length of a non-clustered index.
+   *
+   * @var int
+   */
+  const NONCLUSTERED_INDEX_BYTES = 1700;
+  
+  /**
    * Default recommended collation for SQL Server.
    *
    * @var string
@@ -762,7 +783,7 @@ class Schema extends DatabaseSchema {
    *      - definition: If a computed column, the computation formulae.
    *      - default_value: Default value for the column (if any).
    */
-  public function queryColumnInformation($table, $refresh = FALSE) {
+  public function queryColumnInformation($table) {
 
     if (empty($table) || !$this->tableExists($table)) {
       return [];
@@ -1585,9 +1606,6 @@ EOF
     // Recreate the Primary Key with the given limit size.
     $this->createPrimaryKey($table, $primary_key_fields, $limit);
 
-    // Refresh introspection for this table.
-    $this->queryColumnInformation($table, TRUE);
-
   }
 
   /**
@@ -1704,7 +1722,7 @@ EOF;
    *   Fields participating in the Primary Key.
    */
   public function introspectPrimaryKeyFields($table) {
-    $data = $this->queryColumnInformation($table, TRUE);
+    $data = $this->queryColumnInformation($table);
     // All primary keys have a default index,
     // use that to see if we have a primary key
     // before iterating.
@@ -1790,7 +1808,7 @@ EOF;
     }
 
     // If this column is part of a computed primary key, drop the key.
-    $data = $this->queryColumnInformation($table, TRUE);
+    $data = $this->queryColumnInformation($table);
     if (isset($data['columns'][self::COMPUTED_PK_COLUMN_NAME]['dependencies'][$field])) {
       $this->cleanUpPrimaryKey($table);
     }
