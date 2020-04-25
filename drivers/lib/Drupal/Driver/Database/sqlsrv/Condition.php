@@ -50,7 +50,7 @@ class Condition extends QueryCondition {
           /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema*/
           $schema = $connection->schema();
           $schema_name = $schema->getDefaultSchema();
-          $condition['field'] = $schema_name .  '.' . $condition['field'];
+          $condition['field'] = $schema_name . '.' . $condition['field'];
           $condition['operator'] = NULL;
         }
       }
@@ -65,22 +65,22 @@ class Condition extends QueryCondition {
    * Needs to be tested for complex nested expressions.
    */
   public function where($snippet, $args = []) {
-    $operator = NULl;
+    $operator = NULL;
     if (strpos($snippet, " NOT REGEXP ") !== FALSE) {
       $operator = ' NOT REGEXP ';
     }
     elseif (strpos($snippet, " REGEXP ") !== FALSE) {
       $operator = ' REGEXP ';
     }
-    if ($operator !== NULl) {
+    if ($operator !== NULL) {
       $fragments = explode($operator, $snippet);
       $field = $fragments[0];
       $value = $fragments[1];
       $comparison = $operator == ' REGEXP ' ? '1' : '0';
-     
+
       $snippet = "REGEXP({$value}, {$field}) = {$comparison}";
       // We need the connection in order to add the schema.
-      $operator ='PREFIX_SCHEMA';
+      $operator = 'PREFIX_SCHEMA';
     }
     $this->conditions[] = [
       'field' => $snippet,
