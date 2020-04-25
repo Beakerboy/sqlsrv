@@ -80,7 +80,7 @@ class Condition extends QueryCondition {
      
       $snippet = "REGEXP({$value}, {$field}) = {$comparison}";
       // We need the connection in order to add the schema.
-      $operator ='PREFIX_SCHEMA',
+      $operator ='PREFIX_SCHEMA';
     }
     $this->conditions[] = [
       'field' => $snippet,
