@@ -39,21 +39,21 @@ class Schema extends DatabaseSchema {
    * @var int
    */
   const PRIMARY_KEY_BYTES = 900;
-  
+
   /**
    * Maximum length of a clustered index.
    *
    * @var int
    */
   const CLUSTERED_INDEX_BYTES = 900;
-  
+
   /**
    * Maximum length of a non-clustered index.
    *
    * @var int
    */
   const NONCLUSTERED_INDEX_BYTES = 1700;
-  
+
   /**
    * Default recommended collation for SQL Server.
    *
