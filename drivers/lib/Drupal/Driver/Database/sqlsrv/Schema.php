@@ -914,27 +914,13 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function createTable($name, $table) {
-    if ($this->tableExists($name)) {
-      throw new SchemaObjectExistsException(t('Table %name already exists.', ['%name' => $name]));
-    }
 
     // Build the table and its unique keys in a transaction, and fail the whole
     // creation in case of an error.
     $transaction = $this->connection->startTransaction();
 
-    // Create the table with a default technical primary key.
-    // $this->createTableSql already prefixes the table name, and we must
-    // inhibit prefixing at the query level because field
-    // default_context_menu_block_active_values definitions can contain string
-    // literals with braces.
-    $this->connection->queryDirect($this->createTableSql($name, $table), [], ['prefix_tables' => FALSE]);
+    parent::createTable($name, $table);
 
-    // Create Field Comments.
-    foreach ($table['fields'] as $field_name => $field) {
-      if (isset($field['description'])) {
-        $this->connection->queryDirect($this->createCommentSQL($field['description'], $name, $field_name));
-      }
-    }
     // If the spec had a primary key, set it now after all fields have been
     // created. We are creating the keys after creating the table so that
     // createPrimaryKey is able to introspect column definition from the
@@ -955,10 +941,6 @@ class Schema extends DatabaseSchema {
       foreach ($table['unique keys'] as $key_name => $key) {
         $this->addUniqueKey($name, $key_name, $key);
       }
-    }
-    // Add table comment.
-    if (!empty($table['description'])) {
-      $this->connection->queryDirect($this->createCommentSql($table['description'], $name));
     }
 
     unset($transaction);
@@ -1320,22 +1302,27 @@ EOF
    * @param array $table
    *   A Schema API table definition array.
    *
-   * @return string
-   *   The SQL statement to create the table.
+   * @return array
+   *   A collection of SQL statements to create the table.
    */
   protected function createTableSql($name, array $table) {
+    $statements = [];
     $sql_fields = [];
     foreach ($table['fields'] as $field_name => $field) {
       $sql_fields[] = $this->createFieldSql($name, $field_name, $this->processField($field));
+      if (isset($field['description'])) {
+        $statements[] = $this->createCommentSQL($field['description'], $name, $field_name);
+      }
     }
 
-    // Use already prefixed table name.
-    $table_prefixed = $this->connection->prefixTables('{' . $name . '}');
-
-    $sql = "CREATE TABLE [{$table_prefixed}] (" . PHP_EOL;
+    $sql = "CREATE TABLE {{$name}} (" . PHP_EOL;
     $sql .= implode("," . PHP_EOL, $sql_fields);
     $sql .= PHP_EOL . ")";
-    return $sql;
+    array_unshift($statements, $sql);
+    if (!empty($table['description'])) {
+      $statements[] = $this->createCommentSql($table['description'], $name);
+    }
+    return $statements;
   }
 
   /**
@@ -1955,7 +1942,7 @@ EOF;
    */
   protected function createCommentSql($value, $table = NULL, $column = NULL) {
     $schema = $this->getDefaultSchema();
-    $value = $this->connection->quote($value);
+    $value = $this->prepareComment($value);
 
     $sql = "EXEC sp_addextendedproperty @name=N'MS_Description', @value={$value}";
     $sql .= ",@level0type = N'Schema', @level0name = '{$schema}'";
