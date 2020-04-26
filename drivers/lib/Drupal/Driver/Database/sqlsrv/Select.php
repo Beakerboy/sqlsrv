@@ -318,7 +318,7 @@ class Select extends QuerySelect {
           // primary keys or custom computed columns.
           if (isset($info['columns_clean'])) {
             foreach ($info['columns_clean'] as $column) {
-              $fields[] = $this->connection->escapeTable($alias) . '.' . $column['name'];
+              $fields[] = $this->connection->escapeTable($alias) . '.' . $this->connection->escapeField($column['name']);
             }
           }
         }
