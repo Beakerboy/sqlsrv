@@ -316,11 +316,9 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function getFullQualifiedTableName($table) {
-    return $table;
     $options = $this->getConnectionOptions();
     $prefix = $this->tablePrefix($table);
     $schema_name = $this->schema->getDefaultSchema();
-    return $schema_name . '.' . $prefix . $table;
     return $options['database'] . '.' . $schema_name . '.' . $prefix . $table;
   }
 
