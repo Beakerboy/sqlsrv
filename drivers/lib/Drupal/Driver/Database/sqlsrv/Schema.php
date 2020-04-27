@@ -727,7 +727,7 @@ class Schema extends DatabaseSchema {
       $this->defaultSchema = $options['schema'];
     }
   }
-  
+
   /**
    * {@inheritdoc}
    *
