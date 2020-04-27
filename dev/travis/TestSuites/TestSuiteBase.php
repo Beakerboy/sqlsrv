@@ -34,13 +34,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
     '/core/modules/migrate_drupal/tests/src/Kernel/d7/FieldDiscoveryTest.php',
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
-    '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
-    '/core/modules/node/tests/src/Kernel/Migrate/d7/MigrateNodeTest.php',
     '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
-    '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTaxonomyVocabularyTranslationTest.php',
-    '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTaxonomyTermTranslationTest.php',
-    '/core/modules/taxonomy/tests/src/Kernel/Migrate/d6/MigrateTermLocalizedTranslationTest.php',
-    '/core/modules/taxonomy/tests/src/Kernel/Migrate/d7/MigrateTermLocalizedTranslationTest.php',
     '/core/modules/views/tests/src/Kernel/Handler/FilterCombineTest.php',
     '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
   ];

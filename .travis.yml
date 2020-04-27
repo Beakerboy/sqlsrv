@@ -53,22 +53,31 @@ install:
       composer update phpunit/phpunit symfony/phpunit-bridge phpspec/prophecy symfony/yaml --with-dependencies
       composer require --dev phpstan/phpstan-phpunit
       # Core patches
+      # Logger backtrace incorrect. pushed to 9.x
       wget https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
-      wget https://www.drupal.org/files/issues/2020-04-06/3125391-3.patch
+      # Duplicate placeholder in a core query. awaiting merge to core.
       wget https://www.drupal.org/files/issues/2020-04-18/3128761-2.patch
+      # core Condition not able to be overridden in views...needs work. 
       wget https://www.drupal.org/files/issues/2020-04-24/3130655-3.patch
       git apply 3128761-2.patch
       git apply 2867788-79.patch
-      git apply 3125391-3.patch
       git apply 3130655-3.patch
       # Testing-only patches
+      # Fix format of deprecation notices for phpcs 
       wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
+      # Add a sqlsrv-specific datatype to test
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
-      wget https://www.drupal.org/files/issues/2020-04-15/2966272-15.patch
+      # Enable sqlsrv module in specific kernel tests
+      wget https://www.drupal.org/files/issues/2020-04-27/2966272-15.patch
+      # docbloc return type not correct...for phpstan
+      wget https://www.drupal.org/files/issues/2020-04-06/3125391-3.patch
       git apply 2966272-15.patch
       git apply drupal-3111134-database_specific_types-3.patch
       git apply 3108540-11.patch
+      git apply 3125391-3.patch
+      git apply 3125391-3.patch
       if [ "${DRUPAL_VERSION}" == "8.8.x" ]; then
+        # Override core Condition 
         wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
         git apply 3113403-33.patch
       fi
