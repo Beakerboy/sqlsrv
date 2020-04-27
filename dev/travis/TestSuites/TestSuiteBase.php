@@ -33,6 +33,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
     '/core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
     '/core/modules/migrate_drupal/tests/src/Kernel/d7/FieldDiscoveryTest.php',
+    '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
     '/core/modules/views/tests/src/Kernel/Handler/FilterCombineTest.php',
