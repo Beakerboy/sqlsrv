@@ -727,6 +727,28 @@ class Schema extends DatabaseSchema {
       $this->defaultSchema = $options['schema'];
     }
   }
+  
+  /**
+   * {@inheritdoc}
+   *
+   * Temporary tables and regular tables cannot be verified in the same way.
+   */
+  public function tableExists($table) {
+    // If $table is NULL, then $table[0] will generate a notice.
+    if (empty($table)) {
+      return FALSE;
+    }
+    // Temporary tables and regular tables cannot be verified in the same way.
+    $query = NULL;
+    if ($table[0] == '#') {
+      $query = "SELECT 1 FROM tempdb.sys.tables WHERE name like '" . $this->connection->prefixTables('{' . $table . '}') . "%'";
+    }
+    else {
+      $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'";
+    }
+
+    return (bool) $this->connection->queryDirect($query)->fetchField()
+  }
 
   /**
    * Drupal specific functions.
@@ -1002,36 +1024,6 @@ class Schema extends DatabaseSchema {
       $comments = array_filter($comments[3]);
     }
     return $uncommentedSQL;
-  }
-
-  /**
-   * Find if a table already exists.
-   *
-   * @param string $table
-   *   Name of the table.
-   *
-   * @return bool
-   *   True if the table exists, false otherwise.
-   */
-  public function tableExists($table) {
-    // If $table is NULL, then $table[0] will generate a notice.
-    if (empty($table)) {
-      return FALSE;
-    }
-    // Temporary tables and regular tables cannot be verified in the same way.
-    $query = NULL;
-    if ($table[0] == '#') {
-      $query = "SELECT 1 FROM tempdb.sys.tables WHERE name like '" . $this->connection->prefixTables('{' . $table . '}') . "%'";
-    }
-    else {
-      $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'";
-    }
-
-    $exists = $this->connection
-      ->queryDirect($query)
-      ->fetchField() !== FALSE;
-
-    return $exists;
   }
 
   /**
