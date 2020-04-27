@@ -319,7 +319,8 @@ class Connection extends DatabaseConnection {
     $options = $this->getConnectionOptions();
     $prefix = $this->tablePrefix($table);
     $schema_name = $this->schema->getDefaultSchema();
-    return $prefix . $table;
+    return parent:: getFullQualifiedTableName($table);
+    // return $options['database'] . '.' . $schema_name . '.' . $prefix . $table;
   }
 
   /**
