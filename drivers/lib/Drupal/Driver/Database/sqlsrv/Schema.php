@@ -747,7 +747,7 @@ class Schema extends DatabaseSchema {
       $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'";
     }
 
-    return (bool) $this->connection->queryDirect($query)->fetchField()
+    return (bool) $this->connection->queryDirect($query)->fetchField();
   }
 
   /**
