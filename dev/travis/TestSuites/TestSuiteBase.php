@@ -36,7 +36,6 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
-    '/core/modules/views/tests/src/Kernel/Handler/FilterCombineTest.php',
     '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
   ];
 
