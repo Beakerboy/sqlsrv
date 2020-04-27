@@ -35,7 +35,7 @@ expressions, a CLR will need to be installed that is equivalent to
 
 ### Minimum Requirements
  * Drupal 8.8.0
- * SQL Server 2014
+ * SQL Server 2016
  * pdo_sqlsrv 5.8.0
 
 Usage
