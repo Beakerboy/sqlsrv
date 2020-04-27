@@ -59,12 +59,12 @@ install:
       wget https://www.drupal.org/files/issues/2020-04-18/3128761-2.patch
       # core Condition not able to be overridden in views...needs work. 
       wget https://www.drupal.org/files/issues/2020-04-24/3130655-3.patch
-      # CONCAT_WS requres at least two arguments
-      wget http://beakerboy.com/~kevin/filter_combine.patch
+      # CONCAT_WS requires at least three arguments
+      wget https://www.drupal.org/files/issues/2020-04-27/3131379-2.patch
       git apply 3128761-2.patch
       git apply 2867788-79.patch
       git apply 3130655-3.patch
-      git apply filter_combine.patch
+      git apply 3131379-2.patch
       # Testing-only patches
       # Fix format of deprecation notices for phpcs 
       wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
