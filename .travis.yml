@@ -60,7 +60,7 @@ install:
       # core Condition not able to be overridden in views...needs work. 
       wget https://www.drupal.org/files/issues/2020-04-24/3130655-3.patch
       # CONCAT_WS requres at least two arguments
-      wget https://beakerboy.com/~kevin/filter_combine.patch
+      wget http://beakerboy.com/~kevin/filter_combine.patch
       git apply 3128761-2.patch
       git apply 2867788-79.patch
       git apply 3130655-3.patch
