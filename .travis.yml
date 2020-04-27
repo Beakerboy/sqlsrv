@@ -65,9 +65,11 @@ install:
       wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
       wget https://www.drupal.org/files/issues/2020-04-15/2966272-11.patch
+      wget http://beakerboy.com/~kevin/sqlsrv.patch
       git apply 2966272-11.patch
       git apply drupal-3111134-database_specific_types-3.patch
       git apply 3108540-11.patch
+      git apply sqlsrv.patch
       if [ "${DRUPAL_VERSION}" == "8.8.x" ]; then
         wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
         git apply 3113403-33.patch
