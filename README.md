@@ -66,12 +66,24 @@ escape character multiple times. This bug just affects the backslash.
 
 Outstanding Issues
 -----
-The 8.x-1.x branch is not able to pass all Drupal tests due to limitations in
+The 1.x branch is not able to pass all Drupal tests due to limitations in
 SQL server before SQL Server 2019. These earlier vesions do not natively
 support UTF8 character encoding. This means most string data is stored in the
 database as an `nvarchar`. Converting nvarchar to varbinary and back leads to
 data corruption.
 
-This branch creates the database with a case-insensitive collation for text
+The 1.x branch creates the database with a case-insensitive collation for text
 fields. However, all non-MySQL databases use case-sensitive default. One
 Kernel Test fails due to this default in this driver.
+
+The following are outstanding core issues that affect the sqlsrv driver.
+
+All Versions:
+* https://www.drupal.org/files/issues/2020-04-18/3128761-2.patch
+* https://www.drupal.org/files/issues/2020-04-24/3130655-3.patch
+
+Drupal 8.x:
+* https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
+
+Drupal 8.8.x:
+* https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
