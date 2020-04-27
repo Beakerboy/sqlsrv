@@ -69,8 +69,6 @@ install:
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
       # Enable sqlsrv module in specific kernel tests
       wget https://www.drupal.org/files/issues/2020-04-27/2966272-15.patch
-      # docbloc return type not correct...for phpstan. Patch is outdated.
-      wget https://www.drupal.org/files/issues/2020-04-06/3125391-3.patch
       git apply 2966272-15.patch
       git apply drupal-3111134-database_specific_types-3.patch
       git apply 3108540-11.patch
@@ -79,6 +77,9 @@ install:
         # Override core Condition 
         wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
         git apply 3113403-33.patch
+        # docbloc return type not correct...for phpstan. Patch is outdated.
+        wget https://www.drupal.org/files/issues/2020-04-06/3125391-3.patch
+        git apply 3125391-3.patch
       fi
     fi
   - cp -r $TRAVIS_BUILD_DIR/drivers ./drivers
