@@ -77,7 +77,6 @@
     <testsuite name="passing_unit">
       <file> ../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensionsUnitTestSuite.php</file>
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
-     
     </testsuite>
     <testsuite name="passing_functional">
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Bootstrap</directory>
