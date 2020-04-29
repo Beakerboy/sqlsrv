@@ -77,8 +77,7 @@
     <testsuite name="passing_unit">
       <file> ../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensionsUnitTestSuite.php</file>
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
-      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Installer</directory>
-      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Routing</directory>
+     
     </testsuite>
     <testsuite name="passing_functional">
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Bootstrap</directory>
@@ -88,46 +87,11 @@
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Hal</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/HttpKernel</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Image</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Installer</directory>
     </testsuite>
-    <testsuite name="passing_functional3">
-      <file>./tests/Drupal/FunctionalTests/Rest/BaseFieldOverrideJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/BaseFieldOverrideJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/BaseFieldOverrideJsonCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/BaseFieldOverrideXmlAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/BaseFieldOverrideXmlBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/BaseFieldOverrideXmlCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/DateFormatJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/DateFormatJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/DateFormatJsonCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/DateFormatXmlAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/DateFormatXmlBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/DateFormatXmlCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayJsonCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayXmlAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayXmlBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormDisplayXmlCookieTest.php</file>
-    </testsuite>
-    <testsuite name="passing_functional4">
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormModeJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormModeJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormModeJsonCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormModeXmlAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormModeXmlBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityFormModeXmlCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewDisplayJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewDisplayJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewDisplayJsonCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewDisplayXmlAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewDisplayXmlBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewDisplayXmlCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewModeJsonAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewModeJsonBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewModeJsonCookieTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewModeXmlAnonTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewModeXmlBasicAuthTest.php</file>
-      <file>./tests/Drupal/FunctionalTests/Rest/EntityViewModeXmlCookieTest.php</file>
+    <testsuite name="passing_functional2">
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Rest</directory>
+      <directory suffix="Test.php">tests/Drupal/FunctionalTests/Routing</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Theme</directory>
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Update</directory>
     </testsuite>
