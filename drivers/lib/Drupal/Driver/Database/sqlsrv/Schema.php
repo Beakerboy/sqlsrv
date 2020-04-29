@@ -833,7 +833,7 @@ class Schema extends DatabaseSchema {
     }
 
     if (isset($this->columnInformation[$table])) {
-      return $this->columnInformation[$table]
+      return $this->columnInformation[$table];
     }
 
     $table_info = $this->getPrefixInfo($table);
