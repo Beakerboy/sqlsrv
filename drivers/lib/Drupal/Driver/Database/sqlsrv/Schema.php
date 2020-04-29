@@ -105,6 +105,13 @@ class Schema extends DatabaseSchema {
   protected $engineVersion;
 
   /**
+   * Table schema.
+   *
+   * @var mixed
+   */
+  private $columnInformation = [];
+
+  /**
    * {@inheritdoc}
    */
   public function getFieldTypeMap() {
@@ -188,6 +195,7 @@ class Schema extends DatabaseSchema {
         ]);
       }
     }
+    $this->resetColumnInformation($table);
   }
 
   /**
@@ -198,6 +206,7 @@ class Schema extends DatabaseSchema {
       return FALSE;
     }
     $this->connection->queryDirect('DROP TABLE {' . $table . '}');
+    $this->resetColumnInformation($table);
     return TRUE;
   }
 
@@ -257,7 +266,7 @@ class Schema extends DatabaseSchema {
     $query = "ALTER TABLE {$table_prefixed} ADD ";
     $query .= $this->createFieldSql($table, $field, $spec);
     $this->connection->queryDirect($query, [], ['prefix_tables' => FALSE]);
-
+    $this->resetColumnInformation($table);
     // Load the initial data.
     if (isset($spec['initial_from_field'])) {
       if (isset($spec['initial'])) {
@@ -293,6 +302,7 @@ class Schema extends DatabaseSchema {
       $spec['not null'] = TRUE;
       $field_sql = $this->createFieldSql($table, $field, $spec, TRUE);
       $this->connection->queryDirect("ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}");
+      $this->resetColumnInformation($table);
     }
 
     $this->recreateTableKeys($table, $keys_new);
@@ -328,6 +338,7 @@ class Schema extends DatabaseSchema {
     }
 
     $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
+    $this->resetColumnInformation($table);
     return TRUE;
   }
 
@@ -352,6 +363,7 @@ class Schema extends DatabaseSchema {
 
     // Create the new default.
     $this->connection->query('ALTER TABLE [{' . $table . '}] ADD CONSTRAINT {' . $table . '}_' . $field . '_df DEFAULT ' . $default . ' FOR [' . $field . ']');
+    $this->resetColumnInformation($table);
   }
 
   /**
@@ -365,6 +377,7 @@ class Schema extends DatabaseSchema {
     }
 
     $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT {' . $table . '}_' . $field . '_df');
+    $this->resetColumnInformation($table);
   }
 
   /**
@@ -390,6 +403,7 @@ class Schema extends DatabaseSchema {
       if ($this->isTechnicalPrimaryKey($primary_key_name)) {
         // Destroy the existing technical primary key.
         $this->connection->queryDirect('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
+        $this->resetColumnInformation($table);
         $this->cleanUpTechnicalPrimaryColumn($table);
       }
       else {
@@ -419,6 +433,7 @@ class Schema extends DatabaseSchema {
     $this->cleanUpPrimaryKey($table);
     $this->createTechnicalPrimaryColumn($table);
     $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")");
+    $this->resetColumnInformation($table);
     return TRUE;
   }
 
@@ -472,6 +487,7 @@ class Schema extends DatabaseSchema {
     // in the columns of the unique key.
     $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST(" . self::TECHNICAL_PK_COLUMN_NAME . " AS varbinary(max)))) AS varbinary(16))");
     $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON {{$table}} (__unique_{$name})");
+    $this->resetColumnInformation($table);
   }
 
   /**
@@ -484,7 +500,7 @@ class Schema extends DatabaseSchema {
 
     $this->connection->query("DROP INDEX {$name}_unique ON {{$table}}");
     $this->connection->query("ALTER TABLE {{$table}} DROP COLUMN __unique_{$name}");
-
+    $this->resetColumnInformation($table);
     // Try to clean-up the technical primary key if possible.
     $this->cleanUpTechnicalPrimaryColumn($table);
 
@@ -515,6 +531,7 @@ class Schema extends DatabaseSchema {
       }
     }
     $this->connection->query($sql);
+    $this->resetColumnInformation($table);
   }
 
   /**
@@ -531,7 +548,7 @@ class Schema extends DatabaseSchema {
     }
 
     $this->connection->query('DROP INDEX ' . $name . '_idx ON [{' . $table . '}]');
-
+    $this->resetColumnInformation($table);
     // If we just dropped an XML index, we can re-expand the original primary
     // key index.
     if ($expand) {
@@ -652,6 +669,7 @@ class Schema extends DatabaseSchema {
       ':new' => $field . '_old',
       ':type' => 'COLUMN',
     ]);
+    $this->resetColumnInformation($table);
 
     // If the new column does not allow nulls, we need to
     // create it first as nullable, then either migrate
@@ -674,6 +692,7 @@ class Schema extends DatabaseSchema {
       // errors.
       $sql = "UPDATE {{$table}} SET {$field_new}=CAST({$field}_old AS {$new_data_type})";
       $this->connection->queryDirect($sql);
+      $this->resetColumnInformation($table);
     }
 
     // Switch to NOT NULL now.
@@ -685,12 +704,14 @@ class Schema extends DatabaseSchema {
         $default_expression = $this->defaultValueExpression($spec['sqlsrv_type'], $spec['default']);
         $sql = "UPDATE {{$table}} SET {$field_new} = {$default_expression} WHERE {$field_new} IS NULL";
         $this->connection->queryDirect($sql);
+        $this->resetColumnInformation($table);
       }
       // Now it's time to make this non-nullable.
       $spec['not null'] = TRUE;
       $field_sql = $this->createFieldSql($table, $field_new, $spec, TRUE);
       $sql = "ALTER TABLE {{$table}} ALTER COLUMN {$field_sql}";
       $this->connection->queryDirect($sql);
+      $this->resetColumnInformation($table);
     }
     // Recreate the primary key if no new primary key has been sent along with
     // the change field.
@@ -811,6 +832,10 @@ class Schema extends DatabaseSchema {
       return [];
     }
 
+    if (isset($this->columnInformation[$table])) {
+      return $this->columnInformation[$table]
+    }
+
     $table_info = $this->getPrefixInfo($table);
 
     // We could adapt the current code to support temporary table introspection,
@@ -928,8 +953,16 @@ class Schema extends DatabaseSchema {
         $info['columns_clean'][$index_column->column_name]['indexes'][] = $index_column->index_name;
       }
     }
+    $this->columnInformation[$table] = $info;
 
     return $info;
+  }
+
+  /**
+   * Unset cached table schema.
+   */
+  public function resetColumnInformation($table) {
+    unset($this->columnInformation[$table]);
   }
 
   /**
@@ -1259,7 +1292,7 @@ EOF
     }
 
     $this->connection->queryDirect('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
-
+    $this->resetColumnInformation($table);
     // If we relied on a computed column for the Primary Key,
     // at least index the fields with a regular index.
     if ($index) {
@@ -1761,6 +1794,7 @@ EOF;
     ]);
     foreach ($indexes as $index) {
       $this->connection->query('DROP INDEX [' . $index->name . '] ON [{' . $table . '}]');
+      $this->resetColumnInformation($table);
     }
 
     // Fetch the list of check constraints referencing this column.
@@ -1770,6 +1804,7 @@ EOF;
     ]);
     foreach ($constraints as $constraint) {
       $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $constraint->name . ']');
+      $this->resetColumnInformation($table);
     }
 
     // Fetch the list of default constraints referencing this column.
@@ -1779,6 +1814,7 @@ EOF;
     ]);
     foreach ($constraints as $constraint) {
       $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $constraint->name . ']');
+      $this->resetColumnInformation($table);
     }
 
     // Drop any indexes on related computed columns when we have some.
@@ -1840,6 +1876,7 @@ EOF;
     $existing_primary_key = $this->primaryKeyName($table);
     if ($existing_primary_key !== FALSE) {
       $this->connection->query("ALTER TABLE [{{$table}}] DROP CONSTRAINT {$existing_primary_key}");
+      $this->resetColumnInformation($table);
     }
     // We are using computed columns to store primary keys,
     // try to remove it if it exists.
