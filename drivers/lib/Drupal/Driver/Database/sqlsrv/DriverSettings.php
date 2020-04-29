@@ -87,10 +87,10 @@ class DriverSettings {
   private static $defaultDriverSettings = [
     'default_isolation_level' => FALSE,
     'default_direct_queries' => FALSE,
-    'default_statement_caching' => FALSE,
+    'default_statement_caching' => TRUE,
     'use_native_upsert' => FALSE,
     'use_native_merge' => FALSE,
-    'statement_caching_mode' => 'disabled',
+    'statement_caching_mode' => 'enabled',
     'append_stack_comments' => FALSE,
     'default_bypass_query_preprocess' => FALSE,
     'enable_transactions' => TRUE,
