@@ -754,7 +754,7 @@ class Schema extends DatabaseSchema {
     if (isset($options['schema'])) {
       $this->defaultSchema = $options['schema'];
     }
-    $this->cacheSchema = $options['cache_schema'];
+    $this->cacheSchema = $options['cache_schema'] ?? FALSE;
   }
 
   /**
