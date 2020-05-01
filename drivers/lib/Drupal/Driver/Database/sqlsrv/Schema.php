@@ -105,6 +105,13 @@ class Schema extends DatabaseSchema {
   protected $engineVersion;
 
   /**
+   * Should we cache table schema?
+   *
+   * @var bool
+   */
+  private $cacheSchema;
+
+  /**
    * Table schema.
    *
    * @var mixed
@@ -747,6 +754,7 @@ class Schema extends DatabaseSchema {
     if (isset($options['schema'])) {
       $this->defaultSchema = $options['schema'];
     }
+    $this->cacheSchema = $options['cache_schema']
   }
 
   /**
@@ -832,7 +840,7 @@ class Schema extends DatabaseSchema {
       return [];
     }
 
-    if (isset($this->columnInformation[$table])) {
+    if ($this->cacheSchema && isset($this->columnInformation[$table])) {
       return $this->columnInformation[$table];
     }
 
@@ -953,7 +961,9 @@ class Schema extends DatabaseSchema {
         $info['columns_clean'][$index_column->column_name]['indexes'][] = $index_column->index_name;
       }
     }
-    $this->columnInformation[$table] = $info;
+    if ($this->cacheSchema) {
+      $this->columnInformation[$table] = $info;
+    }
 
     return $info;
   }
