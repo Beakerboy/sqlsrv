@@ -982,7 +982,7 @@ class Connection extends DatabaseConnection {
       if (isset($query['schema'])) {
         $database['schema'] = $query['schema'];
       }
-      $database['cache_schema'] = $query['cache_schema'] == 'true' ? TRUE : FALSE;
+      $database['cache_schema'] = isset($query['cache_schema']) && $query['cache_schema'] == 'true' ? TRUE : FALSE;
     }
     return $database;
   }
