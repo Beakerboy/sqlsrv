@@ -1,13 +1,14 @@
 language: php
 # Functional and Unit tests require Apache
 env:
-  #- DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-kernel
-  #- DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-1
-  #- DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-2
-  #- DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-3
-  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing APACHE=yes
-  #- DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional,passing_unit CODE_SNIFF=yes APACHE=yes
-  #- DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional2 APACHE=yes
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-kernel
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-1
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-2
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-3
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-4
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional,passing_unit CODE_SNIFF=yes APACHE=yes
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional2 APACHE=yes
 
 php:
   - '7.3'
