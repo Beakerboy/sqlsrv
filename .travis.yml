@@ -6,11 +6,9 @@ env:
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-2
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-3
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-4
-  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional CODE_SNIFF=yes APACHE=yes
-  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional3 APACHE=yes
-  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional4 APACHE=yes
-  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_unit APACHE=yes
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional,passing_unit CODE_SNIFF=yes APACHE=yes
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional2 APACHE=yes
 
 php:
   - '7.3'
@@ -71,11 +69,10 @@ install:
       # Add a sqlsrv-specific datatype to test
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
       # Enable sqlsrv module in specific kernel tests
-      wget https://www.drupal.org/files/issues/2020-04-27/2966272-15.patch
-      git apply 2966272-15.patch
+      wget https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch
+      git apply 2966272-16.patch
       git apply drupal-3111134-database_specific_types-3.patch
       git apply 3108540-11.patch
-      git apply 3125391-3.patch
       if [ "${DRUPAL_VERSION}" == "8.8.x" ]; then
         # Override core Condition 
         wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
@@ -122,7 +119,7 @@ before_script:
 script:
   - cp $TRAVIS_BUILD_DIR/dev/travis/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
   - cd $TRAVIS_BUILD_DIR/../drupal-project
-  - vendor/bin/phpunit -c core/phpunit.xml --testsuite=$TEST_SUITE
+  - vendor/bin/phpunit -v -c core/phpunit.xml --testsuite=$TEST_SUITE
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
       phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
