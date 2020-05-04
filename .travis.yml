@@ -35,6 +35,7 @@ before_install:
   # Install the pdo_sqlsrv extension
   - sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev gcc g++ make autoconf libc-dev pkg-config
   - pecl install sqlsrv pdo_sqlsrv
+  - yes "autodetect" | pecl install yaml
   - phpenv config-add dev/travis/travis-7.x.ini
 install:
   # Create a Drupal Site
