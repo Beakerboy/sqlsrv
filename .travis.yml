@@ -78,8 +78,8 @@ install:
         wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
         git apply 3113403-33.patch
         # docbloc return type not correct...for phpstan. Pushed to 8.9.x
-        wget https://www.drupal.org/files/issues/2020-04-06/3125391-9.patch
-        git apply 3125391-9.patch
+        wget https://www.drupal.org/files/issues/2020-04-07/3125391-9_0.patch
+        git apply 3125391-9_0.patch
       fi
     fi
   - cp -r $TRAVIS_BUILD_DIR/drivers ./drivers
