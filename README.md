@@ -79,9 +79,8 @@ Kernel Test fails due to this default in this driver.
 The following are outstanding core issues that affect the sqlsrv driver.
 
 All Versions:
-* https://www.drupal.org/files/issues/2020-04-18/3128761-2.patch
 * https://www.drupal.org/files/issues/2020-04-24/3130655-3.patch
-* https://www.drupal.org/files/issues/2020-04-27/3131379-2.patch
+* https://www.drupal.org/files/issues/2020-05-05/3131379-8.patch
 
 Drupal 8.x:
 * https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
