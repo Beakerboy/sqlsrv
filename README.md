@@ -10,9 +10,6 @@ SQL Server Driver for Drupal
 This contrib module allows the Drupal CMS to connect to Microsoft SQL Server
 databases.
 
-The 8.x-1.x branch will continue to fulfill the needs of site operators who
-are currently using this branch and will not upgrade to Drupal 9.
-
 Setup
 -----
 
