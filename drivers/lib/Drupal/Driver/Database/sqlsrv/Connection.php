@@ -37,15 +37,6 @@ class Connection extends DatabaseConnection {
   protected $schema = NULL;
 
   /**
-   * Database driver settings.
-   *
-   * Should be renamed to driverSettings.
-   *
-   * @var \Drupal\Driver\Database\sqlsrv\DriverSettings
-   */
-  public $driverSettings;
-
-  /**
    * Error code for Login Failed.
    *
    * Usually happens when the database does not exist.
@@ -297,9 +288,6 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function __construct(\PDO $connection, array $connection_options) {
-    // Initialize settings.
-    $this->driverSettings = DriverSettings::instanceFromSettings();
-
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
     parent::__construct($connection, $connection_options);
 
