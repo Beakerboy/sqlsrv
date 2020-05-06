@@ -462,7 +462,7 @@ class Connection extends DatabaseConnection {
 
     // Lets you access rows in any order. Creates a client-side cursor query.
     $driver_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
-    
+
     // Call our overriden prepare.
     $stmt = $this->prepare($query, $driver_options);
 
@@ -643,9 +643,8 @@ class Connection extends DatabaseConnection {
         'direct_query' => TRUE,
         'bypass_preprocess' => TRUE,
       ];
-      $stmt = $this->prepareQuery($query, $options);
+      $stmt = $this->prepareQuery($query, $direct_query_options + $options);
       $stmt->execute($args, $options);
-
 
       // Depending on the type of query we may need to return a different value.
       // See DatabaseConnection::defaultOptions() for a description of each
