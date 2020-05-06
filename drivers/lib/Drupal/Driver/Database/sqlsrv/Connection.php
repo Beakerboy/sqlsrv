@@ -459,9 +459,6 @@ class Connection extends DatabaseConnection {
     if ($this->driverSettings->GetStatementCachingMode() != 'always' || $options['direct_query'] == TRUE) {
       $pdo_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
-
-   
-
     // Call our overriden prepare.
     $stmt = $this->prepare($query, $pdo_options);
 
