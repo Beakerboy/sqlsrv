@@ -408,7 +408,6 @@ class Connection extends DatabaseConnection {
       return $this->statementCache[$query];
     }
 
-    // Region PDO Options.
     $pdo_options = [];
 
     // Set insecure options if requested so.
@@ -461,18 +460,10 @@ class Connection extends DatabaseConnection {
       $pdo_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
 
-    // It creates a cursor for the query, which allows you to iterate over the
-    // result set without fetching the whole result at once. A scrollable
-    // cursor, specifically, is one that allows iterating backwards.
-    // https://msdn.microsoft.com/en-us/library/hh487158%28v=sql.105%29.aspx
-    $pdo_options[\PDO::ATTR_CURSOR] = \PDO::CURSOR_SCROLL;
+   
 
-    // Lets you access rows in any order. Creates a client-side cursor query.
-    $pdo_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
-
-    // Endregion
     // Call our overriden prepare.
-    $stmt = $this->PDOPrepare($query, $pdo_options);
+    $stmt = $this->prepare($query, $pdo_options);
 
     // If statement caching is enabled, store current statement for reuse.
     if ($options['statement_caching'] === TRUE) {
@@ -483,67 +474,25 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Internal function: prepare a query by calling PDO directly.
+   * {@inheritdoc}
    *
-   * This function has to be public because it is called by other parts of the
-   * database layer, but do not call it directly, as you risk locking down the
-   * PHP process.
-   *
-   * @param mixed $query
-   *   The query to prepare.
-   * @param array $options
-   *   Query options.
-   *
-   * @return mixed
-   *   Prepared query.
+   * Prepareing statements for SQL Server.
    */
-  public function pdoPrepare($query, array $options = []) {
+  public function prepare($query, array $driver_options = []) {
 
     // Preprocess the query.
     if (!$this->driverSettings->GetDeafultBypassQueryPreprocess()) {
       $query = $this->preprocessQuery($query);
     }
+    // It creates a cursor for the query, which allows you to iterate over the
+    // result set without fetching the whole result at once. A scrollable
+    // cursor, specifically, is one that allows iterating backwards.
+    // https://msdn.microsoft.com/en-us/library/hh487158%28v=sql.105%29.aspx
+    $driver_options[\PDO::ATTR_CURSOR] = \PDO::CURSOR_SCROLL;
 
-    // You can set the MSSQL_APPEND_CALLSTACK_COMMENT to TRUE
-    // to append to each query, in the form of comments, the current
-    // backtrace plus other details that aid in debugging deadlocks
-    // or long standing locks. Use in combination with MSSQL profiler.
-    global $conf;
-    if ($this->driverSettings->GetAppendCallstackComment()) {
-      $oUser = \Drupal::currentUser();
-      $uid = NULL;
-      if ($oUser != NULL) {
-        $uid = $oUser->getAccount()->id();
-      }
-      $trim = strlen(DRUPAL_ROOT);
-      $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-      static $request_id;
-      if (empty($request_id)) {
-        $request_id = uniqid('', TRUE);
-      }
-      // Remove las item (it's alwasy PDOPrepare)
-      $trace = array_splice($trace, 1);
-      $comment = PHP_EOL . PHP_EOL;
-      $comment .= '-- uid:' . (($uid) ? $uid : 'NULL') . PHP_EOL;
-      $uri = (isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'none');
-      $uri = preg_replace("/[^a-zA-Z0-9]/i", "_", $uri);
-      $comment .= '-- url:' . $uri . PHP_EOL;
-      // $comment .= '-- request_id:' . $request_id . PHP_EOL;
-      foreach ($trace as $t) {
-        $function = isset($t['function']) ? $t['function'] : '';
-        $file = '';
-        if (isset($t['file'])) {
-          $len = strlen($t['file']);
-          if ($len > $trim) {
-            $file = substr($t['file'], $trim, $len - $trim) . " [{$t['line']}]";
-          }
-        }
-        $comment .= '-- ' . str_pad($function, 35) . '  ' . $file . PHP_EOL;
-      }
-      $query = $comment . PHP_EOL . $query;
-    }
-
-    return parent::prepare($query, $options);
+    // Lets you access rows in any order. Creates a client-side cursor query.
+    $driver_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
+    return parent::prepare($query, $driver_options);
   }
 
   /**
