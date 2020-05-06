@@ -327,9 +327,6 @@ class Connection extends DatabaseConnection {
    */
   public static function open(array &$connection_options = []) {
 
-    // Get driver settings.
-    $driverSettings = DriverSettings::instanceFromSettings();
-
     // Build the DSN.
     $options = [];
     $options['Server'] = $connection_options['host'] . (!empty($connection_options['port']) ? ',' . $connection_options['port'] : '');
@@ -338,11 +335,6 @@ class Connection extends DatabaseConnection {
     // database creation in Install.
     if (!empty($connection_options['database'])) {
       $options['Database'] = $connection_options['database'];
-    }
-
-    // Set isolation level if specified.
-    if ($level = $driverSettings->GetDefaultIsolationLevel()) {
-      $options['TransactionIsolation'] = $level;
     }
 
     // Build the DSN.
@@ -385,21 +377,18 @@ class Connection extends DatabaseConnection {
    * @status: tested, temporary
    */
   public function prepareQuery($query, array $options = []) {
-
+    $default_options = [
+      'insecure' => FALSE,
+      'statement_caching' => 'disabled',
+      'direct_query' => FALSE,
+      'bypass_preprocess' => FALSE,
+    ];
     // Merge default statement options. These options are
     // only specific for this preparation and will only override
     // the global configuration if set to different than NULL.
-    $options = array_merge([
-      'insecure' => FALSE,
-      'statement_caching' => $this->driverSettings->GetStatementCachingMode(),
-      'direct_query' => $this->driverSettings->GetDefaultDirectQueries(),
-      'prefix_tables' => TRUE,
-    ], $options);
+    $options += $default_options;
 
-    // Prefix tables. There is no global setting for this.
-    if ($options['prefix_tables'] !== FALSE) {
-      $query = $this->prefixTables($query);
-    }
+    $query = $this->prefixTables($query);
 
     // The statement caching settings only affect the storage
     // in the cache, but if a statement is already available
@@ -408,7 +397,12 @@ class Connection extends DatabaseConnection {
       return $this->statementCache[$query];
     }
 
-    $pdo_options = [];
+    // Preprocess the query.
+    if (!$options['bypass_preprocess']) {
+      $query = $this->preprocessQuery($query);
+    }
+
+    $driver_options = [];
 
     // Set insecure options if requested so.
     if ($options['insecure'] === TRUE) {
@@ -442,7 +436,7 @@ class Connection extends DatabaseConnection {
       // Transact-SQL code.
       // Never use this when you need special column binding.
       // THIS ONLY WORKS IF SET AT THE STATEMENT LEVEL.
-      $pdo_options[\PDO::ATTR_EMULATE_PREPARES] = TRUE;
+      $driver_options[\PDO::ATTR_EMULATE_PREPARES] = TRUE;
     }
 
     // We run the statements in "direct mode" because the way PDO prepares
@@ -455,32 +449,11 @@ class Connection extends DatabaseConnection {
     // If a query requires the context that was set in a previous query,
     // you should execute your queries with PDO::SQLSRV_ATTR_DIRECT_QUERY set to
     // True. For example, if you use temporary tables in your queries,
-    // PDO::SQLSRV_ATTR_DIRECT_QUERY must be set to True.
-    if ($this->driverSettings->GetStatementCachingMode() != 'always' || $options['direct_query'] == TRUE) {
-      $pdo_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
-    }
-    // Call our overriden prepare.
-    $stmt = $this->prepare($query, $pdo_options);
-
-    // If statement caching is enabled, store current statement for reuse.
-    if ($options['statement_caching'] === TRUE) {
-      $this->statementCache[$query] = $stmt;
+    // PDO::SQLSRV_ATTR_DrIRECT_QUERY must be set to True.
+    if ($options['statement_caching'] != 'always' || $options['direct_query'] == TRUE) {
+      $driver_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
 
-    return $stmt;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * Prepareing statements for SQL Server.
-   */
-  public function prepare($query, array $driver_options = []) {
-
-    // Preprocess the query.
-    if (!$this->driverSettings->GetDeafultBypassQueryPreprocess()) {
-      $query = $this->preprocessQuery($query);
-    }
     // It creates a cursor for the query, which allows you to iterate over the
     // result set without fetching the whole result at once. A scrollable
     // cursor, specifically, is one that allows iterating backwards.
@@ -489,7 +462,16 @@ class Connection extends DatabaseConnection {
 
     // Lets you access rows in any order. Creates a client-side cursor query.
     $driver_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
-    return parent::prepare($query, $driver_options);
+    
+    // Call our overriden prepare.
+    $stmt = $this->prepare($query, $driver_options);
+
+    // If statement caching is enabled, store current statement for reuse.
+    if ($options['statement_caching'] === TRUE) {
+      $this->statementCache[$query] = $stmt;
+    }
+
+    return $stmt;
   }
 
   /**
@@ -597,7 +579,7 @@ class Connection extends DatabaseConnection {
           $insecure = TRUE;
         }
         $stmt = $this->prepareQuery($query, ['insecure' => $insecure]);
-        $stmt->execute($args, $options);
+        $stmt->execute($args);
       }
 
       // Depending on the type of query we may need to return a different value.
@@ -657,12 +639,13 @@ class Connection extends DatabaseConnection {
 
       // Bypass query preprocessing and use direct queries.
       $ctx = new Context($this, TRUE, TRUE);
-
+      $direct_query_options = [
+        'direct_query' => TRUE,
+        'bypass_preprocess' => TRUE,
+      ];
       $stmt = $this->prepareQuery($query, $options);
-      $stmt->execute($args, $options);
+      $stmt->execute($args);
 
-      // Reset the context settings.
-      unset($ctx);
 
       // Depending on the type of query we may need to return a different value.
       // See DatabaseConnection::defaultOptions() for a description of each
