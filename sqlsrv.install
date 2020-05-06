@@ -7,7 +7,6 @@
 
 use Drupal\Core\Database\Database;
 use Drupal\Driver\Database\sqlsrv\Connection;
-use Drupal\Driver\Database\sqlsrv\DriverSettings;
 use Drupal\Driver\Database\sqlsrv\Utils;
 
 /**
@@ -144,14 +143,12 @@ function sqlsrv_requirements($phase) {
     // effectively deployed driver code.
     // TODO:// Nicer than just showing the error,
     // would be to offer the option to autodploy the driver...
-    if (DriverSettings::instanceFromSettings()->GetMonitorDriverStatus()) {
-      $deployed_ok = sqlsrv_verify_driver();
-      $requirements['sqlsrv_deployed_files'] = [
-        'title' => t('MSSQL Server Deployed Driver'),
-        'severity' => $deployed_ok === TRUE ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-        'description' => $deployed_ok === TRUE ? t('Deployed driver matches module version.') : t('The deployed driver files do not match the module driver.'),
-      ];
-    }
+    $deployed_ok = sqlsrv_verify_driver();
+    $requirements['sqlsrv_deployed_files'] = [
+      'title' => t('MSSQL Server Deployed Driver'),
+      'severity' => $deployed_ok === TRUE ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+      'description' => $deployed_ok === TRUE ? t('Deployed driver matches module version.') : t('The deployed driver files do not match the module driver.'),
+    ];
   }
   return $requirements;
 }
