@@ -579,7 +579,7 @@ class Connection extends DatabaseConnection {
           $insecure = TRUE;
         }
         $stmt = $this->prepareQuery($query, ['insecure' => $insecure]);
-        $stmt->execute($args);
+        $stmt->execute($args, $options);
       }
 
       // Depending on the type of query we may need to return a different value.
@@ -644,7 +644,7 @@ class Connection extends DatabaseConnection {
         'bypass_preprocess' => TRUE,
       ];
       $stmt = $this->prepareQuery($query, $options);
-      $stmt->execute($args);
+      $stmt->execute($args, $options);
 
 
       // Depending on the type of query we may need to return a different value.
