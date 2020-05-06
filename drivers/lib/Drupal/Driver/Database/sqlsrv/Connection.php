@@ -624,9 +624,6 @@ class Connection extends DatabaseConnection {
     $stmt = NULL;
 
     try {
-
-      // Bypass query preprocessing and use direct queries.
-      $ctx = new Context($this, TRUE, TRUE);
       $direct_query_options = [
         'direct_query' => TRUE,
         'bypass_preprocess' => TRUE,
