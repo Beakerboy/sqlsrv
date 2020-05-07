@@ -367,7 +367,8 @@ class Connection extends DatabaseConnection {
   public function prepareQuery($query, array $options = []) {
     $default_options = [
       'insecure' => FALSE,
-      'caching_mode' => 'disabled', //'disabled', 'on-demand', or 'always'
+      // Caching mode can be 'disabled', 'on-demand', or 'always'.
+      'caching_mode' => 'disabled',
       'cache_statements' => FALSE,
       'direct_query' => FALSE,
       'bypass_preprocess' => FALSE,
@@ -395,36 +396,9 @@ class Connection extends DatabaseConnection {
 
     // Set insecure options if requested so.
     if ($options['insecure'] === TRUE) {
-      // We have to log this, prepared statements are a security RISK.
-      // watchdog(
-      // 'SQL Server Driver',
-      // 'An insecure query has been executed against the database.'
-      // . 'This is not critical, but worth looking into: %query',
-      // array('%query' => $query)
-      // );
-      // These are defined in class Connection.
-      // This PDO options are INSECURE, but will overcome the following issues:
-      // (1) Duplicate placeholders
-      // (2) > 2100 parameter limit
-      // (3) Using expressions for group by with parameters are not detected as
-      // equal. This options are not applied by default, they are just stored in
-      // the connection options and applied when needed. See {Statement} class.
-      // We ask PDO to perform the placeholders replacement itself because SQL
-      // Server is not able to detect duplicated placeholders in complex
-      // statements.
-      // E.g. This query is going to fail because SQL Server cannot
-      // detect that length1 and length2 are equals.
-      // SELECT SUBSTRING(title, 1, :length1)
-      // FROM node
-      // GROUP BY SUBSTRING(title, 1, :length2
-      // This is only going to work in PDO 3 but doesn't hurt in PDO 2. The
-      // security of parameterized queries is not in effect when you use
-      // PDO::ATTR_EMULATE_PREPARES => true. Your application should ensure that
-      // the data that is bound to the parameter(s) does not contain malicious
-      //
-      // Transact-SQL code.
       // Never use this when you need special column binding.
-      // THIS ONLY WORKS IF SET AT THE STATEMENT LEVEL.
+      // Unlike other PDO drivers, sqlsrv requires this attribute be set
+      // on the statement, not the connection.
       $driver_options[\PDO::ATTR_EMULATE_PREPARES] = TRUE;
     }
 
@@ -439,6 +413,7 @@ class Connection extends DatabaseConnection {
     // you should execute your queries with PDO::SQLSRV_ATTR_DIRECT_QUERY set to
     // True. For example, if you use temporary tables in your queries,
     // PDO::SQLSRV_ATTR_DrIRECT_QUERY must be set to True.
+    // Why does caching mode taken into account for queryDirect?
     if ($options['caching_mode'] != 'always' || $options['direct_query'] == TRUE) {
       $driver_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
