@@ -83,6 +83,7 @@ same as when it started.
 
 The 1.x branch creates the database with a case-insensitive collation for text
 fields. However, all non-MySQL databases use case-sensitive default.
+
 Outstanding Issues
 -----
 The issues mentioned above means that the sqlsrv driver does not pass every core
