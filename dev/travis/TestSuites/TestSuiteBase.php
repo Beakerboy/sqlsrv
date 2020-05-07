@@ -16,9 +16,9 @@ abstract class TestSuiteBase extends TestSuite {
    * @var array
    */
   protected static $coreExtensionPatterns = [
-    '[A-Ia-i]',
-    '[J-Qj-q]',
-    '[R-Zr-z]',
+    '[a-i]',
+    '[j-q]',
+    '[r-z]',
   ];
 
   /**
@@ -30,7 +30,6 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
     '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
     '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
-    '/core/modules/comment/tests/src/Kernel/CommentIntegrationTest.php',
     '/core/modules/migrate_drupal/tests/src/Kernel/d7/FieldDiscoveryTest.php',
     '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
