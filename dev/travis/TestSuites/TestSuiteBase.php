@@ -27,11 +27,15 @@ abstract class TestSuiteBase extends TestSuite {
    * @var array
    */
   protected static $FunctionalExtensionPatterns = [
-    '[a-b]',
-    '[c-d]',
-    '[e-f]',
-    '[g-i]',
-    '[j-l]',
+    '[a]',
+    '[b]',
+    '[c]',
+    '[d]',
+    '[e]',
+    '[f]',
+   // '[g-i]',
+    '[j-k]',
+    '[l]',
     '[m-n]',
     '[o-p]',
     '[q-r]',
@@ -55,6 +59,8 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
     '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
+    '/core/modules/hal/tests/src/Functional/Update/CreateHalSettingsForLinkDomainUpdateTest.php',
+    '/core/modules/hal/tests/src/Functional/Update/MigrateLinkDomainSettingFromRestToHalUpdateTest.php',
   ];
 
   /**
