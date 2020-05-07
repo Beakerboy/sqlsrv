@@ -27,11 +27,11 @@ abstract class TestSuiteBase extends TestSuite {
    * @var array
    */
   protected static $FunctionalExtensionPatterns = [
-    '[a]',
-    '[b]',
-    '[c]',
-    '[d]',
-    '[e]',
+    //'[a]',
+    //'[b]',
+   // '[c]',
+   // '[d]',
+    //'[e]',
     '[f]',
    // '[g-i]',
     '[j-k]',
