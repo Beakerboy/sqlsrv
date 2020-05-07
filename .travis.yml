@@ -71,9 +71,12 @@ install:
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
       # Enable sqlsrv module in specific kernel tests
       wget https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch
+      # Do not compare string to blob
+      wget https://www.drupal.org/files/issues/2020-05-07/3134475-2.patch
       git apply 2966272-16.patch
       git apply drupal-3111134-database_specific_types-3.patch
       git apply 3108540-11.patch
+      git apply 3134475-2.patch
       if [ "${DRUPAL_VERSION}" == "8.8.x" ]; then
         # Override core Condition...pushed to 8.9.x
         wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
