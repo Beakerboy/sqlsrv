@@ -222,7 +222,7 @@ class Schema extends DatabaseSchema {
    */
   public function fieldExists($table, $field) {
     return $this->connection
-      ->query('SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = :table AND column_name = :name', [
+      ->queryDirect('SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = :table AND column_name = :name', [
         ':table' => $this->connection->prefixTables('{' . $table . '}'),
         ':name' => $field,
       ])
