@@ -36,16 +36,15 @@ abstract class TestSuiteBase extends TestSuite {
    // '[g-i]', good
     //'[j-k]', split
     //'[l]', split
-    '[m]',
-    '[n]',
-    //'[o]',
-    //'[p]',
-    //'[q]', good
-    //'[r]',
-    //'[s]',
-    '[t]',
-    '[u]',
-    '[v]',
+    //'[m]', split
+    //'[n]',split
+    //'[o-q]', good
+    //'[r]', split
+    //'[s]', split
+   // '[t]', split
+    //'[u]', split
+    //'[v]', split
+    '[w]',
   ];
 
 
@@ -65,6 +64,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
     '/core/modules/hal/tests/src/Functional/Update/CreateHalSettingsForLinkDomainUpdateTest.php',
     '/core/modules/hal/tests/src/Functional/Update/MigrateLinkDomainSettingFromRestToHalUpdateTest.php',
+    '/core/modules/path/tests/src/Functional/PathAliasTest.php',
   ];
 
   /**
