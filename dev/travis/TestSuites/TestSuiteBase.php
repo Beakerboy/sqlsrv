@@ -16,8 +16,8 @@ abstract class TestSuiteBase extends TestSuite {
    * @var array
    */
   protected static $coreExtensionPatterns = [
-    '[A-Ha-h]',
-    '[I-Qi-q]',
+    '[A-Ia-i]',
+    '[J-Qj-q]',
     '[R-Zr-z]',
   ];
 
