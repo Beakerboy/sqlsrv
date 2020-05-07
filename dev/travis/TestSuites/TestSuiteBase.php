@@ -11,7 +11,7 @@ use Drupal\Core\Test\TestDiscovery;
 abstract class TestSuiteBase extends TestSuite {
 
   /**
-   * Regex patterns to split up core extensions.
+   * Regex patterns to split up core Kernel extensions.
    *
    * @var array
    */
@@ -20,6 +20,26 @@ abstract class TestSuiteBase extends TestSuite {
     '[j-q]',
     '[r-z]',
   ];
+
+  /**
+   * Regex patterns to split up core Functional extensions.
+   *
+   * @var array
+   */
+  protected static $FunctionalExtensionPatterns = [
+    '[a-b]',
+    '[c-d]',
+    '[e-f]',
+    '[g-i]',
+    '[j-l]',
+    '[m-n]',
+    '[o-p]',
+    '[q-r]',
+    '[s-t]',
+    '[u-v]',
+    '[w-z]',
+  ];
+
 
   /**
    * The failing test files.
