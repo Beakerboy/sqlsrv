@@ -367,8 +367,8 @@ class Connection extends DatabaseConnection {
   public function prepareQuery($query, array $options = []) {
     $default_options = [
       'insecure' => FALSE,
-      'caching_mode' => 'on_demand',
-      'cache_statements' => TRUE,
+      'caching_mode' => 'disabled', //'disabled', 'on-demand', or 'always'
+      'cache_statements' => FALSE,
       'direct_query' => FALSE,
       'bypass_preprocess' => FALSE,
     ];
