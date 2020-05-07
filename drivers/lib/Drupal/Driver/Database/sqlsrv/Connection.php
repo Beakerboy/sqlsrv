@@ -367,7 +367,8 @@ class Connection extends DatabaseConnection {
   public function prepareQuery($query, array $options = []) {
     $default_options = [
       'insecure' => FALSE,
-      'statement_caching' => 'disabled',
+      'caching_mode' => 'on_demand',
+      'cache_statements' => TRUE,
       'direct_query' => FALSE,
       'bypass_preprocess' => FALSE,
     ];
@@ -438,7 +439,7 @@ class Connection extends DatabaseConnection {
     // you should execute your queries with PDO::SQLSRV_ATTR_DIRECT_QUERY set to
     // True. For example, if you use temporary tables in your queries,
     // PDO::SQLSRV_ATTR_DrIRECT_QUERY must be set to True.
-    if ($options['statement_caching'] != 'always' || $options['direct_query'] == TRUE) {
+    if ($options['caching_mode'] != 'always' || $options['direct_query'] == TRUE) {
       $driver_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
     }
 
@@ -455,7 +456,7 @@ class Connection extends DatabaseConnection {
     $stmt = $this->prepare($query, $driver_options);
 
     // If statement caching is enabled, store current statement for reuse.
-    if ($options['statement_caching'] === TRUE) {
+    if ($options['cache_statements'] === TRUE && $options['caching_mode'] != 'disabled' || $options['caching_mode'] == 'always') {
       $this->statementCache[$query] = $stmt;
     }
 
