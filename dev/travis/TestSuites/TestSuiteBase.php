@@ -36,12 +36,16 @@ abstract class TestSuiteBase extends TestSuite {
    // '[g-i]', good
     //'[j-k]', split
     //'[l]', split
-    //'[m-n]', split
-    '[o]',
-    '[p]',
-    '[q]',
-    '[r]',
-    '[s]',
+    '[m]',
+    '[n]',
+    //'[o]',
+    //'[p]',
+    //'[q]', good
+    //'[r]',
+    //'[s]',
+    '[t]',
+    '[u]',
+    '[v]',
   ];
 
 
