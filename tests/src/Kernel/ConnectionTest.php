@@ -31,4 +31,12 @@ class ConnectionTest extends DatabaseTestBase {
     $this->assertIdentical($namespace, get_class($nested_or_condition));
   }
 
+  /**
+   * Test createUrl.
+   */
+  public function testCreateUrlFromConnectionOptions() {
+    $url = $this->connection->createUrlFromConnectionOptions();
+    $db_url = getenv('SIMPLETEST_DB');
+    $this->assertEquals($db_url, $url);
+
 }
