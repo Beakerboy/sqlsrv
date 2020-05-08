@@ -876,6 +876,56 @@ class Connection extends DatabaseConnection {
     return $database;
   }
 
+  /**
+   * {@inheritdoc}
+   *
+   * Adding schema to the connection URL.
+   */
+  public static function createUrlFromConnectionOptions(array $connection_options) {
+    if (!isset($connection_options['driver'], $connection_options['database'])) {
+      throw new \InvalidArgumentException("As a minimum, the connection options array must contain at least the 'driver' and 'database' keys");
+    }
+
+    $user = '';
+    if (isset($connection_options['username'])) {
+      $user = $connection_options['username'];
+      if (isset($connection_options['password'])) {
+        $user .= ':' . $connection_options['password'];
+      }
+      $user .= '@';
+    }
+
+    $host = empty($connection_options['host']) ? 'localhost' : $connection_options['host'];
+
+    $db_url = $connection_options['driver'] . '://' . $user . $host;
+
+    if (isset($connection_options['port'])) {
+      $db_url .= ':' . $connection_options['port'];
+    }
+
+    $db_url .= '/' . $connection_options['database'];
+    $query = [];
+    if (isset($connection_options['module'])) {
+      $query['module'] = $connection_options['module'];
+    }
+    if (isset($connection_options['schema'])) {
+      $query['schema'] = $connection_options['schema'];
+    }
+    if (isset($connection_options['cache_schema'])) {
+      $query['cache_schema'] = $connection_options['cache_schema'];
+    }
+    
+    if (count($query_string) > 0) {
+      $query_string = implode("&amp;", $query);
+      $db_url .= '?' . $query_string;
+    }
+    if (isset($connection_options['prefix']['default']) && $connection_options['prefix']['default'] !== '') {
+      $db_url .= '#' . $connection_options['prefix']['default'];
+    }
+
+    return $db_url;
+  }
+
 }
 
 /**
