@@ -53,8 +53,7 @@ final class CoreExtensions1FunctionalTestSuite extends TestSuiteBase {
             $passing_tests[] = $test;
           }
         }
-        $chunks = array_chunk($passing_tests, 100);
-        $this->addTestFiles($chunks[$splice]);
+        $this->addTestFiles(array_splice($passing_tests, 0, 100));
       }
     }
   }
