@@ -22,33 +22,6 @@ abstract class TestSuiteBase extends TestSuite {
   ];
 
   /**
-   * Regex patterns to split up core Functional extensions.
-   *
-   * @var array
-   */
-  protected static $FunctionalExtensionPatterns = [
-    //'[a]', good
-    //'[b]', split
-   // '[c]', split
-   // '[d]', split
-    //'[e]', split
-    //'[f]', split
-   // '[g-i]', good
-    //'[j-k]', split
-    //'[l]', split
-    //'[m]', split
-    //'[n]',split
-    //'[o-q]', good
-    //'[r]', split
-    //'[s]', split
-   // '[t]', split
-    //'[u]', split
-    //'[v]', split
-    '[w]',
-  ];
-
-
-  /**
    * The failing test files.
    *
    * @var array
@@ -116,6 +89,41 @@ abstract class TestSuiteBase extends TestSuite {
           }
           $this->addTestFiles($passing_tests);
         }
+      }
+    }
+  }
+
+  /**
+   * Find and add tests to the suite for core and any extensions.
+   *
+   * @param string $root
+   *   Path to the root of the Drupal installation.
+   * @param string $suite_namespace
+   *   SubNamespace used to separate test suite. Examples: Unit, Functional.
+   * @param int $splice
+   *   The chunk number to test
+   */
+  protected function addExtensionTestsBySuiteNamespaceAndChunk($root, $suite_namespace, $splice) {
+    $failing_classes = [];
+    foreach ($this->failingClasses as $failing_class) {
+      $failing_classes[] = $root . $failing_class;
+    }
+    // Extensions' tests will always be in the namespace
+    // Drupal\Tests\$extension_name\$suite_namespace\ and be in the
+    // $extension_path/tests/src/$suite_namespace directory. Not all extensions
+    // will have all kinds of tests.
+    foreach ($this->findExtensionDirectories($root) as $extension_name => $dir) {
+      $test_path = "$dir/tests/src/$suite_namespace";
+      if (is_dir($test_path)) {
+        $passing_tests = [];
+        $tests = TestDiscovery::scanDirectory("Drupal\\Tests\\$extension_name\\$suite_namespace\\", $test_path);
+        foreach ($tests as $test) {
+          if (!in_array($test, $failing_classes)) {
+            $passing_tests[] = $test;
+          }
+        }
+        $chunks = array_chunk($passing_tests, 100);
+        $this->addTestFiles($chunks[$splice]);
       }
     }
   }
