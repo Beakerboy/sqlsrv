@@ -35,8 +35,17 @@ class ConnectionTest extends DatabaseTestBase {
    * Test createUrl.
    */
   public function testCreateUrlFromConnectionOptions() {
-    $url = $this->connection->createUrlFromConnectionOptions();
-    $db_url = getenv('SIMPLETEST_DB');
+    $connection_array = [
+      'driver' => 'sqlsrv',
+      'database' => 'mydrupalsite',
+      'username' => 'sa',
+      'password' => 'Password12!',
+      'host' => 'localhost',
+      'schema' => 'dbo',
+      'cache_schema' => 'true',
+    ];
+    $url = $this->connection->createUrlFromConnectionOptions($connection_array);
+    $db_url = "sqlsrv://sa:Password12!@localhost/mydrupalsite?schema=dbo&amp;cache_schema=true";
     $this->assertEquals($db_url, $url);
   }
 
