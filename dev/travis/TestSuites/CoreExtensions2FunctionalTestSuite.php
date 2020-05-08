@@ -18,7 +18,7 @@ final class CoreExtensions2FunctionalTestSuite extends TestSuiteBase {
   public static function suite() {
     $root = dirname(dirname(dirname(dirname(dirname(dirname(__DIR__))))));
     $suite = new static('functional');
-    $suite->addExtensionTestsBySuiteNamespace($root, 'Functional', self::$FunctionalExtensionPatterns[1]);
+    $suite->addExtensionTestsBySuiteNamespace($root, 'Functional', 1);
     return $suite;
   }
 
