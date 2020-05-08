@@ -23,14 +23,10 @@ class Condition extends QueryCondition {
     foreach ($this->conditions as &$condition) {
       if (isset($condition['operator'])) {
         if ($condition['operator'] == 'REGEXP' || $condition['operator'] == 'NOT REGEXP') {
-
-          /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema*/
-          $schema = $connection->schema();
-          $schema_name = $schema->getDefaultSchema();
           $placeholder = ':db_condition_placeholder_' . $queryPlaceholder->nextPlaceholder();
           $field_fragment = $connection->escapeField($condition['field']);
           $comparison = $condition['operator'] == 'REGEXP' ? '1' : '0';
-          $condition['field'] = "{$schema_name}.REGEXP({$placeholder}, {$field_fragment}) = {$comparison}";
+          $condition['field'] = "REGEXP({$placeholder}, {$field_fragment}) = {$comparison}";
           $condition['operator'] = NULL;
           $condition['value'] = [$placeholder => $condition['value']];
         }
@@ -45,13 +41,6 @@ class Condition extends QueryCondition {
             '\_' => '[_]',
             '\\\\' => '\\',
           ]);
-        }
-        elseif ($condition['operator'] == 'PREFIX_SCHEMA') {
-          /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema*/
-          $schema = $connection->schema();
-          $schema_name = $schema->getDefaultSchema();
-          $condition['field'] = $schema_name . '.' . $condition['field'];
-          $condition['operator'] = NULL;
         }
       }
     }
@@ -79,8 +68,7 @@ class Condition extends QueryCondition {
       $comparison = $operator == ' REGEXP ' ? '1' : '0';
 
       $snippet = "REGEXP({$value}, {$field}) = {$comparison}";
-      // We need the connection in order to add the schema.
-      $operator = 'PREFIX_SCHEMA';
+      $operator = NULL;
     }
     $this->conditions[] = [
       'field' => $snippet,

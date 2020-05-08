@@ -5,7 +5,6 @@ namespace Drupal\Tests\sqlsrv\Unit;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\PlaceholderInterface;
 use Drupal\Driver\Database\sqlsrv\Condition;
-use Drupal\Driver\Database\sqlsrv\Schema;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 
@@ -93,16 +92,12 @@ class SqlsrvConditionTest extends UnitTestCase {
    *
    * @dataProvider dataProviderForTestRegexp
    */
-  public function testRegexp($expected, $field_name, $operator, $schema_name, $pattern) {
-    $schema = $this->prophesize(Schema::class);
-    $schema->getDefaultSchema()->willReturn($schema_name);
-    $schema = $schema->reveal();
+  public function testRegexp($expected, $field_name, $operator, $pattern) {
     $connection = $this->prophesize(Connection::class);
     $connection->escapeField($field_name)->will(function ($args) {
       return preg_replace('/[^A-Za-z0-9_.]+/', '', $args[0]);
     });
     $connection->mapConditionOperator($operator)->willReturn(['operator' => $operator]);
-    $connection->schema()->willReturn($schema);
     $connection = $connection->reveal();
 
     $query_placeholder = $this->prophesize(PlaceholderInterface::class);
@@ -128,31 +123,27 @@ class SqlsrvConditionTest extends UnitTestCase {
   public function dataProviderForTestRegexp() {
     return [
       [
-        '(dbo.REGEXP(:db_condition_placeholder_0, name) = 1)',
+        '(REGEXP(:db_condition_placeholder_0, name) = 1)',
         'name',
         'REGEXP',
-        'dbo',
         '^P',
       ],
       [
-        '(db.REGEXP(:db_condition_placeholder_0, name123) = 1)',
+        '(REGEXP(:db_condition_placeholder_0, name123) = 1)',
         'name-123',
         'REGEXP',
-        'db',
         's$',
       ],
       [
-        '(odb.REGEXP(:db_condition_placeholder_0, name) = 0)',
+        '(REGEXP(:db_condition_placeholder_0, name) = 0)',
         'name',
         'NOT REGEXP',
-        'odb',
         '^\$[a-z][a-zA-Z_]$',
       ],
       [
-        '(dbo.REGEXP(:db_condition_placeholder_0, name123) = 0)',
+        '(REGEXP(:db_condition_placeholder_0, name123) = 0)',
         'name-123',
         'NOT REGEXP',
-        'dbo',
         '^[a-z].*$',
       ],
     ];
