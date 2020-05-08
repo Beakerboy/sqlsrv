@@ -103,7 +103,7 @@ abstract class TestSuiteBase extends TestSuite {
    * @param int $splice
    *   The chunk number to test
    */
-  protected function addExtensionTestsBySuiteNamespaceAndChunk($root, $suite_namespace, $splice) {
+  protected function addExtensionTestsBySuiteNamespaceAndChunk($root, $suite_namespace, $splice = 0) {
     $failing_classes = [];
     foreach ($this->failingClasses as $failing_class) {
       $failing_classes[] = $root . $failing_class;
