@@ -796,7 +796,7 @@ class Schema extends DatabaseSchema {
       'GREATEST',
       'MD5',
       'LPAD',
-      'GROUP_CONCAT',
+      'REGEXP',
       'IF',
       'CONNECTION_ID',
     ];
