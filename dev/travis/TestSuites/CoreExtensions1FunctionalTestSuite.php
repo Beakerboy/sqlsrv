@@ -57,5 +57,4 @@ final class CoreExtensions1FunctionalTestSuite extends TestSuiteBase {
     }
   }
 
-
 }
