@@ -31,4 +31,22 @@ class ConnectionTest extends DatabaseTestBase {
     $this->assertIdentical($namespace, get_class($nested_or_condition));
   }
 
+  /**
+   * Test createUrl.
+   */
+  public function testCreateUrlFromConnectionOptions() {
+    $connection_array = [
+      'driver' => 'sqlsrv',
+      'database' => 'mydrupalsite',
+      'username' => 'sa',
+      'password' => 'Password12!',
+      'host' => 'localhost',
+      'schema' => 'dbo',
+      'cache_schema' => 'true',
+    ];
+    $url = $this->connection->createUrlFromConnectionOptions($connection_array);
+    $db_url = "sqlsrv://sa:Password12!@localhost/mydrupalsite?schema=dbo&amp;cache_schema=true";
+    $this->assertEquals($db_url, $url);
+  }
+
 }
