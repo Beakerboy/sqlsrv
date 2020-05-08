@@ -915,7 +915,7 @@ class Connection extends DatabaseConnection {
       $query['cache_schema'] = $connection_options['cache_schema'];
     }
     
-    if (count($query_string) > 0) {
+    if (count($query) > 0) {
       $parameters = [];
       foreach($query as $key => $values) {
         $parameters[] = $key . '=' . $values;
