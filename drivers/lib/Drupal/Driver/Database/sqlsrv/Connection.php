@@ -916,7 +916,11 @@ class Connection extends DatabaseConnection {
     }
     
     if (count($query_string) > 0) {
-      $query_string = implode("&amp;", $query);
+      $parameters = [];
+      foreach($query as $key => $values) {
+        $parameters[] = $key . '=' . $values;
+      }
+      $query_string = implode("&amp;", $parameters);
       $db_url .= '?' . $query_string;
     }
     if (isset($connection_options['prefix']['default']) && $connection_options['prefix']['default'] !== '') {
