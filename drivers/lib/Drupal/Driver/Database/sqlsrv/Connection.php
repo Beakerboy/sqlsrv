@@ -914,10 +914,10 @@ class Connection extends DatabaseConnection {
     if (isset($connection_options['cache_schema'])) {
       $query['cache_schema'] = $connection_options['cache_schema'];
     }
-    
+
     if (count($query) > 0) {
       $parameters = [];
-      foreach($query as $key => $values) {
+      foreach ($query as $key => $values) {
         $parameters[] = $key . '=' . $values;
       }
       $query_string = implode("&amp;", $parameters);
