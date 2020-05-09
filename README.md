@@ -92,12 +92,12 @@ remedying them.
 
 The following are outstanding core issues that affect the sqlsrv driver.
 
-All Versions:
-* https://www.drupal.org/files/issues/2020-04-24/3130655-3.patch
-* https://www.drupal.org/files/issues/2020-05-05/3131379-8.patch
+All Versions (needs work, patch review or awaiting merge):
+* [Override Condition in views](https://www.drupal.org/node/3130655)-[[patch](https://www.drupal.org/files/issues/2020-04-24/3130655-3.patch)]
+* [CONCAT_WS edge case](https://www.drupal.org/node/3131379)-[[patch](https://www.drupal.org/files/issues/2020-05-05/3131379-8.patch)]
 
-Drupal 8.x:
-* https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
+Drupal 8.x (Already merged into Drupal Core 9+):
+* [Logger backtrace incorrect](https://www.drupal.org/node/2867788)-[[patch](https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch)]
 
-Drupal 8.8.x:
-* https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
+Drupal 8.8.x (Already merged into Drupal Core 8.9+)
+* [Allow core Condition to be overridden](https://www.drupal.org/node/3113403)-\[[patch](https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch)]
