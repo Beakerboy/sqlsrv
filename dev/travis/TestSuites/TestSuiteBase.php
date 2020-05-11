@@ -122,7 +122,9 @@ abstract class TestSuiteBase extends TestSuite {
             $passing_tests[] = $test;
           }
         }
-        $this->addTestFiles(array_splice($passing_tests, $splice * 2, 2));
+        $subset = array_splice($passing_tests, $splice * 2, 2);
+        fwrite(STDOUT, print_r($subset, TRUE));
+        $this->addTestFiles($subset);
       }
     }
   }
