@@ -112,10 +112,10 @@ abstract class TestSuiteBase extends TestSuite {
     // Drupal\Tests\$extension_name\$suite_namespace\ and be in the
     // $extension_path/tests/src/$suite_namespace directory. Not all extensions
     // will have all kinds of tests.
+    $passing_tests = [];
     foreach ($this->findExtensionDirectories($root) as $extension_name => $dir) {
       $test_path = "$dir/tests/src/$suite_namespace";
       if (is_dir($test_path)) {
-        $passing_tests = [];
         $tests = TestDiscovery::scanDirectory("Drupal\\Tests\\$extension_name\\$suite_namespace\\", $test_path);
         foreach ($tests as $test) {
           if (!in_array($test, $failing_classes)) {
