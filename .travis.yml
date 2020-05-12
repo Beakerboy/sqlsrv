@@ -1,12 +1,23 @@
 language: php
 # Functional and Unit tests require Apache
 env:
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-kernel
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-1
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-2
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-kernel-3
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional,passing_unit CODE_SNIFF=yes APACHE=yes
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=passing_functional2 APACHE=yes
+  - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-functional-1 APACHE=yes
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-functional-2 APACHE=yes
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-functional-3 APACHE=yes
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-functional-4 APACHE=yes
   - DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=core-extensions-functional-5 APACHE=yes
-  
+
+matrix:
+  allow_failures:
+    - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing
+    
 php:
   - '7.3'
 
@@ -53,24 +64,18 @@ install:
       wget https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch
       # core Condition not able to be overridden in views...needs work. 
       wget https://www.drupal.org/files/issues/2020-05-04/3130655-10.patch
-      # CONCAT_WS requires at least three arguments...needs work
-      wget https://www.drupal.org/files/issues/2020-04-27/3131379-2.patch
       git apply 2867788-79.patch
       git apply 3130655-10.patch
-      git apply 3131379-2.patch
       # Testing-only patches
       # Fix format of deprecation notices for phpcs 
       wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
       # Add a sqlsrv-specific datatype to test
       wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
       # Enable sqlsrv module in specific kernel tests
-      wget http://beakerboy.com/~kevin/2966272-18.patch
-      # Do not compare string to blob
-      wget https://www.drupal.org/files/issues/2020-05-07/3134475-2.patch
-      git apply 2966272-18.patch
+      wget https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch
+      git apply 2966272-16.patch
       git apply drupal-3111134-database_specific_types-3.patch
       git apply 3108540-11.patch
-      git apply 3134475-2.patch
       if [ "${DRUPAL_VERSION}" == "8.8.x" ]; then
         # Override core Condition...pushed to 8.9.x
         wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
@@ -78,6 +83,9 @@ install:
         # docbloc return type not correct...for phpstan. Pushed to 8.9.x
         wget https://www.drupal.org/files/issues/2020-04-07/3125391-9_0.patch
         git apply 3125391-9_0.patch
+        # CONCAT_WS requires at least three arguments...needs work
+        wget https://www.drupal.org/files/issues/2020-04-27/3131379-2.patch
+        git apply 3131379-2.patch
       fi
     fi
   - cp -r $TRAVIS_BUILD_DIR/drivers ./drivers
