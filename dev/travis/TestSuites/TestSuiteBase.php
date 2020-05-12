@@ -11,7 +11,7 @@ use Drupal\Core\Test\TestDiscovery;
 abstract class TestSuiteBase extends TestSuite {
 
   /**
-   * Regex patterns to split up core extensions.
+   * Regex patterns to split up core Kernel extensions.
    *
    * @var array
    */
@@ -35,6 +35,10 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
     '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
+    '/core/modules/hal/tests/src/Functional/Update/CreateHalSettingsForLinkDomainUpdateTest.php',
+    '/core/modules/hal/tests/src/Functional/Update/MigrateLinkDomainSettingFromRestToHalUpdateTest.php',
+    '/core/modules/path/tests/src/Functional/PathAliasTest.php',
+    '/core/modules/taxonomy/tests/src/Functional/Views/TermDisplayConfigurableTest.php',
   ];
 
   /**
@@ -88,6 +92,47 @@ abstract class TestSuiteBase extends TestSuite {
         }
       }
     }
+  }
+
+  /**
+   * Find and add tests to the suite for core and any extensions.
+   *
+   * @param string $root
+   *   Path to the root of the Drupal installation.
+   * @param string $suite_namespace
+   *   SubNamespace used to separate test suite. Examples: Unit, Functional.
+   * @param int $index
+   *   The chunk number to test
+   */
+  protected function addExtensionTestsBySuiteNamespaceAndChunk($root, $suite_namespace, $index = 0) {
+    $failing_classes = [];
+    foreach ($this->failingClasses as $failing_class) {
+      $failing_classes[] = $root . $failing_class;
+    }
+    // Extensions' tests will always be in the namespace
+    // Drupal\Tests\$extension_name\$suite_namespace\ and be in the
+    // $extension_path/tests/src/$suite_namespace directory. Not all extensions
+    // will have all kinds of tests.
+    $passing_tests = [];
+    foreach ($this->findExtensionDirectories($root) as $extension_name => $dir) {
+      $test_path = "$dir/tests/src/$suite_namespace";
+      if (is_dir($test_path)) {
+        $tests = TestDiscovery::scanDirectory("Drupal\\Tests\\$extension_name\\$suite_namespace\\", $test_path);
+        foreach ($tests as $test) {
+          if (!in_array($test, $failing_classes)) {
+            $passing_tests[] = $test;
+          }
+        }
+      }
+    }
+    $sizes = [17, 34, 25, 25, 30, 25, 25, 25, 30, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25];
+    $index= rand(0, 20);
+    // $index += 5;
+    $length = $sizes[$index];
+    $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index));
+    $subset = array_splice($passing_tests, $offset, $length);
+    fwrite(STDOUT, "SPLICE:" . $index);
+    $this->addTestFiles($subset);
   }
 
 }
