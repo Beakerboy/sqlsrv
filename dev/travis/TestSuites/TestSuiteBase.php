@@ -124,7 +124,7 @@ abstract class TestSuiteBase extends TestSuite {
         }
       }
     }
-    $size = 10;
+    $size = 15;
     $subset = array_splice($passing_tests, $splice * $size, $size);
     // fwrite(STDOUT, print_r($subset, TRUE));
     $this->addTestFiles($subset);
