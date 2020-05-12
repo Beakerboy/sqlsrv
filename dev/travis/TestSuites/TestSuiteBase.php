@@ -101,10 +101,10 @@ abstract class TestSuiteBase extends TestSuite {
    *   Path to the root of the Drupal installation.
    * @param string $suite_namespace
    *   SubNamespace used to separate test suite. Examples: Unit, Functional.
-   * @param int $splice
+   * @param int $index
    *   The chunk number to test
    */
-  protected function addExtensionTestsBySuiteNamespaceAndChunk($root, $suite_namespace, $splice = 0) {
+  protected function addExtensionTestsBySuiteNamespaceAndChunk($root, $suite_namespace, $index = 0) {
     $failing_classes = [];
     foreach ($this->failingClasses as $failing_class) {
       $failing_classes[] = $root . $failing_class;
@@ -125,10 +125,11 @@ abstract class TestSuiteBase extends TestSuite {
         }
       }
     }
-    $sizes = [16];
-    // $splice = rand(0, 30);
-    $size = 17;
-    $subset = array_splice($passing_tests, $splice * $size, $size);
+    $sizes = [17, 34, 25, 25, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20];
+    $index= rand(0, 20);
+    $length = $sizes[$index];
+    $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index))
+    $subset = array_splice($passing_tests, $offset, $length);
     fwrite(STDOUT, "SPLICE:" . $splice);
     $this->addTestFiles($subset);
   }
