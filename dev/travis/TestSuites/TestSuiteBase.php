@@ -38,6 +38,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/hal/tests/src/Functional/Update/CreateHalSettingsForLinkDomainUpdateTest.php',
     '/core/modules/hal/tests/src/Functional/Update/MigrateLinkDomainSettingFromRestToHalUpdateTest.php',
     '/core/modules/path/tests/src/Functional/PathAliasTest.php',
+    '/core/modules/taxonomy/tests/src/Functional/Views/TermDisplayConfigurableTest.php',
   ];
 
   /**
@@ -124,8 +125,9 @@ abstract class TestSuiteBase extends TestSuite {
         }
       }
     }
-    $splice = rand(0, 30);
-    $size = 15;
+    $sizes = [16];
+    // $splice = rand(0, 30);
+    $size = 17;
     $subset = array_splice($passing_tests, $splice * $size, $size);
     fwrite(STDOUT, "SPLICE:" . $splice);
     $this->addTestFiles($subset);
