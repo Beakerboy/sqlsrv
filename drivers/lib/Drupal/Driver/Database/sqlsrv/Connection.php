@@ -368,7 +368,7 @@ class Connection extends DatabaseConnection {
    *   An array of options that are used to determine which PDO
    *   configuration parameters are appropriate for this preparation.
    *
-   * @return \Drupal\Core\Database\StatementInterface
+   * @return \Drupal\Core\Database\Statement
    *   A PDO prepared statement ready for its execute() method.
    */
   public function prepareQuery($query, array $options = []) {
