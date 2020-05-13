@@ -361,7 +361,7 @@ class Connection extends DatabaseConnection {
    *
    * It prefixes tables names enclosed in curly-braces.
    *
-   * @param $query
+   * @param string $query
    *   The query string as SQL, with curly-braces surrounding the
    *   table names.
    * @param array $options
@@ -824,8 +824,8 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
-   * 
-   * SQL Server does not support RELEASE SVAEPOINT
+   *
+   * SQL Server does not support RELEASE SAVEPOINT.
    */
   protected function popCommittableTransactions() {
     // Commit all the committable layers.
