@@ -120,10 +120,10 @@ class Utils {
         continue;
       }
       if ($exists) {
-        $connection->query_direct("DROP FUNCTION [{$name}]");
+        $connection->queryDirect("DROP FUNCTION [{$name}]");
       }
       $script = trim(static::removeUtf8Bom(file_get_contents($path)));
-      $connection->query_direct($script);
+      $connection->queryDirect($script);
     }
   }
 
