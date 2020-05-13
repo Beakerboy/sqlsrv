@@ -102,7 +102,7 @@ abstract class TestSuiteBase extends TestSuite {
    * @param string $suite_namespace
    *   SubNamespace used to separate test suite. Examples: Unit, Functional.
    * @param int $index
-   *   The chunk number to test
+   *   The chunk number to test.
    */
   protected function addExtensionTestsBySuiteNamespaceAndChunk($root, $suite_namespace, $index = 0) {
     $failing_classes = [];
@@ -125,9 +125,13 @@ abstract class TestSuiteBase extends TestSuite {
         }
       }
     }
-    $sizes = [17, 34, 25, 25, 30, 25, 25, 25, 30, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25];
-    $index= rand(0, 20);
-    // $index += 5;
+    $sizes = [
+      17, 34, 25, 25, 30,
+      25, 25, 25, 30, 25,
+      25, 25, 25, 25, 25,
+      25, 25, 25, 25, 25, 25,
+    ];
+    $index = rand(0, 20);
     $length = $sizes[$index];
     $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index));
     $subset = array_splice($passing_tests, $offset, $length);
