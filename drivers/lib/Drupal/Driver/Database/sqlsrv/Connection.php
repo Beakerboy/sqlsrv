@@ -357,19 +357,7 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Prepares a query string and returns the prepared statement.
-   *
-   * It prefixes tables names enclosed in curly-braces.
-   *
-   * @param string $query
-   *   The query string as SQL, with curly-braces surrounding the
-   *   table names.
-   * @param array $options
-   *   An array of options that are used to determine which PDO
-   *   configuration parameters are appropriate for this preparation.
-   *
-   * @return \Drupal\Core\Database\Statement
-   *   A PDO prepared statement ready for its execute() method.
+   * {@inheritdoc}
    */
   public function prepareQuery($query, array $options = []) {
     $default_options = [
