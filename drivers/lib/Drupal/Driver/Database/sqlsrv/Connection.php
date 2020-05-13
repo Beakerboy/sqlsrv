@@ -357,12 +357,19 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Temporary override of DatabaseConnection::prepareQuery().
+   * Prepares a query string and returns the prepared statement.
    *
-   * @todo: remove that when DatabaseConnection::prepareQuery() is fixed to call
-   *   $this->prepare() and not parent::prepare().
-   *   https://www.drupal.org/node/2345451
-   * @status: tested, temporary
+   * It prefixes tables names enclosed in curly-braces.
+   *
+   * @param $query
+   *   The query string as SQL, with curly-braces surrounding the
+   *   table names.
+   * @param array $options
+   *   An array of options that are used to determine which PDO
+   *   configuration parameters are appropriate for this preparation.
+   *
+   * @return \Drupal\Core\Database\StatementInterface
+   *   A PDO prepared statement ready for its execute() method.
    */
   public function prepareQuery($query, array $options = []) {
     $default_options = [
@@ -816,7 +823,9 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Commit all the transaction layers that can commit.
+   * {@inheritdoc}
+   * 
+   * SQL Server does not support RELEASE SVAEPOINT
    */
   protected function popCommittableTransactions() {
     // Commit all the committable layers.
