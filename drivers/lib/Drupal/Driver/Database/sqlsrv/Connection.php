@@ -636,35 +636,14 @@ class Connection extends DatabaseConnection {
     }
   }
 
-  // phpcs:disable
   /**
-   * Like query but with no insecure detection or query preprocessing.
-   *
-   * The caller is sure that the query is MS SQL compatible! Used internally
-   * from the schema class, but could be called from anywhere.
+   * Massage a query to make it compliant with SQL Server.
    *
    * @param mixed $query
-   *   Query.
-   * @param array $args
-   *   Query arguments.
-   * @param mixed $options
-   *   Query options.
+   *   Query string.
    *
-   * @throws \PDOException
-   *
-   * @return mixed
-   *   Query result.
-   *
-   * @deprecated in 8.x-1.0-rc6 and is removed from 8.x-1.0
-   * @see https://www.drupal.org/project/sqlsrv/issues/3108368
-   */
-  public function query_direct($query, array $args = [], $options = []) {
-    return $this->queryDirect($query, $args, $options);
-  }
-  // phpcs:enable
-
-  /**
-   * Internal function: massage a query to make it compliant with SQL Server.
+   * @return string
+   *   Query string in MS SQL format.
    */
   public function preprocessQuery($query) {
     // Generate a cache signature for this query.
