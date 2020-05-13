@@ -16,7 +16,7 @@ env:
 
 matrix:
   allow_failures:
-    - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing
+    - env: DBVERSION=2017 DRUPAL_VERSION=8.8.x TEST_SUITE=failing APACHE=yes
     
 php:
   - '7.3'
