@@ -434,33 +434,12 @@ class Connection extends DatabaseConnection {
    */
   protected function replaceReservedCallback($matches) {
     if ($matches[1] !== '') {
-      // Replace reserved words. We are not calling
-      // quoteIdentifier() on purpose.
+      // Replace reserved words.
       return '[' . $matches[1] . ']';
     }
     // Let other value passthru.
     // by the logic of the regex above, this will always be the last match.
     return end($matches);
-  }
-
-  /**
-   * Quotes an identifier if it matches a SQL Server reserved keyword.
-   *
-   * @param string $identifier
-   *   The field to check.
-   *
-   * @return string
-   *   The identifier, quoted if it matches a SQL Server reserved keyword.
-   */
-  protected function quoteIdentifier($identifier) {
-    if (strpos($identifier, '.') !== FALSE) {
-      list($table, $identifier) = explode('.', $identifier, 2);
-    }
-    if (in_array(strtolower($identifier), $this->reservedKeyWords, TRUE)) {
-      // Quote the string for SQLServer reserved keywords.
-      $identifier = '[' . $identifier . ']';
-    }
-    return isset($table) ? $table . '.' . $identifier : $identifier;
   }
 
   /**
