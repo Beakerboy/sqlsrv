@@ -375,12 +375,9 @@ class Connection extends DatabaseConnection {
   public function prepareQuery($query, array $options = []) {
     $default_options = [
       'insecure' => FALSE,
-      // Caching mode can be 'disabled', 'on-demand', or 'always'.
-      'caching_mode' => 'disabled',
-      'cache_statements' => FALSE,
-      'direct_query' => FALSE,
       'bypass_preprocess' => FALSE,
     ];
+
     // Merge default statement options. These options are
     // only specific for this preparation and will only override
     // the global configuration if set to different than NULL.
@@ -414,10 +411,7 @@ class Connection extends DatabaseConnection {
     // you should execute your queries with PDO::SQLSRV_ATTR_DIRECT_QUERY set to
     // True. For example, if you use temporary tables in your queries,
     // PDO::SQLSRV_ATTR_DrIRECT_QUERY must be set to True.
-    // Why does caching mode taken into account for queryDirect?
-    if ($options['caching_mode'] != 'always' || $options['direct_query'] == TRUE) {
-      $driver_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
-    }
+    $driver_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
 
     // It creates a cursor for the query, which allows you to iterate over the
     // result set without fetching the whole result at once. A scrollable
@@ -685,22 +679,6 @@ class Connection extends DatabaseConnection {
    *   Query string in MS SQL format.
    */
   public function preprocessQuery($query) {
-    // Generate a cache signature for this query.
-    $query_signature = 'query_cache_' . md5($query);
-
-    // Drill through everything...
-    $success = FALSE;
-    $cache = '';
-    if (extension_loaded('wincache')) {
-      $cache = wincache_ucache_get($query_signature, $success);
-    }
-    elseif (extension_loaded('apcu') && (PHP_SAPI !== 'cli' || (bool) ini_get('apc.enable_cli'))) {
-      $cache = apcu_fetch($query_signature, $success);
-    }
-    if ($success) {
-      return $cache;
-    }
-
     // Force quotes around some SQL Server reserved keywords.
     if (preg_match('/^SELECT/i', $query)) {
       $query = preg_replace_callback(self::RESERVED_REGEXP, [$this, 'replaceReservedCallback'], $query);
@@ -732,15 +710,6 @@ class Connection extends DatabaseConnection {
 
     // Now do all the replacements at once.
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
-
-    // Store the processed query, and make sure we expire it some time
-    // so that scarcely used queries don't stay in the cache forever.
-    if (extension_loaded('wincache')) {
-      wincache_ucache_set($query_signature, $query, rand(600, 3600));
-    }
-    elseif (extension_loaded('apcu') && (PHP_SAPI !== 'cli' || (bool) ini_get('apc.enable_cli'))) {
-      apcu_store($query_signature, $query, rand(600, 3600));
-    }
 
     return $query;
   }
