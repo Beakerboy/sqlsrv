@@ -18,12 +18,6 @@ use Drupal\Core\Database\TransactionNameNonUniqueException;
 
 /**
  * Sqlsvr implementation of \Drupal\Core\Database\Connection.
- *
- * Temporary tables: temporary table support is done by means of global
- * temporary tables (#) to avoid the use of DIRECT QUERIES. You can enable and
- * disable the use of direct queries with:
- * $this->driver_settings->defaultDirectQuery = TRUE|FALSE.
- * http://blogs.msdn.com/b/brian_swan/archive/2010/06/15/ctp2-of-microsoft-driver-for-php-for-sql-server-released.aspx.
  */
 class Connection extends DatabaseConnection {
 
@@ -68,35 +62,6 @@ class Connection extends DatabaseConnection {
     }
     $query .= " OFFSET {$from} ROWS FETCH NEXT {$count} ROWS ONLY";
     return $this->query($query, $args, $options);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function queryTemporary($query, array $args = [], array $options = []) {
-    // Generate a new GLOBAL temporary table name and protect it from prefixing.
-    // SQL Server requires that temporary tables to be non-qualified.
-    $tablename = '##' . $this->generateTemporaryTableName();
-    // Temporary tables cannot be introspected so using them is limited on some
-    // scenarios.
-    if (isset($options['real_table']) && $options['real_table'] === TRUE) {
-      $tablename = trim($tablename, "#");
-    }
-    $prefixes = $this->prefixes;
-    $prefixes[$tablename] = '';
-    $this->setPrefix($prefixes);
-
-    // Having comments in the query can be tricky and break the
-    // SELECT FROM  -> SELECT INTO conversion.
-    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
-    $schema = $this->schema();
-    $query = $schema->removeSQLComments($query);
-
-    // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
-    $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
-    $this->query($query, $args, $options);
-
-    return $tablename;
   }
 
   /**
@@ -298,21 +263,6 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    *
-   * Because we are using global temporary tables, these are visible between
-   * connections so we need to make sure that their names are as unique as
-   * possible to prevent collisions.
-   */
-  protected function generateTemporaryTableName() {
-    static $temp_key;
-    if (!isset($temp_key)) {
-      $temp_key = strtoupper(md5(uniqid("", TRUE)));
-    }
-    return "db_temp_" . $this->temporaryNameIndex++ . '_' . $temp_key;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
    * This method is overriden to manage the insecure (EMULATE_PREPARE)
    * behaviour to prevent some compatibility issues with SQL Server.
    */
@@ -505,40 +455,6 @@ class Connection extends DatabaseConnection {
     }
 
     return $query;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * Includes special handling for temporary tables.
-   */
-  public function escapeTable($table) {
-    // A static cache is better suited for this.
-    static $tables = [];
-    if (isset($tables[$table])) {
-      return $tables[$table];
-    }
-
-    // Rescue the # prefix from the escaping.
-    $is_temporary = $table[0] == '#';
-    $is_temporary_global = $is_temporary && isset($table[1]) && $table[1] == '#';
-
-    // Any temporary table prefix will be removed.
-    $result = preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
-
-    // Restore the temporary prefix.
-    if ($is_temporary) {
-      if ($is_temporary_global) {
-        $result = '##' . $result;
-      }
-      else {
-        $result = '#' . $result;
-      }
-    }
-
-    $tables[$table] = $result;
-
-    return $result;
   }
 
   /**
