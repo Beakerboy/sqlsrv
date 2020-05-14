@@ -520,6 +520,7 @@ class Connection extends DatabaseConnection {
       // In either case, we want to end up with an executed statement object,
       // which we pass to PDOStatement::execute.
       if ($query instanceof StatementInterface) {
+        /** @var \Drupal\Core\Database\Statement $stmt */
         $stmt = $query;
         $stmt->execute(NULL, $options);
       }
@@ -538,6 +539,7 @@ class Connection extends DatabaseConnection {
         if ($insecure === TRUE || $argcount >= 2100 || ($argcount != substr_count($query, ':'))) {
           $insecure = TRUE;
         }
+        /** @var \Drupal\Core\Database\Statement $stmt */
         $stmt = $this->prepareQuery($query, ['insecure' => $insecure]);
         $stmt->execute($args, $options);
       }
