@@ -423,7 +423,7 @@ class Connection extends DatabaseConnection {
     $driver_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
 
     // Call our overriden prepare.
-    /** @var \Drupal\Core\Database\StatementInterface $stmt */
+    /** @var \Drupal\Core\Database\Statement $stmt */
     $stmt = $this->connection->prepare($query, $driver_options);
 
     // If statement caching is enabled, store current statement for reuse.
