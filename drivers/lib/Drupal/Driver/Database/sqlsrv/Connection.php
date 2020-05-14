@@ -636,7 +636,7 @@ class Connection extends DatabaseConnection {
    * The caller is sure that the query is MS SQL compatible! Used internally
    * from the schema class, but could be called from anywhere.
    *
-   * @param mixed $query
+   * @param string $query
    *   Query.
    * @param array $args
    *   Query arguments.
