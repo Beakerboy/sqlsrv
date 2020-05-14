@@ -522,7 +522,7 @@ class Connection extends DatabaseConnection {
    *   An array of arguments for the prepared statement. If the prepared
    *   statement uses ? placeholders, this array must be an indexed array.
    *   If it contains named placeholders, it must be an associative array.
-   * @param $options
+   * @param mixed $options
    *   An associative array of options to control how the query is run. The
    *   given options will be merged with self::defaultOptions(). See the
    *   documentation for self::defaultOptions() for details.
