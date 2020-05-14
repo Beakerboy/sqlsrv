@@ -424,7 +424,7 @@ class Connection extends DatabaseConnection {
 
     // Call our overriden prepare.
     /** @var \Drupal\Core\Database\StatementInterface $stmt */
-    $stmt = $this->prepare($query, $driver_options);
+    $stmt = $this->connection->prepare($query, $driver_options);
 
     // If statement caching is enabled, store current statement for reuse.
     if ($options['cache_statements'] === TRUE && $options['caching_mode'] != 'disabled' || $options['caching_mode'] == 'always') {
