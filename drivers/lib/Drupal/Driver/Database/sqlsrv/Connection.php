@@ -531,7 +531,7 @@ class Connection extends DatabaseConnection {
    *   Typically, $options['return'] will be set by a default or by a query
    *   builder, and should not be set by a user.
    *
-   * @return \Drupal\Core\Database\StatementInterface|int|null
+   * @return \Drupal\Core\Database\Statement|int|string|null
    *   This method will return one of the following:
    *   - If either $options['return'] === self::RETURN_STATEMENT, or
    *     $options['return'] is not set (due to self::defaultOptions()),
@@ -564,7 +564,7 @@ class Connection extends DatabaseConnection {
       // We allow either a pre-bound statement object or a literal string.
       // In either case, we want to end up with an executed statement object,
       // which we pass to PDOStatement::execute.
-      if ($query instanceof StatementInterface) {
+      if ($query instanceof Statement) {
         $stmt = $query;
         $stmt->execute(NULL, $options);
       }
