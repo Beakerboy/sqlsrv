@@ -132,12 +132,13 @@ abstract class TestSuiteBase extends TestSuite {
       }
     }
     $sizes = [
-      17, 34, 25, 25, 30,
+      17, 34, 25, 30, 30,
       25, 25, 25, 30, 25,
       25, 20, 25, 25, 25,
-      25, 25, 25, 25, 25, 25,
+      25, 25, 25, 25, 25,
+      25, 25, 25, 25, 25,
     ];
-    $index = rand(0, 20);
+    $index = rand(0, 24);
     $length = $sizes[$index];
     $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index));
     $subset = array_splice($passing_tests, $offset, $length);
