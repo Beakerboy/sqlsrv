@@ -7,7 +7,6 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\StatementInterface;
-use Drupal\Core\Database\Statement;
 use Drupal\Core\Database\TransactionNoActiveException;
 use Drupal\Core\Database\TransactionOutOfOrderException;
 use Drupal\Core\Database\TransactionNameNonUniqueException;
@@ -429,8 +428,9 @@ class Connection extends DatabaseConnection {
     // Lets you access rows in any order. Creates a client-side cursor query.
     $driver_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
 
-    // Call our overriden prepare.
-    return  $this->connection->prepare($query, $driver_options);
+    /** @var \Drupal\Core\Database\Statement $stmt */
+    $stmt = $this->connection->prepare($query, $driver_options);
+    return $stmt;
   }
 
   /**
@@ -549,7 +549,7 @@ class Connection extends DatabaseConnection {
    *
    * @see \Drupal\Core\Database\Connection::defaultOptions()
    */
-  public function query($query, array $args = [], $options = []) {
+  public function query($query, array $args = [], array $options = []) {
 
     // Use default values if not already set.
     $options += $this->defaultOptions();
