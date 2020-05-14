@@ -35,7 +35,6 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
     '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
-    '/core/modules/hal/tests/src/Functional/Update/MigrateLinkDomainSettingFromRestToHalUpdateTest.php',
     '/core/modules/path/tests/src/Functional/PathAliasTest.php',
     '/core/modules/taxonomy/tests/src/Functional/Views/TermDisplayConfigurableTest.php',
   ];
