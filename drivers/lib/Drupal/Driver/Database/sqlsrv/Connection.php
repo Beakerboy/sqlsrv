@@ -357,7 +357,7 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    */
-  public function prepareQuery($query, $quoteIdentifiers = TRUE, array $options = []) {
+  public function prepareQuery($query, $quote_identifiers = TRUE, array $options = []) {
     $default_options = [
       'insecure' => FALSE,
       // Caching mode can be 'disabled', 'on-demand', or 'always'.
@@ -524,7 +524,7 @@ class Connection extends DatabaseConnection {
         if ($insecure === TRUE || $argcount >= 2100 || ($argcount != substr_count($query, ':'))) {
           $insecure = TRUE;
         }
-        $stmt = $this->prepareQuery($query, ['insecure' => $insecure]);
+        $stmt = $this->prepareQuery($query, TRUE, ['insecure' => $insecure]);
         $stmt->execute($args, $options);
       }
 
@@ -586,7 +586,7 @@ class Connection extends DatabaseConnection {
         'direct_query' => TRUE,
         'bypass_preprocess' => TRUE,
       ];
-      $stmt = $this->prepareQuery($query, $direct_query_options + $options);
+      $stmt = $this->prepareQuery($query, TRUE, $direct_query_options + $options);
       $stmt->execute($args, $options);
 
       // Depending on the type of query we may need to return a different value.
