@@ -289,15 +289,13 @@ class Connection extends DatabaseConnection {
    */
   public function __construct(\PDO $connection, array $connection_options) {
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
+    $this->identifierQuotes = ['[', ']'];
     parent::__construct($connection, $connection_options);
 
     // This driver defaults to transaction support, except if explicitly passed
     // FALSE.
     $this->transactionSupport = !isset($connection_options['transactions']) || $connection_options['transactions'] !== FALSE;
     $this->transactionalDDLSupport = $this->transactionSupport;
-
-    // Store connection options for future reference.
-    $this->connectionOptions = $connection_options;
   }
 
   /**
@@ -357,14 +355,9 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Temporary override of DatabaseConnection::prepareQuery().
-   *
-   * @todo: remove that when DatabaseConnection::prepareQuery() is fixed to call
-   *   $this->prepare() and not parent::prepare().
-   *   https://www.drupal.org/node/2345451
-   * @status: tested, temporary
+   * {@inheritdoc}
    */
-  public function prepareQuery($query, array $options = []) {
+  public function prepareQuery($query, $quoteIdentifiers = TRUE, array $options = []) {
     $default_options = [
       'insecure' => FALSE,
       // Caching mode can be 'disabled', 'on-demand', or 'always'.
@@ -379,12 +372,8 @@ class Connection extends DatabaseConnection {
     $options += $default_options;
 
     $query = $this->prefixTables($query);
-
-    // The statement caching settings only affect the storage
-    // in the cache, but if a statement is already available
-    // why not reuse it!
-    if (isset($this->statementCache[$query])) {
-      return $this->statementCache[$query];
+    if ($quote_identifiers) {
+      $query = $this->quoteIdentifiers($query);
     }
 
     // Preprocess the query.
@@ -428,14 +417,7 @@ class Connection extends DatabaseConnection {
     $driver_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
 
     // Call our overriden prepare.
-    $stmt = $this->prepare($query, $driver_options);
-
-    // If statement caching is enabled, store current statement for reuse.
-    if ($options['cache_statements'] === TRUE && $options['caching_mode'] != 'disabled' || $options['caching_mode'] == 'always') {
-      $this->statementCache[$query] = $stmt;
-    }
-
-    return $stmt;
+    return  $this->connection->prepare($query, $driver_options);
   }
 
   /**
