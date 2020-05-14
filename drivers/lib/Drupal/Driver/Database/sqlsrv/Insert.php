@@ -30,7 +30,10 @@ class Insert extends QueryInsert {
   const MAX_BATCH_SIZE = 200;
 
   /**
-   * {@inheritdoc}
+   * Runs the query against the database.
+   *
+   * @return string|int|bool|null
+   *   A primary key value, NULL if the query is not valid.
    */
   public function execute() {
     if (!$this->preExecute()) {

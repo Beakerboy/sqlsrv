@@ -357,12 +357,20 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Temporary override of DatabaseConnection::prepareQuery().
+   * Prepares a query string and returns the prepared statement.
    *
-   * @todo: remove that when DatabaseConnection::prepareQuery() is fixed to call
-   *   $this->prepare() and not parent::prepare().
-   *   https://www.drupal.org/node/2345451
-   * @status: tested, temporary
+   * This method caches prepared statements, reusing them when
+   * possible. It also prefixes tables names enclosed in curly-braces.
+   *
+   * @param string $query
+   *   The query string as SQL, with curly-braces surrounding the
+   *   table names.
+   * @param array $options
+   *   An array ooptions to determine which PDO Parameters
+   *   should be used.
+   *
+   * @return \Drupal\Core\Database\Statement
+   *   A PDO prepared statement ready for its execute() method.
    */
   public function prepareQuery($query, array $options = []) {
     $default_options = [
@@ -379,13 +387,6 @@ class Connection extends DatabaseConnection {
     $options += $default_options;
 
     $query = $this->prefixTables($query);
-
-    // The statement caching settings only affect the storage
-    // in the cache, but if a statement is already available
-    // why not reuse it!
-    if (isset($this->statementCache[$query])) {
-      return $this->statementCache[$query];
-    }
 
     // Preprocess the query.
     if (!$options['bypass_preprocess']) {
@@ -427,14 +428,8 @@ class Connection extends DatabaseConnection {
     // Lets you access rows in any order. Creates a client-side cursor query.
     $driver_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
 
-    // Call our overriden prepare.
-    $stmt = $this->prepare($query, $driver_options);
-
-    // If statement caching is enabled, store current statement for reuse.
-    if ($options['cache_statements'] === TRUE && $options['caching_mode'] != 'disabled' || $options['caching_mode'] == 'always') {
-      $this->statementCache[$query] = $stmt;
-    }
-
+    /** @var \Drupal\Core\Database\Statement $stmt */
+    $stmt = $this->connection->prepare($query, $driver_options);
     return $stmt;
   }
 
@@ -505,10 +500,54 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * {@inheritdoc}
+   * Executes a query string against the database.
+   *
+   * This method provides a central handler for the actual execution of every
+   * query. All queries executed by Drupal are executed as PDO prepared
+   * statements.
    *
    * This method is overriden to manage the insecure (EMULATE_PREPARE)
    * behaviour to prevent some compatibility issues with SQL Server.
+   *
+   * @param string|\Drupal\Core\Database\Statement $query
+   *   The query to execute. In most cases this will be a string containing
+   *   an SQL query with placeholders. An already-prepared instance of
+   *   StatementInterface may also be passed in order to allow calling
+   *   code to manually bind variables to a query. If a
+   *   StatementInterface is passed, the $args array will be ignored.
+   *   It is extremely rare that module code will need to pass a statement
+   *   object to this method. It is used primarily for database drivers for
+   *   databases that require special LOB field handling.
+   * @param array $args
+   *   An array of arguments for the prepared statement. If the prepared
+   *   statement uses ? placeholders, this array must be an indexed array.
+   *   If it contains named placeholders, it must be an associative array.
+   * @param mixed $options
+   *   An associative array of options to control how the query is run. The
+   *   given options will be merged with self::defaultOptions(). See the
+   *   documentation for self::defaultOptions() for details.
+   *   Typically, $options['return'] will be set by a default or by a query
+   *   builder, and should not be set by a user.
+   *
+   * @return \Drupal\Core\Database\Statement|int|string|null
+   *   This method will return one of the following:
+   *   - If either $options['return'] === self::RETURN_STATEMENT, or
+   *     $options['return'] is not set (due to self::defaultOptions()),
+   *     returns the executed statement.
+   *   - If $options['return'] === self::RETURN_AFFECTED,
+   *     returns the number of rows affected by the query
+   *     (not the number matched).
+   *   - If $options['return'] === self::RETURN_INSERT_ID,
+   *     returns the generated insert ID of the last query.
+   *   - If either $options['return'] === self::RETURN_NULL, or
+   *     an exception occurs and $options['throw_exception'] evaluates to FALSE,
+   *     returns NULL.
+   *
+   * @throws \Drupal\Core\Database\DatabaseExceptionWrapper
+   * @throws \Drupal\Core\Database\IntegrityConstraintViolationException
+   * @throws \InvalidArgumentException
+   *
+   * @see \Drupal\Core\Database\Connection::defaultOptions()
    */
   public function query($query, array $args = [], $options = []) {
 
@@ -581,7 +620,7 @@ class Connection extends DatabaseConnection {
    * The caller is sure that the query is MS SQL compatible! Used internally
    * from the schema class, but could be called from anywhere.
    *
-   * @param mixed $query
+   * @param string $query
    *   Query.
    * @param array $args
    *   Query arguments.
@@ -816,7 +855,9 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Commit all the transaction layers that can commit.
+   * {@inheritdoc}
+   *
+   * SQL Server does not support RELEASE SAVEPOINT.
    */
   protected function popCommittableTransactions() {
     // Commit all the committable layers.
