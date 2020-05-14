@@ -358,8 +358,22 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * {@inheritdoc}
+   * Prepares a query string and returns the prepared statement.
+   *
+   * This method caches prepared statements, reusing them when
+   * possible. It also prefixes tables names enclosed in curly-braces.
+   *
+   * @param $query
+   *   The query string as SQL, with curly-braces surrounding the
+   *   table names.
+   * @param array $options
+   *   An array ooptions to determine which PDO Parameters
+   *   should be used.
+   *
+   * @return \Drupal\Core\Database\Statement
+   *   A PDO prepared statement ready for its execute() method.
    */
+
   public function prepareQuery($query, array $options = []) {
     $default_options = [
       'insecure' => FALSE,
@@ -564,7 +578,7 @@ class Connection extends DatabaseConnection {
       // We allow either a pre-bound statement object or a literal string.
       // In either case, we want to end up with an executed statement object,
       // which we pass to PDOStatement::execute.
-      if ($query instanceof Statement) {
+      if ($query instanceof StatementInterface) {
         $stmt = $query;
         $stmt->execute(NULL, $options);
       }
@@ -583,7 +597,6 @@ class Connection extends DatabaseConnection {
         if ($insecure === TRUE || $argcount >= 2100 || ($argcount != substr_count($query, ':'))) {
           $insecure = TRUE;
         }
-        /** @var \Drupal\Core\Database\Statement $stmt */
         $stmt = $this->prepareQuery($query, ['insecure' => $insecure]);
         $stmt->execute($args, $options);
       }
