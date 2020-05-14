@@ -465,14 +465,6 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
-   */
-  public function escapeField($field) {
-    $field = parent::escapeField($field);
-    return $this->quoteIdentifier($field);
-  }
-
-  /**
-   * {@inheritdoc}
    *
    * Because we are using global temporary tables, these are visible between
    * connections so we need to make sure that their names are as unique as
