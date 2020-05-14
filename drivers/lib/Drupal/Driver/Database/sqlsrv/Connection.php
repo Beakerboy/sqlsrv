@@ -363,7 +363,7 @@ class Connection extends DatabaseConnection {
    * This method caches prepared statements, reusing them when
    * possible. It also prefixes tables names enclosed in curly-braces.
    *
-   * @param $query
+   * @param string $query
    *   The query string as SQL, with curly-braces surrounding the
    *   table names.
    * @param array $options
@@ -373,7 +373,6 @@ class Connection extends DatabaseConnection {
    * @return \Drupal\Core\Database\Statement
    *   A PDO prepared statement ready for its execute() method.
    */
-
   public function prepareQuery($query, array $options = []) {
     $default_options = [
       'insecure' => FALSE,
@@ -389,13 +388,6 @@ class Connection extends DatabaseConnection {
     $options += $default_options;
 
     $query = $this->prefixTables($query);
-
-    // The statement caching settings only affect the storage
-    // in the cache, but if a statement is already available
-    // why not reuse it!
-    if (isset($this->statementCache[$query])) {
-      return $this->statementCache[$query];
-    }
 
     // Preprocess the query.
     if (!$options['bypass_preprocess']) {
@@ -438,15 +430,7 @@ class Connection extends DatabaseConnection {
     $driver_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
 
     // Call our overriden prepare.
-    /** @var \Drupal\Core\Database\Statement $stmt */
-    $stmt = $this->connection->prepare($query, $driver_options);
-
-    // If statement caching is enabled, store current statement for reuse.
-    if ($options['cache_statements'] === TRUE && $options['caching_mode'] != 'disabled' || $options['caching_mode'] == 'always') {
-      $this->statementCache[$query] = $stmt;
-    }
-
-    return $stmt;
+    return  $this->connection->prepare($query, $driver_options);
   }
 
   /**
