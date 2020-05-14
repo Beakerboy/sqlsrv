@@ -502,10 +502,54 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * {@inheritdoc}
+   * Executes a query string against the database.
+   *
+   * This method provides a central handler for the actual execution of every
+   * query. All queries executed by Drupal are executed as PDO prepared
+   * statements.
    *
    * This method is overriden to manage the insecure (EMULATE_PREPARE)
    * behaviour to prevent some compatibility issues with SQL Server.
+   *
+   * @param string|\Drupal\Core\Database\Statement $query
+   *   The query to execute. In most cases this will be a string containing
+   *   an SQL query with placeholders. An already-prepared instance of
+   *   StatementInterface may also be passed in order to allow calling
+   *   code to manually bind variables to a query. If a
+   *   StatementInterface is passed, the $args array will be ignored.
+   *   It is extremely rare that module code will need to pass a statement
+   *   object to this method. It is used primarily for database drivers for
+   *   databases that require special LOB field handling.
+   * @param array $args
+   *   An array of arguments for the prepared statement. If the prepared
+   *   statement uses ? placeholders, this array must be an indexed array.
+   *   If it contains named placeholders, it must be an associative array.
+   * @param array $options
+   *   An associative array of options to control how the query is run. The
+   *   given options will be merged with self::defaultOptions(). See the
+   *   documentation for self::defaultOptions() for details.
+   *   Typically, $options['return'] will be set by a default or by a query
+   *   builder, and should not be set by a user.
+   *
+   * @return \Drupal\Core\Database\StatementInterface|int|null
+   *   This method will return one of the following:
+   *   - If either $options['return'] === self::RETURN_STATEMENT, or
+   *     $options['return'] is not set (due to self::defaultOptions()),
+   *     returns the executed statement.
+   *   - If $options['return'] === self::RETURN_AFFECTED,
+   *     returns the number of rows affected by the query
+   *     (not the number matched).
+   *   - If $options['return'] === self::RETURN_INSERT_ID,
+   *     returns the generated insert ID of the last query.
+   *   - If either $options['return'] === self::RETURN_NULL, or
+   *     an exception occurs and $options['throw_exception'] evaluates to FALSE,
+   *     returns NULL.
+   *
+   * @throws \Drupal\Core\Database\DatabaseExceptionWrapper
+   * @throws \Drupal\Core\Database\IntegrityConstraintViolationException
+   * @throws \InvalidArgumentException
+   *
+   * @see \Drupal\Core\Database\Connection::defaultOptions()
    */
   public function query($query, array $args = [], $options = []) {
 
@@ -521,7 +565,6 @@ class Connection extends DatabaseConnection {
       // In either case, we want to end up with an executed statement object,
       // which we pass to PDOStatement::execute.
       if ($query instanceof StatementInterface) {
-        /** @var \Drupal\Core\Database\Statement $stmt */
         $stmt = $query;
         $stmt->execute(NULL, $options);
       }
