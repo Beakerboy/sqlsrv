@@ -43,6 +43,8 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/hal/tests/src/Functional/Update/MigrateLinkDomainSettingFromRestToHalUpdateTest.php',
     '/core/modules/path/tests/src/Functional/PathAliasTest.php',
     '/core/modules/taxonomy/tests/src/Functional/Views/TermDisplayConfigurableTest.php',
+    '/core/modules/views/tests/src/Functional/Update/CacheabilityMetadataUpdateTest.php',
+    '/core/modules/workspaces/tests/src/Functional/Update/WorkspacesUpdateTest.php',
   ];
 
   /**
