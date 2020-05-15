@@ -284,6 +284,7 @@ class Connection extends DatabaseConnection {
     $driver_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
 
     // Call our overriden prepare.
+    fwrite(STDOUT, $query . "\n");
     return  $this->connection->prepare($query, $driver_options);
   }
 
