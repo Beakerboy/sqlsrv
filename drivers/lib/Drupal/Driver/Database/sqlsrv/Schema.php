@@ -221,9 +221,10 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function fieldExists($table, $field) {
-    return $this->connection
-      ->queryDirect('SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = :table AND column_name = :name', [
-        ':table' => $this->connection->prefixTables('{' . $table . '}'),
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
+    $sql = 'SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = :table AND column_name = :name';
+    return $this->connection->queryDirect($sql, [
+        ':table' => $prefixInfo['table'],
         ':name' => $field,
       ])
       ->fetchField() !== FALSE;
