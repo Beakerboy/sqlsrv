@@ -1752,6 +1752,26 @@ EOF;
   }
 
   /**
+   * Drop a constraint.
+   *
+   * @param string $table
+   *   Table name.
+   * @param string $name
+   *   Constraint name.
+   * @param bool $check
+   *   Check if the constraint exists?
+   */
+  public function dropConstraint($table, $name, $check = TRUE) {
+    // Check if constraint exists
+    if ($check) {
+      // Do Something.
+    }
+    $sql = 'ALTER TABLE {' . $table . '} DROP CONSTRAINT [' . $constraint->name . ']';
+    $this->connection->query($sql);
+    $this->resetColumnInformation($table);
+  }
+    
+  /**
    * Drop the related objects of a column (indexes, constraints, etc.).
    *
    * @param mixed $table
@@ -1779,9 +1799,7 @@ EOF;
       ':name' => $field,
     ]);
     foreach ($constraints as $constraint) {
-      $sql = 'ALTER TABLE {' . $table . '} DROP CONSTRAINT [' . $constraint->name . ']';
-      $this->connection->query($sql);
-      $this->resetColumnInformation($table);
+      $this->dropConstraint($table, $constraint->name, FALSE);
     }
 
     // Fetch the list of default constraints referencing this column.
@@ -1791,9 +1809,7 @@ EOF;
       ':name' => $field,
     ]);
     foreach ($constraints as $constraint) {
-      $sql = 'ALTER TABLE {' . $table . '} DROP CONSTRAINT [' . $constraint->name . ']';
-      $this->connection->query($sql);
-      $this->resetColumnInformation($table);
+      $this->dropConstraint($table, $constraint->name, FALSE);
     }
 
     // Drop any indexes on related computed columns when we have some.
@@ -1856,8 +1872,7 @@ EOF;
     // We are droping the constraint, but not the column.
     $existing_primary_key = $this->primaryKeyName($table);
     if ($existing_primary_key !== FALSE) {
-      $this->connection->query("ALTER TABLE {{$table}} DROP CONSTRAINT {$existing_primary_key}");
-      $this->resetColumnInformation($table);
+      $this->dropConstraint($table, $existing_primary_key, FALSE);
     }
     // We are using computed columns to store primary keys,
     // try to remove it if it exists.
