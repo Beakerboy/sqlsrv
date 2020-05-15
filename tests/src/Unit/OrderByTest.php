@@ -30,7 +30,7 @@ class OrderByTest extends UnitTestCase {
       ->getMockForAbstractClass();
     $condition = new Condition('AND');
     $connection->method('condition')->willReturn($condition);
-    $this->query = new Select('test', 'test', $connection);
+    $this->query = new Select($connection, 'test', 'test');
   }
 
   /**
