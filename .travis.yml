@@ -53,6 +53,9 @@ install:
   - composer install
   - |
     if [ "${DRUPAL_VERSION}" == "9.0.x" ]; then
+      # encapsulate fields.
+      wget http://beakerboy.com/~kevin/3136974-4.patch
+      git apply 3136974-4.patch
       # core Condition not able to be overridden in views...needs work.
       wget https://www.drupal.org/files/issues/2020-05-04/3130655-13.patch
     else
