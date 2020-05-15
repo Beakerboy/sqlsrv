@@ -272,7 +272,7 @@ class Schema extends DatabaseSchema {
     // algorithm to do so is a crappy str_replace.
     $query = "ALTER TABLE {$table_prefixed} ADD ";
     $query .= $this->createFieldSql($table, $field, $spec);
-    $this->connection->queryDirect($query, [], ['prefix_tables' => FALSE]);
+    $this->connection->queryDirect($query, []);
     $this->resetColumnInformation($table);
     // Load the initial data.
     if (isset($spec['initial_from_field'])) {
@@ -1382,7 +1382,7 @@ EOF
     if (!$skip_checks) {
       if (isset($spec['default'])) {
         $default = $this->defaultValueExpression($sqlsrv_type, $spec['default']);
-        $sql .= " CONSTRAINT {$table_prefixed}_{$name}_df DEFAULT $default";
+        $sql .= " CONSTRAINT {{$table}_{$name}_df} DEFAULT $default";
       }
       if (!empty($spec['identity'])) {
         $sql .= ' IDENTITY';
