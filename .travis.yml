@@ -58,6 +58,7 @@ install:
       git apply 3136974-4.patch
       # core Condition not able to be overridden in views...needs work.
       wget https://www.drupal.org/files/issues/2020-05-04/3130655-13.patch
+      # Enable sqlsrv module in specific kernel tests
     else
       composer require --dev symfony/phpunit-bridge phpstan/extension-installer jangregor/phpstan-prophecy mglaman/phpstan-drupal
       composer update phpunit/phpunit symfony/phpunit-bridge phpspec/prophecy symfony/yaml --with-dependencies
