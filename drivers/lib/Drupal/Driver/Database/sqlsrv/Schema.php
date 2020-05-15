@@ -1765,7 +1765,7 @@ EOF;
     if ($check) {
       // Do Something.
     }
-    $sql = 'ALTER TABLE {' . $table . '} DROP CONSTRAINT [' . $constraint->name . ']';
+    $sql = 'ALTER TABLE {' . $table . '} DROP CONSTRAINT [' . $name . ']';
     $this->connection->query($sql);
     $this->resetColumnInformation($table);
   }
