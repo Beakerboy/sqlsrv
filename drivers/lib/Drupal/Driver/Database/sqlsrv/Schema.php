@@ -1257,14 +1257,14 @@ EOF
     if ($nullable || $size >= $limit) {
       // Use a computed column instead, and create a custom index.
       $result[] = self::COMPUTED_PK_COLUMN_NAME . " AS (CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT('',{$csv_fields})), 2)) PERSISTED NOT NULL";
-      $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED (" . self::COMPUTED_PK_COLUMN_NAME . ")";
+      $result[] = "CONSTRAINT {{$table}_pkey} PRIMARY KEY CLUSTERED (" . self::COMPUTED_PK_COLUMN_NAME . ")";
       $index = TRUE;
     }
     else {
-      $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$csv_fields})";
+      $result[] = "CONSTRAINT {{$table}_pkey} PRIMARY KEY CLUSTERED ({$csv_fields})";
     }
 
-    $this->connection->queryDirect('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
+    $this->connection->queryDirect('ALTER TABLE {' . $table . '} ADD ' . implode(' ', $result));
     $this->resetColumnInformation($table);
     // If we relied on a computed column for the Primary Key,
     // at least index the fields with a regular index.
@@ -1288,7 +1288,7 @@ EOF
   private function createTechnicalPrimaryKeyIndexSql($table) {
     $result = [];
     $result[] = self::TECHNICAL_PK_COLUMN_NAME . " UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL";
-    $result[] = "CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")";
+    $result[] = "CONSTRAINT {{$table}_pkey_technical} PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")";
     return implode(' ', $result);
   }
 
@@ -1346,7 +1346,6 @@ EOF
    */
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
     // Use a prefixed table.
-    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
 
     $sql = $this->connection->escapeField($name) . ' ';
 
@@ -1529,10 +1528,10 @@ EOF
       // an index that is too big for SQL Server (> 900 bytes) this could be
       // dependant on a computed hash column.
       $fields_csv = implode(', ', $fields);
-      return "CREATE INDEX {$name}_idx ON [{{$table}}] ({$fields_csv})";
+      return "CREATE INDEX {$name}_idx ON {{$table}} ({$fields_csv})";
     }
     else {
-      return "CREATE PRIMARY XML INDEX {$name}_idx ON [{{$table}}] ({$xml_field})";
+      return "CREATE PRIMARY XML INDEX {$name}_idx ON {{$table}} ({$xml_field})";
     }
   }
 
@@ -1760,19 +1759,21 @@ EOF;
    *   Field name.
    */
   protected function dropFieldRelatedObjects($table, $field) {
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
     // Fetch the list of indexes referencing this column.
-    $indexes = $this->connection->query('SELECT DISTINCT i.name FROM sys.columns c INNER JOIN sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id INNER JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id WHERE i.is_primary_key = 0 AND i.is_unique_constraint = 0 AND c.object_id = OBJECT_ID(:table) AND c.name = :name', [
-      ':table' => $this->connection->prefixTables('{' . $table . '}'),
+    $sql = 'SELECT DISTINCT i.name FROM sys.columns c INNER JOIN sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id INNER JOIN sys.indexes i ON i.object_id = ic.object_id AND i.index_id = ic.index_id WHERE i.is_primary_key = 0 AND i.is_unique_constraint = 0 AND c.object_id = OBJECT_ID(:table) AND c.name = :name';
+    $indexes = $this->connection->query($sql, [
+      ':table' => $prefixInfo['table'],
       ':name' => $field,
     ]);
     foreach ($indexes as $index) {
-      $this->connection->query('DROP INDEX [' . $index->name . '] ON [{' . $table . '}]');
+      $this->connection->query('DROP INDEX [' . $index->name . '] ON {' . $table . '}');
       $this->resetColumnInformation($table);
     }
 
     // Fetch the list of check constraints referencing this column.
     $constraints = $this->connection->query('SELECT DISTINCT cc.name FROM sys.columns c INNER JOIN sys.check_constraints cc ON cc.parent_object_id = c.object_id AND cc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', [
-      ':table' => $this->connection->prefixTables('{' . $table . '}'),
+      ':table' => $prefixInfo['table'],
       ':name' => $field,
     ]);
     foreach ($constraints as $constraint) {
@@ -1782,11 +1783,11 @@ EOF;
 
     // Fetch the list of default constraints referencing this column.
     $constraints = $this->connection->query('SELECT DISTINCT dc.name FROM sys.columns c INNER JOIN sys.default_constraints dc ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', [
-      ':table' => $this->connection->prefixTables('{' . $table . '}'),
+      ':table' => $prefixInfo['table'],
       ':name' => $field,
     ]);
     foreach ($constraints as $constraint) {
-      $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $constraint->name . ']');
+      $this->connection->query('ALTER TABLE {' . $table . '} DROP CONSTRAINT [' . $constraint->name . ']');
       $this->resetColumnInformation($table);
     }
 
@@ -1809,9 +1810,10 @@ EOF;
    *   Table name.
    */
   protected function primaryKeyName($table) {
-    $table = $this->connection->prefixTables('{' . $table . '}');
-    return $this->connection->query('SELECT name FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID(:table) AND type = :type', [
-      ':table' => $table,
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
+    $sql = 'SELECT name FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID(:table) AND type = :type';
+    return $this->connection->query($sql, [
+      ':table' => $prefixInfo['table'],
       ':type' => 'PK',
     ])->fetchField();
   }
@@ -1849,7 +1851,7 @@ EOF;
     // We are droping the constraint, but not the column.
     $existing_primary_key = $this->primaryKeyName($table);
     if ($existing_primary_key !== FALSE) {
-      $this->connection->query("ALTER TABLE [{{$table}}] DROP CONSTRAINT {$existing_primary_key}");
+      $this->connection->query("ALTER TABLE {{$table}} DROP CONSTRAINT {$existing_primary_key}");
       $this->resetColumnInformation($table);
     }
     // We are using computed columns to store primary keys,
@@ -1877,7 +1879,10 @@ EOF;
   protected function cleanUpTechnicalPrimaryColumn($table) {
     // Get the number of remaining unique indexes on the table, that
     // are not primary keys and prune the technical primary column if possible.
-    $unique_indexes = $this->connection->query('SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1 AND is_primary_key = 0', [':table' => $this->connection->prefixTables('{' . $table . '}')])->fetchField();
+    $prefixed_table = $this->connection->prefixTables('{' . $table . '}');
+    $sql = 'SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1 AND is_primary_key = 0';
+    $args = [':table' => $prefixed_table];
+    $unique_indexes = $this->connection->query($sql, $args)->fetchField();
     $primary_key_is_technical = $this->isTechnicalPrimaryKey($this->primaryKeyName($table));
     if (!$unique_indexes && !$primary_key_is_technical) {
       $this->dropField($table, self::TECHNICAL_PK_COLUMN_NAME);
@@ -1896,9 +1901,9 @@ EOF;
    *   Does the key exist?
    */
   protected function uniqueKeyExists($table, $name) {
-    $table = $this->connection->prefixTables('{' . $table . '}');
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
     return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
-      ':table' => $table,
+      ':table' => $prefixInfo['table'],
       ':name' => $name . '_unique',
     ])->fetchField();
   }
@@ -1929,10 +1934,12 @@ EOF;
    */
   protected function deleteCommentSql($table = NULL, $column = NULL) {
     $schema = $this->getDefaultSchema();
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
+    $prefixed_table = $prefixInfo['table'];
     $sql = "EXEC sp_dropextendedproperty @name=N'MS_Description'";
     $sql .= ",@level0type = N'Schema', @level0name = '" . $schema . "'";
     if (isset($table)) {
-      $sql .= ",@level1type = N'Table', @level1name = '{{$table}}'";
+      $sql .= ",@level1type = N'Table', @level1name = '{$prefixed_table}'";
       if (isset($column)) {
         $sql .= ",@level2type = N'Column', @level2name = '{$column}'";
       }
@@ -1946,11 +1953,12 @@ EOF;
   protected function createCommentSql($value, $table = NULL, $column = NULL) {
     $schema = $this->getDefaultSchema();
     $value = $this->prepareComment($value);
-
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
+    $prefixed_table = $prefixInfo['table'];
     $sql = "EXEC sp_addextendedproperty @name=N'MS_Description', @value={$value}";
     $sql .= ",@level0type = N'Schema', @level0name = '{$schema}'";
     if (isset($table)) {
-      $sql .= ",@level1type = N'Table', @level1name = '{{$table}}'";
+      $sql .= ",@level1type = N'Table', @level1name = '{$prefixed_table}'";
       if (isset($column)) {
         $sql .= ",@level2type = N'Column', @level2name = '{$column}'";
       }
@@ -1962,9 +1970,11 @@ EOF;
    * Retrieve a table or column comment.
    */
   public function getComment($table, $column = NULL) {
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
+    $prefixed_table = $prefixInfo['table'];
     $schema = $this->getDefaultSchema();
     $column_string = isset($column) ? "'Column','{$column}'" : "NULL,NULL";
-    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','{$schema}','Table','{{$table}}',{$column_string})";
+    $sql = "SELECT value FROM fn_listextendedproperty ('MS_Description','Schema','{$schema}','Table','{$prefixed_table}',{$column_string})";
     $comment = $this->connection->query($sql)->fetchField();
     return $comment;
   }
