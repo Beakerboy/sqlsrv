@@ -137,7 +137,9 @@ abstract class TestSuiteBase extends TestSuite {
       25, 20, 25, 25, 25,
       25, 25, 25, 25, 25,
       25, 25, 25, 25, 25,
+      25, 25, 25, 25, 25,
     ];
+    fwrite(STDOUT, "PASSING:" . count($passing_tests));
     $index = rand(0, 24);
     $length = $sizes[$index];
     $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index));
