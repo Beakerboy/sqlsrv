@@ -735,7 +735,8 @@ class Schema extends DatabaseSchema {
       $query = "SELECT 1 FROM tempdb.sys.tables WHERE name like '" . $this->connection->prefixTables('{' . $table . '}') . "%'";
     }
     else {
-      $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'";
+      $table_name = trim($this->connection->prefixTables('{' . $table . '}'), '[]');
+      $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE table_name = '{$table_name}'";
     }
 
     return (bool) $this->connection->queryDirect($query)->fetchField();
