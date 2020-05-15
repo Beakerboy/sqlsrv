@@ -38,6 +38,43 @@ class Connection extends DatabaseConnection {
   const DATABASE_NOT_FOUND = 28000;
 
   /**
+   * This is the original replacement regexp from Microsoft.
+   *
+   * We could probably simplify it a lot because queries only contain
+   * placeholders when we modify them.
+   *
+   * NOTE: removed 'escape' from the list, because it explodes
+   * with LIKE xxx ESCAPE yyy syntax.
+   */
+  const RESERVED_REGEXP = '/\G
+    # Everything that follows a boundary that is not : or _.
+    \b(?<![:\[_])(?:
+      # Any reserved words, followed by a boundary that is not an opening parenthesis.
+      (action|admin|alias|any|are|array|at|begin|boolean|class|commit|contains|current|
+      data|date|day|depth|domain|external|file|full|function|get|go|host|input|language|
+      last|less|local|map|min|module|new|no|object|old|open|operation|parameter|parameters|
+      path|plan|prefix|proc|public|ref|result|returns|role|row|rule|save|search|second|
+      section|session|size|state|statistics|temporary|than|time|timestamp|tran|translate|
+      translation|trim|user|value|variable|view|without)
+      (?!\()
+      |
+      # Or a normal word.
+      ([a-z]+)
+    )\b
+    |
+    \b(
+      [^a-z\'"\\\\]+
+    )\b
+    |
+    (?=[\'"])
+    (
+      "  [^\\\\"] * (?: \\\\. [^\\\\"] *) * "
+      |
+      \' [^\\\\\']* (?: \\\\. [^\\\\\']*) * \'
+    )
+  /Six';
+
+  /**
    * A map of condition operators to sqlsrv operators.
    *
    * SQL Server doesn't need special escaping for the \ character in a string
@@ -421,6 +458,29 @@ class Connection extends DatabaseConnection {
   }
 
   /**
+   * Replace reserved words.
+   *
+   * This method gets called between 3,000 and 10,000 times
+   * on cold caches. Make sure it is simple and fast.
+   *
+   * @param mixed $matches
+   *   What is this?
+   *
+   * @return string
+   *   The match surrounded with brackets.
+   */
+  protected function replaceReservedCallback($matches) {
+    if ($matches[1] !== '') {
+      // Replace reserved words. We are not calling
+      // quoteIdentifier() on purpose.
+      return '[' . $matches[1] . ']';
+    }
+    // Let other value passthru.
+    // by the logic of the regex above, this will always be the last match.
+    return end($matches);
+  }
+
+  /**
    * Massage a query to make it compliant with SQL Server.
    *
    * @param mixed $query
@@ -444,6 +504,11 @@ class Connection extends DatabaseConnection {
     }
     if ($success) {
       return $cache;
+    }
+
+    // Force quotes around some SQL Server reserved keywords.
+    if (preg_match('/^SELECT/i', $query)) {
+      $query = preg_replace_callback(self::RESERVED_REGEXP, [$this, 'replaceReservedCallback'], $query);
     }
 
     // Last chance to modify some SQL Server-specific syntax.
