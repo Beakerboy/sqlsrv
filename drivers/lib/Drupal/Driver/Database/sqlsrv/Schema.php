@@ -1773,22 +1773,26 @@ EOF;
     }
 
     // Fetch the list of check constraints referencing this column.
-    $constraints = $this->connection->query('SELECT DISTINCT cc.name FROM sys.columns c INNER JOIN sys.check_constraints cc ON cc.parent_object_id = c.object_id AND cc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', [
+    $sql = 'SELECT DISTINCT cc.name FROM sys.columns c INNER JOIN sys.check_constraints cc ON cc.parent_object_id = c.object_id AND cc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name';
+    $constraints = $this->connection->query($sql, [
       ':table' => $prefixInfo['table'],
       ':name' => $field,
     ]);
     foreach ($constraints as $constraint) {
-      $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $constraint->name . ']');
+      $sql = 'ALTER TABLE {' . $table . '} DROP CONSTRAINT [' . $constraint->name . ']';
+      $this->connection->query($sql);
       $this->resetColumnInformation($table);
     }
 
     // Fetch the list of default constraints referencing this column.
-    $constraints = $this->connection->query('SELECT DISTINCT dc.name FROM sys.columns c INNER JOIN sys.default_constraints dc ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name', [
+    $sql = 'SELECT DISTINCT dc.name FROM sys.columns c INNER JOIN sys.default_constraints dc ON dc.parent_object_id = c.object_id AND dc.parent_column_id = c.column_id WHERE c.object_id = OBJECT_ID(:table) AND c.name = :name';
+    $constraints = $this->connection->query($sql, [
       ':table' => $prefixInfo['table'],
       ':name' => $field,
     ]);
     foreach ($constraints as $constraint) {
-      $this->connection->query('ALTER TABLE {' . $table . '} DROP CONSTRAINT [' . $constraint->name . ']');
+      $sql = 'ALTER TABLE {' . $table . '} DROP CONSTRAINT [' . $constraint->name . ']';
+      $this->connection->query($sql);
       $this->resetColumnInformation($table);
     }
 
