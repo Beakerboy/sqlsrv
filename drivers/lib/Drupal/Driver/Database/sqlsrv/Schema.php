@@ -807,7 +807,7 @@ class Schema extends DatabaseSchema {
       return $this->columnInformation[$table];
     }
 
-    $table_info = $this->getPrefixInfo($table);
+    $table_info = $this->getPrefixInfo($table, TRUE);
 
     // We could adapt the current code to support temporary table introspection,
     // but for now this is not supported.
@@ -860,7 +860,9 @@ class Schema extends DatabaseSchema {
     }
 
     // Don't use {} around system tables.
-    $result = $this->connection->queryDirect('SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)', [':table' => $table_info['schema'] . '.' . $table_info['table']]);
+    $sql = 'SELECT name FROM sys.identity_columns WHERE object_id = OBJECT_ID(:table)';
+    $args = [':table' => $table_info['schema'] . '.' . $table_info['table']];
+    $result = $this->connection->queryDirect($sql, $args);
     unset($column);
     $info['identities'] = [];
     $info['identity'] = NULL;
@@ -870,7 +872,7 @@ class Schema extends DatabaseSchema {
     }
 
     // Now introspect information about indexes.
-    $result = $this->connection->queryDirect("select tab.[name]  as [table_name],
+    $sql = "select tab.[name]  as [table_name],
          idx.[name]  as [index_name],
          allc.[name] as [column_name],
          idx.[type_desc],
@@ -890,13 +892,13 @@ class Schema extends DatabaseSchema {
          idxc.[index_column_id],
          idxc.[key_ordinal]
     FROM sys.[tables] as tab
-    INNER join sys.[indexes]       idx  ON tab.[object_id] =  idx.[object_id]
-    INNER join sys.[index_columns] idxc ON idx.[object_id] = idxc.[object_id] and  idx.[index_id]  = idxc.[index_id]
-    INNER join sys.[all_columns]   allc ON tab.[object_id] = allc.[object_id] and idxc.[column_id] = allc.[column_id]
-    WHERE tab.object_id = OBJECT_ID(:table)
-    ORDER BY tab.[name], idx.[index_id], idxc.[index_column_id]
-                    ",
-                  [':table' => $table_info['schema'] . '.' . $table_info['table']]);
+    INNER JOIN sys.[indexes]       idx  ON tab.[object_id] =  idx.[object_id]
+    INNER JOIN sys.[index_columns] idxc ON idx.[object_id] = idxc.[object_id] AND  idx.[index_id]  = idxc.[index_id]
+    INNER JOIN sys.[all_columns]   allc ON tab.[object_id] = allc.[object_id] AND idxc.[column_id] = allc.[column_id]
+    WHERE tab.[object_id] = OBJECT_ID(:table)
+    ORDER BY tab.[name], idx.[index_id], idxc.[index_column_id]";
+    $args = [':table' => $table_info['schema'] . '.' . $table_info['table']];
+    $result = $this->connection->queryDirect($sql, $args);
 
     foreach ($result as $index_column) {
       if (!isset($info['indexes'][$index_column->index_name])) {
