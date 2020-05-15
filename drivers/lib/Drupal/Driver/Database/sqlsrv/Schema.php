@@ -372,8 +372,7 @@ class Schema extends DatabaseSchema {
     if ($primary_key_name = $this->primaryKeyName($table)) {
       if ($this->isTechnicalPrimaryKey($primary_key_name)) {
         // Destroy the existing technical primary key.
-        $this->connection->queryDirect('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
-        $this->resetColumnInformation($table);
+        $this->dropConstraint($table, $primary_key_name, FALSE);
         $this->cleanUpTechnicalPrimaryColumn($table);
       }
       else {
