@@ -345,7 +345,7 @@ class Schema extends DatabaseSchema {
       $this->connection->queryDirect($this->deleteCommentSql($table, $field));
     }
 
-    $this->connection->query('ALTER TABLE {' . $table . '} DROP COLUMN ' . $field);
+    $this->connection->queryDirect("ALTER TABLE {{$table}} DROP COLUMN [{$field}]");
     $this->resetColumnInformation($table);
     return TRUE;
   }
@@ -354,9 +354,9 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function indexExists($table, $name) {
-    $table = $this->connection->prefixTables('{' . $table . '}');
-    return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
-      ':table' => $table,
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
+    return (bool) $this->connection->queryDirect('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
+      ':table' => $prefixInfo['table'],
       ':name' => $name . '_idx',
     ])->fetchField();
   }
@@ -401,7 +401,7 @@ class Schema extends DatabaseSchema {
     }
     $this->cleanUpPrimaryKey($table);
     $this->createTechnicalPrimaryColumn($table);
-    $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")");
+    $this->connection->queryDirect("ALTER TABLE {{$table}} ADD CONSTRAINT {{$table}_pkey_technical} PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")");
     $this->resetColumnInformation($table);
     return TRUE;
   }
@@ -414,14 +414,16 @@ class Schema extends DatabaseSchema {
       return FALSE;
     }
     // Use already prefixed table name.
-    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
     $query = "SELECT column_name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC "
       . "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KU "
       . "ON TC.CONSTRAINT_TYPE = 'PRIMARY KEY' AND "
       . "TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND "
-      . "KU.table_name='{$table_prefixed}' AND column_name != '__pk' AND column_name != '__pkc' "
+      . "KU.table_name = :table AND column_name != '__pk' AND column_name != '__pkc' "
       . "ORDER BY KU.ORDINAL_POSITION";
-    $result = $this->connection->query($query)->fetchAllAssoc('column_name');
+    $result = $this->connection
+      ->queryDirect($query, [':table' => $prefixInfo['table']])
+      ->fetchAllAssoc('column_name');
     return array_keys($result);
   }
 
@@ -454,8 +456,8 @@ class Schema extends DatabaseSchema {
     // values with the globally unique identifier generated previously.
     // This is (very) unlikely to result in a collision with any actual value
     // in the columns of the unique key.
-    $this->connection->query("ALTER TABLE {{$table}} ADD [__unique_{$name}] AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST(" . self::TECHNICAL_PK_COLUMN_NAME . " AS varbinary(max)))) AS varbinary(16))");
-    $this->connection->query("CREATE UNIQUE INDEX [{$name}_unique] ON {{$table}} (__unique_{$name})");
+    $this->connection->queryDirect("ALTER TABLE {{$table}} ADD [__unique_{$name}] AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST(" . self::TECHNICAL_PK_COLUMN_NAME . " AS varbinary(max)))) AS varbinary(16))");
+    $this->connection->queryDirect("CREATE UNIQUE INDEX [{$name}_unique] ON {{$table}} ([__unique_{$name}])");
     $this->resetColumnInformation($table);
   }
 
@@ -467,8 +469,8 @@ class Schema extends DatabaseSchema {
       return FALSE;
     }
 
-    $this->connection->query("DROP INDEX [{$name}_unique] ON {{$table}}");
-    $this->connection->query("ALTER TABLE {{$table}} DROP COLUMN [__unique_{$name}]");
+    $this->connection->queryDirect("DROP INDEX [{$name}_unique] ON {{$table}}");
+    $this->connection->queryDirect("ALTER TABLE {{$table}} DROP COLUMN [__unique_{$name}]");
     $this->resetColumnInformation($table);
     // Try to clean-up the technical primary key if possible.
     $this->cleanUpTechnicalPrimaryColumn($table);
