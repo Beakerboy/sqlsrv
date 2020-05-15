@@ -454,8 +454,8 @@ class Schema extends DatabaseSchema {
     // values with the globally unique identifier generated previously.
     // This is (very) unlikely to result in a collision with any actual value
     // in the columns of the unique key.
-    $this->connection->query("ALTER TABLE {{$table}} ADD __unique_{$name} AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST(" . self::TECHNICAL_PK_COLUMN_NAME . " AS varbinary(max)))) AS varbinary(16))");
-    $this->connection->query("CREATE UNIQUE INDEX {$name}_unique ON {{$table}} (__unique_{$name})");
+    $this->connection->query("ALTER TABLE {{$table}} ADD [__unique_{$name}] AS CAST(HashBytes('MD4', COALESCE({$column_expression}, CAST(" . self::TECHNICAL_PK_COLUMN_NAME . " AS varbinary(max)))) AS varbinary(16))");
+    $this->connection->query("CREATE UNIQUE INDEX [{$name}_unique] ON {{$table}} (__unique_{$name})");
     $this->resetColumnInformation($table);
   }
 
@@ -467,8 +467,8 @@ class Schema extends DatabaseSchema {
       return FALSE;
     }
 
-    $this->connection->query("DROP INDEX {$name}_unique ON {{$table}}");
-    $this->connection->query("ALTER TABLE {{$table}} DROP COLUMN __unique_{$name}");
+    $this->connection->query("DROP INDEX [{$name}_unique] ON {{$table}}");
+    $this->connection->query("ALTER TABLE {{$table}} DROP COLUMN [__unique_{$name}]");
     $this->resetColumnInformation($table);
     // Try to clean-up the technical primary key if possible.
     $this->cleanUpTechnicalPrimaryColumn($table);
@@ -516,7 +516,7 @@ class Schema extends DatabaseSchema {
       $expand = TRUE;
     }
 
-    $this->connection->query('DROP INDEX ' . $name . '_idx ON [{' . $table . '}]');
+    $this->connection->query('DROP INDEX [' . $name . '_idx] ON {' . $table . '}');
     $this->resetColumnInformation($table);
     // If we just dropped an XML index, we can re-expand the original primary
     // key index.
