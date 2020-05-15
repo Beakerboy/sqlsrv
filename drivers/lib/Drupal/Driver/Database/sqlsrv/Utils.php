@@ -120,10 +120,10 @@ class Utils {
         continue;
       }
       if ($exists) {
-        $connection->queryDirect("DROP FUNCTION [{$name}]", ['allow_square_brackets' => TRUE]);
+        $connection->queryDirect("DROP FUNCTION [{$name}]");
       }
       $script = trim(static::removeUtf8Bom(file_get_contents($path)));
-      $connection->queryDirect($script, ['allow_square_brackets' => TRUE]);
+      $connection->queryDirect($script);
     }
   }
 
