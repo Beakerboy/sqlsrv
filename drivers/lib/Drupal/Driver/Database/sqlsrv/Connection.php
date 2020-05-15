@@ -507,9 +507,9 @@ class Connection extends DatabaseConnection {
     }
 
     // Force quotes around some SQL Server reserved keywords.
-    if (preg_match('/^SELECT/i', $query)) {
-      $query = preg_replace_callback(self::RESERVED_REGEXP, [$this, 'replaceReservedCallback'], $query);
-    }
+    //if (preg_match('/^SELECT/i', $query)) {
+     // $query = preg_replace_callback(self::RESERVED_REGEXP, [$this, 'replaceReservedCallback'], $query);
+    //}
 
     // Last chance to modify some SQL Server-specific syntax.
     $replacements = [];
