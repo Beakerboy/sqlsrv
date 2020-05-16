@@ -45,6 +45,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/file/tests/src/Functional/Update/FileUsageTemporaryDeletionConfigurationUpdateTest.php',
     '/core/modules/hal/tests/src/Functional/Update/CreateHalSettingsForLinkDomainUpdateTest.php',
     '/core/modules/hal/tests/src/Functional/Update/MigrateLinkDomainSettingFromRestToHalUpdateTest.php',
+    '/core/modules/language/tests/src/Functional/ConfigurableLanguageManagerTest.php',
     '/core/modules/path/tests/src/Functional/PathAliasTest.php',
     '/core/modules/rest/tests/src/Functional/ResourceTestBase.php',
     '/core/modules/taxonomy/tests/src/Functional/Views/TermDisplayConfigurableTest.php',
