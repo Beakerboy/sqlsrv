@@ -190,12 +190,18 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
+   *
+   * Adding SQL Server specific information.
    */
   public function __construct(\PDO $connection, array $connection_options) {
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
     $this->identifierQuotes = ['[', ']'];
     parent::__construct($connection, $connection_options);
-
+    // Add replacement patterns for temporary tables
+    // Probably does not work for prefixes with dots.
+    array_unshift($this->prefixSearch, '{db_temporary_');
+    $replace = $start_quote . '#' . $this->prefixes['default'] . 'db_temporary_';
+    array_unshift($this->prefixReplace, $replace);
     // This driver defaults to transaction support, except if explicitly passed
     // FALSE.
     $this->transactionSupport = !isset($connection_options['transactions']) || $connection_options['transactions'] !== FALSE;
@@ -204,6 +210,8 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
+   *
+   * Adding schema to name.
    */
   public function getFullQualifiedTableName($table) {
     $options = $this->getConnectionOptions();
@@ -325,6 +333,7 @@ class Connection extends DatabaseConnection {
     return  $this->connection->prepare($query, $driver_options);
   }
 
+  public function prefixTables()
   /**
    * {@inheritdoc}
    *
