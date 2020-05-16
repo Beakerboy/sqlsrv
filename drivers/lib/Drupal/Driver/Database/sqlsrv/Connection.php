@@ -333,7 +333,6 @@ class Connection extends DatabaseConnection {
     return  $this->connection->prepare($query, $driver_options);
   }
 
-  public function prefixTables()
   /**
    * {@inheritdoc}
    *
