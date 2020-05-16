@@ -105,7 +105,7 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function queryTemporary($query, array $args = [], array $options = []) {
-    $tablename = '#' . $this->generateTemporaryTableName();
+    $tablename = '##' . $this->generateTemporaryTableName();
     // Temporary tables cannot be introspected so using them is limited on some
     // scenarios.
     if (isset($options['real_table']) && $options['real_table'] === TRUE) {
@@ -201,7 +201,7 @@ class Connection extends DatabaseConnection {
     // Add replacement patterns for temporary tables
     // Probably does not work for prefixes with dots.
     array_unshift($this->prefixSearch, '{db_temporary_');
-    $replace = '[#' . rand() . $this->prefixes['default'] . 'db_temporary_';
+    $replace = '[##' . rand() . $this->prefixes['default'] . 'db_temporary_';
     array_unshift($this->prefixReplace, $replace);
     // This driver defaults to transaction support, except if explicitly passed
     // FALSE.
