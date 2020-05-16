@@ -128,6 +128,10 @@ class Connection extends DatabaseConnection {
     return $tablename;
   }
 
+  public function isTemporaryTable($table) {
+    return stripos($table, 'db_temporary_') !== FALSE;
+  }
+
   /**
    * {@inheritdoc}
    */
