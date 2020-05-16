@@ -211,6 +211,22 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
+   */
+  public function tablePrefix($table = 'default') {
+    $temp_prefix = '';
+    if (stripos($table, 'db_temporary_') !== FALSE) {
+      $temp_prefix = '##';
+    }
+    if (isset($this->prefixes[$table])) {
+      return $temp_prefix . $this->prefixes[$table];
+    }
+    else {
+      return $temp_prefix . $this->prefixes['default'];
+    }
+  }
+
+  /**
+   * {@inheritdoc}
    *
    * Adding schema to name.
    */
