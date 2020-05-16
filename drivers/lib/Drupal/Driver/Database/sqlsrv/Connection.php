@@ -38,6 +38,14 @@ class Connection extends DatabaseConnection {
   const DATABASE_NOT_FOUND = 28000;
 
   /**
+   * Prefix to use on temporary tables.
+   *
+   * Single hash is local.
+   * Double hash for global.
+   */
+  protected $tempTablePrefix = '#';
+
+  /**
    * This is the original replacement regexp from Microsoft.
    *
    * We could probably simplify it a lot because queries only contain
@@ -205,7 +213,7 @@ class Connection extends DatabaseConnection {
     // Add replacement patterns for temporary tables
     // Probably does not work for prefixes with dots.
     array_unshift($this->prefixSearch, '{db_temporary_');
-    $replace = '[##' . rand() . $this->prefixes['default'] . 'db_temporary_';
+    $replace = '[' . $this->tempTablePrefix . rand() . $this->prefixes['default'] . 'db_temporary_';
     array_unshift($this->prefixReplace, $replace);
     // This driver defaults to transaction support, except if explicitly passed
     // FALSE.
@@ -219,7 +227,7 @@ class Connection extends DatabaseConnection {
   public function tablePrefix($table = 'default') {
     $temp_prefix = '';
     if (stripos($table, 'db_temporary_') !== FALSE) {
-      $temp_prefix = '##';
+      $temp_prefix = $this->tempTablePrefix;
     }
     if (isset($this->prefixes[$table])) {
       return $temp_prefix . $this->prefixes[$table];
