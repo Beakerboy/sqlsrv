@@ -197,10 +197,11 @@ class Connection extends DatabaseConnection {
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
     $this->identifierQuotes = ['[', ']'];
     parent::__construct($connection, $connection_options);
+
     // Add replacement patterns for temporary tables
     // Probably does not work for prefixes with dots.
     array_unshift($this->prefixSearch, '{db_temporary_');
-    $replace = $start_quote . '#' . $this->prefixes['default'] . 'db_temporary_';
+    $replace = '[#' . $this->prefixes['default'] . 'db_temporary_';
     array_unshift($this->prefixReplace, $replace);
     // This driver defaults to transaction support, except if explicitly passed
     // FALSE.
