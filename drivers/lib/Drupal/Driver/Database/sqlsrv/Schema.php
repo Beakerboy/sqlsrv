@@ -724,23 +724,14 @@ class Schema extends DatabaseSchema {
   /**
    * {@inheritdoc}
    *
-   * Temporary tables and regular tables cannot be verified in the same way.
    */
   public function tableExists($table) {
     // If $table is NULL, then $table[0] will generate a notice.
     if (empty($table)) {
       return FALSE;
     }
-    // Temporary tables and regular tables cannot be verified in the same way.
-    $query = NULL;
-    if ($table[0] == '#') {
-      $query = "SELECT 1 FROM tempdb.sys.tables WHERE name like '" . $this->connection->prefixTables('{' . $table . '}') . "%'";
-    }
-    else {
-      $prefixInfo = $this->getPrefixInfo($table, TRUE);
-      $query = 'SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE table_name = :table';
-    }
-
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
+    $query = 'SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE table_name = :table';
     return (bool) $this->connection->queryDirect($query, [':table' => $prefixInfo['table']])->fetchField();
   }
 
