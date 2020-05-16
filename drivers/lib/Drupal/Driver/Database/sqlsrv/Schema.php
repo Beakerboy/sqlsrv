@@ -723,16 +723,15 @@ class Schema extends DatabaseSchema {
 
   /**
    * {@inheritdoc}
-   *
    */
   public function tableExists($table) {
-    // If $table is NULL, then $table[0] will generate a notice.
-    if (empty($table)) {
+    try {
+      $this->connection->queryRange("SELECT 1 FROM {" . $table . "}", 0, 1);
+      return TRUE;
+    }
+    catch (\Exception $e) {
       return FALSE;
     }
-    $prefixInfo = $this->getPrefixInfo($table, TRUE);
-    $query = 'SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE table_name = :table';
-    return (bool) $this->connection->queryDirect($query, [':table' => $prefixInfo['table']])->fetchField();
   }
 
   /**
