@@ -201,7 +201,7 @@ class Connection extends DatabaseConnection {
     // Add replacement patterns for temporary tables
     // Probably does not work for prefixes with dots.
     array_unshift($this->prefixSearch, '{db_temporary_');
-    $replace = '[#' . $this->prefixes['default'] . 'db_temporary_';
+    $replace = '[#' . rand() . $this->prefixes['default'] . 'db_temporary_';
     array_unshift($this->prefixReplace, $replace);
     // This driver defaults to transaction support, except if explicitly passed
     // FALSE.
