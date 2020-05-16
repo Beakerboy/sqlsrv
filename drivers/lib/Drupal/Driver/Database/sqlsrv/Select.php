@@ -307,8 +307,8 @@ class Select extends QuerySelect {
       // Table might be a subquery, so nothing to do really.
       if (is_string($table['table']) && !empty($table['all_fields'])) {
         // Temporary tables are not supported here.
-        if ($this->connection->isTemporaryTable($table)) {
-          $fields[] = $this->connection->escapeTable($alias) . '.*';
+        if ($this->connection->isTemporaryTable($table['table'])) {
+          $fields[] = '[' . $this->connection->escapeTable($alias) . '].*';
         }
         else {
           /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
@@ -318,7 +318,7 @@ class Select extends QuerySelect {
           // primary keys or custom computed columns.
           if (isset($info['columns_clean'])) {
             foreach ($info['columns_clean'] as $column) {
-              $fields[] = $this->connection->escapeTable($alias) . '.' . $this->connection->escapeField($column['name']);
+              $fields[] = '[' . $this->connection->escapeTable($alias) . '].[' . $this->connection->escapeField($column['name']) . ']';
             }
           }
         }
@@ -327,7 +327,7 @@ class Select extends QuerySelect {
     foreach ($this->fields as $alias => $field) {
       // Always use the AS keyword for field aliases, as some
       // databases require it (e.g., PostgreSQL).
-      $fields[] = (isset($field['table']) ? $this->connection->escapeTable($field['table']) . '.' : '') . $this->connection->escapeField($field['field']) . ' AS ' . $this->connection->escapeAlias($field['alias']);
+      $fields[] = (isset($field['table']) ? '[' . $this->connection->escapeTable($field['table']) . '].' : '') . '[' . $this->connection->escapeField($field['field']) . '] AS [' . $this->connection->escapeAlias($field['alias'] . ']');
     }
     // In MySQL you can reuse expressions present in SELECT
     // from WHERE.
@@ -406,7 +406,7 @@ class Select extends QuerySelect {
 
       // Don't use the AS keyword for table aliases, as some
       // databases don't support it (e.g., Oracle).
-      $query .= $table_string . ' ' . $this->connection->escapeAlias($table['alias']);
+      $query .= '{' . $table_string . '} [' . $this->connection->escapeAlias($table['alias']) . ']';
 
       if (!empty($table['condition'])) {
         $query .= ' ON ' . $table['condition'];
