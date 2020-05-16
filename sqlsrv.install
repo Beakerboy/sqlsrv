@@ -192,7 +192,7 @@ function sqlsrv_verify_driver() {
  *   Checksum.
  */
 function sqlsrv_directory_checksum($directory) {
-  $files = file_scan_directory($directory, '/\.*/i');
+  $files = \Drupal::service('file_system')->scanDirectory($directory, '/\.*/i');
   $checksum = 0;
   $names = '';
   foreach ($files as $file) {
