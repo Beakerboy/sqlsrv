@@ -26,7 +26,10 @@ class ParameterTest extends DatabaseTestBase {
       // The regular expandArguments implementation will fail to
       // properly expand the associative array with weird keys, OH, and actually
       // you can perform some SQL Injection through the array keys.
-      $result = db_query('SELECT COUNT(*) FROM users WHERE users.uid IN (:nids)', $params)->execute()->fetchField();
+      $result = $this->connection
+        ->query('SELECT COUNT(*) FROM users WHERE users.uid IN (:nids)', $params)
+        ->execute()
+        ->fetchField();
     }
     catch (\Exception $err) {
       // Regular drupal will fail with
