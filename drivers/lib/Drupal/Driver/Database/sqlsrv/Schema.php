@@ -1802,7 +1802,7 @@ EOF;
    *   Check if the constraint exists?
    */
   public function dropConstraint($table, $name, $check = TRUE) {
-    // Check if constraint exists
+    // Check if constraint exists.
     if ($check) {
       // Do Something.
     }
@@ -1810,7 +1810,7 @@ EOF;
     $this->connection->query($sql);
     $this->resetColumnInformation($table);
   }
-    
+
   /**
    * Drop the related objects of a column (indexes, constraints, etc.).
    *
