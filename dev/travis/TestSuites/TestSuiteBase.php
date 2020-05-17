@@ -35,13 +35,19 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
     '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
+    '/core/modules/aggregator/tests/src/Functional/Rest/FeedJsonAnonTest.php'
+    '/core/modules/aggregator/tests/src/Functional/Rest/FeedJsonBasicAuthTest.php',
+    '/core/modules/aggregator/tests/src/Functional/Hal/FeedHalJsonAnonTest.php',
     '/core/modules/block_content/tests/src/Functional/Update/BlockContentReusableUpdateTest.php',
     '/core/modules/block_content/tests/src/Functional/Update/BlockContentUpdateTest.php',
+    '/core/modules/datetime/tests/src/Functional/Views/FilterDateTest.php',
     '/core/modules/file/tests/src/Functional/Update/FileUpdateTest.php',
     '/core/modules/file/tests/src/Functional/Update/FileUsageTemporaryDeletionConfigurationUpdateTest.php',
     '/core/modules/hal/tests/src/Functional/Update/CreateHalSettingsForLinkDomainUpdateTest.php',
     '/core/modules/hal/tests/src/Functional/Update/MigrateLinkDomainSettingFromRestToHalUpdateTest.php',
+    '/core/modules/language/tests/src/Functional/ConfigurableLanguageManagerTest.php',
     '/core/modules/path/tests/src/Functional/PathAliasTest.php',
+    '/core/modules/rest/tests/src/Functional/ResourceTestBase.php',
     '/core/modules/taxonomy/tests/src/Functional/Views/TermDisplayConfigurableTest.php',
     '/core/modules/views/tests/src/Functional/Update/CacheabilityMetadataUpdateTest.php',
     '/core/modules/workspaces/tests/src/Functional/Update/WorkspacesUpdateTest.php',
@@ -138,9 +144,14 @@ abstract class TestSuiteBase extends TestSuite {
       25, 25, 25, 25, 25,
       25, 25, 25, 25, 25,
       25, 25, 25, 25, 25,
+      25, 25, 25, 25, 25,
+      25, 25, 25, 25, 25,
+      25, 25, 25, 25, 25,
+      25, 25, 25, 25, 25,
+      25, 25, 25, 25, 25,
+      25, 25, 25,
     ];
-    fwrite(STDOUT, "PASSING:" . count($passing_tests));
-    $index = rand(0, 24);
+    $index = rand(0, 58);
     $length = $sizes[$index];
     $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index));
     $subset = array_splice($passing_tests, $offset, $length);
