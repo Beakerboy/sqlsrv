@@ -1941,7 +1941,7 @@ EOF;
     // are not primary keys and prune the technical primary column if possible.
     $prefixInfo = $this->getPrefixInfo($table, TRUE);
     $sql = 'SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1 AND is_primary_key = 0';
-    $args = [':table' => $prefInfo['table']];
+    $args = [':table' => $prefixInfo['table']];
     $unique_indexes = $this->connection->query($sql, $args)->fetchField();
     $primary_key_is_technical = $this->isTechnicalPrimaryKey($this->primaryKeyName($table));
     if (!$unique_indexes && !$primary_key_is_technical) {
