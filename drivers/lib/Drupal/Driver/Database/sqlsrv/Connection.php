@@ -44,13 +44,6 @@ class Connection extends DatabaseConnection {
   const DATABASE_NOT_FOUND = 28000;
 
   /**
-   * Prepared PDO statements only makes sense if we cache them...
-   *
-   * @var mixed
-   */
-  private $statementCache = [];
-
-  /**
    * This is the original replacement regexp from Microsoft.
    *
    * We could probably simplify it a lot because queries only contain
