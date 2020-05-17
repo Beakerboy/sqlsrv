@@ -35,7 +35,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     '/core/modules/node/tests/src/Kernel/Views/RevisionUidTest.php',
     '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
-    '/core/modules/aggregator/tests/src/Functional/Rest/FeedJsonAnonTest.php'
+    '/core/modules/aggregator/tests/src/Functional/Rest/FeedJsonAnonTest.php',
     '/core/modules/aggregator/tests/src/Functional/Rest/FeedJsonBasicAuthTest.php',
     '/core/modules/aggregator/tests/src/Functional/Hal/FeedHalJsonAnonTest.php',
     '/core/modules/block_content/tests/src/Functional/Update/BlockContentReusableUpdateTest.php',
