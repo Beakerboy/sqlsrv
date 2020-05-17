@@ -318,7 +318,7 @@ class Select extends QuerySelect {
           // primary keys or custom computed columns.
           if (isset($info['columns_clean'])) {
             foreach ($info['columns_clean'] as $column) {
-              $fields[] = '[' . $this->connection->escapeTable($alias) . '].[' . $this->connection->escapeField($column['name']) . ']';
+              $fields[] = '[' . $this->connection->escapeTable($alias) . '].' . $this->connection->escapeField($column['name']);
             }
           }
         }
@@ -327,7 +327,7 @@ class Select extends QuerySelect {
     foreach ($this->fields as $alias => $field) {
       // Always use the AS keyword for field aliases, as some
       // databases require it (e.g., PostgreSQL).
-      $fields[] = (isset($field['table']) ? '[' . $this->connection->escapeTable($field['table']) . '].' : '') . '[' . $this->connection->escapeField($field['field']) . '] AS [' . $this->connection->escapeAlias($field['alias'] . ']');
+      $fields[] = (isset($field['table']) ? '[' . $this->connection->escapeTable($field['table']) . '].' : '') . $this->connection->escapeField($field['field']) . ' AS ' . $this->connection->escapeAlias($field['alias']);
     }
     // In MySQL you can reuse expressions present in SELECT
     // from WHERE.
