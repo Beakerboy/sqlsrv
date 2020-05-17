@@ -674,7 +674,7 @@ class Schema extends DatabaseSchema {
     $prefixInfo = $this->getPrefixInfo($table, TRUE);
     // Start by renaming the current column.
     $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
-      ':old' => $prefixInfo['table'] . $field,
+      ':old' => $prefixInfo['table'] . '.' . $field,
       ':new' => $field . '_old',
       ':type' => 'COLUMN',
     ]);
