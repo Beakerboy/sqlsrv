@@ -161,7 +161,7 @@ class Connection extends DatabaseConnection {
     'without',
   ];
 
-  protected tempTablePrefix = '##';
+  protected $tempTablePrefix = '##';
 
   /**
    * A map of condition operators to sqlsrv operators.
