@@ -59,8 +59,15 @@ install:
   - composer install
   - |
     if [ "${DRUPAL_VERSION}" == "9.0.x" ]; then
-      wget https://www.drupal.org/files/issues/2020-02-11/2867788-71.patch
-      git apply 2867788-71.patch
+      # encapsulate fields.
+      wget http://beakerboy.com/~kevin/3136974-4.patch
+      git apply 3136974-4.patch
+      # core Condition not able to be overridden in views...needs work.
+      wget https://www.drupal.org/files/issues/2020-05-04/3130655-13.patch
+      git apply 3130655-13.patch
+      # Enable sqlsrv module in specific kernel tests
+      wget https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch
+      git apply 2966272-16.patch
     else
       composer require --dev symfony/phpunit-bridge phpstan/extension-installer jangregor/phpstan-prophecy mglaman/phpstan-drupal
       composer update phpunit/phpunit symfony/phpunit-bridge phpspec/prophecy symfony/yaml --with-dependencies
