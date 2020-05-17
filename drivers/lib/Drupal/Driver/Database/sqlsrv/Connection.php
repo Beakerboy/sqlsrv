@@ -161,6 +161,8 @@ class Connection extends DatabaseConnection {
     'without',
   ];
 
+  protected tempTablePrefix = '##';
+
   /**
    * A map of condition operators to sqlsrv operators.
    *
@@ -194,12 +196,13 @@ class Connection extends DatabaseConnection {
   public function queryTemporary($query, array $args = [], array $options = []) {
     // Generate a new GLOBAL temporary table name and protect it from prefixing.
     // SQL Server requires that temporary tables to be non-qualified.
-    $tablename = '##' . $this->generateTemporaryTableName();
+    $tablename = $this->tempTablePrefix . $this->generateTemporaryTableName();
     // Temporary tables cannot be introspected so using them is limited on some
     // scenarios.
     if (isset($options['real_table']) && $options['real_table'] === TRUE) {
       $tablename = trim($tablename, "#");
     }
+    // Don't prefix temp tables
     $prefixes = $this->prefixes;
     $prefixes[$tablename] = '';
     $this->setPrefix($prefixes);
@@ -215,6 +218,10 @@ class Connection extends DatabaseConnection {
     $this->query($query, $args, $options);
 
     return $tablename;
+  }
+
+  protected function isTemporaryTable($table) {
+    return isset($table[0]) && $table[0] == '#';
   }
 
   /**
