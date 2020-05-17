@@ -161,6 +161,11 @@ class Connection extends DatabaseConnection {
     'without',
   ];
 
+  /**
+   * The temporary table prefix.
+   *
+   * @var string
+   */
   protected $tempTablePrefix = '##';
 
   /**
@@ -202,7 +207,7 @@ class Connection extends DatabaseConnection {
     if (isset($options['real_table']) && $options['real_table'] === TRUE) {
       $tablename = trim($tablename, "#");
     }
-    // Don't prefix temp tables
+    // Don't prefix temp tables.
     $prefixes = $this->prefixes;
     $prefixes[$tablename] = '';
     $this->setPrefix($prefixes);
@@ -220,6 +225,15 @@ class Connection extends DatabaseConnection {
     return $tablename;
   }
 
+  /**
+   * Is this table a temporary table?
+   *
+   * @var string $table
+   *   The table name.
+   *
+   * @return boolean
+   *   True is the table is a temporary table.
+   */
   protected function isTemporaryTable($table) {
     return isset($table[0]) && $table[0] == '#';
   }
