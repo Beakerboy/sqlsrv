@@ -231,7 +231,7 @@ class Connection extends DatabaseConnection {
    * @var string $table
    *   The table name.
    *
-   * @return boolean
+   * @return bool
    *   True is the table is a temporary table.
    */
   protected function isTemporaryTable($table) {
