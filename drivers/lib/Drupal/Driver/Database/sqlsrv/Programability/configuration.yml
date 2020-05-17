@@ -1,6 +1,4 @@
 functions:
-  - name: CONCAT
-    file: ScalarValued/CONCAT.sql
   - name: CONNECTION_ID
     file: ScalarValued/CONNECTION_ID.sql
   - name: GREATEST
