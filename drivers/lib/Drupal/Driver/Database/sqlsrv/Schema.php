@@ -382,9 +382,9 @@ class Schema extends DatabaseSchema {
     if (!$this->fieldExists($table, $field)) {
       throw new SchemaObjectDoesNotExistException(t("Cannot remove default value of field %table.%field: field doesn't exist.", ['%table' => $table, '%field' => $field]));
     }
-
-    $this->connection->query('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT {' . $table . '}_' . $field . '_df');
-    $this->resetColumnInformation($table);
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
+    $constraint_name = $prefixInfo['table'] . '_' . $field . '_df';
+    $this->dropConstraint($table, $constraint_name, FALSE);
   }
 
   /**
