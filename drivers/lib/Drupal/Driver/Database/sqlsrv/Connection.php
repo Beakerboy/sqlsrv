@@ -113,15 +113,12 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function queryTemporary($query, array $args = [], array $options = []) {
-    $tablename = '##' . $this->generateTemporaryTableName();
+    $tablename = $this->tempTablePrefix . $this->generateTemporaryTableName();
     // Temporary tables cannot be introspected so using them is limited on some
     // scenarios.
     if (isset($options['real_table']) && $options['real_table'] === TRUE) {
       $tablename = trim($tablename, "#");
     }
-    $prefixes = $this->prefixes;
-    $prefixes[$tablename] = '';
-    $this->setPrefix($prefixes);
 
     // Having comments in the query can be tricky and break the
     // SELECT FROM  -> SELECT INTO conversion.
@@ -130,7 +127,7 @@ class Connection extends DatabaseConnection {
     $query = $schema->removeSQLComments($query);
 
     // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
-    $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
+    $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO {' . $tablename . '} FROM', $query);
     $this->query($query, $args, $options);
 
     return $tablename;
