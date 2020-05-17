@@ -87,7 +87,6 @@ class SqlsrvTest extends DatabaseTestBase {
 
     // The table should not exist now.
     $this->assertFALSE($this->connection->schema()->tableExists($table), 'The temporary table does not exist');
-  
   }
 
   /**
