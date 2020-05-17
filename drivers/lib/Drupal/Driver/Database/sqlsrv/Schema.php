@@ -221,9 +221,10 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function fieldExists($table, $field) {
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
     return $this->connection
       ->queryDirect('SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = :table AND column_name = :name', [
-        ':table' => $this->connection->prefixTables('{' . $table . '}'),
+        ':table' => $prefixInfo['table'],
         ':name' => $field,
       ])
       ->fetchField() !== FALSE;
@@ -252,7 +253,8 @@ class Schema extends DatabaseSchema {
     $spec = $this->processField($spec);
 
     // Use already prefixed table name.
-    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
+    $table_prefixed = $prefixInfo['table'];
 
     if ($this->findPrimaryKeyColumns($table) !== [] && isset($keys_new['primary key']) && in_array($field, $keys_new['primary key'])) {
       $this->cleanUpPrimaryKey($table);
@@ -270,9 +272,9 @@ class Schema extends DatabaseSchema {
     // Because the default values of fields can contain string literals
     // with braces, we CANNOT allow the driver to prefix tables because the
     // algorithm to do so is a crappy str_replace.
-    $query = "ALTER TABLE {$table_prefixed} ADD ";
+    $query = "ALTER TABLE {{$table}} ADD ";
     $query .= $this->createFieldSql($table, $field, $spec);
-    $this->connection->queryDirect($query, [], ['prefix_tables' => FALSE]);
+    $this->connection->queryDirect($query, []);
     $this->resetColumnInformation($table);
     // Load the initial data.
     if (isset($spec['initial_from_field'])) {
@@ -391,9 +393,9 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function indexExists($table, $name) {
-    $table = $this->connection->prefixTables('{' . $table . '}');
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
     return (bool) $this->connection->query('SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND name = :name', [
-      ':table' => $table,
+      ':table' => $prefixInfo['table'],
       ':name' => $name . '_idx',
     ])->fetchField();
   }
@@ -409,7 +411,7 @@ class Schema extends DatabaseSchema {
     if ($primary_key_name = $this->primaryKeyName($table)) {
       if ($this->isTechnicalPrimaryKey($primary_key_name)) {
         // Destroy the existing technical primary key.
-        $this->connection->queryDirect('ALTER TABLE [{' . $table . '}] DROP CONSTRAINT [' . $primary_key_name . ']');
+        $this->connection->queryDirect('ALTER TABLE {' . $table . '} DROP CONSTRAINT [' . $primary_key_name . ']');
         $this->resetColumnInformation($table);
         $this->cleanUpTechnicalPrimaryColumn($table);
       }
@@ -439,7 +441,7 @@ class Schema extends DatabaseSchema {
     }
     $this->cleanUpPrimaryKey($table);
     $this->createTechnicalPrimaryColumn($table);
-    $this->connection->query("ALTER TABLE [{{$table}}] ADD CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")");
+    $this->connection->query("ALTER TABLE {{$table}} ADD CONSTRAINT {{$table}_pkey_technical} PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")");
     $this->resetColumnInformation($table);
     return TRUE;
   }
@@ -452,14 +454,14 @@ class Schema extends DatabaseSchema {
       return FALSE;
     }
     // Use already prefixed table name.
-    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
     $query = "SELECT column_name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC "
       . "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KU "
       . "ON TC.CONSTRAINT_TYPE = 'PRIMARY KEY' AND "
       . "TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME AND "
-      . "KU.table_name='{$table_prefixed}' AND column_name != '__pk' AND column_name != '__pkc' "
+      . "KU.table_name=:table AND column_name != '__pk' AND column_name != '__pkc' "
       . "ORDER BY KU.ORDINAL_POSITION";
-    $result = $this->connection->query($query)->fetchAllAssoc('column_name');
+    $result = $this->connection->query($query, [':table' => $prefixInfo['table']])->fetchAllAssoc('column_name');
     return array_keys($result);
   }
 
@@ -669,10 +671,10 @@ class Schema extends DatabaseSchema {
     if ($drop_field_comment) {
       $this->connection->queryDirect($this->deleteCommentSql($table, $field));
     }
-
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
     // Start by renaming the current column.
     $this->connection->queryDirect('EXEC sp_rename :old, :new, :type', [
-      ':old' => $this->connection->prefixTables('{' . $table . '}.' . $field),
+      ':old' => $prefixInfo['table'] . $field,
       ':new' => $field . '_old',
       ':type' => 'COLUMN',
     ]);
@@ -769,14 +771,18 @@ class Schema extends DatabaseSchema {
     }
     // Temporary tables and regular tables cannot be verified in the same way.
     $query = NULL;
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
+    $args = [];
     if ($table[0] == '#') {
-      $query = "SELECT 1 FROM tempdb.sys.tables WHERE name like '" . $this->connection->prefixTables('{' . $table . '}') . "%'";
+      $query = "SELECT 1 FROM tempdb.sys.tables WHERE [name] LIKE :table";
+      $args = [':table' => $prefixInfo['table'] . '%'];
     }
     else {
-      $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE table_name = '" . $this->connection->prefixTables('{' . $table . '}') . "'";
+      $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE [table_name] = :table";
+      $args = [':table' => $prefixInfo['table']];
     }
 
-    return (bool) $this->connection->queryDirect($query)->fetchField();
+    return (bool) $this->connection->queryDirect($query, $args)->fetchField();
   }
 
   /**
@@ -1382,9 +1388,6 @@ EOF
    *   The SQL statement to create the field.
    */
   protected function createFieldSql($table, $name, $spec, $skip_checks = FALSE) {
-    // Use a prefixed table.
-    $table_prefixed = $this->connection->prefixTables('{' . $table . '}');
-
     $sql = $this->connection->escapeField($name) . ' ';
 
     $sql .= $this->createDataType($table, $name, $spec);
@@ -1420,7 +1423,7 @@ EOF
     if (!$skip_checks) {
       if (isset($spec['default'])) {
         $default = $this->defaultValueExpression($sqlsrv_type, $spec['default']);
-        $sql .= " CONSTRAINT {$table_prefixed}_{$name}_df DEFAULT $default";
+        $sql .= " CONSTRAINT {{$table}_{$name}_df} DEFAULT $default";
       }
       if (!empty($spec['identity'])) {
         $sql .= ' IDENTITY';
@@ -1936,9 +1939,9 @@ EOF;
   protected function cleanUpTechnicalPrimaryColumn($table) {
     // Get the number of remaining unique indexes on the table, that
     // are not primary keys and prune the technical primary column if possible.
-    $prefixed_table = $this->connection->prefixTables('{' . $table . '}');
+    $prefixInfo = $this->getPrefixInfo($table, TRUE);
     $sql = 'SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID(:table) AND is_unique = 1 AND is_primary_key = 0';
-    $args = [':table' => $prefixed_table];
+    $args = [':table' => $prefInfo['table'];
     $unique_indexes = $this->connection->query($sql, $args)->fetchField();
     $primary_key_is_technical = $this->isTechnicalPrimaryKey($this->primaryKeyName($table));
     if (!$unique_indexes && !$primary_key_is_technical) {
