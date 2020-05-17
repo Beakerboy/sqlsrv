@@ -82,11 +82,21 @@ class SqlsrvTest extends DatabaseTestBase {
     // User ID's are negative, so this should return 0 matches.
     $this->assertEqual(count($data1), count($data2), 'Temporary table has the same number of rows.');
 
+    $connection2 = \Drupal::getConnection();
+    // Assert that the global temporary table exists on the new connection.
+    $this->assertTRUE($connection2->schema()->tableExists($table), 'The global temporary table is global.');
+
     // Drop the table.
     $this->connection->schema()->dropTable($table);
 
     // The table should not exist now.
-    $this->assertFALSE($this->connection->schema()->tableExists($table), 'The temporary table does not exists.');
+    $this->assertFALSE($this->connection->schema()->tableExists($table), 'The temporary table does not exist');
+  
+    $table = $this->connection->queryTemporary((string) $query);
+    $this->connection->close();
+
+    // The temporary table should not exist now.
+    $this->assertFALSE($connection2->schema()->tableExists($table), 'The global temporary table is removed upon connection closure.');
   }
 
   /**
