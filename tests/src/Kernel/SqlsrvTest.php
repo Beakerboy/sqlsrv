@@ -2,8 +2,9 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
+use Drupal\Core\Database\Database;
 use Drupal\Driver\Database\sqlsrv\Condition;
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Test behavior that is unique to the Sql Server Driver.
@@ -61,8 +62,11 @@ class SqlsrvTest extends DatabaseTestBase {
 
   /**
    * Test the temporary table functionality.
+   *
+   * @dataProvider dataProviderForTestTemporaryTables
    */
-  public function testTemporaryTables() {
+  public function testTemporaryTables($temp_prefix, $leak_table) {
+    // Set the temp table prefix on the Connection
 
     $query = $this->connection->select('test_task', 't');
     $query->fields('t');
@@ -87,6 +91,29 @@ class SqlsrvTest extends DatabaseTestBase {
 
     // The table should not exist now.
     $this->assertFALSE($this->connection->schema()->tableExists($table), 'The temporary table does not exist');
+
+    // Create a second independant connection.
+    $second_connection = Database::openConnection('default', 'second');
+
+    // Create a temporary table in this connection
+    $table = $second_connection->queryTemporary((string) $query);
+
+    // Is the table visible on the original connection?
+    $this->assertEquals($leak_table, $this->connection->schema()->tableExists($table))
+
+    // Close the Connection that created the table and ensure is is gone.
+    Database::closeConnection('second');
+    $this->assertEquals($this->connection->schema()->tableExists($table))
+  }
+
+  /**
+   * Provides data for testTemporaryTable().
+   */
+  public function dataProviderForTestTemporaryTables() {
+    return [
+      'local' => ['#', FALSE],
+      'global' => ['##', TRUE],
+    ];
   }
 
   /**
