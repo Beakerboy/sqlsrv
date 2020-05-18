@@ -4,6 +4,7 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\Database;
 use Drupal\Driver\Database\sqlsrv\Condition;
+use Drupal\Driver\Database\sqlsrv\Connection
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
@@ -67,7 +68,7 @@ class SqlsrvTest extends DatabaseTestBase {
    */
   public function testTemporaryTables($temp_prefix, $leak_table) {
     // Set the temp table prefix on the Connection
-    $reflectionClass = new \ReflectionClass($this->connection::class);
+    $reflectionClass = new \ReflectionClass(Connection::class);
     $reflectionProperty = $reflectionClass->getProperty('tempTablePrefix');
     $reflectionProperty->setAccessible(true);
     $reflectionProperty->setValue($this->connection, $temp_prefix);
