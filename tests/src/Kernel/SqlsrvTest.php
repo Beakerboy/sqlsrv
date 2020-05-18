@@ -103,7 +103,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $table = $second_connection->queryTemporary((string) $query);
 
     // Is the table visible on the original connection?
-    $this->assertEquals($leak_table, $this->connection->schema()->tableExists($table))
+    $this->assertEquals($leak_table, $this->connection->schema()->tableExists($table));
 
     // Close the Connection that created the table and ensure is is gone.
     Database::closeConnection('second');
