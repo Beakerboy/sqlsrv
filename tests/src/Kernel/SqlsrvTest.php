@@ -107,7 +107,7 @@ class SqlsrvTest extends DatabaseTestBase {
 
     // Close the Connection that created the table and ensure is is gone.
     Database::closeConnection('second');
-    $this->assertEquals($this->connection->schema()->tableExists($table))
+    $this->assertEquals($this->connection->schema()->tableExists($table));
   }
 
   /**
