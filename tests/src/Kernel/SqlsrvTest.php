@@ -108,7 +108,7 @@ class SqlsrvTest extends DatabaseTestBase {
       ],
     ];
     // Create a second independant connection.
-    Database::addConnectionInfo('default', 'second', $this->getDatabaseConnectionInfo()['default']);
+    Database::addConnectionInfo('second', 'second', $this->getDatabaseConnectionInfo()['default']);
     $second_connection = Database::getConnection('second');
 
     // Create a temporary table in this connection
@@ -124,7 +124,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $this->assertEquals($leak_table, $this->connection->schema()->tableExists($table));
 
     // Close the Connection that created the table and ensure is is gone.
-    Database::closeConnection('second');
+    Database::removeConnection('second');
     $this->assertFalse($this->connection->schema()->tableExists($table));
   }
 
