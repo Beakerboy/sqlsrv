@@ -98,7 +98,8 @@ class SqlsrvTest extends DatabaseTestBase {
     $this->assertFALSE($this->connection->schema()->tableExists($table), 'The temporary table does not exist');
 
     // Create a second independant connection.
-    $second_connection = Database::openConnection('default', 'second');
+    Database::addConnectionInfo('default', 'second', $this->getDatabaseConnectionInfo()['default']);
+    $second_connection = Database::getConnection('second');
 
     // Create a temporary table in this connection
     $table = $second_connection->queryTemporary((string) $query);
