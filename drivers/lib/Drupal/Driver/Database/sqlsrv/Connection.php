@@ -504,7 +504,7 @@ class Connection extends DatabaseConnection {
     if (!isset($temp_key)) {
       $temp_key = strtoupper(md5(uniqid("", TRUE)));
     }
-    return "db_temp_" . $this->temporaryNameIndex++ . '_' . $temp_key;
+    return "db_temporary_" . $this->temporaryNameIndex++ . '_' . $temp_key;
   }
 
   /**
