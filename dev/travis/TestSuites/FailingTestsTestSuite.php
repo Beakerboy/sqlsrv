@@ -31,7 +31,10 @@ final class FailingTestsTestSuite extends TestSuiteBase {
   protected function addFailingTests($root) {
     $failing_classes = [];
     foreach ($this->failingClasses as $failing_class) {
-      $failing_classes[] = $root . $failing_class;
+      $filename = $root . $failing_class;
+      if (file_exists($filename)) {
+        $failing_classes[] = $filename;
+      }
     }
     $this->addTestFiles($failing_classes);
   }
