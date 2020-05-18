@@ -169,6 +169,13 @@ class Connection extends DatabaseConnection {
   protected $tempTablePrefix = '##';
 
   /**
+   * The connection's unique key for global temporary tables.
+   *
+   * @var string
+   */
+  protected $temp_key;
+
+  /**
    * A map of condition operators to sqlsrv operators.
    *
    * SQL Server doesn't need special escaping for the \ character in a string
@@ -500,11 +507,10 @@ class Connection extends DatabaseConnection {
    * possible to prevent collisions.
    */
   protected function generateTemporaryTableName() {
-    static $temp_key;
-    if (!isset($temp_key)) {
-      $temp_key = strtoupper(md5(uniqid("", TRUE)));
+    if (!isset($this->temp_key)) {
+      $this->temp_key = strtoupper(md5(uniqid("", TRUE)));
     }
-    return "db_temporary_" . $this->temporaryNameIndex++ . '_' . $temp_key;
+    return "db_temporary_" . $this->temporaryNameIndex++ . '_' . $this->temp_key;
   }
 
   /**
