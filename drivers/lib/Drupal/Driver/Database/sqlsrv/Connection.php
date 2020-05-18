@@ -234,7 +234,7 @@ class Connection extends DatabaseConnection {
    * @return bool
    *   True is the table is a temporary table.
    */
-  protected function isTemporaryTable($table) {
+  public function isTemporaryTable($table) {
     return isset($table[0]) && $table[0] == '#';
   }
 
