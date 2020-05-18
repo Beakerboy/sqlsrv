@@ -97,6 +97,16 @@ class SqlsrvTest extends DatabaseTestBase {
     // The table should not exist now.
     $this->assertFALSE($this->connection->schema()->tableExists($table), 'The temporary table does not exist');
 
+    $schema = [
+      'description' => 'Basic test table for the database unit tests.',
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ],
+      ],
+    ];
     // Create a second independant connection.
     Database::addConnectionInfo('default', 'second', $this->getDatabaseConnectionInfo()['default']);
     $second_connection = Database::getConnection('second');
@@ -104,7 +114,13 @@ class SqlsrvTest extends DatabaseTestBase {
     // Create a temporary table in this connection
     $table = $second_connection->queryTemporary((string) $query);
 
-    // Is the table visible on the original connection?
+    // Create a normal table.
+    $second_connection->schema()->createTable('real_table_for_temp_test', $schema);
+
+    // Is the real table visible on the original connection?
+    $this->assertTrue($this->connection->schema()->tableExists('real_table_for_temp_test'));
+
+    // Is the temp table visible on the original connection?
     $this->assertEquals($leak_table, $this->connection->schema()->tableExists($table));
 
     // Close the Connection that created the table and ensure is is gone.
