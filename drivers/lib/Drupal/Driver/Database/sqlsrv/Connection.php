@@ -173,7 +173,7 @@ class Connection extends DatabaseConnection {
    *
    * @var string
    */
-  protected $temp_key;
+  protected $tempKey;
 
   /**
    * A map of condition operators to sqlsrv operators.
@@ -507,10 +507,10 @@ class Connection extends DatabaseConnection {
    * possible to prevent collisions.
    */
   protected function generateTemporaryTableName() {
-    if (!isset($this->temp_key)) {
-      $this->temp_key = strtoupper(md5(uniqid("", TRUE)));
+    if (!isset($this->tempKey)) {
+      $this->tempKey = strtoupper(md5(uniqid("", TRUE)));
     }
-    return "db_temporary_" . $this->temporaryNameIndex++ . '_' . $this->temp_key;
+    return "db_temporary_" . $this->temporaryNameIndex++ . '_' . $this->tempKey;
   }
 
   /**
