@@ -67,6 +67,10 @@ class SqlsrvTest extends DatabaseTestBase {
    */
   public function testTemporaryTables($temp_prefix, $leak_table) {
     // Set the temp table prefix on the Connection
+    $reflectionClass = new \ReflectionClass($this->connection::class);
+    $reflectionProperty = $reflectionClass->getProperty('tempTablePrefix');
+    $reflectionProperty->setAccessible(true);
+    $reflectionProperty->setValue($this->connection, $temp_prefix);
 
     $query = $this->connection->select('test_task', 't');
     $query->fields('t');
