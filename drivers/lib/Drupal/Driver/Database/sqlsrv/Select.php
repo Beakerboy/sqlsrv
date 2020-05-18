@@ -15,6 +15,13 @@ use Drupal\Core\Database\Query\Condition as DatabaseCondition;
 class Select extends QuerySelect {
 
   /**
+   * The connection object on which to run this query.
+   *
+   * @var \Drupal\Driver\Database\sqlsrv\Connection
+   */
+  protected $connection;
+
+  /**
    * Is this statement in a subquery?
    *
    * @var bool
