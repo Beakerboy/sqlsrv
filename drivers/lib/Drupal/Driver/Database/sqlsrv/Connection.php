@@ -162,6 +162,13 @@ class Connection extends DatabaseConnection {
   ];
 
   /**
+   * The temporary table prefix.
+   *
+   * @var string
+   */
+  protected $tempTablePrefix = '##';
+
+  /**
    * A map of condition operators to sqlsrv operators.
    *
    * SQL Server doesn't need special escaping for the \ character in a string
@@ -194,12 +201,13 @@ class Connection extends DatabaseConnection {
   public function queryTemporary($query, array $args = [], array $options = []) {
     // Generate a new GLOBAL temporary table name and protect it from prefixing.
     // SQL Server requires that temporary tables to be non-qualified.
-    $tablename = '##' . $this->generateTemporaryTableName();
+    $tablename = $this->tempTablePrefix . $this->generateTemporaryTableName();
     // Temporary tables cannot be introspected so using them is limited on some
     // scenarios.
     if (isset($options['real_table']) && $options['real_table'] === TRUE) {
       $tablename = trim($tablename, "#");
     }
+    // Don't prefix temp tables.
     $prefixes = $this->prefixes;
     $prefixes[$tablename] = '';
     $this->setPrefix($prefixes);
@@ -215,6 +223,19 @@ class Connection extends DatabaseConnection {
     $this->query($query, $args, $options);
 
     return $tablename;
+  }
+
+  /**
+   * Is this table a temporary table?
+   *
+   * @var string $table
+   *   The table name.
+   *
+   * @return bool
+   *   True is the table is a temporary table.
+   */
+  protected function isTemporaryTable($table) {
+    return isset($table[0]) && $table[0] == '#';
   }
 
   /**
