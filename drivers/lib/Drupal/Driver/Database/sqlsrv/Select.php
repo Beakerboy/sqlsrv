@@ -307,7 +307,7 @@ class Select extends QuerySelect {
       // Table might be a subquery, so nothing to do really.
       if (is_string($table['table']) && !empty($table['all_fields'])) {
         // Temporary tables are not supported here.
-        if ($table['table'][0] == '#') {
+        if ($this->connection->isTemporaryTable($table['table'])) {
           $fields[] = $this->connection->escapeTable($alias) . '.*';
         }
         else {
