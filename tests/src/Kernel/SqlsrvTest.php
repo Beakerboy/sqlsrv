@@ -119,7 +119,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $c = new \PDO("sqlsrv:Server=localhost;Database=mydrupalsite;LoginTimeout=60", "sa", "Password12!");
     $connection_id4 = $c->query('SELECT @@SPID AS [ID]')->fetch(\PDO::FETCH_NUM)[0];
     // Ensure connections are unique.
-    $connection_id1 = $second_connection->query('SELECT @@SPID AS [ID]')->fetchField();
+    $connection_id1 = $this->connection->query('SELECT @@SPID AS [ID]')->fetchField();
     $connection_id2 = $second_connection->query('SELECT @@SPID AS [ID]')->fetchField();
     $connection_id3 = $third_connection->query('SELECT @@SPID AS [ID]')->fetchField();
     $this->assertNotEquals($connection_id2, $connection_id4, 'Connections 2 & 4 have different IDs.');
