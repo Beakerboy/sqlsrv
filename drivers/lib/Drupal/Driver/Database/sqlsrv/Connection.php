@@ -236,6 +236,19 @@ class Connection extends DatabaseConnection {
    * @return bool
    *   True is the table is a temporary table.
    */
+  public function getTempTablePrefix() {
+    return $this->tempTablePrefix;
+  }
+
+  /**
+   * Is this table a temporary table?
+   *
+   * @var string $table
+   *   The table name.
+   *
+   * @return bool
+   *   True is the table is a temporary table.
+   */
   public function isTemporaryTable($table) {
     return isset($table[0]) && $table[0] == '#';
   }
