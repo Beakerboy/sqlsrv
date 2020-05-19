@@ -116,6 +116,14 @@ class SqlsrvTest extends DatabaseTestBase {
     $third_connection = Database::getConnection('third', 'third');
     $reflectionProperty->setValue($third_connection, $temp_prefix);
 
+    // Ensure connections are unique.
+    $connection_id1 = $second_connection->query('EXECUTE CONNECTION_ID()')->fetchField();
+    $connection_id2 = $second_connection->query('EXECUTE CONNECTION_ID()')->fetchField();
+    $connection_id3 = $third_connection->query('EXECUTE CONNECTION_ID()')->fetchField();
+    $this->assertNotEquals($connection_id2, $connection_id3, 'Connections have different IDs.');
+    $this->assertNotEquals($connection_id1, $connection_id3, 'Connections have different IDs.');
+    $this->assertNotEquals($connection_id2, $connection_id1, 'Connections have different IDs.');
+
     // Create a temporary table in this connection.
     $table = $second_connection->queryTemporary((string) $query);
 
