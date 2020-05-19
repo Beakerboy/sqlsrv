@@ -209,11 +209,7 @@ class Connection extends DatabaseConnection {
     // Generate a new GLOBAL temporary table name and protect it from prefixing.
     // SQL Server requires that temporary tables to be non-qualified.
     $tablename = $this->tempTablePrefix . $this->generateTemporaryTableName();
-    // Temporary tables cannot be introspected so using them is limited on some
-    // scenarios.
-    if (isset($options['real_table']) && $options['real_table'] === TRUE) {
-      $tablename = trim($tablename, "#");
-    }
+   
     // Don't prefix temp tables.
     $prefixes = $this->prefixes;
     $prefixes[$tablename] = '';
