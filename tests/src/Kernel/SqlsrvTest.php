@@ -116,13 +116,15 @@ class SqlsrvTest extends DatabaseTestBase {
     $third_connection = Database::getConnection('third', 'third');
     $reflectionProperty->setValue($third_connection, $temp_prefix);
 
+    $c = new PDO("sqlsrv:Server=localhost,1521;Database=mydrupalsite", "sa", "Password12!");
+    $connection_id4 = $c->query('SELECT @@SPID AS [ID]')->fetch(\PDO::FETCH_ASSOC)['ID'];
     // Ensure connections are unique.
     $connection_id1 = $second_connection->query('SELECT @@SPID AS [ID]')->fetchField();
     $connection_id2 = $second_connection->query('SELECT @@SPID AS [ID]')->fetchField();
     $connection_id3 = $third_connection->query('SELECT @@SPID AS [ID]')->fetchField();
-    $this->assertNotEquals($connection_id2, $connection_id3, 'Connections have different IDs.');
-    $this->assertNotEquals($connection_id1, $connection_id3, 'Connections have different IDs.');
-    $this->assertNotEquals($connection_id2, $connection_id1, 'Connections have different IDs.');
+    $this->assertNotEquals($connection_id2, $connection_id4, 'Connections 2 & 4 have different IDs.');
+    $this->assertNotEquals($connection_id1, $connection_id4, 'Connections 1 & 4 have different IDs.');
+    $this->assertNotEquals($connection_id2, $connection_id1, 'Connections 1 & 2 have different IDs.');
 
     // Create a temporary table in this connection.
     $table = $second_connection->queryTemporary((string) $query);
