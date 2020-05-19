@@ -116,7 +116,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $third_connection = Database::getConnection('third', 'third');
     $reflectionProperty->setValue($third_connection, $temp_prefix);
 
-    $c = new PDO("sqlsrv:Server=localhost,1521;Database=mydrupalsite", "sa", "Password12!");
+    $c = new \PDO("sqlsrv:Server=localhost,1521;Database=mydrupalsite", "sa", "Password12!");
     $connection_id4 = $c->query('SELECT @@SPID AS [ID]')->fetch(\PDO::FETCH_ASSOC)['ID'];
     // Ensure connections are unique.
     $connection_id1 = $second_connection->query('SELECT @@SPID AS [ID]')->fetchField();
