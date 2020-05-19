@@ -166,7 +166,7 @@ class Connection extends DatabaseConnection {
    *
    * @var string
    */
-  protected $tempTablePrefix = '#';
+  protected $tempTablePrefix = '##';
 
   /**
    * The connection's unique key for global temporary tables.
