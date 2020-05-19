@@ -111,8 +111,8 @@ class SqlsrvTest extends DatabaseTestBase {
     $connection_info = $this->getDatabaseConnectionInfo()['default'];
     Database::addConnectionInfo('second', 'second', $connection_info);
     Database::addConnectionInfo('third', 'third', $connection_info);
-    $second_connection = Database::getConnection('second');
-    $third_connection = Database::getConnection('third');
+    $second_connection = Database::getConnection('second', 'second');
+    $third_connection = Database::getConnection('third', 'third');
 
     // Create a temporary table in this connection.
     $table = $second_connection->queryTemporary((string) $query);
