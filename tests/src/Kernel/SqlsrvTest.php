@@ -122,8 +122,8 @@ class SqlsrvTest extends DatabaseTestBase {
     $connection_id1 = $this->connection->query('SELECT @@SPID AS [ID]')->fetchField();
     $connection_id2 = $second_connection->query('SELECT @@SPID AS [ID]')->fetchField();
     $connection_id3 = $third_connection->query('SELECT @@SPID AS [ID]')->fetchField();
-    $this->assertNotEquals($connection_id2, $connection_id4, 'Connections 2 & 4 have different IDs.');
-    $this->assertNotEquals($connection_id1, $connection_id4, 'Connections 1 & 4 have different IDs.');
+    $this->assertNotEquals($connection_id2, $connection_id3, 'Connections 2 & 4 have different IDs.');
+    $this->assertNotEquals($connection_id1, $connection_id3, 'Connections 1 & 4 have different IDs.');
     $this->assertNotEquals($connection_id2, $connection_id1, 'Connections 1 & 2 have different IDs.');
 
     // Create a temporary table in this connection.
