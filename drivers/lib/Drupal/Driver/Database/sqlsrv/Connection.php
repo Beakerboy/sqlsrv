@@ -228,13 +228,11 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Is this table a temporary table?
+   * The temporary table prefix.
    *
-   * @var string $table
-   *   The table name.
    *
-   * @return bool
-   *   True is the table is a temporary table.
+   * @return string
+   *   The temporary table prefix.
    */
   public function getTempTablePrefix() {
     return $this->tempTablePrefix;
