@@ -120,18 +120,22 @@ class SqlsrvTest extends DatabaseTestBase {
     $table = $second_connection->queryTemporary((string) $query);
 
     // Is the temp table visible on the originating connection?
-    $this->assertTrue($second_connection->schema()->tableExists($table), 'Tempoary table exists.');
+    $this->assertTrue($second_connection->schema()->tableExists($table), 'Temporary table exists.');
 
     // Create a normal table.
     $second_connection->schema()->createTable('real_table_for_temp_test', $schema);
 
-    // Is the real table visible on the original connection?
+    // Is the real table visible on the other connection?
     $this->assertTrue($third_connection->schema()->tableExists('real_table_for_temp_test'), 'Real table found across connections.');
 
     // Is the temp table visible on the other connection?
-    $this->assertEquals($leak_table, $third_connection->schema()->tableExists($table), 'Tempoary table leaking appropriately.');
+    $this->assertEquals($leak_table, $third_connection->schema()->tableExists($table), 'Temporary table leaking appropriately.');
 
-    // Close the Connection that created the table and ensure is is gone.
+    // Is the temp table still visible on the originating connection?
+    $this->assertTrue($second_connection->schema()->tableExists($table), 'Temporary table still exists.');
+
+    // Close the Connection that created the table and ensure that
+    // it is removed inly after all connections that are using it have closed.
     Database::removeConnection('second');
     $this->assertEquals($leak_table, $third_connection->schema()->tableExists($table), 'Temporary table leaks consistently when creation connection closes.');
 
