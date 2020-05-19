@@ -116,8 +116,6 @@ class SqlsrvTest extends DatabaseTestBase {
     $third_connection = Database::getConnection('third', 'third');
     $reflectionProperty->setValue($third_connection, $temp_prefix);
 
-    $c = new \PDO("sqlsrv:Server=localhost;Database=mydrupalsite;LoginTimeout=60", "sa", "Password12!");
-    $connection_id4 = $c->query('SELECT @@SPID AS [ID]')->fetch(\PDO::FETCH_NUM)[0];
     // Ensure connections are unique.
     $connection_id1 = $this->connection->query('SELECT @@SPID AS [ID]')->fetchField();
     $connection_id2 = $second_connection->query('SELECT @@SPID AS [ID]')->fetchField();
@@ -145,7 +143,7 @@ class SqlsrvTest extends DatabaseTestBase {
     $this->assertTrue($second_connection->schema()->tableExists($table), 'Temporary table still exists.');
 
     // Close the Connection that created the table and ensure that
-    // it is removed inly after all connections that are using it have closed.
+    // it is removed only after all connections that are using it have closed.
     Database::removeConnection('second');
     $this->assertEquals($leak_table, $third_connection->schema()->tableExists($table), 'Temporary table leaks consistently when creation connection closes.');
 
