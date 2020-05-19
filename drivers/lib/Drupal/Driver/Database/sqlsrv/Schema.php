@@ -775,7 +775,7 @@ class Schema extends DatabaseSchema {
     $args = [];
     if ($this->connection->isTemporaryTable($table)) {
       $query = "SELECT 1 FROM tempdb.sys.tables WHERE [name] LIKE :table";
-      $args = [':table' => $table];
+      $args = [':table' => $table . '%'];
     }
     else {
       $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE [table_name] = :table";
