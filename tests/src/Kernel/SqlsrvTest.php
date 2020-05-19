@@ -108,24 +108,33 @@ class SqlsrvTest extends DatabaseTestBase {
       ],
     ];
     // Create a second independant connection.
-    Database::addConnectionInfo('second', 'second', $this->getDatabaseConnectionInfo()['default']);
+    $connection_info = $this->getDatabaseConnectionInfo()['default'];
+    Database::addConnectionInfo('second', 'second', $connection_info);
+    Database::addConnectionInfo('third', 'third', $connection_info);
     $second_connection = Database::getConnection('second');
+    $third_connection = Database::getConnection('third');
 
     // Create a temporary table in this connection.
     $table = $second_connection->queryTemporary((string) $query);
+
+    // Is the temp table visible on the originating connection?
+    $this->assertTrue($second_connection->schema()->tableExists($table), 'Tempoary table exists.');
 
     // Create a normal table.
     $second_connection->schema()->createTable('real_table_for_temp_test', $schema);
 
     // Is the real table visible on the original connection?
-    $this->assertTrue($this->connection->schema()->tableExists('real_table_for_temp_test'));
+    $this->assertTrue($third_connection->schema()->tableExists('real_table_for_temp_test'), 'Real table found across connections.');
 
-    // Is the temp table visible on the original connection?
-    $this->assertEquals($leak_table, $this->connection->schema()->tableExists($table));
+    // Is the temp table visible on the other connection?
+    $this->assertEquals($leak_table, $third_connection->schema()->tableExists($table), 'Tempoary table leaking appropriately.');
 
     // Close the Connection that created the table and ensure is is gone.
     Database::removeConnection('second');
-    $this->assertFalse($this->connection->schema()->tableExists($table));
+    $this->assertEquals($leak_table, $third_connection->schema()->tableExists($table), 'Temporary table leaks consistently when creation connection closes.');
+
+    Database::removeConnection('third');
+    $this->assertFalse($this->connection->schema()->tableExists($table), 'Temporary table destroyed when connections close.');
   }
 
   /**
