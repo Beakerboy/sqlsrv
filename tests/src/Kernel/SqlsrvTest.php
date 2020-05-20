@@ -152,7 +152,6 @@ class SqlsrvTest extends DatabaseTestBase {
     unset($third_connection);
     Database::removeConnection('third');
     $this->assertFalse($this->connection->schema()->tableExists($table), 'Temporary table destroyed when connections close.');
-   
   }
 
   /**
