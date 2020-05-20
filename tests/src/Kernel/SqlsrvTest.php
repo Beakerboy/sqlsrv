@@ -145,8 +145,11 @@ class SqlsrvTest extends DatabaseTestBase {
     // Close the Connection that created the table and ensure that
     // it is removed only after all connections that are using it have closed.
     Database::removeConnection('second');
+    unset($second_connection);
+
     $this->assertEquals($leak_table, $third_connection->schema()->tableExists($table), 'Temporary table leaks consistently when creation connection closes.');
 
+    unset($third_connection);
     Database::removeConnection('third');
     $this->assertEquals($leak_table, $this->connection->schema()->tableExists($table), 'Temporary table destroyed when connections close.');
     Database::removeConnection('default');
