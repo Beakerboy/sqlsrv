@@ -150,9 +150,9 @@ class SqlsrvTest extends DatabaseTestBase {
     Database::removeConnection('third');
     $this->assertEquals($leak_table, $this->connection->schema()->tableExists($table), 'Temporary table destroyed when connections close.');
     Database::removeConnection('default');
-    Database::addConnectionInfo('default', 'default', $connection_info);
-    $this->connection = Database::getConnection('default', 'default');
-    $this->assertFalse($this->connection->schema()->tableExists($table), 'Temporary table does not exist.');
+    Database::addConnectionInfo('fourth', 'fourth', $connection_info);
+    $fourth_connection = Database::getConnection('fourth', 'fourth');
+    $this->assertFalse($fourth_connection->schema()->tableExists($table), 'Temporary table does not exist.');
   }
 
   /**
