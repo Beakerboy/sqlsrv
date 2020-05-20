@@ -230,7 +230,6 @@ class Connection extends DatabaseConnection {
   /**
    * The temporary table prefix.
    *
-   *
    * @return string
    *   The temporary table prefix.
    */
