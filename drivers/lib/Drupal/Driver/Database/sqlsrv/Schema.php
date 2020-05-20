@@ -773,9 +773,9 @@ class Schema extends DatabaseSchema {
     $query = NULL;
     $prefixInfo = $this->getPrefixInfo($table, TRUE);
     $args = [];
-    if ($table[0] == '#') {
-      $query = "SELECT 1 FROM tempdb.sys.tables WHERE [name] LIKE :table";
-      $args = [':table' => $prefixInfo['table'] . '%'];
+    if ($this->connection->isTemporaryTable($table)) {
+      $query = "SELECT 1 FROM tempdb.sys.tables WHERE [object_id] = OBJECT_ID(:table)";
+      $args = [':table' => 'tempdb.[' . $this->getDefaultSchema() . '].[' . $table . ']'];
     }
     else {
       $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE [table_name] = :table";
@@ -854,7 +854,7 @@ class Schema extends DatabaseSchema {
 
     // We could adapt the current code to support temporary table introspection,
     // but for now this is not supported.
-    if ($table_info['table'][0] == '#') {
+    if ($this->connection->isTemporaryTable($table)) {
       throw new \Exception('Temporary table introspection is not supported.');
     }
 

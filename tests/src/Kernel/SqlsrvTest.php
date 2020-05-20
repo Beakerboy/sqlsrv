@@ -2,8 +2,10 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
+use Drupal\Core\Database\Database;
 use Drupal\Driver\Database\sqlsrv\Condition;
+use Drupal\Driver\Database\sqlsrv\Connection;
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Test behavior that is unique to the Sql Server Driver.
@@ -61,8 +63,15 @@ class SqlsrvTest extends DatabaseTestBase {
 
   /**
    * Test the temporary table functionality.
+   *
+   * @dataProvider dataProviderForTestTemporaryTables
    */
-  public function testTemporaryTables() {
+  public function testTemporaryTables($temp_prefix, $leak_table) {
+    // Set the temp table prefix on the Connection.
+    $reflectionClass = new \ReflectionClass(Connection::class);
+    $reflectionProperty = $reflectionClass->getProperty('tempTablePrefix');
+    $reflectionProperty->setAccessible(TRUE);
+    $reflectionProperty->setValue($this->connection, $temp_prefix);
 
     $query = $this->connection->select('test_task', 't');
     $query->fields('t');
@@ -87,6 +96,72 @@ class SqlsrvTest extends DatabaseTestBase {
 
     // The table should not exist now.
     $this->assertFALSE($this->connection->schema()->tableExists($table), 'The temporary table does not exist');
+
+    $schema = [
+      'description' => 'Basic test table for the database unit tests.',
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ],
+      ],
+    ];
+    // Create a second independant connection.
+    $connection_info = $this->getDatabaseConnectionInfo()['default'];
+    Database::addConnectionInfo('second', 'second', $connection_info);
+    Database::addConnectionInfo('third', 'third', $connection_info);
+    $second_connection = Database::getConnection('second', 'second');
+    $reflectionProperty->setValue($second_connection, $temp_prefix);
+    $third_connection = Database::getConnection('third', 'third');
+    $reflectionProperty->setValue($third_connection, $temp_prefix);
+
+    // Ensure connections are unique.
+    $connection_id1 = $this->connection->query('SELECT @@SPID AS [ID]')->fetchField();
+    $connection_id2 = $second_connection->query('SELECT @@SPID AS [ID]')->fetchField();
+    $connection_id3 = $third_connection->query('SELECT @@SPID AS [ID]')->fetchField();
+    $this->assertNotEquals($connection_id2, $connection_id3, 'Connections 2 & 4 have different IDs.');
+    $this->assertNotEquals($connection_id1, $connection_id3, 'Connections 1 & 4 have different IDs.');
+    $this->assertNotEquals($connection_id2, $connection_id1, 'Connections 1 & 2 have different IDs.');
+
+    // Create a temporary table in this connection.
+    $table = $second_connection->queryTemporary((string) $query);
+
+    // Is the temp table visible on the originating connection?
+    $this->assertTrue($second_connection->schema()->tableExists($table), 'Temporary table exists.');
+
+    // Create a normal table.
+    $second_connection->schema()->createTable('real_table_for_temp_test', $schema);
+
+    // Is the real table visible on the other connection?
+    $this->assertTrue($third_connection->schema()->tableExists('real_table_for_temp_test'), 'Real table found across connections.');
+
+    // Is the temp table visible on the other connection?
+    $this->assertEquals($leak_table, $third_connection->schema()->tableExists($table), 'Temporary table leaking appropriately.');
+
+    // Is the temp table still visible on the originating connection?
+    $this->assertTrue($second_connection->schema()->tableExists($table), 'Temporary table still exists.');
+
+    // Close the Connection that created the table and ensure that
+    // it is removed only after all connections that are using it have closed.
+    Database::removeConnection('second');
+    unset($second_connection);
+
+    $this->assertFalse($third_connection->schema()->tableExists($table), 'Temporary table leaks consistently when creation connection closes.');
+
+    unset($third_connection);
+    Database::removeConnection('third');
+    $this->assertFalse($this->connection->schema()->tableExists($table), 'Temporary table destroyed when connections close.');
+  }
+
+  /**
+   * Provides data for testTemporaryTable().
+   */
+  public function dataProviderForTestTemporaryTables() {
+    return [
+      'local' => ['#', FALSE],
+      'global' => ['##', TRUE],
+    ];
   }
 
   /**

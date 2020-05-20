@@ -15,6 +15,13 @@ use Drupal\Core\Database\Query\Condition as DatabaseCondition;
 class Select extends QuerySelect {
 
   /**
+   * The connection object on which to run this query.
+   *
+   * @var \Drupal\Driver\Database\sqlsrv\Connection
+   */
+  protected $connection;
+
+  /**
    * Is this statement in a subquery?
    *
    * @var bool
@@ -307,7 +314,7 @@ class Select extends QuerySelect {
       // Table might be a subquery, so nothing to do really.
       if (is_string($table['table']) && !empty($table['all_fields'])) {
         // Temporary tables are not supported here.
-        if ($table['table'][0] == '#') {
+        if ($this->connection->isTemporaryTable($table['table'])) {
           $fields[] = $this->connection->escapeTable($alias) . '.*';
         }
         else {

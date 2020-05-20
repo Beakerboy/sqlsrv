@@ -166,7 +166,14 @@ class Connection extends DatabaseConnection {
    *
    * @var string
    */
-  protected $tempTablePrefix = '##';
+  protected $tempTablePrefix = '#';
+
+  /**
+   * The connection's unique key for global temporary tables.
+   *
+   * @var string
+   */
+  protected $tempKey;
 
   /**
    * A map of condition operators to sqlsrv operators.
@@ -202,11 +209,6 @@ class Connection extends DatabaseConnection {
     // Generate a new GLOBAL temporary table name and protect it from prefixing.
     // SQL Server requires that temporary tables to be non-qualified.
     $tablename = $this->tempTablePrefix . $this->generateTemporaryTableName();
-    // Temporary tables cannot be introspected so using them is limited on some
-    // scenarios.
-    if (isset($options['real_table']) && $options['real_table'] === TRUE) {
-      $tablename = trim($tablename, "#");
-    }
     // Don't prefix temp tables.
     $prefixes = $this->prefixes;
     $prefixes[$tablename] = '';
@@ -226,6 +228,16 @@ class Connection extends DatabaseConnection {
   }
 
   /**
+   * The temporary table prefix.
+   *
+   * @return string
+   *   The temporary table prefix.
+   */
+  public function getTempTablePrefix() {
+    return $this->tempTablePrefix;
+  }
+
+  /**
    * Is this table a temporary table?
    *
    * @var string $table
@@ -234,7 +246,7 @@ class Connection extends DatabaseConnection {
    * @return bool
    *   True is the table is a temporary table.
    */
-  protected function isTemporaryTable($table) {
+  public function isTemporaryTable($table) {
     return isset($table[0]) && $table[0] == '#';
   }
 
@@ -500,11 +512,10 @@ class Connection extends DatabaseConnection {
    * possible to prevent collisions.
    */
   protected function generateTemporaryTableName() {
-    static $temp_key;
-    if (!isset($temp_key)) {
-      $temp_key = strtoupper(md5(uniqid("", TRUE)));
+    if (!isset($this->tempKey)) {
+      $this->tempKey = strtoupper(md5(uniqid("", TRUE)));
     }
-    return "db_temp_" . $this->temporaryNameIndex++ . '_' . $temp_key;
+    return "db_temporary_" . $this->temporaryNameIndex++ . '_' . $this->tempKey;
   }
 
   /**
