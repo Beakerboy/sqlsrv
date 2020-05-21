@@ -328,6 +328,22 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
+   *
+   * Adding logic for temporary tables.
+   */
+  public function tablePrefix($table = 'default') {
+    if (isset($this->prefixes[$table])) {
+      return $this->prefixes[$table];
+    }
+    $temp_prefix = '';
+    if ($this->isTemporaryTable($table)) {
+      $temp_prefix = $this->tempTablePrefix;
+    }
+    return $temp_prefix . $this->prefixes['default'];
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public static function open(array &$connection_options = []) {
 
