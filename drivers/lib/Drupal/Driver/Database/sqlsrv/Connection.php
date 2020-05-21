@@ -207,10 +207,6 @@ class Connection extends DatabaseConnection {
    */
   public function queryTemporary($query, array $args = [], array $options = []) {
     $tablename = $this->generateTemporaryTableName();
-    // Don't prefix temp tables.
-    $prefixes = $this->prefixes;
-    $prefixes[$tablename] = '';
-    $this->setPrefix($prefixes);
 
     // Having comments in the query can be tricky and break the
     // SELECT FROM  -> SELECT INTO conversion.
