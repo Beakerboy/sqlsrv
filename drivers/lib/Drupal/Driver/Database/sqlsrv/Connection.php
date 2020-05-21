@@ -206,9 +206,8 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function queryTemporary($query, array $args = [], array $options = []) {
-    // Generate a new GLOBAL temporary table name and protect it from prefixing.
-    // SQL Server requires that temporary tables to be non-qualified.
-    $tablename = $this->tempTablePrefix . $this->generateTemporaryTableName();
+   
+    $tablename = $this->generateTemporaryTableName();
     // Don't prefix temp tables.
     $prefixes = $this->prefixes;
     $prefixes[$tablename] = '';
@@ -221,7 +220,7 @@ class Connection extends DatabaseConnection {
     $query = $schema->removeSQLComments($query);
 
     // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
-    $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
+    $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO {' . $tablename . '} FROM', $query);
     $this->query($query, $args, $options);
 
     return $tablename;
@@ -317,6 +316,9 @@ class Connection extends DatabaseConnection {
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
     parent::__construct($connection, $connection_options);
 
+    array_unshift($this->prefixSearch, '{db_temporary_');
+    $replace = $this->tempTablePrefix . $this->prefixes['default'] . 'db_temporary_';
+    array_unshift($this->prefixReplace, $replace);
     // This driver defaults to transaction support, except if explicitly passed
     // FALSE.
     $this->transactionSupport = !isset($connection_options['transactions']) || $connection_options['transactions'] !== FALSE;
@@ -502,20 +504,6 @@ class Connection extends DatabaseConnection {
   public function escapeField($field) {
     $field = parent::escapeField($field);
     return $this->quoteIdentifier($field);
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * Because we are using global temporary tables, these are visible between
-   * connections so we need to make sure that their names are as unique as
-   * possible to prevent collisions.
-   */
-  protected function generateTemporaryTableName() {
-    if (!isset($this->tempKey)) {
-      $this->tempKey = strtoupper(md5(uniqid("", TRUE)));
-    }
-    return "db_temporary_" . $this->temporaryNameIndex++ . '_' . $this->tempKey;
   }
 
   /**
