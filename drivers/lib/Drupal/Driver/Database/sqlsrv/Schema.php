@@ -765,7 +765,6 @@ class Schema extends DatabaseSchema {
    * Temporary tables and regular tables cannot be verified in the same way.
    */
   public function tableExists($table) {
-    // If $table is NULL, then $table[0] will generate a notice.
     if (empty($table)) {
       return FALSE;
     }
@@ -775,7 +774,7 @@ class Schema extends DatabaseSchema {
     $args = [];
     if ($this->connection->isTemporaryTable($table)) {
       $query = "SELECT 1 FROM tempdb.sys.tables WHERE [object_id] = OBJECT_ID(:table)";
-      $args = [':table' => 'tempdb.[' . $this->getDefaultSchema() . '].[' . $table . ']'];
+      $args = [':table' => 'tempdb.[' . $this->getDefaultSchema() . '].[' . $prefixInfo['table'] . ']'];
     }
     else {
       $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE [table_name] = :table";
