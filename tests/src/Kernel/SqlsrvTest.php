@@ -126,7 +126,6 @@ class SqlsrvTest extends DatabaseTestBase {
 
     // Create a temporary table in this connection.
     $table = $second_connection->queryTemporary((string) $query);
-    fwrite(STDOUT, "\n" . $table . "\n");
     // Is the temp table visible on the originating connection?
     $this->assertTrue($second_connection->schema()->tableExists($table), 'Temporary table exists.');
 
@@ -144,8 +143,8 @@ class SqlsrvTest extends DatabaseTestBase {
 
     // Close the Connection that created the table and ensure that
     // it is removed only after all connections that are using it have closed.
-    Database::removeConnection('second');
     unset($second_connection);
+    Database::removeConnection('second');
 
     $this->assertFalse($third_connection->schema()->tableExists($table), 'Temporary table leaks consistently when creation connection closes.');
 
