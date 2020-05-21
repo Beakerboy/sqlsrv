@@ -307,9 +307,12 @@ class Connection extends DatabaseConnection {
    */
   protected function generateTemporaryTableName() {
     $tablename = parent::generateTemporaryTableName();
+    if (!isset($this->tempKey)) {
+      $this->tempKey = md5(rand());
+    }
     // Need to add support for if the default contains a period.
     $prefixes = $this->prefixes;
-    $prefix = $this->tempTablePrefix . $this->prefixes['default'];
+    $prefix = $this->tempTablePrefix . $this->prefixes['default'] . '_' . $this->tempKey;
     // Does this need an array_unshift to make sure the string replace
     // runs it before the default?
     $prefixes[$tablename] = $prefix;
