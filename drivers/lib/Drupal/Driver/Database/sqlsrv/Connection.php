@@ -206,7 +206,6 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function queryTemporary($query, array $args = [], array $options = []) {
-   
     $tablename = $this->generateTemporaryTableName();
     // Don't prefix temp tables.
     $prefixes = $this->prefixes;
