@@ -835,7 +835,7 @@ class Connection extends DatabaseConnection {
    *   True is the table is a temporary table.
    */
   public function isTemporaryTable($table) {
-    return isset($table[0]) && $table[0] == '#';
+    return stripos($table, 'db_temporary_') !== FALSE;
   }
 
   /**
