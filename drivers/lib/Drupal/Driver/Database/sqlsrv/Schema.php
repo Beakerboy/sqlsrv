@@ -775,7 +775,6 @@ class Schema extends DatabaseSchema {
     if ($this->connection->isTemporaryTable($table)) {
       $query = "SELECT 1 FROM tempdb.sys.tables WHERE [object_id] = OBJECT_ID(:table)";
       $args = [':table' => 'tempdb.[' . $this->getDefaultSchema() . '].[' . $prefixInfo['table'] . ']'];
-      fwrite(STDOUT, $query . "\n" . print_r($args, TRUE));
     }
     else {
       $query = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE [table_name] = :table";
