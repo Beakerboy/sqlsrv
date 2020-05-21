@@ -310,7 +310,6 @@ class Connection extends DatabaseConnection {
       $this->tempKey = md5(rand());
     }
     $tablename = parent::generateTemporaryTableName() . '_' . $this->tempKey;
-   
     // Need to add support for if the default contains a period.
     $prefixes = $this->prefixes;
     $prefix = $this->tempTablePrefix . $this->prefixes['default'];
