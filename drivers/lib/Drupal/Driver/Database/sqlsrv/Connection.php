@@ -728,7 +728,7 @@ class Connection extends DatabaseConnection {
    * Adding logic for temporary tables.
    */
   protected function setPrefix($prefix) {
-    parent::setPrefix($table);
+    parent::setPrefix($prefix);
     // Add this to the front of the array so it is done before
     // the default action.
     array_unshift($this->prefixSearch, '{db_temporary_');
