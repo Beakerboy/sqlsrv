@@ -375,11 +375,6 @@ class Connection extends DatabaseConnection {
       $this->tempKey = md5(rand());
     }
     $tablename = parent::generateTemporaryTableName() . '_' . $this->tempKey;
-    // Need to add support for if the default contains a period.
-    $prefixes = $this->prefixes;
-    $prefix = $this->tempTablePrefix . $this->prefixes['default'];
-    $prefixes[$tablename] = $prefix;
-    $this->setPrefix($prefixes);
     return $tablename;
   }
 
@@ -725,6 +720,26 @@ class Connection extends DatabaseConnection {
     if ($rolled_back_other_active_savepoints) {
       throw new TransactionOutOfOrderException();
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Adding logic for temporary tables.
+   */
+  protected function setPrefix($prefix) {
+    parent::setPrefix($table);
+    // Add this to the front of the array so it is done before
+    // the default action.
+    array_unshift($this->prefixSearch, '{db_temporary_');
+
+    // If there is a period in the prefix, apply the temp prefix
+    // to the final piece.
+    $default_parts = explode('.', $this->prefixes['default']);
+    $table_part = array_pop($default_parts);
+    $default_parts[] = $this->tempTablePrefix . $table_part;
+    $full_prefix = implode('.', $default_parts);
+    array_unshift($this->prefixReplace, $full_prefix . 'db_temporary_');
   }
 
   /**
