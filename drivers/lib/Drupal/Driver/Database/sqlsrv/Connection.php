@@ -81,6 +81,87 @@ class Connection extends DatabaseConnection {
   /Six';
 
   /**
+   * The list of SQLServer reserved key words.
+   *
+   * @var array
+   */
+  private $reservedKeyWords = [
+    'action',
+    'admin',
+    'alias',
+    'any',
+    'are',
+    'array',
+    'at',
+    'begin',
+    'boolean',
+    'class',
+    'commit',
+    'contains',
+    'current',
+    'data',
+    'date',
+    'day',
+    'depth',
+    'domain',
+    'external',
+    'file',
+    'full',
+    'function',
+    'get',
+    'go',
+    'host',
+    'input',
+    'language',
+    'last',
+    'less',
+    'local',
+    'map',
+    'min',
+    'module',
+    'new',
+    'no',
+    'object',
+    'old',
+    'open',
+    'operation',
+    'parameter',
+    'parameters',
+    'path',
+    'plan',
+    'prefix',
+    'proc',
+    'public',
+    'ref',
+    'result',
+    'returns',
+    'role',
+    'row',
+    'rule',
+    'save',
+    'search',
+    'second',
+    'section',
+    'session',
+    'size',
+    'state',
+    'statistics',
+    'temporary',
+    'than',
+    'time',
+    'timestamp',
+    'tran',
+    'translate',
+    'translation',
+    'trim',
+    'user',
+    'value',
+    'variable',
+    'view',
+    'without',
+  ];
+
+  /**
    * The temporary table prefix.
    *
    * @var string
@@ -93,22 +174,6 @@ class Connection extends DatabaseConnection {
    * @var string
    */
   protected $tempKey;
-
-  /**
-   * A map of condition operators to sqlsrv operators.
-   *
-   * SQL Server doesn't need special escaping for the \ character in a string
-   * literal, because it uses '' to escape the single quote, not \'.
-   *
-   * @var array
-   */
-  protected static $sqlsrvConditionOperatorMap = [
-    // These can be changed to 'LIKE' => ['postfix' => " ESCAPE '\\'"],
-    // if https://bugs.php.net/bug.php?id=79276 is fixed.
-    'LIKE' => [],
-    'NOT LIKE' => [],
-    'LIKE BINARY' => ['operator' => 'LIKE'],
-  ];
 
   /**
    * {@inheritdoc}
@@ -218,6 +283,8 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
+   *
+   * Allowing local or global temp tables.
    */
   protected function generateTemporaryTableName() {
     // In case the user changes to global temp tables.
@@ -228,8 +295,6 @@ class Connection extends DatabaseConnection {
     // Need to add support for if the default contains a period.
     $prefixes = $this->prefixes;
     $prefix = $this->tempTablePrefix . $this->prefixes['default'];
-    // Does this need an array_unshift to make sure the string replace
-    // runs it before the default?
     $prefixes[$tablename] = $prefix;
     $this->setPrefix($prefixes);
     return $tablename;
@@ -237,6 +302,8 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
+   *
+   * Including schema name.
    */
   public function getFullQualifiedTableName($table) {
     $options = $this->getConnectionOptions();
@@ -263,6 +330,8 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
+   *
+   * Uses SQL Server format.
    */
   public static function open(array &$connection_options = []) {
 
@@ -379,48 +448,9 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Replace reserved words.
-   *
-   * This method gets called between 3,000 and 10,000 times
-   * on cold caches. Make sure it is simple and fast.
-   *
-   * @param mixed $matches
-   *   What is this?
-   *
-   * @return string
-   *   The match surrounded with brackets.
-   */
-  protected function replaceReservedCallback($matches) {
-    if ($matches[1] !== '') {
-      // Replace reserved words. We are not calling
-      // quoteIdentifier() on purpose.
-      return '[' . $matches[1] . ']';
-    }
-    // Let other value passthru.
-    // by the logic of the regex above, this will always be the last match.
-    return end($matches);
-  }
-
-  /**
-   * Quotes an identifier if it matches a SQL Server reserved keyword.
-   *
-   * @param string $identifier
-   *   The field to check.
-   *
-   * @return string
-   *   The identifier, quoted if it matches a SQL Server reserved keyword.
-   */
-  protected function quoteIdentifier($identifier) {
-    if (strpos($identifier, '.') !== FALSE) {
-      list($table, $identifier) = explode('.', $identifier, 2);
-    }
-    // Quote the string for SQLServer reserved keywords.
-    $identifier = '[' . $identifier . ']';
-    return isset($table) ? '[' .$table . '].' . $identifier : $identifier;
-  }
-
-  /**
    * {@inheritdoc}
+   *
+   * Encapsulates field names in brackets when necessary.
    */
   public function escapeField($field) {
     $field = parent::escapeField($field);
@@ -755,7 +785,6 @@ class Connection extends DatabaseConnection {
    *   Query result.
    */
   public function queryDirect($query, array $args = [], $options = []) {
-
     // Use default values if not already set.
     $options += $this->defaultOptions();
     $stmt = NULL;
@@ -841,6 +870,65 @@ class Connection extends DatabaseConnection {
 
     return $query;
   }
+
+  /**
+   * Quotes an identifier if it matches a SQL Server reserved keyword.
+   *
+   * @param string $identifier
+   *   The field to check.
+   *
+   * @return string
+   *   The identifier, quoted if it matches a SQL Server reserved keyword.
+   */
+  protected function quoteIdentifier($identifier) {
+    if (strpos($identifier, '.') !== FALSE) {
+      list($table, $identifier) = explode('.', $identifier, 2);
+    }
+    if (in_array(strtolower($identifier), $this->reservedKeyWords, TRUE)) {
+      // Quote the string for SQLServer reserved keywords.
+      $identifier = '[' . $identifier . ']';
+    }
+    return isset($table) ? $table . '.' . $identifier : $identifier;
+  }
+
+  /**
+   * Replace reserved words.
+   *
+   * This method gets called between 3,000 and 10,000 times
+   * on cold caches. Make sure it is simple and fast.
+   *
+   * @param mixed $matches
+   *   What is this?
+   *
+   * @return string
+   *   The match surrounded with brackets.
+   */
+  protected function replaceReservedCallback($matches) {
+    if ($matches[1] !== '') {
+      // Replace reserved words. We are not calling
+      // quoteIdentifier() on purpose.
+      return '[' . $matches[1] . ']';
+    }
+    // Let other value passthru.
+    // by the logic of the regex above, this will always be the last match.
+    return end($matches);
+  }
+
+  /**
+   * A map of condition operators to sqlsrv operators.
+   *
+   * SQL Server doesn't need special escaping for the \ character in a string
+   * literal, because it uses '' to escape the single quote, not \'.
+   *
+   * @var array
+   */
+  protected static $sqlsrvConditionOperatorMap = [
+    // These can be changed to 'LIKE' => ['postfix' => " ESCAPE '\\'"],
+    // if https://bugs.php.net/bug.php?id=79276 is fixed.
+    'LIKE' => [],
+    'NOT LIKE' => [],
+    'LIKE BINARY' => ['operator' => 'LIKE'],
+  ];
 
 }
 
