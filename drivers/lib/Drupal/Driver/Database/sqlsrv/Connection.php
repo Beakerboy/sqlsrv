@@ -628,15 +628,6 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    *
-   * Encapsulates all tables with brackets.
-   */
-  public function escapeTable($table) {
-    return '[' . parent::escapeTable($table) . ']';
-  }
-
-  /**
-   * {@inheritdoc}
-   *
    * Using SQL Server query syntax.
    */
   public function rollBack($savepoint_name = 'drupal_transaction') {
