@@ -160,6 +160,7 @@ class SqlsrvTest extends DatabaseTestBase {
     return [
       'local' => ['#', FALSE],
       'global' => ['##', TRUE],
+      // Need a test where the prefix has periods.
     ];
   }
 
