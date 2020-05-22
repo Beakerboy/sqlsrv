@@ -72,6 +72,13 @@ class SqlsrvTest extends DatabaseTestBase {
     $reflectionProperty = $reflectionClass->getProperty('tempTablePrefix');
     $reflectionProperty->setAccessible(TRUE);
     $reflectionProperty->setValue($this->connection, $temp_prefix);
+    $reflectionMethod = $reflectionClass->getMethod('setPrefix');
+    $reflectionMethod->setAccessible(TRUE);
+    $prefixProperty = $reflectionClass->getProperty('prefixes');
+    $prefixProperty->setAccessible(TRUE);
+    
+    $prefixes = $prefixProperty->getValue($this->connection);
+    $reflectionMethod->invoke($this->connection, $prefixes); 
 
     $query = $this->connection->select('test_task', 't');
     $query->fields('t');
@@ -111,10 +118,16 @@ class SqlsrvTest extends DatabaseTestBase {
     $connection_info = $this->getDatabaseConnectionInfo()['default'];
     Database::addConnectionInfo('second', 'second', $connection_info);
     Database::addConnectionInfo('third', 'third', $connection_info);
+
     $second_connection = Database::getConnection('second', 'second');
     $reflectionProperty->setValue($second_connection, $temp_prefix);
+    $prefixes = $prefixProperty->getValue($second_connection);
+    $reflectionMethod->invoke($second_connection, $prefixes);
+
     $third_connection = Database::getConnection('third', 'third');
     $reflectionProperty->setValue($third_connection, $temp_prefix);
+    $prefixes = $prefixProperty->getValue($third_connection);
+    $reflectionMethod->invoke($third_connection, $prefixes);
 
     // Ensure connections are unique.
     $connection_id1 = $this->connection->query('SELECT @@SPID AS [ID]')->fetchField();
