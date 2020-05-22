@@ -495,11 +495,9 @@ class Connection extends DatabaseConnection {
     if (strpos($identifier, '.') !== FALSE) {
       list($table, $identifier) = explode('.', $identifier, 2);
     }
-    if (in_array(strtolower($identifier), $this->reservedKeyWords, TRUE)) {
-      // Quote the string for SQLServer reserved keywords.
-      $identifier = '[' . $identifier . ']';
-    }
-    return isset($table) ? $table . '.' . $identifier : $identifier;
+    // Quote the string for SQLServer reserved keywords.
+    $identifier = '[' . $identifier . ']';
+    return isset($table) ? '[' .$table . '].' . $identifier : $identifier;
   }
 
   /**
