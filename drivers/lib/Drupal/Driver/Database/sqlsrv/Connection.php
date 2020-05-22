@@ -284,6 +284,89 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    *
+   * Adding schema to the connection URL.
+   */
+  public static function createConnectionOptionsFromUrl($url, $root) {
+    $database = parent::createConnectionOptionsFromUrl($url, $root);
+    $url_components = parse_url($url);
+    if (isset($url_components['query'])) {
+      $query = [];
+      parse_str($url_components['query'], $query);
+      if (isset($query['schema'])) {
+        $database['schema'] = $query['schema'];
+      }
+      $database['cache_schema'] = isset($query['cache_schema']) && $query['cache_schema'] == 'true' ? TRUE : FALSE;
+    }
+    return $database;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Adding schema to the connection URL.
+   */
+  public static function createUrlFromConnectionOptions(array $connection_options) {
+    if (!isset($connection_options['driver'], $connection_options['database'])) {
+      throw new \InvalidArgumentException("As a minimum, the connection options array must contain at least the 'driver' and 'database' keys");
+    }
+
+    $user = '';
+    if (isset($connection_options['username'])) {
+      $user = $connection_options['username'];
+      if (isset($connection_options['password'])) {
+        $user .= ':' . $connection_options['password'];
+      }
+      $user .= '@';
+    }
+
+    $host = empty($connection_options['host']) ? 'localhost' : $connection_options['host'];
+
+    $db_url = $connection_options['driver'] . '://' . $user . $host;
+
+    if (isset($connection_options['port'])) {
+      $db_url .= ':' . $connection_options['port'];
+    }
+
+    $db_url .= '/' . $connection_options['database'];
+    $query = [];
+    if (isset($connection_options['module'])) {
+      $query['module'] = $connection_options['module'];
+    }
+    if (isset($connection_options['schema'])) {
+      $query['schema'] = $connection_options['schema'];
+    }
+    if (isset($connection_options['cache_schema'])) {
+      $query['cache_schema'] = $connection_options['cache_schema'];
+    }
+
+    if (count($query) > 0) {
+      $parameters = [];
+      foreach ($query as $key => $values) {
+        $parameters[] = $key . '=' . $values;
+      }
+      $query_string = implode("&amp;", $parameters);
+      $db_url .= '?' . $query_string;
+    }
+    if (isset($connection_options['prefix']['default']) && $connection_options['prefix']['default'] !== '') {
+      $db_url .= '#' . $connection_options['prefix']['default'];
+    }
+
+    return $db_url;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Encapsulates field names in brackets when necessary.
+   */
+  public function escapeField($field) {
+    $field = parent::escapeField($field);
+    return $this->quoteIdentifier($field);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
    * Allowing local or global temp tables.
    */
   protected function generateTemporaryTableName() {
@@ -310,22 +393,6 @@ class Connection extends DatabaseConnection {
     $prefix = $this->tablePrefix($table);
     $schema_name = $this->schema->getDefaultSchema();
     return $options['database'] . '.' . $schema_name . '.' . $prefix . $table;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * Adding logic for temporary tables.
-   */
-  public function tablePrefix($table = 'default') {
-    if (isset($this->prefixes[$table])) {
-      return $this->prefixes[$table];
-    }
-    $temp_prefix = '';
-    if ($this->isTemporaryTable($table)) {
-      $temp_prefix = $this->tempTablePrefix;
-    }
-    return $temp_prefix . $this->prefixes['default'];
   }
 
   /**
@@ -450,11 +517,47 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    *
-   * Encapsulates field names in brackets when necessary.
+   * SQL Server does not support RELEASE SAVEPOINT.
    */
-  public function escapeField($field) {
-    $field = parent::escapeField($field);
-    return $this->quoteIdentifier($field);
+  protected function popCommittableTransactions() {
+    // Commit all the committable layers.
+    foreach (array_reverse($this->transactionLayers) as $name => $active) {
+      // Stop once we found an active transaction.
+      if ($active) {
+        break;
+      }
+      // If there are no more layers left then we should commit.
+      unset($this->transactionLayers[$name]);
+      if (empty($this->transactionLayers)) {
+        $this->doCommit();
+      }
+      else {
+        // Nothing to do in SQL Server.
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Using SQL Server query syntax.
+   */
+  public function pushTransaction($name) {
+    if (!$this->supportsTransactions()) {
+      return;
+    }
+    if (isset($this->transactionLayers[$name])) {
+      throw new TransactionNameNonUniqueException($name . " is already in use.");
+    }
+    // If we're already in a transaction then we want to create a savepoint
+    // rather than try to create another transaction.
+    if ($this->inTransaction()) {
+      $this->queryDirect('SAVE TRANSACTION ' . $name);
+    }
+    else {
+      $this->connection->beginTransaction();
+    }
+    $this->transactionLayers[$name] = $name;
   }
 
   /**
@@ -627,120 +730,17 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    *
-   * Using SQL Server query syntax.
+   * Adding logic for temporary tables.
    */
-  public function pushTransaction($name) {
-    if (!$this->supportsTransactions()) {
-      return;
+  public function tablePrefix($table = 'default') {
+    if (isset($this->prefixes[$table])) {
+      return $this->prefixes[$table];
     }
-    if (isset($this->transactionLayers[$name])) {
-      throw new TransactionNameNonUniqueException($name . " is already in use.");
+    $temp_prefix = '';
+    if ($this->isTemporaryTable($table)) {
+      $temp_prefix = $this->tempTablePrefix;
     }
-    // If we're already in a transaction then we want to create a savepoint
-    // rather than try to create another transaction.
-    if ($this->inTransaction()) {
-      $this->queryDirect('SAVE TRANSACTION ' . $name);
-    }
-    else {
-      $this->connection->beginTransaction();
-    }
-    $this->transactionLayers[$name] = $name;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * SQL Server does not support RELEASE SAVEPOINT.
-   */
-  protected function popCommittableTransactions() {
-    // Commit all the committable layers.
-    foreach (array_reverse($this->transactionLayers) as $name => $active) {
-      // Stop once we found an active transaction.
-      if ($active) {
-        break;
-      }
-      // If there are no more layers left then we should commit.
-      unset($this->transactionLayers[$name]);
-      if (empty($this->transactionLayers)) {
-        $this->doCommit();
-      }
-      else {
-        // Nothing to do in SQL Server.
-      }
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * Adding schema to the connection URL.
-   */
-  public static function createConnectionOptionsFromUrl($url, $root) {
-    $database = parent::createConnectionOptionsFromUrl($url, $root);
-    $url_components = parse_url($url);
-    if (isset($url_components['query'])) {
-      $query = [];
-      parse_str($url_components['query'], $query);
-      if (isset($query['schema'])) {
-        $database['schema'] = $query['schema'];
-      }
-      $database['cache_schema'] = isset($query['cache_schema']) && $query['cache_schema'] == 'true' ? TRUE : FALSE;
-    }
-    return $database;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * Adding schema to the connection URL.
-   */
-  public static function createUrlFromConnectionOptions(array $connection_options) {
-    if (!isset($connection_options['driver'], $connection_options['database'])) {
-      throw new \InvalidArgumentException("As a minimum, the connection options array must contain at least the 'driver' and 'database' keys");
-    }
-
-    $user = '';
-    if (isset($connection_options['username'])) {
-      $user = $connection_options['username'];
-      if (isset($connection_options['password'])) {
-        $user .= ':' . $connection_options['password'];
-      }
-      $user .= '@';
-    }
-
-    $host = empty($connection_options['host']) ? 'localhost' : $connection_options['host'];
-
-    $db_url = $connection_options['driver'] . '://' . $user . $host;
-
-    if (isset($connection_options['port'])) {
-      $db_url .= ':' . $connection_options['port'];
-    }
-
-    $db_url .= '/' . $connection_options['database'];
-    $query = [];
-    if (isset($connection_options['module'])) {
-      $query['module'] = $connection_options['module'];
-    }
-    if (isset($connection_options['schema'])) {
-      $query['schema'] = $connection_options['schema'];
-    }
-    if (isset($connection_options['cache_schema'])) {
-      $query['cache_schema'] = $connection_options['cache_schema'];
-    }
-
-    if (count($query) > 0) {
-      $parameters = [];
-      foreach ($query as $key => $values) {
-        $parameters[] = $key . '=' . $values;
-      }
-      $query_string = implode("&amp;", $parameters);
-      $db_url .= '?' . $query_string;
-    }
-    if (isset($connection_options['prefix']['default']) && $connection_options['prefix']['default'] !== '') {
-      $db_url .= '#' . $connection_options['prefix']['default'];
-    }
-
-    return $db_url;
+    return $temp_prefix . $this->prefixes['default'];
   }
 
   /**
