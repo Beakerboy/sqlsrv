@@ -18,12 +18,6 @@ use Drupal\Core\Database\TransactionNameNonUniqueException;
 
 /**
  * Sqlsvr implementation of \Drupal\Core\Database\Connection.
- *
- * Temporary tables: temporary table support is done by means of global
- * temporary tables (#) to avoid the use of DIRECT QUERIES. You can enable and
- * disable the use of direct queries with:
- * $this->driver_settings->defaultDirectQuery = TRUE|FALSE.
- * http://blogs.msdn.com/b/brian_swan/archive/2010/06/15/ctp2-of-microsoft-driver-for-php-for-sql-server-released.aspx.
  */
 class Connection extends DatabaseConnection {
 
@@ -733,8 +727,8 @@ class Connection extends DatabaseConnection {
     // the default action.
     array_unshift($this->prefixSearch, '{db_temporary_');
 
-    // If there is a period in the prefix, apply the temp prefix
-    // to the final piece.
+    // If there is a period in the prefix, apply the temp prefix to the final
+    // piece.
     $default_parts = explode('.', $this->prefixes['default']);
     $table_part = array_pop($default_parts);
     $default_parts[] = $this->tempTablePrefix . $table_part;
@@ -754,8 +748,14 @@ class Connection extends DatabaseConnection {
     $temp_prefix = '';
     if ($this->isTemporaryTable($table)) {
       $temp_prefix = $this->tempTablePrefix;
+      // If there is a period in the prefix, apply the temp prefix to the final
+      // piece.
+      $default_parts = explode('.', $this->prefixes['default']);
+      $table_part = array_pop($default_parts);
+      $default_parts[] = $this->tempTablePrefix . $table_part;
+      return implode('.', $default_parts);
     }
-    return $temp_prefix . $this->prefixes['default'];
+    return $this->prefixes['default'];
   }
 
   /**
