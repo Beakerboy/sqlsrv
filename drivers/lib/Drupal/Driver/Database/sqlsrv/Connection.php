@@ -206,13 +206,7 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   public function queryTemporary($query, array $args = [], array $options = []) {
-    // Generate a new GLOBAL temporary table name and protect it from prefixing.
-    // SQL Server requires that temporary tables to be non-qualified.
-    $tablename = $this->tempTablePrefix . $this->generateTemporaryTableName();
-    // Don't prefix temp tables.
-    $prefixes = $this->prefixes;
-    $prefixes[$tablename] = '';
-    $this->setPrefix($prefixes);
+    $tablename = $this->generateTemporaryTableName();
 
     // Having comments in the query can be tricky and break the
     // SELECT FROM  -> SELECT INTO conversion.
@@ -221,33 +215,10 @@ class Connection extends DatabaseConnection {
     $query = $schema->removeSQLComments($query);
 
     // Replace SELECT xxx FROM table by SELECT xxx INTO #table FROM table.
-    $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO ' . $tablename . ' FROM', $query);
+    $query = preg_replace('/^SELECT(.*?)FROM/is', 'SELECT$1 INTO {' . $tablename . '} FROM', $query);
     $this->query($query, $args, $options);
 
     return $tablename;
-  }
-
-  /**
-   * The temporary table prefix.
-   *
-   * @return string
-   *   The temporary table prefix.
-   */
-  public function getTempTablePrefix() {
-    return $this->tempTablePrefix;
-  }
-
-  /**
-   * Is this table a temporary table?
-   *
-   * @var string $table
-   *   The table name.
-   *
-   * @return bool
-   *   True is the table is a temporary table.
-   */
-  public function isTemporaryTable($table) {
-    return isset($table[0]) && $table[0] == '#';
   }
 
   /**
@@ -329,11 +300,46 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    */
+  protected function generateTemporaryTableName() {
+    // In case the user changes to global temp tables.
+    if (!isset($this->tempKey)) {
+      $this->tempKey = md5(rand());
+    }
+    $tablename = parent::generateTemporaryTableName() . '_' . $this->tempKey;
+    // Need to add support for if the default contains a period.
+    $prefixes = $this->prefixes;
+    $prefix = $this->tempTablePrefix . $this->prefixes['default'];
+    // Does this need an array_unshift to make sure the string replace
+    // runs it before the default?
+    $prefixes[$tablename] = $prefix;
+    $this->setPrefix($prefixes);
+    return $tablename;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getFullQualifiedTableName($table) {
     $options = $this->getConnectionOptions();
     $prefix = $this->tablePrefix($table);
     $schema_name = $this->schema->getDefaultSchema();
     return $options['database'] . '.' . $schema_name . '.' . $prefix . $table;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Adding logic for temporary tables.
+   */
+  public function tablePrefix($table = 'default') {
+    if (isset($this->prefixes[$table])) {
+      return $this->prefixes[$table];
+    }
+    $temp_prefix = '';
+    if ($this->isTemporaryTable($table)) {
+      $temp_prefix = $this->tempTablePrefix;
+    }
+    return $temp_prefix . $this->prefixes['default'];
   }
 
   /**
@@ -505,20 +511,6 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * {@inheritdoc}
-   *
-   * Because we are using global temporary tables, these are visible between
-   * connections so we need to make sure that their names are as unique as
-   * possible to prevent collisions.
-   */
-  protected function generateTemporaryTableName() {
-    if (!isset($this->tempKey)) {
-      $this->tempKey = strtoupper(md5(uniqid("", TRUE)));
-    }
-    return "db_temporary_" . $this->temporaryNameIndex++ . '_' . $this->tempKey;
-  }
-
-  /**
    * Executes a query string against the database.
    *
    * This method provides a central handler for the actual execution of every
@@ -631,112 +623,6 @@ class Connection extends DatabaseConnection {
       // value will be the same as for static::query().
       return $this->handleQueryException($e, $query, $args, $options);
     }
-  }
-
-  /**
-   * Like query but with no insecure detection or query preprocessing.
-   *
-   * The caller is sure that the query is MS SQL compatible! Used internally
-   * from the schema class, but could be called from anywhere.
-   *
-   * @param string $query
-   *   Query.
-   * @param array $args
-   *   Query arguments.
-   * @param mixed $options
-   *   Query options.
-   *
-   * @throws \PDOException
-   *
-   * @return mixed
-   *   Query result.
-   */
-  public function queryDirect($query, array $args = [], $options = []) {
-
-    // Use default values if not already set.
-    $options += $this->defaultOptions();
-    $stmt = NULL;
-
-    try {
-      $direct_query_options = [
-        'direct_query' => TRUE,
-        'bypass_preprocess' => TRUE,
-      ];
-      $stmt = $this->prepareQuery($query, $direct_query_options + $options);
-      $stmt->execute($args, $options);
-
-      // Depending on the type of query we may need to return a different value.
-      // See DatabaseConnection::defaultOptions() for a description of each
-      // value.
-      switch ($options['return']) {
-        case Database::RETURN_STATEMENT:
-          return $stmt;
-
-        case Database::RETURN_AFFECTED:
-          $stmt->allowRowCount = TRUE;
-          return $stmt->rowCount();
-
-        case Database::RETURN_INSERT_ID:
-          return $this->connection->lastInsertId();
-
-        case Database::RETURN_NULL:
-          return NULL;
-
-        default:
-          throw new \PDOException('Invalid return directive: ' . $options['return']);
-      }
-    }
-    catch (\PDOException $e) {
-      // Most database drivers will return NULL here, but some of them
-      // (e.g. the SQLite driver) may need to re-run the query, so the return
-      // value will be the same as for static::query().
-      return $this->handleQueryException($e, $query, $args, $options);
-    }
-  }
-
-  /**
-   * Massage a query to make it compliant with SQL Server.
-   *
-   * @param mixed $query
-   *   Query string.
-   *
-   * @return string
-   *   Query string in MS SQL format.
-   */
-  public function preprocessQuery($query) {
-    // Force quotes around some SQL Server reserved keywords.
-    if (preg_match('/^SELECT/i', $query)) {
-      $query = preg_replace_callback(self::RESERVED_REGEXP, [$this, 'replaceReservedCallback'], $query);
-    }
-
-    // Last chance to modify some SQL Server-specific syntax.
-    $replacements = [];
-
-    // Add prefixes to Drupal-specific functions.
-    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
-    $schema = $this->schema();
-    $defaultSchema = $schema->GetDefaultSchema();
-    foreach ($schema->DrupalSpecificFunctions() as $function) {
-      $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] = "{$defaultSchema}.$1(";
-    }
-
-    // Rename some functions.
-    $funcs = [
-      'LENGTH' => 'LEN',
-      'POW' => 'POWER',
-    ];
-
-    foreach ($funcs as $function => $replacement) {
-      $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] = $replacement . '(';
-    }
-
-    // Replace the ANSI concatenation operator with SQL Server poor one.
-    $replacements['/\|\|/'] = '+';
-
-    // Now do all the replacements at once.
-    $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
-
-    return $query;
   }
 
   /**
@@ -942,6 +828,135 @@ class Connection extends DatabaseConnection {
     }
 
     return $db_url;
+  }
+
+  /**
+   * The temporary table prefix.
+   *
+   * @return string
+   *   The temporary table prefix.
+   */
+  public function getTempTablePrefix() {
+    return $this->tempTablePrefix;
+  }
+
+  /**
+   * Is this table a temporary table?
+   *
+   * @var string $table
+   *   The table name.
+   *
+   * @return bool
+   *   True is the table is a temporary table.
+   */
+  public function isTemporaryTable($table) {
+    return stripos($table, 'db_temporary_') !== FALSE;
+  }
+
+  /**
+   * Like query but with no insecure detection or query preprocessing.
+   *
+   * The caller is sure that the query is MS SQL compatible! Used internally
+   * from the schema class, but could be called from anywhere.
+   *
+   * @param string $query
+   *   Query.
+   * @param array $args
+   *   Query arguments.
+   * @param mixed $options
+   *   Query options.
+   *
+   * @throws \PDOException
+   *
+   * @return mixed
+   *   Query result.
+   */
+  public function queryDirect($query, array $args = [], $options = []) {
+
+    // Use default values if not already set.
+    $options += $this->defaultOptions();
+    $stmt = NULL;
+
+    try {
+      $direct_query_options = [
+        'direct_query' => TRUE,
+        'bypass_preprocess' => TRUE,
+      ];
+      $stmt = $this->prepareQuery($query, $direct_query_options + $options);
+      $stmt->execute($args, $options);
+
+      // Depending on the type of query we may need to return a different value.
+      // See DatabaseConnection::defaultOptions() for a description of each
+      // value.
+      switch ($options['return']) {
+        case Database::RETURN_STATEMENT:
+          return $stmt;
+
+        case Database::RETURN_AFFECTED:
+          $stmt->allowRowCount = TRUE;
+          return $stmt->rowCount();
+
+        case Database::RETURN_INSERT_ID:
+          return $this->connection->lastInsertId();
+
+        case Database::RETURN_NULL:
+          return NULL;
+
+        default:
+          throw new \PDOException('Invalid return directive: ' . $options['return']);
+      }
+    }
+    catch (\PDOException $e) {
+      // Most database drivers will return NULL here, but some of them
+      // (e.g. the SQLite driver) may need to re-run the query, so the return
+      // value will be the same as for static::query().
+      return $this->handleQueryException($e, $query, $args, $options);
+    }
+  }
+
+  /**
+   * Massage a query to make it compliant with SQL Server.
+   *
+   * @param mixed $query
+   *   Query string.
+   *
+   * @return string
+   *   Query string in MS SQL format.
+   */
+  public function preprocessQuery($query) {
+    // Force quotes around some SQL Server reserved keywords.
+    if (preg_match('/^SELECT/i', $query)) {
+      $query = preg_replace_callback(self::RESERVED_REGEXP, [$this, 'replaceReservedCallback'], $query);
+    }
+
+    // Last chance to modify some SQL Server-specific syntax.
+    $replacements = [];
+
+    // Add prefixes to Drupal-specific functions.
+    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    $schema = $this->schema();
+    $defaultSchema = $schema->GetDefaultSchema();
+    foreach ($schema->DrupalSpecificFunctions() as $function) {
+      $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] = "{$defaultSchema}.$1(";
+    }
+
+    // Rename some functions.
+    $funcs = [
+      'LENGTH' => 'LEN',
+      'POW' => 'POWER',
+    ];
+
+    foreach ($funcs as $function => $replacement) {
+      $replacements['/\b(?<![:.])(' . preg_quote($function) . ')\(/i'] = $replacement . '(';
+    }
+
+    // Replace the ANSI concatenation operator with SQL Server poor one.
+    $replacements['/\|\|/'] = '+';
+
+    // Now do all the replacements at once.
+    $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
+
+    return $query;
   }
 
 }

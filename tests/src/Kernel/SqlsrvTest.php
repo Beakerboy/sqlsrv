@@ -120,13 +120,12 @@ class SqlsrvTest extends DatabaseTestBase {
     $connection_id1 = $this->connection->query('SELECT @@SPID AS [ID]')->fetchField();
     $connection_id2 = $second_connection->query('SELECT @@SPID AS [ID]')->fetchField();
     $connection_id3 = $third_connection->query('SELECT @@SPID AS [ID]')->fetchField();
-    $this->assertNotEquals($connection_id2, $connection_id3, 'Connections 2 & 4 have different IDs.');
-    $this->assertNotEquals($connection_id1, $connection_id3, 'Connections 1 & 4 have different IDs.');
+    $this->assertNotEquals($connection_id2, $connection_id3, 'Connections 2 & 3 have different IDs.');
+    $this->assertNotEquals($connection_id1, $connection_id3, 'Connections 1 & 3 have different IDs.');
     $this->assertNotEquals($connection_id2, $connection_id1, 'Connections 1 & 2 have different IDs.');
 
     // Create a temporary table in this connection.
     $table = $second_connection->queryTemporary((string) $query);
-
     // Is the temp table visible on the originating connection?
     $this->assertTrue($second_connection->schema()->tableExists($table), 'Temporary table exists.');
 
@@ -144,8 +143,8 @@ class SqlsrvTest extends DatabaseTestBase {
 
     // Close the Connection that created the table and ensure that
     // it is removed only after all connections that are using it have closed.
-    Database::removeConnection('second');
     unset($second_connection);
+    Database::removeConnection('second');
 
     $this->assertFalse($third_connection->schema()->tableExists($table), 'Temporary table leaks consistently when creation connection closes.');
 
