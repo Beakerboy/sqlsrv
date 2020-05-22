@@ -76,9 +76,9 @@ class SqlsrvTest extends DatabaseTestBase {
     $reflectionMethod->setAccessible(TRUE);
     $prefixProperty = $reflectionClass->getProperty('prefixes');
     $prefixProperty->setAccessible(TRUE);
-    
+
     $prefixes = $prefixProperty->getValue($this->connection);
-    $reflectionMethod->invoke($this->connection, $prefixes); 
+    $reflectionMethod->invoke($this->connection, $prefixes);
 
     $query = $this->connection->select('test_task', 't');
     $query->fields('t');
