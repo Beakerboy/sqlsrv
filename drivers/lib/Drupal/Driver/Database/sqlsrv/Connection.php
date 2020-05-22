@@ -628,35 +628,10 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    *
-   * Includes special handling for temporary tables.
+   * Encapsulates all tables with brackets.
    */
   public function escapeTable($table) {
-    // A static cache is better suited for this.
-    static $tables = [];
-    if (isset($tables[$table])) {
-      return $tables[$table];
-    }
-
-    // Rescue the # prefix from the escaping.
-    $is_temporary = $table[0] == '#';
-    $is_temporary_global = $is_temporary && isset($table[1]) && $table[1] == '#';
-
-    // Any temporary table prefix will be removed.
-    $result = preg_replace('/[^A-Za-z0-9_.]+/', '', $table);
-
-    // Restore the temporary prefix.
-    if ($is_temporary) {
-      if ($is_temporary_global) {
-        $result = '##' . $result;
-      }
-      else {
-        $result = '#' . $result;
-      }
-    }
-
-    $tables[$table] = $result;
-
-    return $result;
+    return '[' . parent::escapeTable($table) . ']';
   }
 
   /**
