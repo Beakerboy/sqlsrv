@@ -805,10 +805,11 @@ class Connection extends DatabaseConnection {
     $stmt = NULL;
 
     try {
+      // Core tests run faster without emulating.
       $direct_query_options = [
         'direct_query' => TRUE,
         'bypass_preprocess' => TRUE,
-        'emulate_prepares' => TRUE,
+        'emulate_prepares' => FALSE,
       ];
       $stmt = $this->prepareQuery($query, $direct_query_options + $options);
       $stmt->execute($args, $options);
