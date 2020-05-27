@@ -474,6 +474,7 @@ class Connection extends DatabaseConnection {
       // Unlike other PDO drivers, sqlsrv requires this attribute be set
       // on the statement, not the connection.
       $driver_options[\PDO::ATTR_EMULATE_PREPARES] = TRUE;
+      $driver_options[\PDO::SQLSRV_ATTR_ENCODING] = \PDO::SQLSRV_ENCODING_UTF8;
     }
 
     // We run the statements in "direct mode" because the way PDO prepares
