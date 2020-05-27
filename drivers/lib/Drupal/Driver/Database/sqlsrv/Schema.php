@@ -876,15 +876,7 @@ class Schema extends DatabaseSchema {
       LEFT JOIN sys.syscomments sm ON sm.id = sysc2.cdefault
       WHERE sysc.object_id = OBJECT_ID(:table)";
     $args = [':table' => $table_info['schema'] . '.' . $table_info['table']];
-    $direct_query_options = [
-        'direct_query' => TRUE,
-        'bypass_preprocess' => TRUE,
-        'emulate_prepares' => FALSE,
-      ];
-    if (!isset($this->statementCache['columnInfo'])) {
-      $this->statementCache['columnInfo'] = $this->connection->prepareQuery($sql, $direct_query_options);
-    }
-    $result = $this->connection->query($this->statementCache['columnInfo'], $args);
+    $result = $this->connection->queryDirect($sql, $args);
 
     foreach ($result as $column) {
       if ($column->type == 'varbinary') {
