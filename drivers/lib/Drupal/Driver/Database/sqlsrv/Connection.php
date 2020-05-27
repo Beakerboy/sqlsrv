@@ -450,7 +450,7 @@ class Connection extends DatabaseConnection {
    */
   public function prepareQuery($query, array $options = []) {
     $default_options = [
-      'insecure' => FALSE,
+      'emulate_prepares' => FALSE,
       'bypass_preprocess' => FALSE,
     ];
 
@@ -468,12 +468,12 @@ class Connection extends DatabaseConnection {
 
     $driver_options = [];
 
-    // Set insecure options if requested so.
-    if ($options['insecure'] === TRUE) {
+    if ($options['emulate_prepares'] === TRUE) {
       // Never use this when you need special column binding.
       // Unlike other PDO drivers, sqlsrv requires this attribute be set
       // on the statement, not the connection.
       $driver_options[\PDO::ATTR_EMULATE_PREPARES] = TRUE;
+      $driver_options[\PDO::SQLSRV_ATTR_ENCODING] = \PDO::SQLSRV_ENCODING_UTF8;
     }
 
     // We run the statements in "direct mode" because the way PDO prepares
@@ -556,7 +556,7 @@ class Connection extends DatabaseConnection {
    * query. All queries executed by Drupal are executed as PDO prepared
    * statements.
    *
-   * This method is overriden to manage the insecure (EMULATE_PREPARE)
+   * This method is overriden to manage EMULATE_PREPARE
    * behaviour to prevent some compatibility issues with SQL Server.
    *
    * @param string|\Drupal\Core\Database\Statement $query
@@ -623,15 +623,15 @@ class Connection extends DatabaseConnection {
           throw new \InvalidArgumentException('; is not supported in SQL strings. Use only one statement at a time.');
         }
 
-        $insecure = isset($options['insecure']) ? $options['insecure'] : FALSE;
+        $emulate = isset($options['emulate_prepares']) ? $options['emulate_prepares'] : FALSE;
         // Try to detect duplicate place holders, this check's performance
         // is not a good addition to the driver, but does a good job preventing
         // duplicate placeholder errors.
         $argcount = count($args);
-        if ($insecure === TRUE || $argcount >= 2100 || ($argcount != substr_count($query, ':'))) {
-          $insecure = TRUE;
+        if ($emulate === TRUE || $argcount >= 2100 || ($argcount != substr_count($query, ':'))) {
+          $emulate = TRUE;
         }
-        $stmt = $this->prepareQuery($query, ['insecure' => $insecure]);
+        $stmt = $this->prepareQuery($query, ['emulate_prepares' => $emulate]);
         $stmt->execute($args, $options);
       }
 
@@ -782,7 +782,7 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Like query but with no insecure detection or query preprocessing.
+   * Like query but with no query preprocessing.
    *
    * The caller is sure that the query is MS SQL compatible! Used internally
    * from the schema class, but could be called from anywhere.
@@ -805,9 +805,11 @@ class Connection extends DatabaseConnection {
     $stmt = NULL;
 
     try {
+      // Core tests run faster without emulating.
       $direct_query_options = [
         'direct_query' => TRUE,
         'bypass_preprocess' => TRUE,
+        'emulate_prepares' => FALSE,
       ];
       $stmt = $this->prepareQuery($query, $direct_query_options + $options);
       $stmt->execute($args, $options);

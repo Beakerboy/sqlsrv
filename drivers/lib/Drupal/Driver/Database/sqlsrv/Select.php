@@ -182,15 +182,10 @@ class Select extends QuerySelect {
         elseif (isset($this->expressions[$group_field])) {
           $expression = $this->expressions[$group_field];
           $group_field = $expression['expression'];
-          // If the expression has arguments, we now
-          // have duplicate placeholders. Run as insecure.
-          if (is_array($expression['arguments'])) {
-            $this->queryOptions['insecure'] = TRUE;
-          }
         }
       }
     }
-
+    $this->queryOptions['emulate_prepares'] = TRUE;
     return $this->prepared;
   }
 
