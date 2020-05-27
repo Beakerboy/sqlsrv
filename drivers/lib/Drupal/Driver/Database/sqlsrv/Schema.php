@@ -112,13 +112,6 @@ class Schema extends DatabaseSchema {
   private $cacheSchema;
 
   /**
-   * Saved prepared statements.
-   *
-   * @var array
-   */
-  protected $statementCache;
-
-  /**
    * Table schema.
    *
    * @var mixed
