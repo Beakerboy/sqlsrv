@@ -185,7 +185,7 @@ class Select extends QuerySelect {
         }
       }
     }
-    $this->queryOptions['insecure'] = TRUE;
+    $this->queryOptions['emulate_prepares'] = TRUE;
     return $this->prepared;
   }
 
