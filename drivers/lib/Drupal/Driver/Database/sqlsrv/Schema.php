@@ -112,6 +112,13 @@ class Schema extends DatabaseSchema {
   private $cacheSchema;
 
   /**
+   * Saved prepared statements.
+   *
+   * @var array
+   */
+  protected $statementCache;
+
+  /**
    * Table schema.
    *
    * @var mixed
@@ -860,17 +867,19 @@ class Schema extends DatabaseSchema {
     $info = [];
 
     // Don't use {} around information_schema.columns table.
-    $result = $this->connection->queryDirect("SELECT sysc.name, sysc.max_length, sysc.precision, sysc.collation_name,
-                    sysc.is_nullable, sysc.is_ansi_padded, sysc.is_identity, sysc.is_computed, TYPE_NAME(sysc.user_type_id) as type,
-                    syscc.definition,
-                    sm.[text] as default_value
-                    FROM sys.columns AS sysc
-                    INNER JOIN sys.syscolumns AS sysc2 ON sysc.object_id = sysc2.id and sysc.name = sysc2.name
-                    LEFT JOIN sys.computed_columns AS syscc ON sysc.object_id = syscc.object_id AND sysc.name = syscc.name
-                    LEFT JOIN sys.syscomments sm ON sm.id = sysc2.cdefault
-                    WHERE sysc.object_id = OBJECT_ID(:table)
-                    ",
-                  [':table' => $table_info['schema'] . '.' . $table_info['table']]);
+    $sql = "SELECT sysc.name, sysc.max_length, sysc.precision, sysc.collation_name,
+      sysc.is_nullable, sysc.is_ansi_padded, sysc.is_identity, sysc.is_computed, TYPE_NAME(sysc.user_type_id) as type,
+      syscc.definition, sm.[text] as default_value
+      FROM sys.columns AS sysc
+      INNER JOIN sys.syscolumns AS sysc2 ON sysc.object_id = sysc2.id and sysc.name = sysc2.name
+      LEFT JOIN sys.computed_columns AS syscc ON sysc.object_id = syscc.object_id AND sysc.name = syscc.name
+      LEFT JOIN sys.syscomments sm ON sm.id = sysc2.cdefault
+      WHERE sysc.object_id = OBJECT_ID(:table)";
+    $args = [':table' => $table_info['schema'] . '.' . $table_info['table']];
+    if (!isset($this->statementCache['columnInfo'])) {
+      $this->statementCache['columnInfo'] = $this->connection->prepareQuery($sql);
+    }
+    $result = $this->connection->query($this->statementCache['columnInfo'], $args);
 
     foreach ($result as $column) {
       if ($column->type == 'varbinary') {
