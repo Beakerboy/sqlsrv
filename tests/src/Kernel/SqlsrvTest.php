@@ -158,7 +158,7 @@ class SqlsrvTest extends DatabaseTestBase {
     // it is removed.
     unset($second_connection);
     Database::removeConnection('second');
-    
+
     // Next assertion has intermittent failures. Add a wait?
     $this->assertFalse($third_connection->schema()->tableExists($table), 'Temporary table removed when creation connection closes.');
   }
