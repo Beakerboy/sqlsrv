@@ -440,8 +440,6 @@ class Schema extends DatabaseSchema {
       return FALSE;
     }
     $this->cleanUpPrimaryKey($table);
-    $this->createTechnicalPrimaryColumn($table);
-    $this->connection->query("ALTER TABLE {{$table}} ADD CONSTRAINT {{$table}_pkey_technical} PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")");
     $this->resetColumnInformation($table);
     return TRUE;
   }
