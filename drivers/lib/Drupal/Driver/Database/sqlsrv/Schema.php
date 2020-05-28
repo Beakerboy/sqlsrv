@@ -999,12 +999,6 @@ class Schema extends DatabaseSchema {
       $this->ensureNotNullPrimaryKey($table['primary key'], $table['fields']);
       $this->createPrimaryKey($name, $table['primary key']);
     }
-    // Otherwise use a technical primary key.
-    // Do we really want to do this? Other drivers do not.
-    else {
-      $this->createTechnicalPrimaryColumn($name);
-    }
-
     // Now all the unique keys.
     if (isset($table['unique keys']) && is_array($table['unique keys'])) {
       foreach ($table['unique keys'] as $key_name => $key) {
