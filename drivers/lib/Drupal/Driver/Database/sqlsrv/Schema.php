@@ -60,7 +60,7 @@ class Schema extends DatabaseSchema {
    * @var int
    */
   const XML_INDEX_BYTES = 128;
-  
+
   /**
    * Default recommended collation for SQL Server.
    *
@@ -551,7 +551,7 @@ class Schema extends DatabaseSchema {
       $this->connection->query($sql);
       $this->resetColumnInformation($table);
     }
-    else if ($size <= self::NONCLUSTERED_INDEX_BYTES) {
+    elseif ($size <= self::NONCLUSTERED_INDEX_BYTES) {
       $this->connection->query($sql);
       $this->resetColumnInformation($table);
     }
