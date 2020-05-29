@@ -303,7 +303,7 @@ class Select extends QuerySelect {
       $used_range = TRUE;
     }
 
-    // FIELDS and EXPRESSIONS
+    // FIELDS and EXPRESSIONS.
     $fields = [];
     foreach ($this->tables as $alias => $table) {
       if (!empty($table['all_fields'])) {
@@ -354,18 +354,18 @@ class Select extends QuerySelect {
       }
     }
 
-    // WHERE
+    // WHERE.
     if (count($this->condition)) {
       // There is an implicit string cast on $this->condition.
       $query .= "\nWHERE " . $this->condition;
     }
 
-    // GROUP BY
+    // GROUP BY.
     if ($this->group) {
       $query .= "\nGROUP BY " . implode(', ', $this->group);
     }
 
-    // HAVING
+    // HAVING.
     if (count($this->having)) {
       // There is an implicit string cast on $this->having.
       $query .= "\nHAVING " . $this->having;
@@ -379,7 +379,7 @@ class Select extends QuerySelect {
       }
     }
 
-    // ORDER BY
+    // ORDER BY.
     // The ORDER BY clause is invalid in views, inline functions, derived
     // tables, subqueries, and common table expressions, unless TOP or FOR XML
     // is also specified.
