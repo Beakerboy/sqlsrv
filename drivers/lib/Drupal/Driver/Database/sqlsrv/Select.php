@@ -315,6 +315,9 @@ class Select extends QuerySelect {
       // databases require it (e.g., PostgreSQL).
       $fields[] = (isset($field['table']) ? $this->connection->escapeTable($field['table']) . '.' : '') . $this->connection->escapeField($field['field']) . ' AS ' . $this->connection->escapeAlias($field['alias']);
     }
+    foreach ($this->expressions as $expression) {
+      $fields[] = $expression['expression'] . ' AS ' . $this->connection->escapeAlias($expression['alias']);
+    }
     $query .= implode(', ', $fields);
 
     // FROM - We presume all queries have a FROM, as any query that doesn't
