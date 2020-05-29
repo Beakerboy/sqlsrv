@@ -55,6 +55,13 @@ class Schema extends DatabaseSchema {
   const NONCLUSTERED_INDEX_BYTES = 1700;
 
   /**
+   * Maximum index length with XML field.
+   *
+   * @var int
+   */
+  const XML_INDEX_BYTES = 128;
+  
+  /**
    * Default recommended collation for SQL Server.
    *
    * @var string
@@ -524,21 +531,31 @@ class Schema extends DatabaseSchema {
     if ($this->indexExists($table, $name)) {
       throw new SchemaObjectExistsException(t("Cannot add index %name to table %table: index already exists.", ['%table' => $table, '%name' => $name]));
     }
-
     $xml_field = NULL;
+    foreach ($fields as $field) {
+      if (isset($info['columns'][$field]['type']) && $info['columns'][$field]['type'] == 'xml') {
+        $xml_field = $field;
+        break;
+      }
+    }
     $sql = $this->createIndexSql($table, $name, $fields, $xml_field);
+    $pk_fields = $this->introspectPrimaryKeyFields($table);
+    $size = $this->calculateClusteredIndexRowSizeBytes($table, $pk_fields, TRUE);
     if (!empty($xml_field)) {
       // We can create an XML field, but the current primary key index
       // size needs to be under 128bytes.
-      $pk_fields = $this->introspectPrimaryKeyFields($table);
-      $size = $this->calculateClusteredIndexRowSizeBytes($table, $pk_fields, TRUE);
-      if ($size > 128) {
+      if ($size > self::XML_INDEX_BYTES) {
         // Alright the compress the index.
-        $this->compressPrimaryKeyIndex($table, 128);
+        $this->compressPrimaryKeyIndex($table, self::XML_INDEX_BYTES);
       }
+      $this->connection->query($sql);
+      $this->resetColumnInformation($table);
     }
-    $this->connection->query($sql);
-    $this->resetColumnInformation($table);
+    else if ($size <= self::NONCLUSTERED_INDEX_BYTES) {
+      $this->connection->query($sql);
+      $this->resetColumnInformation($table);
+    }
+    // If the field is too large, do not create an index.
   }
 
   /**
@@ -1533,19 +1550,12 @@ EOF
    * @return string
    *   SQL string.
    */
-  protected function createIndexSql($table, $name, array $fields, &$xml_field) {
+  protected function createIndexSql($table, $name, array $fields, $xml_field) {
     // Get information about current columns.
     $info = $this->queryColumnInformation($table);
     // Flatten $fields array if neccesary.
     $fields = $this->createKeySql($fields, TRUE);
-    // Look if an XML column is present in the fields list.
-    $xml_field = NULL;
-    foreach ($fields as $field) {
-      if (isset($info['columns'][$field]['type']) && $info['columns'][$field]['type'] == 'xml') {
-        $xml_field = $field;
-        break;
-      }
-    }
+    
     // XML indexes can only have 1 column.
     if (!empty($xml_field) && isset($fields[1])) {
       throw new \Exception("Cannot include an XML field on a multiple column index.");
@@ -1555,16 +1565,8 @@ EOF
       throw new \Exception("Only one primary clustered XML index is allowed per table.");
     }
     if (empty($xml_field)) {
-      // TODO: As we are already doing with primary keys, when a user requests
-      // an index that is too big for SQL Server (> 900 bytes) this could be
-      // dependant on a computed hash column.
-      if ($info['columns'][$field]['max_length'] <= self:: NONCLUSTERED_INDEX_BYTES) {
-        $fields_csv = implode(', ', $fields);
-        return "CREATE INDEX {$name}_idx ON [{{$table}}] ({$fields_csv})";
-      }
-      else {
-        return '';
-      }
+      $fields_csv = implode(', ', $fields);
+      return "CREATE INDEX {$name}_idx ON [{{$table}}] ({$fields_csv})";
     }
     else {
       return "CREATE PRIMARY XML INDEX {$name}_idx ON [{{$table}}] ({$xml_field})";
