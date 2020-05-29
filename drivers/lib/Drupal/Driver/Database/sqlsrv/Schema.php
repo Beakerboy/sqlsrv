@@ -1558,8 +1558,13 @@ EOF
       // TODO: As we are already doing with primary keys, when a user requests
       // an index that is too big for SQL Server (> 900 bytes) this could be
       // dependant on a computed hash column.
-      $fields_csv = implode(', ', $fields);
-      return "CREATE INDEX {$name}_idx ON [{{$table}}] ({$fields_csv})";
+      if ($info['columns'][$field]['max_length'] <= self:: NONCLUSTERED_INDEX_BYTES) {
+        $fields_csv = implode(', ', $fields);
+        return "CREATE INDEX {$name}_idx ON [{{$table}}] ({$fields_csv})";
+      }
+      else {
+        return '';
+      }
     }
     else {
       return "CREATE PRIMARY XML INDEX {$name}_idx ON [{{$table}}] ({$xml_field})";
