@@ -1555,7 +1555,6 @@ EOF
     $info = $this->queryColumnInformation($table);
     // Flatten $fields array if neccesary.
     $fields = $this->createKeySql($fields, TRUE);
-    
     // XML indexes can only have 1 column.
     if (!empty($xml_field) && isset($fields[1])) {
       throw new \Exception("Cannot include an XML field on a multiple column index.");
