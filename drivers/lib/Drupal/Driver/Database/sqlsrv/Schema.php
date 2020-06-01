@@ -61,23 +61,6 @@ class Schema extends DatabaseSchema {
    */
   const XML_INDEX_BYTES = 128;
 
-  /**
-   * Default recommended collation for SQL Server.
-   *
-   * @var string
-   */
-  const DEFAULT_COLLATION_CI = 'Latin1_General_CI_AI';
-
-  /**
-   * Default case-sensitive collation.
-   *
-   * Default recommended collation for SQL Server when case sensitivity is
-   * required.
-   *
-   * @var string
-   */
-  const DEFAULT_COLLATION_CS = 'Latin1_General_CS_AI';
-
   // Name for the technical column used for computed key sor technical primary
   // key.
   // IMPORTANT: They both start with "__" because the statement class will
@@ -1414,11 +1397,12 @@ EOF
       // If collation is set in the spec array, use it.
       // Otherwise use the database default.
       if (isset($spec['binary'])) {
+        $default_collation = $this->getCollation();
         if ($spec['binary'] === TRUE) {
-          $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CS;
+          $sql .= ' COLLATE ' . preg_replace("_C[IS]_", "_CS_", $default_collation);
         }
         elseif ($spec['binary'] === FALSE) {
-          $sql .= ' COLLATE ' . self::DEFAULT_COLLATION_CI;
+          $sql .= ' COLLATE ' . preg_replace("_C[IS]_", "_CI_", $default_collation);
         }
       }
     }
