@@ -1399,10 +1399,10 @@ EOF
       if (isset($spec['binary'])) {
         $default_collation = $this->getCollation();
         if ($spec['binary'] === TRUE) {
-          $sql .= ' COLLATE ' . preg_replace("_C[IS]_", "_CS_", $default_collation);
+          $sql .= ' COLLATE ' . preg_replace("/_C[IS]_/", "_CS_", $default_collation);
         }
         elseif ($spec['binary'] === FALSE) {
-          $sql .= ' COLLATE ' . preg_replace("_C[IS]_", "_CI_", $default_collation);
+          $sql .= ' COLLATE ' . preg_replace("/_C[IS]_/", "_CI_", $default_collation);
         }
       }
     }
