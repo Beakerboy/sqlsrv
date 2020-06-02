@@ -99,6 +99,9 @@ install:
         # CONCAT_WS requires at least three arguments...needs work
         wget https://www.drupal.org/files/issues/2020-04-27/3131379-2.patch
         git apply 3131379-2.patch
+        # fix hard-codes LIMIT in test.
+        wget https://www.drupal.org/files/issues/2020-05-22/3139132-2.patch
+        git apply 3139132-2.patch
       fi
     fi
   - cp -r $TRAVIS_BUILD_DIR/drivers ./drivers
