@@ -6,7 +6,6 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Install\Tasks as InstallTasks;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Driver\Database\sqlsrv\Connection;
-use Drupal\Driver\Database\sqlsrv\Schema;
 use Drupal\Driver\Database\sqlsrv\Utils;
 
 /**
