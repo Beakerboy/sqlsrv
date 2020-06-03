@@ -1691,7 +1691,8 @@ EOF;
       $database = $options['database'];
       if (!empty($database)) {
         // Default collation for specific table.
-        $sql = "SELECT CONVERT (varchar, DATABASEPROPERTYEX('$database', 'collation'))";
+        // CONVERT defaults to returning only 30 chars.
+        $sql = "SELECT CONVERT (varchar(50), DATABASEPROPERTYEX('$database', 'collation'))";
         return $this->connection->queryDirect($sql)->fetchField();
       }
       else {
