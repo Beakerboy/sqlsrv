@@ -430,7 +430,6 @@ class Schema extends DatabaseSchema {
       return FALSE;
     }
     $this->cleanUpPrimaryKey($table);
-    $this->resetColumnInformation($table);
     return TRUE;
   }
 
