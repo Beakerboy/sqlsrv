@@ -200,82 +200,6 @@ class Select extends QuerySelect {
   }
 
   /**
-   * Strpos that takes an array of values to match against a string.
-   *
-   * Note the stupid argument order (to match strpos).
-   *
-   * @param mixed $haystack
-   *   The value to search within.
-   * @param mixed $needle
-   *   Value(s) to look for.
-   *
-   * @return int|false
-   *   The position of the first $needle[] in the $haystack.
-   */
-  private function striposArr($haystack, $needle) {
-    if (!is_array($needle)) {
-      $needle = [$needle];
-    }
-    foreach ($needle as $what) {
-      if (($pos = stripos($haystack, $what)) !== FALSE) {
-        return $pos;
-      }
-    }
-    return FALSE;
-  }
-
-  const RESERVED_REGEXP_BASE = '/\G
-    # Everything that follows a boundary that is not ":" or "_" or ".".
-    \b(?<![:\[_\[.])(?:
-      # Any reserved words, followed by a boundary that is not an opening parenthesis.
-      ({0})
-      (?!\()
-      |
-      # Or a normal word.
-      ([a-z]+)
-    )\b
-    |
-    \b(
-      [^a-z\'"\\\\]+
-    )\b
-    |
-    (?=[\'"])
-    (
-      "  [^\\\\"] * (?: \\\\. [^\\\\"] *) * "
-      |
-      \' [^\\\\\']* (?: \\\\. [^\\\\\']*) * \'
-    )
-  /Six';
-
-  /**
-   * Aliases for cross apply.
-   *
-   * Is it an array, string, or something that implements ArrayAccess.
-   *
-   * @var mixed
-   */
-  private $crossApplyAliases;
-
-  /**
-   * Replace Reserve Alises.
-   *
-   * @param mixed $matches
-   *   The matches. Is this an array or string?
-   *
-   * @return mixed
-   *   What does it return?
-   */
-  protected function replaceReservedAliases($matches) {
-    if ($matches[1] !== '') {
-      // Replace reserved words.
-      return $this->crossApplyAliases[$matches[1]];
-    }
-    // Let other value passthru.
-    // by the logic of the regex above, this will always be the last match.
-    return end($matches);
-  }
-
-  /**
    * {@inheritdoc}
    *
    * Overridden to support SQL Server Range Query syntax and CROSS APPLY.
@@ -306,78 +230,17 @@ class Select extends QuerySelect {
     // FIELDS and EXPRESSIONS.
     $fields = [];
     foreach ($this->tables as $alias => $table) {
-      // Table might be a subquery, so nothing to do really.
-      if (is_string($table['table']) && !empty($table['all_fields'])) {
-        // Temporary tables are not supported here.
-        if ($this->connection->isTemporaryTable($table['table'])) {
-          $fields[] = $this->connection->escapeTable($alias) . '.*';
-        }
-        else {
-          /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
-          $schema = $this->connection->schema();
-          $info = $schema->queryColumnInformation($table['table']);
-          // Some fields need to be "transparent" to Drupal, including technical
-          // primary keys or custom computed columns.
-          if (isset($info['columns_clean'])) {
-            foreach ($info['columns_clean'] as $column) {
-              $fields[] = $this->connection->escapeTable($alias) . '.' . $this->connection->escapeField($column['name']);
-            }
-          }
-        }
+      if (!empty($table['all_fields'])) {
+        $fields[] = $this->connection->escapeTable($alias) . '.*';
       }
     }
-    foreach ($this->fields as $alias => $field) {
+    foreach ($this->fields as $field) {
       // Always use the AS keyword for field aliases, as some
       // databases require it (e.g., PostgreSQL).
       $fields[] = (isset($field['table']) ? $this->connection->escapeTable($field['table']) . '.' : '') . $this->connection->escapeField($field['field']) . ' AS ' . $this->connection->escapeAlias($field['alias']);
     }
-    // In MySQL you can reuse expressions present in SELECT
-    // from WHERE.
-    // The way to emulate that behaviour in SQL Server is to
-    // fit all that in a CROSS_APPLY with an alias and then consume
-    // it from WHERE or AGGREGATE.
-    $cross_apply = [];
-    $this->crossApplyAliases = [];
-    foreach ($this->expressions as $alias => $expression) {
-      // Only use CROSS_APPLY for non-aggregate expresions. This trick will not
-      // work, and does not make sense, for aggregates. If the alias is
-      // 'expression' this is Drupal's default meaning that more than probably
-      // this expression is never reused in a WHERE.
-      $function_list = [
-        'AVG(',
-        'GROUP_CONCAT(',
-        'COUNT(',
-        'MAX(',
-        'GROUPING(',
-        'GROUPING_ID(',
-        'COUNT_BIG(',
-        'CHECKSUM_AGG(',
-        'MIN(',
-        'SUM(',
-        'VAR(',
-        'VARP(',
-        'STDEV(',
-        'STDEVP(',
-      ];
-      if ($expression['expand'] !== FALSE && $expression['alias'] != 'expression' && $this->striposArr($expression['expression'], $function_list) === FALSE) {
-        // What we are doing here is using a CROSS APPLY to
-        // generate an expression that can be used in the select and where
-        // but we need to give this expression a new name.
-        $cross_apply[] = "\nCROSS APPLY (SELECT " . $expression['expression'] . ' cross_sqlsrv) cross_' . $expression['alias'];
-        $new_alias = 'cross_' . $expression['alias'] . '.cross_sqlsrv';
-        // We might not want an expression to appear in the select list.
-        if ($expression['exclude'] !== TRUE) {
-          $fields[] = $new_alias . ' AS ' . $expression['alias'];
-        }
-        // Store old expression and new representation.
-        $this->crossApplyAliases[$expression['alias']] = 'cross_' . $expression['alias'] . '.cross_sqlsrv';
-      }
-      else {
-        // We might not want an expression to appear in the select list.
-        if ($expression['exclude'] !== TRUE) {
-          $fields[] = $expression['expression'] . ' AS [' . $expression['alias'] . ']';
-        }
-      }
+    foreach ($this->expressions as $expression) {
+      $fields[] = $expression['expression'] . ' AS ' . $this->connection->escapeAlias($expression['alias']);
     }
     $query .= implode(', ', $fields);
 
@@ -415,36 +278,15 @@ class Select extends QuerySelect {
       }
     }
 
-    // CROSS APPLY.
-    $query .= implode($cross_apply);
-
     // WHERE.
     if (count($this->condition)) {
       // There is an implicit string cast on $this->condition.
-      $where = (string) $this->condition;
-      // References to expressions in cross-apply need to be updated.
-      // Now we need to update all references to the expression aliases
-      // and point them to the CROSS APPLY alias.
-      if (!empty($this->crossApplyAliases)) {
-        $regex = str_replace('{0}', implode('|', array_keys($this->crossApplyAliases)), self::RESERVED_REGEXP_BASE);
-        // Add and then remove the SELECT
-        // keyword. Do this to use the exact same
-        // regex that we have in DatabaseConnection_sqlrv.
-        $where = 'SELECT ' . $where;
-        $where = preg_replace_callback($regex, [$this, 'replaceReservedAliases'], $where);
-        $where = substr($where, 7, strlen($where) - 7);
-      }
-      $query .= "\nWHERE ( " . $where . " )";
+      $query .= "\nWHERE " . $this->condition;
     }
 
     // GROUP BY.
     if ($this->group) {
-      $group = $this->group;
-      // You named it, if the newly expanded expression
-      // is added to the select list, then it must
-      // also be present in the aggregate expression.
-      $group = array_merge($group, $this->crossApplyAliases);
-      $query .= "\nGROUP BY " . implode(', ', $group);
+      $query .= "\nGROUP BY " . implode(', ', $this->group);
     }
 
     // HAVING.
@@ -461,7 +303,7 @@ class Select extends QuerySelect {
       }
     }
 
-    // ORDER BY
+    // ORDER BY.
     // The ORDER BY clause is invalid in views, inline functions, derived
     // tables, subqueries, and common table expressions, unless TOP or FOR XML
     // is also specified.

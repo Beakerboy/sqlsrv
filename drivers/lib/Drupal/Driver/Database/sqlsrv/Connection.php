@@ -222,7 +222,7 @@ class Connection extends DatabaseConnection {
 
     try {
       // Create the database and set it as active.
-      $this->connection->exec("CREATE DATABASE $database COLLATE " . Schema::DEFAULT_COLLATION_CI);
+      $this->connection->exec("CREATE DATABASE $database");
     }
     catch (DatabaseException $e) {
       throw new DatabaseNotFoundException($e->getMessage());
