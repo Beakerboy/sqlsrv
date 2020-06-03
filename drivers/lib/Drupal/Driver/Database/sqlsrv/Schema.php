@@ -411,9 +411,9 @@ class Schema extends DatabaseSchema {
     }
 
     // The size limit of the primary key depends on the
-    // cohexistance with an XML field.
+    // coexistence with an XML field.
     if ($this->tableHasXmlIndex($table)) {
-      $this->createPrimaryKey($table, $fields, 128);
+      $this->createPrimaryKey($table, $fields, self::XML_INDEX_BYTES);
     }
     else {
       $this->createPrimaryKey($table, $fields);
