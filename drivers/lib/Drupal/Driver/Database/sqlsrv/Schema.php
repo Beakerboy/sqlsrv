@@ -1456,7 +1456,12 @@ EOF
     ]);
 
     if (!empty($spec['length']) && $lengthable) {
-      $length = $spec['length'] * $this->isUtf8() ? 3 : 1;
+      $length = $spec['length'];
+      if (is_int($length) && $this->isUtf8()) {
+        // Do we need to check if this exceeds the max length?
+        // If so, use varchar(max).
+        $length *= 3;
+      }
      
       return $sqlsrv_type_native . '(' . $length . ')';
     }
