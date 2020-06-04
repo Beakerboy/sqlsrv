@@ -115,16 +115,30 @@ class Schema extends DatabaseSchema {
     // Put :normal last so it gets preserved by array_flip.  This makes
     // it much easier for modules (such as schema.module) to map
     // database types back into schema types.
-    return [
+    $utf8_string_types = [
+      'varchar:normal' => 'varchar',
+      'char:normal' => 'char',
+
+      'text:tiny' => 'varchar(255)',
+      'text:small' => 'varchar(255)',
+      'text:medium' => 'varchar(max)',
+      'text:big' => 'varchar(max)',
+      'text:normal' => 'varchar(max)',
+    ];
+
+    $ucs2_string_types = [
       'varchar:normal' => 'nvarchar',
       'char:normal' => 'nchar',
-      'varchar_ascii:normal' => 'varchar(255)',
 
       'text:tiny' => 'nvarchar(255)',
       'text:small' => 'nvarchar(255)',
       'text:medium' => 'nvarchar(max)',
       'text:big' => 'nvarchar(max)',
       'text:normal' => 'nvarchar(max)',
+    ];
+
+    $standard_types = [
+      'varchar_ascii:normal' => 'varchar(255)',
 
       'serial:tiny'     => 'smallint',
       'serial:small'    => 'smallint',
@@ -153,6 +167,7 @@ class Schema extends DatabaseSchema {
       'datetime:normal' => 'datetime2(0)',
       'time:normal'     => 'time(0)',
     ];
+    return $standard_types + $this->isUtf8 ? $utf8_string_types : $ucs2_string_types;
   }
 
   /**
@@ -1440,7 +1455,9 @@ EOF
     ]);
 
     if (!empty($spec['length']) && $lengthable) {
-      return $sqlsrv_type_native . '(' . $spec['length'] . ')';
+      $length = $spec['length'] * $this->isUtf8() ? 3 : 1;
+     
+      return $sqlsrv_type_native . '(' . $length . ')';
     }
     elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
       // Maximum precision for SQL Server 2008 or greater is 38.
@@ -1867,6 +1884,14 @@ EOF;
    */
   protected function isTechnicalPrimaryKey($key_name) {
     return $key_name && preg_match('/_pkey_technical$/', $key_name);
+  }
+
+  /**
+   * Is the database configured as UTF8 character encoding?
+   */
+  protected function isUtf8() {
+    $collation = $this->getCollation();
+    return stristr($collation, '_UTF8') !== FALSE;
   }
 
   /**
