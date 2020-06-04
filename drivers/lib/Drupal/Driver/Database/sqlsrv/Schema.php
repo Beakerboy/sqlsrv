@@ -167,7 +167,8 @@ class Schema extends DatabaseSchema {
       'datetime:normal' => 'datetime2(0)',
       'time:normal'     => 'time(0)',
     ];
-    return $standard_types + $this->isUtf8() ? $utf8_string_types : $ucs2_string_types;
+    $standard_types += $this->isUtf8() ? $utf8_string_types : $ucs2_string_types;
+    return $standard_types;
   }
 
   /**
