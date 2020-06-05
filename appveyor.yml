@@ -53,6 +53,7 @@ install:
   - cmd: composer global require hirak/prestissimo --no-progress
   - cmd: cd /d c:\projects
   # Create a new drupal project
+  - cmd: set COMPOSER_MEMORY_LIMIT=-1
   - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
