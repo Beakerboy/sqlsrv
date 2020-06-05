@@ -83,7 +83,7 @@ install:
   - ps: $Env:SITERUNTIMEPATH = $site.DeploymentActive.runtimePath;
   # Make the site's PHP environment the default PHP environment
   - cmd: set path=%SITERUNTIMEPATH%\php;%path%
-  - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mysqlsite"
+  - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
   # Enable Regex
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\projects\drupal-project\web\RegEx.dll')
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
