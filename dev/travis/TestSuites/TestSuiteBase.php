@@ -35,7 +35,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
-    // Functional Test Failures
+    // Functional Test Failures.
     '/core/modules/aggregator/tests/src/Functional/Rest/FeedJsonAnonTest.php',
     '/core/modules/aggregator/tests/src/Functional/Rest/FeedJsonBasicAuthTest.php',
     '/core/modules/aggregator/tests/src/Functional/Hal/FeedHalJsonAnonTest.php',
