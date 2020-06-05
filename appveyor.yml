@@ -92,10 +92,7 @@ install:
   - ps: $Env:CWD = (Get-Location).path;
   - ps: wget "http://sqlsrv.drupal.org/"
   # Enable Regex
-  - cmd: |
-      cd %APPVEYOR_BUILD_FOLDER%\tests\
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
-      csc.exe /target:library /out:RegEx.dll regex.cs
+  - ps: wget https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE ASSEMBLY Regex from '$Env:APPVEYOR_BUILD_FOLDER\tests\RegEx.dll' WITH PERMISSION_SET = SAFE"
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
