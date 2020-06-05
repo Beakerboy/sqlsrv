@@ -58,7 +58,7 @@ install:
   - cmd: cd /d c:\projects
   # Create a new drupal project
   - cmd: set COMPOSER_MEMORY_LIMIT=-1
-  - cmd: IF NOT EXIST C:\projects\drupal-project composer create-project -n drupal-composer/drupal-project:8.x-dev
+  - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 8.8.x drupal-project
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
   - cmd: cd /d C:\projects\drupal-project
@@ -67,15 +67,12 @@ install:
   - cmd: composer require drupal/sqlsrv:dev-1.x@dev
   - cmd: composer require symfony/psr-http-message-bridge:1.1.x-dev
   # Replace the pulled module with the local files, only for this CI
-  - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
+  - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\contrib\sqlsrv
   # Copy driver
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\src %cd%\web\modules\contrib\sqlsrv\src
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests %cd%\web\modules\contrib\sqlsrv\tests
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\web\drivers
-  - ps: |
-      $cwd = (Get-Location).Path;
-      "php $cwd\vendor\drupal\console\bin\drupal " + $([char]37) + "*" | Out-File $cwd/web/drupal.bat -Encoding ASCII
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\src %cd%\modules\contrib\sqlsrv\src
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests %cd%\modules\contrib\sqlsrv\tests
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\drivers
   - cmd: cd /d C:\projects\drupal-project\web
   - cmd: xcopy "%APPVEYOR_BUILD_FOLDER%\dev\appveyor" "C:\projects\drupal-project\chef" /r /s /i
   - ps: Invoke-ChefSelfInstall -Path "c:\chef"
@@ -99,11 +96,11 @@ build_script:
 before_test:
   - cmd: cd C:\projects\drupal-project
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - cmd: cp dev\travis\phpunit.xml.dist C:\projects\drupal-project\web\core\phpunit.xml
+  - cmd: cp dev\travis\phpunit.xml.dist C:\projects\drupal-project\core\phpunit.xml
   - cmd: mkdir .\build\logs
 
 test_script:
-  - cmd: cd C:\projects\drupal-project\web
+  - cmd: cd C:\projects\drupal-project
   - cmd: phpunit -c core\phpunit.xml --testsuite=%TEST_SUITE%
 
 after_test:
