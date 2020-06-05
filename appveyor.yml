@@ -8,6 +8,9 @@ hosts:
   www.mydrupalsite.com: 127.0.0.1
 image:
   - Visual Studio 2019
+matrix:
+  - TEST_SUITE: core-kernel
+  - TEST_SUITE: core-extensions-kernel-1
 install:
   - ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
   - cmd: mkdir c:\testlogs
@@ -65,6 +68,7 @@ install:
   # Replace the pulled module with the local files, only for this CI
   - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
   # Copy driver
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\travis\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\src %cd%\web\modules\contrib\sqlsrv\src
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests %cd%\web\modules\contrib\sqlsrv\tests
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\web\drivers
@@ -99,7 +103,7 @@ before_test:
 
 test_script:
   - cmd: cd C:\projects\drupal-project\web
-  - cmd: phpunit -c core\phpunit.xml --testsuite=kernel
+  - cmd: phpunit -c core\phpunit.xml --testsuite=%TEST_SUITE%
 
 after_test:
 
