@@ -448,8 +448,7 @@ class Connection extends DatabaseConnection {
    * @return \Drupal\Core\Database\Statement
    *   A PDO prepared statement ready for its execute() method.
    */
-  public function prepareQuery($query, array $options = []) {
-    fwrite(STDOUT, $query);
+  public function prepareQuery($query, array $options = []) 
     $default_options = [
       'emulate_prepares' => FALSE,
       'bypass_preprocess' => FALSE,
