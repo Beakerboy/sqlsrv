@@ -80,8 +80,8 @@ install:
       git apply 3130655-10.patch
       # Testing-only patches
       # view sort order bug
-      wget http://beakerboy.com/~kevin/3146016-2.patch
-      git apply 3146016-2.patch
+      wget https://www.drupal.org/files/issues/2020-06-05/3146016-3.patch
+      git apply 3146016-3.patch
       # Fix format of deprecation notices for phpcs 
       wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
       # Add a sqlsrv-specific datatype to test
