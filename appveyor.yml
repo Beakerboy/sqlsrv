@@ -69,7 +69,7 @@ install:
   # Replace the pulled module with the local files, only for this CI
   - cmd: xcopy /I /Y %APPVEYOR_BUILD_FOLDER% %cd%\web\modules\contrib\sqlsrv
   # Copy driver
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\travis\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\src %cd%\web\modules\contrib\sqlsrv\src
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests %cd%\web\modules\contrib\sqlsrv\tests
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\web\drivers
