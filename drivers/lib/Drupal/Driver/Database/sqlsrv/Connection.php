@@ -449,6 +449,7 @@ class Connection extends DatabaseConnection {
    *   A PDO prepared statement ready for its execute() method.
    */
   public function prepareQuery($query, array $options = []) {
+    fwrite(STDOUT, $query);
     $default_options = [
       'emulate_prepares' => FALSE,
       'bypass_preprocess' => FALSE,
