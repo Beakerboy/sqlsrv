@@ -8,9 +8,10 @@ hosts:
   www.mydrupalsite.com: 127.0.0.1
 image:
   - Visual Studio 2019
-matrix:
-  - TEST_SUITE: core-kernel
-  - TEST_SUITE: core-extensions-kernel-1
+environment:
+  matrix:
+    - TEST_SUITE: core-kernel
+    - TEST_SUITE: core-extensions-kernel-1
 install:
   - ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
   - cmd: mkdir c:\testlogs
