@@ -73,7 +73,7 @@ install:
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\src %cd%\modules\contrib\sqlsrv\src
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests %cd%\modules\contrib\sqlsrv\tests
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\drivers
-  - cmd: cd /d C:\projects\drupal-project\web
+  - cmd: cd /d C:\projects\drupal-project
   - cmd: xcopy "%APPVEYOR_BUILD_FOLDER%\dev\appveyor" "C:\projects\drupal-project\chef" /r /s /i
   - ps: Invoke-ChefSelfInstall -Path "c:\chef"
   - ps: Invoke-ChefAppDeployPath "C:\projects\drupal-project" drupal -Install
