@@ -1462,7 +1462,6 @@ EOF
         // If so, use varchar(max).
         $length *= 3;
       }
-     
       return $sqlsrv_type_native . '(' . $length . ')';
     }
     elseif (in_array($sqlsrv_type_native, ['numeric', 'decimal']) && isset($spec['precision']) && isset($spec['scale'])) {
