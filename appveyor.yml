@@ -10,7 +10,7 @@ image:
   - Visual Studio 2019
 environment:
   matrix:
-    - TEST_SUITE: core-kernel
+    - TEST_SUITE: sqlsrv
     - TEST_SUITE: core-extensions-kernel-1
 install:
   - ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
@@ -101,7 +101,7 @@ before_test:
 
 test_script:
   - cmd: cd C:\projects\drupal-project
-  - cmd: phpunit -vvv -c core\phpunit.xml --testsuite=sqlsrv
+  - cmd: phpunit -vvv -c core\phpunit.xml --testsuite=%TEST_SUITE%
 
 after_test:
 
