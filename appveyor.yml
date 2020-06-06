@@ -102,6 +102,3 @@ before_test:
 test_script:
   - cmd: cd C:\projects\drupal-project
   - cmd: phpunit -vvv -c core\phpunit.xml --testsuite=%TEST_SUITE%
-
-after_test:
-
