@@ -31,7 +31,7 @@ before_install:
   - phpenv config-rm xdebug.ini
   - pecl channel-update pecl.php.net
   # Install the database
-  - bash dev/travis/${DBVERSION}
+  - bash dev/travis/${DBVERSION}.sh
 install:
   # Create a Drupal Site
   - cd ..
