@@ -99,13 +99,6 @@ install:
   - mkdir $TRAVIS_BUILD_DIR/../drupal-project/sites/simpletest/browser_output
   - cd $TRAVIS_BUILD_DIR/../drupal-project
   - sed -e "s?WEB_DIR?$(pwd)?g" --in-place $TRAVIS_BUILD_DIR/dev/travis/phpunit.xml.dist
-  # Install REGEX CLR
-  - wget https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll
-  - sudo mv RegEx.dll /var/opt/mssql/data/
-  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
-  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE ASSEMBLY Regex from '/var/opt/mssql/data/RegEx.dll' WITH PERMISSION_SET = SAFE"
-  - /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -d mydrupalsite -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
-  - cd $TRAVIS_BUILD_DIR/../drupal-project
 before_script:
   - |
     if ! [ -z "$APACHE" ]; then
