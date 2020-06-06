@@ -1,4 +1,4 @@
-bash dev/travis/drupal8.x.sh
+bash sqlsrv/dev/travis/drupal8.x.sh
 # Override core Condition...pushed to 8.9.x
 wget https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch
 git apply 3113403-33.patch
