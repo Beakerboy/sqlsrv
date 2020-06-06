@@ -1,1 +1,1 @@
-bash ./mssql.sh 2019
+bash ./dev/travis/mssql.sh 2019
