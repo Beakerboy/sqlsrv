@@ -32,6 +32,8 @@ before_install:
   - pecl channel-update pecl.php.net
   # Install the database
   - bash dev/travis/${DBVERSION}.sh
+  # Install custom php.ini
+  - phpenv config-add dev/travis/travis-7.x.ini
 install:
   # Create a Drupal Site
   - cd ..
