@@ -42,7 +42,7 @@ install:
   - cd drupal-project
   - composer config -g github-oauth.github.com $GITHUB_OAUTH
   - composer install
-  - bash sqlsrv/dev/travis/drupal${DRUPAL_VERSION}.sh
+  - bash ../sqlsrv/dev/travis/drupal${DRUPAL_VERSION}.sh
   - cp -r $TRAVIS_BUILD_DIR/drivers ./drivers
   - mkdir ./modules/contrib
   - mv $TRAVIS_BUILD_DIR/dev/travis/TestSuites $TRAVIS_BUILD_DIR/tests/src/
