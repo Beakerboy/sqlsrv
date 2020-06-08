@@ -14,7 +14,7 @@ environment:
     - TEST_SUITE: core-extensions-kernel-1
 install:
   #- ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
-  # - cmd: mkdir c:\testlogs
+  - cmd: mkdir c:\testlogs
   #- ps: Start-Service 'MSSQL$SQL2016' | out-null
   #- ps: Set-Service 'SQLAgent$SQL2016' -StartupType Manual | out-null
   #- ps: Start-Service W3SVC | out-null
