@@ -97,7 +97,7 @@ build_script:
   # Testing-only patches
   # view sort order bug
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-05/3146016-3.patch')
-  git apply 3146016-3.patch
+  - cmd: git apply 3146016-3.patch
   # Fix format of deprecation notices for phpcs 
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch')
   # Add a sqlsrv-specific datatype to test
