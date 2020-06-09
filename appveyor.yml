@@ -63,9 +63,9 @@ install:
   - cmd: set path=%SITERUNTIMEPATH%\php;%path%
   - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
   # Enable Regex
-  - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\projects\drupal-project\web\RegEx.dll')
+  - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\projects\drupal-project\RegEx.dll')
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
-  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE ASSEMBLY Regex from 'C:\projects\drupal-project\web\RegEx.dll' WITH PERMISSION_SET = SAFE"
+  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE ASSEMBLY Regex from 'C:\projects\drupal-project\RegEx.dll' WITH PERMISSION_SET = SAFE"
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
 build_script:
   # Logger backtrace incorrect. pushed to 9.x
