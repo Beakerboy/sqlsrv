@@ -50,10 +50,6 @@ install:
   - cmd: choco install composer --version=4.10.0 -y --no-progress
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
-  - ps: |
-      If ($Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL -imatch 'rdpcomposer') {
-        $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-      }
   - cmd: composer global require hirak/prestissimo --no-progress
   - cmd: cd /d c:\projects
   # Create a new drupal project
@@ -71,14 +67,6 @@ install:
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\drivers
   - cmd: cd /d C:\projects\drupal-project
   - cmd: xcopy "%APPVEYOR_BUILD_FOLDER%\dev\appveyor" "C:\projects\drupal-project\chef" /r /s /i
-  - ps: Invoke-ChefSelfInstall -Path "c:\chef"
-  - ps: Invoke-ChefAppDeployPath "C:\projects\drupal-project" drupal -Install
-  - ps: $site = Invoke-ChefAppGetDeployment drupal
-  - ps: $Env:DATABASENAME = $site.DeploymentActive.GetRuntimeSetting("services.default.database", "");
-  - ps: $Env:DATABASEPASSWORD = $site.DeploymentActive.GetRuntimeSetting("services.default.password", "");
-  - ps: $Env:DATABASEUSER = $site.DeploymentActive.GetRuntimeSetting("services.default.username", "");
-  - ps: $Env:DATABASEHOST = $site.DeploymentActive.GetRuntimeSetting("services.default.host", "");
-  - ps: $Env:SITERUNTIMEPATH = $site.DeploymentActive.runtimePath;
   # Make the site's PHP environment the default PHP environment
   - cmd: set path=%SITERUNTIMEPATH%\php;%path%
   - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
