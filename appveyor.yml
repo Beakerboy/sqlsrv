@@ -7,7 +7,7 @@ services:
 hosts:
   www.mydrupalsite.com: 127.0.0.1
 image:
-  - Visual Studio 2017
+  - Visual Studio 2015
 environment:
   matrix:
     - TEST_SUITE: sqlsrv
@@ -21,14 +21,6 @@ install:
   - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\TestLogs\choco_install_urlrewrite.txt
   - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\TestLogs\choco_install_openssl.txt
-  - ps: | 
-      $WorkingDir = Convert-Path .
-      $ZipPath = Join-Path $WorkingDir '\chef_cmdlet.zip'
-      (New-Object Net.WebClient).DownloadFile('https://ci.appveyor.com/api/projects/David19767/iischef/artifacts/iischef.cmdlet.zip?branch=1.x', $ZipPath)
-      $DESTINATION= Join-Path $env:ProgramFiles "\WindowsPowerShell\Modules\Chef"
-      New-Item -ItemType directory -Force -Path $DESTINATION
-      (new-object -com shell.application).namespace($DESTINATION).CopyHere((new-object -com shell.application).namespace($ZipPath).Items(),16)
-      Remove-Item $ZipPath
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
   # Start Windows Update service
   - cmd: sc config wuauserv start= auto
