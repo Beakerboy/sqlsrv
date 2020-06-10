@@ -7,7 +7,7 @@ services:
 hosts:
   www.mydrupalsite.com: 127.0.0.1
 image:
-  - Visual Studio 2017
+  - Visual Studio 2019
 environment:
   matrix:
     - TEST_SUITE: sqlsrv
