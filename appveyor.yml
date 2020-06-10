@@ -80,7 +80,7 @@ install:
   # Install other composer packages for production
   - cmd: composer require symfony/psr-http-message-bridge:1.1.x-dev
   # Copy in the module
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\contrib\sqlsrv
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\drivers
   - cmd: cd /d C:\projects\drupal-project
