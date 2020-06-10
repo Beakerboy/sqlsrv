@@ -10,7 +10,7 @@ image:
   - Visual Studio 2019
 environment:
   matrix:
-    - TEST_SUITE: sqlsrv
+    - TEST_SUITE: core-kernel
     - TEST_SUITE: core-extensions-kernel-1
 install:
   # Set up the Environment
