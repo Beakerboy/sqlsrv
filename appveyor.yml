@@ -83,6 +83,7 @@ install:
 build_script:
   # Override core condition
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch', 'C:\projects\drupal-project\3113403-33.patch')
+  - cmd: git apply 3113403-33.patch
   # Logger backtrace incorrect. pushed to 9.x
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-27/2867788-92.patch', 'C:\projects\drupal-project\2867788-92.patch')
   # core Condition not able to be overridden in views...needs work. 
