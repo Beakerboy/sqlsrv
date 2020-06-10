@@ -32,13 +32,13 @@ install:
   - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\TestLogs\choco_install_openssl.txt
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
   - ps: |
-    $cli = New-Object Net.WebClient
-    $cli.Headers['User-Agent'] = 'Appveyor';
-    $cli.DownloadFile('https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.8.1/php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_pdo_sqlsrv.zip')
+      $cli = New-Object Net.WebClient
+      $cli.Headers['User-Agent'] = 'Appveyor';
+      $cli.DownloadFile('https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.8.1/php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_pdo_sqlsrv.zip')
   - ps: |
-    $cli = New-Object Net.WebClient
-    $cli.Headers['User-Agent'] = 'Appveyor';
-    $cli.DownloadFile('http://windows.php.net/downloads/pecl/releases/yaml/2.1.0/php_yaml-2.1.0-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_yaml.zip')
+      $cli = New-Object Net.WebClient
+      $cli.Headers['User-Agent'] = 'Appveyor';
+      $cli.DownloadFile('http://windows.php.net/downloads/pecl/releases/yaml/2.1.0/php_yaml-2.1.0-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_yaml.zip')
   - cmd: dir c:\testlogs
   - ps: Expand-Archive -Path 'C:\testlogs\php_pdo_sql.zip' -Destinationpath 'C:\testlogs\php_pdo_sqlsrv'
   - cmd: xcopy C:\testlogs\php_pdo_sqlsrv\php_pdo_sqlsrv.dll C:\tools\php\ext\php_pdo_sqlsrv.dll
