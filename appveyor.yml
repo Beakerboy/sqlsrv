@@ -13,15 +13,26 @@ environment:
     - TEST_SUITE: sqlsrv
     - TEST_SUITE: core-extensions-kernel-1
 install:
-  #- ps: $Env:APPVEYOR_REPO_COMMIT_MESSAGE_FULL = "$env:APPVEYOR_REPO_COMMIT_MESSAGE $env:APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED".TrimEnd();
+  # Set up the Environment
   - cmd: mkdir c:\testlogs
+  # Set up the Database
   - ps: Start-Service 'MSSQL$SQL2017' | out-null
   - ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual | out-null
+  # is this needed
   - ps: Start-Service W3SVC | out-null
+  - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
+  # Enable Regex
+  - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\projects\drupal-project\RegEx.dll')
+  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
+  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE ASSEMBLY Regex from 'C:\projects\drupal-project\RegEx.dll' WITH PERMISSION_SET = SAFE"
+  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
+  # Set up PHP-is OpenSSL needed?
   - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\TestLogs\choco_install_urlrewrite.txt
   - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\TestLogs\choco_install_openssl.txt
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
+  - ps: (New-Object Net.WebClient).DownloadFile('https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.8.1/php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_pdo_sqlsrv.zip')
+  - ps: Expand-Archive -LiteralPath C:\testlogs\php_pdo_sqlsrv.zip -DestinationPath C:\php\ext\
   # Start Windows Update service
   - cmd: sc config wuauserv start= auto
   - cmd: net start wuauserv
@@ -30,12 +41,14 @@ install:
   - ps: $Env:Path = "C:\tools\php;" + $Env:Path;
   # Edit the php.ini file - Should we have a php.ini.dist file somewhere that we just `cat` into the exiting file?
   - ps: Add-Content C:\tools\php\php.ini "extension_dir=ext"
+  - ps: Add-Content C:\tools\php\php.ini "extension=php_pdo_sqlsrv"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_openssl"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_mbstring"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_curl"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_gd2.dll"
   - ps: Add-Content C:\tools\php\php.ini 'curl.cainfo="C:\tools\php\cacert.pem"'
   - ps: Add-Content C:\tools\php\php.ini 'openssl.cafile="C:\tools\php\cacert.pem"'
+  # Set up Drupal
   # Create a directory for composer and install
   - ps: new-item c:\composer -itemtype directory
   - cmd: cd /d C:\composer
@@ -50,7 +63,6 @@ install:
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
   - cmd: cd /d C:\projects\drupal-project
-  - cmd: composer config repositories.drupal composer https://packages.drupal.org/8
   # Install other composer packages for production
   - cmd: composer require symfony/psr-http-message-bridge:1.1.x-dev
   # Copy in the module
@@ -58,15 +70,6 @@ install:
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\contrib\sqlsrv
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\drivers
   - cmd: cd /d C:\projects\drupal-project
-  - cmd: xcopy "%APPVEYOR_BUILD_FOLDER%\dev\appveyor" "C:\projects\drupal-project\chef" /r /s /i
-  # Make the site's PHP environment the default PHP environment
-  - cmd: set path=%SITERUNTIMEPATH%\php;%path%
-  - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
-  # Enable Regex
-  - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\projects\drupal-project\RegEx.dll')
-  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
-  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE ASSEMBLY Regex from 'C:\projects\drupal-project\RegEx.dll' WITH PERMISSION_SET = SAFE"
-  - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
 build_script:
   # Logger backtrace incorrect. pushed to 9.x
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-27/2867788-92.patch', 'C:\projects\drupal-project\2867788-92.patch')
@@ -92,7 +95,6 @@ before_test:
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: cp dev\travis\phpunit.xml.dist C:\projects\drupal-project\core\phpunit.xml
   - cmd: mkdir .\build\logs
-
 test_script:
   - cmd: cd C:\projects\drupal-project
   - cmd: phpunit -vvv -c core\phpunit.xml --testsuite=%TEST_SUITE%
