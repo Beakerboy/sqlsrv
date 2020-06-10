@@ -31,8 +31,8 @@ install:
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\TestLogs\choco_install_urlrewrite.txt
   - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\TestLogs\choco_install_openssl.txt
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
-  - ps: (New-Object Net.WebClient).DownloadFile('https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.8.1/php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_pdo_sqlsrv.zip')
-  - ps: Expand-Archive -Path 'C:\testlogs\php_pdo_sqlsrv.zip' -Destinationpath 'C:\testlogs\php_pdo_sqlsrv'
+  - ps: (New-Object Net.WebClient).DownloadFile('https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.8.1/php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip')
+  - ps: Expand-Archive -Path 'C:\testlogs\php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip' -Destinationpath 'C:\testlogs\php_pdo_sqlsrv'
   - cmd: xcopy C:\testlogs\php_pdo_sqlsrv\php_pdo_sqlsrv.dll C:\tools\php\ext\php_pdo_sqlsrv.dll
   # Start Windows Update service
   - cmd: sc config wuauserv start= auto
