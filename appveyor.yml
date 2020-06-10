@@ -39,11 +39,10 @@ install:
       $cli = New-Object Net.WebClient
       $cli.Headers['User-Agent'] = 'Appveyor';
       $cli.DownloadFile('http://windows.php.net/downloads/pecl/releases/yaml/2.1.0/php_yaml-2.1.0-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_yaml.zip')
-  - cmd: dir c:\testlogs
   - ps: Expand-Archive -Path 'C:\testlogs\php_pdo_sqlsrv.zip' -Destinationpath 'C:\testlogs\php_pdo_sqlsrv'
-  - cmd: xcopy C:\testlogs\php_pdo_sqlsrv\php_pdo_sqlsrv.dll C:\tools\php\ext\php_pdo_sqlsrv.dll
+  - cmd: copy C:\testlogs\php_pdo_sqlsrv\php_pdo_sqlsrv.dll C:\tools\php\ext
   - ps: Expand-Archive -Path 'C:\testlogs\php_yaml.zip' -Destinationpath 'C:\testlogs\php_yaml'
-  - cmd: xcopy C:\testlogs\php_yaml\php_yaml.dll C:\tools\php\ext\php_yaml.dll
+  - cmd: xcopy C:\testlogs\php_yaml\php_yaml.dll C:\tools\php\ext
   # Start Windows Update service
   - cmd: sc config wuauserv start= auto
   - cmd: net start wuauserv
