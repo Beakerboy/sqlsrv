@@ -33,8 +33,8 @@ install:
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
   - ps: (New-Object Net.WebClient).DownloadFile('http://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.8.1/php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip')
   - ps: (New-Object Net.WebClient).DownloadFile('http://windows.php.net/downloads/pecl/releases/yaml/2.1.0/php_yaml-2.1.0-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_yaml.zip')
-  - ps: Expand-Archive -Path 'C:\testlogs\php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip' -Destinationpath 'C:\testlogs\php_pdo_sqlsrv'
-  - cmd: xcopy C:\testlogs\php_pdo_sqlsrv\php_pdo_sqlsrv.dll C:\tools\php\ext\php_pdo_sqlsrv.dll
+  #- ps: Expand-Archive -Path 'C:\testlogs\php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip' -Destinationpath 'C:\testlogs\php_pdo_sqlsrv'
+  #- cmd: xcopy C:\testlogs\php_pdo_sqlsrv\php_pdo_sqlsrv.dll C:\tools\php\ext\php_pdo_sqlsrv.dll
   - ps: Expand-Archive -Path 'C:\testlogs\php_yaml.zip' -Destinationpath 'C:\testlogs\php_yaml'
   - cmd: xcopy C:\testlogs\php_yaml\php_yaml.dll C:\tools\php\ext\php_yaml.dll
   # Start Windows Update service
