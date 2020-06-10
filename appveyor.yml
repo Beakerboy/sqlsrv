@@ -21,11 +21,7 @@ install:
   # is this needed
   - ps: Start-Service W3SVC | out-null
   # Fix Mixed Mode Assembly error
-  - ps: |
-      $ConfigFile = "C:\Program Files\Opsware\agent\bin\PsSasHost.exe.config"
-      $Xml = [xml](Get-Content -Path $ConfigFile)
-      $Xml.configuration.startup.SetAttribute("useLegacyV2RuntimeActivationPolicy","true")
-      $Xml.Save($ConfigFile)
+  - cmd: dir C:\Users
   - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
   # Enable Regex
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\testlogs\RegEx.dll')
