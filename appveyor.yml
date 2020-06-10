@@ -2,12 +2,12 @@ skip_tags: true
 init:
   - ps: ''
 services:
-  - mssql2016
+  - mssql2017
   - iis
 hosts:
   www.mydrupalsite.com: 127.0.0.1
 image:
-  - Previous Visual Studio 2015
+  - Visual Studio 2019
 environment:
   matrix:
     - TEST_SUITE: sqlsrv
@@ -16,13 +16,14 @@ install:
   # Set up the Environment
   - cmd: mkdir c:\testlogs
   # SET UP DATABASE
-  - ps: Start-Service 'MSSQL$SQL2016' | out-null
-  - ps: Set-Service 'SQLAgent$SQL2016' -StartupType Manual | out-null
+  - ps: Start-Service 'MSSQL$SQL2017' | out-null
+  - ps: Set-Service 'SQLAgent$SQL2017' -StartupType Manual | out-null
   # is this needed
   - ps: Start-Service W3SVC | out-null
   # Fix Mixed Mode Assembly error
   - cmd: dir C:\Users\appveyor
   - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
+  - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "ALTER DATABASE mydrupalsite SET COMPATIBILITY_LEVEL=130"
   # Enable Regex
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\testlogs\RegEx.dll')
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
