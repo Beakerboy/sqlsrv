@@ -95,6 +95,9 @@ build_script:
   - cmd: git apply 2867788-92.patch
   - cmd: git apply 3130655-10.patch
   # Testing-only patches
+  # directory separator
+  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/directory.patch', 'C:\projects\drupal-project\directory.patch')
+  - cmd: git apply directory.patch
   # view sort order bug
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-05/3146016-3.patch', 'C:\projects\drupal-project\3146016-3.patch')
   - cmd: git apply 3146016-3.patch
