@@ -7,7 +7,7 @@ services:
 hosts:
   www.mydrupalsite.com: 127.0.0.1
 image:
-  - Visual Studio 2019
+  - Visual Studio 2017
 environment:
   matrix:
     - TEST_SUITE: sqlsrv
@@ -15,18 +15,25 @@ environment:
 install:
   # Set up the Environment
   - cmd: mkdir c:\testlogs
-  # Set up the Database
+  # SET UP DATABASE
   - ps: Start-Service 'MSSQL$SQL2016' | out-null
   - ps: Set-Service 'SQLAgent$SQL2016' -StartupType Manual | out-null
   # is this needed
   - ps: Start-Service W3SVC | out-null
+  # Fix Mixed Mode Assembly error
+  - ps: |
+      $ConfigFile = "C:\Program Files\Opsware\agent\bin\PsSasHost.exe.config"
+      $Xml = [xml](Get-Content -Path $ConfigFile)
+      $Xml.configuration.startup.SetAttribute("useLegacyV2RuntimeActivationPolicy","true")
+      $Xml.Save($ConfigFile)
   - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
   # Enable Regex
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\testlogs\RegEx.dll')
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE ASSEMBLY Regex from 'C:\testlogs\RegEx.dll' WITH PERMISSION_SET = SAFE"
   - ps: Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
-  # Set up PHP-is OpenSSL needed?
+  # SET UP PHP
+  # is OpenSSL needed?
   - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\TestLogs\choco_install_urlrewrite.txt
   - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\TestLogs\choco_install_openssl.txt
