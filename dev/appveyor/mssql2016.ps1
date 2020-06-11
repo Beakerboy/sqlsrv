@@ -3,7 +3,6 @@ Set-Service 'SQLAgent$SQL2016' -StartupType Manual | out-null
 # is this needed
 Start-Service W3SVC | out-null
 Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
-Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "ALTER DATABASE mydrupalsite SET COMPATIBILITY_LEVEL=130"
 # Enable Regex
 (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\testlogs\RegEx.dll')
 Invoke-Sqlcmd -Database mydrupalsite -Username sa -Password "Password12!" -Query "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr strict security', 0; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
