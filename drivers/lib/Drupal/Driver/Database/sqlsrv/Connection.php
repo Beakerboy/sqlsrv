@@ -441,6 +441,9 @@ class Connection extends DatabaseConnection {
    * @param string $query
    *   The query string as SQL, with curly-braces surrounding the
    *   table names.
+   * @param bool $quote_identifiers
+   *   (optional) Quote any identifiers enclosed in square brackets. Defaults to
+   *   TRUE.
    * @param array $options
    *   An array ooptions to determine which PDO Parameters
    *   should be used.
@@ -448,7 +451,7 @@ class Connection extends DatabaseConnection {
    * @return \Drupal\Core\Database\Statement
    *   A PDO prepared statement ready for its execute() method.
    */
-  public function prepareQuery($query, array $options = []) {
+  public function prepareQuery($query, $quote_identifiers = TRUE, array $options = []) {
     $default_options = [
       'emulate_prepares' => FALSE,
       'bypass_preprocess' => FALSE,
@@ -460,7 +463,9 @@ class Connection extends DatabaseConnection {
     $options += $default_options;
 
     $query = $this->prefixTables($query);
-
+    if ($quote_identifiers) {
+      $query = $this->quoteIdentifiers($query);
+    }
     // Preprocess the query.
     if (!$options['bypass_preprocess']) {
       $query = $this->preprocessQuery($query);
