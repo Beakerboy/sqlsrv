@@ -18,7 +18,7 @@ final class CoreExtensionsUnitTestSuite extends TestSuiteBase {
    *   The test suite.
    */
   public static function suite() {
-    $root = dirname(dirname(dirname(dirname(dirname(dirname(__DIR__))))));
+    $root = dirname(__DIR__, 6);
     $suite = new static('unit');
     $suite->addExtensionTestsBySuiteNamespace($root, 'Unit', '');
     return $suite;
