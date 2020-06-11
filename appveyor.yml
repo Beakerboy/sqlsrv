@@ -16,7 +16,7 @@ install:
   # Set up the Environment
   - cmd: mkdir c:\testlogs
   # SET UP DATABASE
-  - ps: .\dev\appveyor\mssql2016.ps1
+  - cmd: powershell .\dev\appveyor\mssql2016.ps1
   # SET UP PHP
   # is OpenSSL needed?
   - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
