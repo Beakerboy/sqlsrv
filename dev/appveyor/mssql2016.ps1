@@ -1,5 +1,7 @@
 Start-Service 'MSSQL$SQL2016' | out-null
 Set-Service 'SQLAgent$SQL2016' -StartupType Manual | out-null
+# configure RPC server
+netsh advfirewall firewall set rule group="Windows Management Instrumentation (WMI)" new enable=yes
 # is this needed
 Start-Service W3SVC | out-null
 Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
