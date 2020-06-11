@@ -72,6 +72,7 @@ install:
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\contrib\sqlsrv
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\drivers
   - cmd: cd /d C:\projects\drupal-project
+  - cmd: mkdir C:\projects\drupal-project\sites\simpletest
 build_script:
   # Override core condition
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch', 'C:\projects\drupal-project\3113403-33.patch')
