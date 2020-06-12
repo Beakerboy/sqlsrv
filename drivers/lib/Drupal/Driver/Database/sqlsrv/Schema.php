@@ -1570,10 +1570,10 @@ EOF
     }
     if (empty($xml_field)) {
       $fields_csv = implode(', ', $fields);
-      return "CREATE INDEX {$name}_idx ON [{{$table}}] ({$fields_csv})";
+      return "CREATE INDEX {$name}_idx ON {{$table}} ({$fields_csv})";
     }
     else {
-      return "CREATE PRIMARY XML INDEX {$name}_idx ON [{{$table}}] ({$xml_field})";
+      return "CREATE PRIMARY XML INDEX {$name}_idx ON {{$table}} ({$xml_field})";
     }
   }
 
