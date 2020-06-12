@@ -1830,7 +1830,7 @@ EOF;
       ':name' => $field,
     ]);
     foreach ($indexes as $index) {
-      $this->connection->query('DROP INDEX [' . $index->name . '] ON {' . $table . '}');
+      $this->connection->query('DROP INDEX ' . $index->name . ' ON {' . $table . '}');
       $this->resetColumnInformation($table);
     }
 
