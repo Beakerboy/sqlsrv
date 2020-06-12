@@ -569,7 +569,7 @@ class Schema extends DatabaseSchema {
       $expand = TRUE;
     }
 
-    $this->connection->query('DROP INDEX ' . $name . '_idx ON [{' . $table . '}]');
+    $this->connection->query('DROP INDEX ' . $name . '_idx ON {' . $table . '}');
     $this->resetColumnInformation($table);
     // If we just dropped an XML index, we can re-expand the original primary
     // key index.
