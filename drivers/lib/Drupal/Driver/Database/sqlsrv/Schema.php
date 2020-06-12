@@ -1305,14 +1305,14 @@ EOF
     if ($nullable || $size >= $limit) {
       // Use a computed column instead, and create a custom index.
       $result[] = self::COMPUTED_PK_COLUMN_NAME . " AS (CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT('',{$csv_fields})), 2)) PERSISTED NOT NULL";
-      $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED (" . self::COMPUTED_PK_COLUMN_NAME . ")";
+      $result[] = "CONSTRAINT {{$table}_pkey} PRIMARY KEY CLUSTERED (" . self::COMPUTED_PK_COLUMN_NAME . ")";
       $index = TRUE;
     }
     else {
-      $result[] = "CONSTRAINT {{$table}}_pkey PRIMARY KEY CLUSTERED ({$csv_fields})";
+      $result[] = "CONSTRAINT {{$table}_pkey} PRIMARY KEY CLUSTERED ({$csv_fields})";
     }
 
-    $this->connection->queryDirect('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
+    $this->connection->queryDirect('ALTER TABLE {' . $table . '} ADD ' . implode(' ', $result));
     $this->resetColumnInformation($table);
     // If we relied on a computed column for the Primary Key,
     // at least index the fields with a regular index.
@@ -1336,7 +1336,7 @@ EOF
   private function createTechnicalPrimaryKeyIndexSql($table) {
     $result = [];
     $result[] = self::TECHNICAL_PK_COLUMN_NAME . " UNIQUEIDENTIFIER DEFAULT NEWID() NOT NULL";
-    $result[] = "CONSTRAINT {{$table}}_pkey_technical PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")";
+    $result[] = "CONSTRAINT {{$table}_pkey_technical} PRIMARY KEY CLUSTERED (" . self::TECHNICAL_PK_COLUMN_NAME . ")";
     return implode(' ', $result);
   }
 
