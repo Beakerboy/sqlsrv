@@ -264,6 +264,7 @@ class Connection extends DatabaseConnection {
    */
   public function __construct(\PDO $connection, array $connection_options) {
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
+    $this->identifierQuotes = ['[', ']'];
     parent::__construct($connection, $connection_options);
 
     // This driver defaults to transaction support, except if explicitly passed
@@ -346,16 +347,6 @@ class Connection extends DatabaseConnection {
     }
 
     return $db_url;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * Encapsulates field names in brackets when necessary.
-   */
-  public function escapeField($field) {
-    $field = parent::escapeField($field);
-    return $this->quoteIdentifier($field);
   }
 
   /**
@@ -891,26 +882,6 @@ class Connection extends DatabaseConnection {
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
 
     return $query;
-  }
-
-  /**
-   * Quotes an identifier if it matches a SQL Server reserved keyword.
-   *
-   * @param string $identifier
-   *   The field to check.
-   *
-   * @return string
-   *   The identifier, quoted if it matches a SQL Server reserved keyword.
-   */
-  protected function quoteIdentifier($identifier) {
-    if (strpos($identifier, '.') !== FALSE) {
-      list($table, $identifier) = explode('.', $identifier, 2);
-    }
-    if (in_array(strtolower($identifier), $this->reservedKeyWords, TRUE)) {
-      // Quote the string for SQLServer reserved keywords.
-      $identifier = '[' . $identifier . ']';
-    }
-    return isset($table) ? $table . '.' . $identifier : $identifier;
   }
 
   /**
