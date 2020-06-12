@@ -636,7 +636,7 @@ class Connection extends DatabaseConnection {
         if ($emulate === TRUE || $argcount >= 2100 || ($argcount != substr_count($query, ':'))) {
           $emulate = TRUE;
         }
-        $stmt = $this->prepareQuery($query, ['emulate_prepares' => $emulate]);
+        $stmt = $this->prepareQuery($query, TRUE, ['emulate_prepares' => $emulate]);
         $stmt->execute($args, $options);
       }
 
@@ -816,7 +816,7 @@ class Connection extends DatabaseConnection {
         'bypass_preprocess' => TRUE,
         'emulate_prepares' => FALSE,
       ];
-      $stmt = $this->prepareQuery($query, $direct_query_options + $options);
+      $stmt = $this->prepareQuery($query, TRUE, $direct_query_options + $options);
       $stmt->execute($args, $options);
 
       // Depending on the type of query we may need to return a different value.
