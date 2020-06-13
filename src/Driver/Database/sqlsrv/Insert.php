@@ -1,6 +1,6 @@
 <?php
 
-namespace sqlsrv\Driver\Database\sqlsrv;
+namespace Drupal\sqlsrv\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Query\Insert as QueryInsert;
 

@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\sqlsrv\Unit;
 
-use sqlsrv\Driver\Database\sqlsrv\Select;
-use sqlsrv\Driver\Database\sqlsrv\Condition;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Select;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Condition;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -24,7 +24,7 @@ class OrderByTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp() {
-    $connection = $this->getMockBuilder('sqlsrv\Driver\Database\sqlsrv\Connection')
+    $connection = $this->getMockBuilder('Drupal\sqlsrv\Driver\Database\sqlsrv\Connection')
       ->setMethods(['condition'])
       ->disableOriginalConstructor()
       ->getMockForAbstractClass();

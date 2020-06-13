@@ -4,7 +4,7 @@ namespace Drupal\Tests\sqlsrv\Unit;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\PlaceholderInterface;
-use sqlsrv\Driver\Database\sqlsrv\Condition;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Condition;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 

@@ -3,8 +3,8 @@
 namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\Database;
-use sqlsrv\Driver\Database\sqlsrv\Condition;
-use sqlsrv\Driver\Database\sqlsrv\Connection;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Condition;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Connection;
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**

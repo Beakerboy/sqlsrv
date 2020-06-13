@@ -1,6 +1,6 @@
 <?php
 
-namespace sqlsrv\Driver\Database\sqlsrv;
+namespace Drupal\sqlsrv\Driver\Database\sqlsrv;
 
 use Symfony\Component\Yaml\Parser;
 

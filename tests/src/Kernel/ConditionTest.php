@@ -3,7 +3,7 @@
 namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\Query\Condition as CoreCondition;
-use sqlsrv\Driver\Database\sqlsrv\Select;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Select;
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**

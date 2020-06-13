@@ -1,12 +1,12 @@
 <?php
 
-namespace sqlsrv\Driver\Database\sqlsrv\Install;
+namespace Drupal\sqlsrv\Driver\Database\sqlsrv\Install;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Install\Tasks as InstallTasks;
 use Drupal\Core\Database\DatabaseNotFoundException;
-use sqlsrv\Driver\Database\sqlsrv\Connection;
-use sqlsrv\Driver\Database\sqlsrv\Utils;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Connection;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Utils;
 
 /**
  * Specifies installation tasks for PostgreSQL databases.
@@ -122,7 +122,7 @@ class Tasks extends InstallTasks {
     try {
       $database = Database::getConnection();
 
-      /** @var \sqlsrv\Driver\Database\sqlsrv\Schema $schema */
+      /** @var \Drupal\sqlsrv\Driver\Database\sqlsrv\Schema $schema */
       $schema = $database->schema();
       $collation = $schema->getCollation();
       if (stristr($collation, '_CI_') !== FALSE) {
@@ -151,7 +151,7 @@ class Tasks extends InstallTasks {
     // avoid trying to create them again in that case.
     try {
 
-      /** @var \sqlsrv\Driver\Database\sqlsrv\Connection $connection */
+      /** @var \Drupal\sqlsrv\Driver\Database\sqlsrv\Connection $connection */
       $connection = Database::getConnection();
 
       Utils::DeployCustomFunctions($connection);

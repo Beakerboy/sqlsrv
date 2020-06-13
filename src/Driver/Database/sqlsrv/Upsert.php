@@ -1,6 +1,6 @@
 <?php
 
-namespace sqlsrv\Driver\Database\sqlsrv;
+namespace Drupal\sqlsrv\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Query\Upsert as QueryUpsert;
 
@@ -29,7 +29,7 @@ class Upsert extends QueryUpsert {
       return NULL;
     }
     // Fetch the list of blobs and sequences used on that table.
-    /** @var \sqlsrv\Driver\Database\sqlsrv\Schema $schema */
+    /** @var \Drupal\sqlsrv\Driver\Database\sqlsrv\Schema $schema */
     $schema = $this->connection->schema();
     $columnInformation = $schema->queryColumnInformation($this->table);
     $this->queryOptions['allow_delimiter_in_query'] = TRUE;

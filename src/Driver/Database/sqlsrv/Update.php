@@ -1,6 +1,6 @@
 <?php
 
-namespace sqlsrv\Driver\Database\sqlsrv;
+namespace Drupal\sqlsrv\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\SelectInterface;
@@ -20,7 +20,7 @@ class Update extends QueryUpdate {
     $options = $this->queryOptions;
 
     // Fetch the list of blobs and sequences used on that table.
-    /** @var \sqlsrv\Driver\Database\sqlsrv\Schema $schema */
+    /** @var \Drupal\sqlsrv\Driver\Database\sqlsrv\Schema $schema */
     $schema = $this->connection->schema();
     $columnInformation = $schema->queryColumnInformation($this->table);
 
