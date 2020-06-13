@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Driver\Database\sqlsrv;
+namespace sqlsrv\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Transaction as DatabaseTransaction;
 

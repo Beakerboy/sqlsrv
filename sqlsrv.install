@@ -139,67 +139,8 @@ function sqlsrv_requirements($phase) {
     // Redeploy functions.
     Utils::DeployCustomFunctions($connection);
 
-    // Make sure that the module's driver code is the same one as the
-    // effectively deployed driver code.
-    // TODO:// Nicer than just showing the error,
-    // would be to offer the option to autodploy the driver...
-    $deployed_ok = sqlsrv_verify_driver();
-    $requirements['sqlsrv_deployed_files'] = [
-      'title' => t('MSSQL Server Deployed Driver'),
-      'severity' => $deployed_ok === TRUE ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-      'description' => $deployed_ok === TRUE ? t('Deployed driver matches module version.') : t('The deployed driver files do not match the module driver.'),
-    ];
   }
   return $requirements;
-}
-
-/**
- * Verify Deployed Driver.
- *
- * Verify that the deployed driver is the same one as the module
- * version.
- *
- * @return bool
- *   Drivers match.
- */
-function sqlsrv_verify_driver() {
-
-  // Location of the effective driver.
-  $class = Connection::class;
-  $reflector = new ReflectionClass($class);
-  $driver_dir = dirname($reflector->getFileName());
-
-  // Location for the module's driver.
-  $path_array = ['drivers', 'lib', 'drupal', 'driver', 'database', 'sqlsrv'];
-  $module_dir = dirname(__FILE__) . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $path_array);
-
-  return sqlsrv_directory_checksum($driver_dir) === sqlsrv_directory_checksum($module_dir);
-}
-
-/**
- * Directory Checksum.
- *
- * Calculate a unique identifier for a directory and it's contents
- * based on file sizes and names.
- *
- * TODO:// This thing will not notice files being moved around in directories
- * as long as they keep same name and size.
- *
- * @param string $directory
- *   Directory.
- *
- * @return string
- *   Checksum.
- */
-function sqlsrv_directory_checksum($directory) {
-  $files = file_scan_directory($directory, '/\.*/i');
-  $checksum = 0;
-  $names = '';
-  foreach ($files as $file) {
-    $checksum += filesize($file->uri);
-    $names .= $file->name;
-  }
-  return $checksum . '-' . md5($names);
 }
 
 /**

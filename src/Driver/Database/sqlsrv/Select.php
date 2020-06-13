@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Driver\Database\sqlsrv;
+namespace sqlsrv\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Connection as DatabaseConnection;
 use Drupal\Core\Database\Query\PlaceholderInterface;
@@ -17,7 +17,7 @@ class Select extends QuerySelect {
   /**
    * The connection object on which to run this query.
    *
-   * @var \Drupal\Driver\Database\sqlsrv\Connection
+   * @var \sqlsrv\Driver\Database\sqlsrv\Connection
    */
   protected $connection;
 
