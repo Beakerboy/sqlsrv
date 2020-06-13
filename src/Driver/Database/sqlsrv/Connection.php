@@ -12,11 +12,6 @@ use Drupal\Core\Database\TransactionOutOfOrderException;
 use Drupal\Core\Database\TransactionNameNonUniqueException;
 
 /**
- * @addtogroup database
- * @{
- */
-
-/**
  * Sqlsvr implementation of \Drupal\Core\Database\Connection.
  */
 class Connection extends DatabaseConnection {
@@ -948,7 +943,3 @@ class Connection extends DatabaseConnection {
   ];
 
 }
-
-/**
- * @} End of "addtogroup database".
- */
