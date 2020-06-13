@@ -3,7 +3,7 @@
 namespace Drupal\Tests\sqlsrv\Unit;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\Driver\Database\sqlsrv\Connection;
+use sqlsrv\Driver\Database\sqlsrv\Connection;
 
 /**
  * Test the behavior of the Connection class.
@@ -24,7 +24,7 @@ class SqlsrvConnectionTest extends UnitTestCase {
   /**
    * Mock Schema object for use in tests.
    *
-   * @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\Driver\Database\sqlsrv\Schema
+   * @var \PHPUnit\Framework\MockObject\MockObject|\sqlsrv\Driver\Database\sqlsrv\Schema
    */
   protected $mockSchema;
 
@@ -44,18 +44,18 @@ class SqlsrvConnectionTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->mockSchema = $this->getMockBuilder('Drupal\Driver\Database\sqlsrv\Schema')
+    $this->mockSchema = $this->getMockBuilder('sqlsrv\Driver\Database\sqlsrv\Schema')
       ->setMethods(['getDefaultSchema', '__construct'])
       ->setMockClassName('MockSchema')
       ->setConstructorArgs([NULL])
       ->disableOriginalConstructor()
       ->getMock();
     $this->mockSchema->method('getDefaultSchema')->willReturn('dbo');
-    if (!class_exists('Drupal\Driver\Database\mock\Schema')) {
-      class_alias('MockSchema', 'Drupal\Driver\Database\mock\Schema');
+    if (!class_exists('sqlsrv\Driver\Database\mock\Schema')) {
+      class_alias('MockSchema', 'sqlsrv\Driver\Database\mock\Schema');
     }
 
-    $this->options['namespace'] = 'Drupal\Driver\Database\mock';
+    $this->options['namespace'] = 'sqlsrv\Driver\Database\mock';
     $this->options['prefix']['default'] = '';
 
     $this->mockPdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');

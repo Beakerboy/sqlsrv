@@ -23,7 +23,7 @@ class SchemaTest extends DatabaseTestBase {
   /**
    * The sqlsrv schema.
    *
-   * @var \Drupal\Driver\Database\sqlsrv\Schema
+   * @var \sqlsrv\Driver\Database\sqlsrv\Schema
    */
   protected $schema;
 
@@ -32,7 +32,7 @@ class SchemaTest extends DatabaseTestBase {
    */
   protected function setUp() {
     parent::setUp();
-    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    /** @var \sqlsrv\Driver\Database\sqlsrv\Schema $schema */
     $schema = $this->connection->schema();
     $this->schema = $schema;
     $this->table = [
@@ -157,7 +157,7 @@ class SchemaTest extends DatabaseTestBase {
    * value for the schema?
    */
   public function testGetDefaultSchemaNoDefault() {
-    $schema = new \ReflectionClass('\Drupal\Driver\Database\sqlsrv\Schema');
+    $schema = new \ReflectionClass('\sqlsrv\Driver\Database\sqlsrv\Schema');
     $property = $schema->getProperty("defaultSchema");
     $property->setAccessible(TRUE);
     $property->setValue($this->schema, NULL);
