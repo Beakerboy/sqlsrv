@@ -59,7 +59,7 @@ install:
   - cmd: cd /d c:\projects
   # Create a new drupal project
   - cmd: set COMPOSER_MEMORY_LIMIT=-1
-  - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 8.8.x drupal-project
+  - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 8.9.x drupal-project
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
   - cmd: cd /d C:\projects\drupal-project
