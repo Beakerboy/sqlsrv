@@ -31,7 +31,7 @@ expressions, a CLR will need to be installed that is equivalent to
    RETURNS bit EXTERNAL NAME {name_of_function}`
 
 ### Minimum Requirements
- * Drupal 8.8.0
+ * Drupal 8.9.0
  * SQL Server 2016
  * pdo_sqlsrv 5.8.0
 
