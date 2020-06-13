@@ -97,7 +97,3 @@ All Versions (needs work, patch review or awaiting merge):
 
 Drupal 8.x (Already merged into Drupal Core 9+):
 * [Logger backtrace incorrect](https://www.drupal.org/node/2867788)-[[patch](https://www.drupal.org/files/issues/2020-02-22/2867788-79.patch)]
-
-Drupal 8.8.x (Already merged into Drupal Core 8.9+)
-* [Allow core Condition to be overridden](https://www.drupal.org/node/3113403)-\[[patch](https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch)]
-* [CONCAT_WS edge case](https://www.drupal.org/node/3131379)-[[patch](https://www.drupal.org/files/issues/2020-05-05/3131379-8.patch)]
