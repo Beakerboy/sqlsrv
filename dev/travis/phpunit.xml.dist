@@ -17,7 +17,7 @@
     <!-- Example SIMPLETEST_BASE_URL value: http://localhost -->
     <env name="SIMPLETEST_BASE_URL" value="http://127.0.0.1"/>
     <!-- Example SIMPLETEST_DB value: mysql://username:password@localhost/databasename#table_prefix -->
-    <env name="SIMPLETEST_DB" value="sqlsrv://sa:Password12!@localhost/mydrupalsite?schema=dbo&amp;cache_schema=true"/>
+    <env name="SIMPLETEST_DB" value="sqlsrv://sa:Password12!@localhost/mydrupalsite?schema=dbo&amp;cache_schema=true&amp;module=sqlsrv"/>
     <!-- Example BROWSERTEST_OUTPUT_DIRECTORY value: /path/to/webroot/sites/simpletest/browser_output -->
     <env name="BROWSERTEST_OUTPUT_DIRECTORY" value="WEB_DIR/sites/simpletest/browser_output"/>
     <!-- To have browsertest output use an alternative base URL. For example if

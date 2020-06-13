@@ -1,1 +1,1 @@
-bash dev/travis/drupal8.x.sh
+bash ../sqlsrv/dev/travis/drupal8.x.sh
