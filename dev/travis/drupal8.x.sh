@@ -16,8 +16,5 @@ git apply 3146016-3.patch
 wget https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch
 # Add a sqlsrv-specific datatype to test
 wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
-# Enable sqlsrv module in specific kernel tests
-wget https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch
-git apply 2966272-16.patch
 git apply drupal-3111134-database_specific_types-3.patch
 git apply 3108540-11.patch
