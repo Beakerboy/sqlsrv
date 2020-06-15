@@ -43,9 +43,8 @@ install:
   - composer config -g github-oauth.github.com $GITHUB_OAUTH
   - composer install
   - bash ../sqlsrv/dev/travis/drupal${DRUPAL_VERSION}.sh
-  - mkdir ./modules/contrib
   - mv $TRAVIS_BUILD_DIR/dev/travis/TestSuites $TRAVIS_BUILD_DIR/tests/src/
-  - cp -rf $TRAVIS_BUILD_DIR ./modules/contrib/sqlsrv
+  - cp -rf $TRAVIS_BUILD_DIR ./modules/sqlsrv
   - PATH=$PATH:$TRAVIS_BUILD_DIR/../drupal-project/vendor/bin
   - mkdir $TRAVIS_BUILD_DIR/../drupal-project/sites/simpletest
   - mkdir $TRAVIS_BUILD_DIR/../drupal-project/sites/simpletest/browser_output
@@ -76,9 +75,9 @@ script:
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
       phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
-      phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/contrib/sqlsrv
+      phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/sqlsrv
     fi
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
-      vendor/bin/phpstan analyze modules/contrib/sqlsrv --level 4 -c $TRAVIS_BUILD_DIR/dev/phpstan.neon
+      vendor/bin/phpstan analyze modules/sqlsrv --level 4 -c $TRAVIS_BUILD_DIR/dev/phpstan.neon
     fi
