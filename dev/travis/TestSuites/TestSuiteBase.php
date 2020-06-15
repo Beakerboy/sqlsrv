@@ -178,7 +178,7 @@ abstract class TestSuiteBase extends TestSuite {
     $this->addTestFiles($subset);
   }
 
-  protected function getDrupalRoot() {
+  protected static function getDrupalRoot() {
     return dirname(__DIR__, 5);
   }
 
