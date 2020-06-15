@@ -268,7 +268,6 @@ class Connection extends DatabaseConnection {
 
     // Store connection options for future reference.
     $this->connectionOptions = $connection_options;
-    require_once $root . '/core/includes/bootstrap.inc';
   }
 
   /**
