@@ -16,7 +16,7 @@ final class CoreExtensions2FunctionalTestSuite extends TestSuiteBase {
    *   The test suite.
    */
   public static function suite() {
-    $root = dirname(__DIR__, 6);
+    $root = $this->getDrupalRoot();
     $suite = new static('functional');
     $suite->addExtensionTestsBySuiteNamespaceAndChunk($root, 'Functional', 1);
     return $suite;
