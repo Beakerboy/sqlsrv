@@ -54,43 +54,43 @@
       <file>./tests/TestSuites/BuildTestSuite.php</file>
     </testsuite>
     <testsuite name="core-kernel">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreKernelTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreKernelTestSuite.php</file>
     </testsuite>
     <testsuite name="core-extensions-kernel-1">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions1KernelTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions1KernelTestSuite.php</file>
     </testsuite>
     <testsuite name="core-extensions-kernel-2">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions2KernelTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions2KernelTestSuite.php</file>
     </testsuite>
     <testsuite name="core-extensions-kernel-3">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions3KernelTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions3KernelTestSuite.php</file>
     </testsuite>
     <testsuite name="core-extensions-kernel-4">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions4KernelTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions4KernelTestSuite.php</file>
     </testsuite>
     <testsuite name="core-extensions-kernel-5">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions5KernelTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions5KernelTestSuite.php</file>
     </testsuite>
    <testsuite name="core-extensions-functional-1">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions1FunctionalTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions1FunctionalTestSuite.php</file>
     </testsuite>
    <testsuite name="core-extensions-functional-2">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions2FunctionalTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions2FunctionalTestSuite.php</file>
     </testsuite>
    <testsuite name="core-extensions-functional-3">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions3FunctionalTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions3FunctionalTestSuite.php</file>
     </testsuite>
    <testsuite name="core-extensions-functional-4">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions4FunctionalTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions4FunctionalTestSuite.php</file>
     </testsuite>
    <testsuite name="core-extensions-functional-5">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensions5FunctionalTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions5FunctionalTestSuite.php</file>
     </testsuite>
     <testsuite name="failing">
-      <file>../modules/contrib/sqlsrv/tests/src/TestSuites/FailingTestsTestSuite.php</file>
+      <file>../modules/sqlsrv/tests/src/TestSuites/FailingTestsTestSuite.php</file>
     </testsuite>
     <testsuite name="passing_unit">
-      <file> ../modules/contrib/sqlsrv/tests/src/TestSuites/CoreExtensionsUnitTestSuite.php</file>
+      <file> ../modules/sqlsrv/tests/src/TestSuites/CoreExtensionsUnitTestSuite.php</file>
       <directory suffix="Test.php">tests/Drupal/Tests</directory>
     </testsuite>
     <testsuite name="passing_functional">
@@ -110,7 +110,7 @@
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Update</directory>
     </testsuite>
     <testsuite name="sqlsrv">
-      <directory suffix="Test.php">../modules/contrib/sqlsrv</directory>
+      <directory suffix="Test.php">../modules/sqlsrv</directory>
     </testsuite>
   </testsuites>
   <listeners>
