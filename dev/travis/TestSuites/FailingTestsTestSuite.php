@@ -16,7 +16,7 @@ final class FailingTestsTestSuite extends TestSuiteBase {
    *   The test suite.
    */
   public static function suite() {
-    $root = dirname(__DIR__, 6);
+    $root = $this->getDrupalRoot();
     $suite = new static('kernel');
     $suite->addFailingTests($root);
     return $suite;
