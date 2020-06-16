@@ -9,6 +9,9 @@ wget https://www.drupal.org/files/issues/2020-05-04/3130655-10.patch
 git apply 2867788-92.patch
 git apply 3130655-10.patch
 # Testing-only patches
+# include bootstrap earlier
+wget https://www.drupal.org/files/issues/2020-06-16/3152003-2.patch
+git apply 3152003-2.patch
 # view sort order bug
 wget https://www.drupal.org/files/issues/2020-06-05/3146016-3.patch
 git apply 3146016-3.patch
