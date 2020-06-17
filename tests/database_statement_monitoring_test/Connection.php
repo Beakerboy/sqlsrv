@@ -2,7 +2,7 @@
 
 namespace Drupal\database_statement_monitoring_test\sqlsrv;
 
-use Drupal\sqlsrv\Database\Driver\sqlsrv\Connection as BaseConnection;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Connection as BaseConnection;
 use Drupal\database_statement_monitoring_test\LoggedStatementsTrait;
 
 /**
