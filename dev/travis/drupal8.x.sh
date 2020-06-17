@@ -9,6 +9,7 @@ wget https://www.drupal.org/files/issues/2020-05-04/3130655-10.patch
 git apply 2867788-92.patch
 git apply 3130655-10.patch
 # Testing-only patches
+# Enable sqlsrv module in specific kernel tests
 wget https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch
 git apply 2966272-16.patch
 # include bootstrap earlier
