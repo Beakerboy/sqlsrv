@@ -16,7 +16,7 @@ final class CoreExtensions5FunctionalTestSuite extends TestSuiteBase {
    *   The test suite.
    */
   public static function suite() {
-    $root = $this->getDrupalRoot();
+    $root = self::getDrupalRoot();
     $suite = new static('functional');
     $suite->addExtensionTestsBySuiteNamespaceAndChunk($root, 'Functional', 4);
     return $suite;
