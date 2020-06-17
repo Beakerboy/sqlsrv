@@ -18,7 +18,7 @@ final class CoreExtensionsUnitTestSuite extends TestSuiteBase {
    *   The test suite.
    */
   public static function suite() {
-    $root = $this->getDrupalRoot();
+    $root = self::getDrupalRoot();
     $suite = new static('unit');
     $suite->addExtensionTestsBySuiteNamespace($root, 'Unit', '');
     return $suite;
