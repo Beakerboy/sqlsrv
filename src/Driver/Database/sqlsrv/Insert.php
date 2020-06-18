@@ -41,7 +41,7 @@ class Insert extends QueryInsert {
     }
 
     // Fetch the list of blobs and sequences used on that table.
-    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    /** @var \Drupal\sqlsrv\Driver\Database\sqlsrv\Schema $schema */
     $schema = $this->connection->schema();
     $columnInformation = $schema->queryColumnInformation($this->table);
 
