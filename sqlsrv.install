@@ -6,8 +6,8 @@
  */
 
 use Drupal\Core\Database\Database;
-use Drupal\Driver\Database\sqlsrv\Connection;
-use Drupal\Driver\Database\sqlsrv\Utils;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Connection;
+use Drupal\sqlsrv\Driver\Database\sqlsrv\Utils;
 
 /**
  * Implements hook_uninstall().
@@ -24,7 +24,7 @@ function sqlsrv_requirements($phase) {
 
   if ($phase == 'runtime') {
 
-    /** @var \Drupal\Driver\Database\sqlsrv\Connection $connection */
+    /** @var \Drupal\sqlsrv\Driver\Database\sqlsrv\Connection $connection */
     $connection = Database::getConnection();
 
     // Nothing to do if we are not running on MSSQL.
@@ -34,7 +34,7 @@ function sqlsrv_requirements($phase) {
 
     $options = $connection->getConnectionOptions();
 
-    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    /** @var \Drupal\sqlsrv\Driver\Database\sqlsrv\Schema $schema */
     $schema = $connection->schema();
     $collation = $schema->getCollation();
     $version = $schema->EngineVersion();
