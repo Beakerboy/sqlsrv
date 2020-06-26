@@ -428,22 +428,9 @@ class Connection extends DatabaseConnection {
   }
 
   /**
-   * Prepares a query string and returns the prepared statement.
-   *
-   * This method caches prepared statements, reusing them when
-   * possible. It also prefixes tables names enclosed in curly-braces.
-   *
-   * @param string $query
-   *   The query string as SQL, with curly-braces surrounding the
-   *   table names.
-   * @param array $options
-   *   An array ooptions to determine which PDO Parameters
-   *   should be used.
-   *
-   * @return \Drupal\Core\Database\Statement
-   *   A PDO prepared statement ready for its execute() method.
+   * {@inheritdoc}
    */
-  public function prepareQuery($query, array $options = []) {
+  public function prepareStatement(string $query, array $options): StatementInterface {
     $default_options = [
       'emulate_prepares' => FALSE,
       'bypass_preprocess' => FALSE,
@@ -453,8 +440,6 @@ class Connection extends DatabaseConnection {
     // only specific for this preparation and will only override
     // the global configuration if set to different than NULL.
     $options += $default_options;
-
-    $query = $this->prefixTables($query);
 
     // Preprocess the query.
     if (!$options['bypass_preprocess']) {
@@ -467,8 +452,8 @@ class Connection extends DatabaseConnection {
       // Never use this when you need special column binding.
       // Unlike other PDO drivers, sqlsrv requires this attribute be set
       // on the statement, not the connection.
-      $driver_options[\PDO::ATTR_EMULATE_PREPARES] = TRUE;
-      $driver_options[\PDO::SQLSRV_ATTR_ENCODING] = \PDO::SQLSRV_ENCODING_UTF8;
+      $driver_options['pdo'][\PDO::ATTR_EMULATE_PREPARES] = TRUE;
+      $driver_options['pdo'][\PDO::SQLSRV_ATTR_ENCODING] = \PDO::SQLSRV_ENCODING_UTF8;
     }
 
     // We run the statements in "direct mode" because the way PDO prepares
@@ -482,20 +467,17 @@ class Connection extends DatabaseConnection {
     // you should execute your queries with PDO::SQLSRV_ATTR_DIRECT_QUERY set to
     // True. For example, if you use temporary tables in your queries,
     // PDO::SQLSRV_ATTR_DrIRECT_QUERY must be set to True.
-    $driver_options[\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
+    $driver_options['pdo'][\PDO::SQLSRV_ATTR_DIRECT_QUERY] = TRUE;
 
     // It creates a cursor for the query, which allows you to iterate over the
     // result set without fetching the whole result at once. A scrollable
     // cursor, specifically, is one that allows iterating backwards.
     // https://msdn.microsoft.com/en-us/library/hh487158%28v=sql.105%29.aspx
-    $driver_options[\PDO::ATTR_CURSOR] = \PDO::CURSOR_SCROLL;
+    $driver_options['pdo'][\PDO::ATTR_CURSOR] = \PDO::CURSOR_SCROLL;
 
     // Lets you access rows in any order. Creates a client-side cursor query.
-    $driver_options[\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
-
-    /** @var \Drupal\Core\Database\Statement $stmt */
-    $stmt = $this->connection->prepare($query, $driver_options);
-    return $stmt;
+    $driver_options['pdo'][\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
+    return parent::prepareStatement($query, $driver_options);
   }
 
   /**
