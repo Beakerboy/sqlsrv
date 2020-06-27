@@ -54,7 +54,7 @@ class Upsert extends QueryUpsert {
 
       // Prepare the query.
       /** @var \Drupal\Core\Database\Statement $stmt */
-      $stmt = $this->connection->prepareStatement($query);
+      $stmt = $this->connection->prepareStatement($query, []);
 
       // We use this array to store references to the blob handles.
       // This is necessary because the PDO will otherwise mess up with
