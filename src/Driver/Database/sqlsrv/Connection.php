@@ -751,11 +751,6 @@ class Connection extends DatabaseConnection {
    *   Query string in MS SQL format.
    */
   public function preprocessQuery($query) {
-    // Force quotes around some SQL Server reserved keywords.
-    if (preg_match('/^SELECT/i', $query)) {
-      $query = preg_replace_callback(self::RESERVED_REGEXP, [$this, 'replaceReservedCallback'], $query);
-    }
-
     // Last chance to modify some SQL Server-specific syntax.
     $replacements = [];
 
@@ -784,49 +779,6 @@ class Connection extends DatabaseConnection {
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
 
     return $query;
-  }
-
-  /**
-   * Quotes an identifier if it matches a SQL Server reserved keyword.
-   *
-   * @param string $identifier
-   *   The field to check.
-   *
-   * @return string
-   *   The identifier, quoted if it matches a SQL Server reserved keyword.
-   */
-  protected function quoteIdentifier($identifier) {
-    if (strpos($identifier, '.') !== FALSE) {
-      list($table, $identifier) = explode('.', $identifier, 2);
-    }
-    if (in_array(strtolower($identifier), $this->reservedKeyWords, TRUE)) {
-      // Quote the string for SQLServer reserved keywords.
-      $identifier = '[' . $identifier . ']';
-    }
-    return isset($table) ? $table . '.' . $identifier : $identifier;
-  }
-
-  /**
-   * Replace reserved words.
-   *
-   * This method gets called between 3,000 and 10,000 times
-   * on cold caches. Make sure it is simple and fast.
-   *
-   * @param mixed $matches
-   *   What is this?
-   *
-   * @return string
-   *   The match surrounded with brackets.
-   */
-  protected function replaceReservedCallback($matches) {
-    if ($matches[1] !== '') {
-      // Replace reserved words. We are not calling
-      // quoteIdentifier() on purpose.
-      return '[' . $matches[1] . ']';
-    }
-    // Let other value passthru.
-    // by the logic of the regex above, this will always be the last match.
-    return end($matches);
   }
 
   /**
