@@ -16,14 +16,16 @@ use Drupal\Core\Database\TransactionNameNonUniqueException;
  */
 class Connection extends DatabaseConnection {
 
-  /**
-   * The schema object for this connection.
+/**
+   * The identifier quote characters for the database type.
    *
-   * Set to NULL when the schema is destroyed.
+   * An array containing the start and end identifier quote characters for the
+   * database type. The ANSI SQL standard identifier quote character is a double
+   * quotation mark.
    *
-   * @var \Drupal\Driver\Database\sqlsrv\Schema|null
+   * @var string[]
    */
-  protected $schema = NULL;
+  protected $identifierQuotes = ['[', ']'];
 
   /**
    * Error code for Login Failed.
@@ -68,87 +70,6 @@ class Connection extends DatabaseConnection {
       \' [^\\\\\']* (?: \\\\. [^\\\\\']*) * \'
     )
   /Six';
-
-  /**
-   * The list of SQLServer reserved key words.
-   *
-   * @var array
-   */
-  private $reservedKeyWords = [
-    'action',
-    'admin',
-    'alias',
-    'any',
-    'are',
-    'array',
-    'at',
-    'begin',
-    'boolean',
-    'class',
-    'commit',
-    'contains',
-    'current',
-    'data',
-    'date',
-    'day',
-    'depth',
-    'domain',
-    'external',
-    'file',
-    'full',
-    'function',
-    'get',
-    'go',
-    'host',
-    'input',
-    'language',
-    'last',
-    'less',
-    'local',
-    'map',
-    'min',
-    'module',
-    'new',
-    'no',
-    'object',
-    'old',
-    'open',
-    'operation',
-    'parameter',
-    'parameters',
-    'path',
-    'plan',
-    'prefix',
-    'proc',
-    'public',
-    'ref',
-    'result',
-    'returns',
-    'role',
-    'row',
-    'rule',
-    'save',
-    'search',
-    'second',
-    'section',
-    'session',
-    'size',
-    'state',
-    'statistics',
-    'temporary',
-    'than',
-    'time',
-    'timestamp',
-    'tran',
-    'translate',
-    'translation',
-    'trim',
-    'user',
-    'value',
-    'variable',
-    'view',
-    'without',
-  ];
 
   /**
    * The temporary table prefix.
@@ -227,13 +148,6 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    */
-  public function mapConditionOperator($operator) {
-    return isset(static::$sqlsrvConditionOperatorMap[$operator]) ? static::$sqlsrvConditionOperatorMap[$operator] : NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function nextId($existing = 0) {
     // If an exiting value is passed, for its insertion into the sequence table.
     if ($existing > 0) {
@@ -259,7 +173,6 @@ class Connection extends DatabaseConnection {
    */
   public function __construct(\PDO $connection, array $connection_options) {
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
-    $this->identifierQuotes = ['[', ']'];
     parent::__construct($connection, $connection_options);
 
     // This driver defaults to transaction support, except if explicitly passed
