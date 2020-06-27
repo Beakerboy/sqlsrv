@@ -259,6 +259,7 @@ class Connection extends DatabaseConnection {
    */
   public function __construct(\PDO $connection, array $connection_options) {
     $connection->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, TRUE);
+    $this->identifierQuotes = ['[', ']'];
     parent::__construct($connection, $connection_options);
 
     // This driver defaults to transaction support, except if explicitly passed
