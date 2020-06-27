@@ -148,6 +148,13 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    */
+  public function mapConditionOperator($operator) {
+    return isset(static::$sqlsrvConditionOperatorMap[$operator]) ? static::$sqlsrvConditionOperatorMap[$operator] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function nextId($existing = 0) {
     // If an exiting value is passed, for its insertion into the sequence table.
     if ($existing > 0) {
