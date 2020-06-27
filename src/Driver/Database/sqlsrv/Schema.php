@@ -531,7 +531,7 @@ class Schema extends DatabaseSchema {
       $expand = TRUE;
     }
 
-    $this->connection->query('DROP INDEX ' . $name . '_idx ON [{' . $table . '}]');
+    $this->connection->query('DROP INDEX ' . $name . '_idx ON {' . $table . '}');
     $this->resetColumnInformation($table);
     // If we just dropped an XML index, we can re-expand the original primary
     // key index.
@@ -1274,7 +1274,7 @@ EOF
       $result[] = "CONSTRAINT {{$table}_pkey} PRIMARY KEY CLUSTERED ({$csv_fields})";
     }
 
-    $this->connection->queryDirect('ALTER TABLE [{' . $table . '}] ADD ' . implode(' ', $result));
+    $this->connection->queryDirect('ALTER TABLE {' . $table . '} ADD ' . implode(' ', $result));
     $this->resetColumnInformation($table);
     // If we relied on a computed column for the Primary Key,
     // at least index the fields with a regular index.
@@ -1532,10 +1532,10 @@ EOF
     }
     if (empty($xml_field)) {
       $fields_csv = implode(', ', $fields);
-      return "CREATE INDEX {$name}_idx ON [{{$table}}] ({$fields_csv})";
+      return "CREATE INDEX {$name}_idx ON {{$table}} ({$fields_csv})";
     }
     else {
-      return "CREATE PRIMARY XML INDEX {$name}_idx ON [{{$table}}] ({$xml_field})";
+      return "CREATE PRIMARY XML INDEX {$name}_idx ON {{$table}} ({$xml_field})";
     }
   }
 
