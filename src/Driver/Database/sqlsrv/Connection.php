@@ -267,16 +267,6 @@ class Connection extends DatabaseConnection {
   /**
    * {@inheritdoc}
    *
-   * Encapsulates field names in brackets when necessary.
-   */
-  public function escapeField($field) {
-    $field = parent::escapeField($field);
-    return $this->quoteIdentifier($field);
-  }
-
-  /**
-   * {@inheritdoc}
-   *
    * Allowing local or global temp tables.
    */
   protected function generateTemporaryTableName() {
