@@ -194,6 +194,10 @@ class Tasks extends InstallTasks {
       '#description' => t('Allow the table schema to be cached. This will significantly speed up the site, but the schema must be stable.'),
       '#return_value' => 'true',
     ];
+    $form['advanced_options']['autoload'] = [
+      '#type' => 'hidden',
+      '#default_value' => '',
+    ];
     // Make username not required.
     $form['username']['#required'] = FALSE;
     // Add a description for about leaving username blank.
