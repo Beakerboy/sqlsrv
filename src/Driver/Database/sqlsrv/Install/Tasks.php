@@ -30,10 +30,6 @@ class Tasks extends InstallTasks {
       'function' => 'initializeDatabase',
       'arguments' => [],
     ];
-    $this->tasks[] = [
-      'function' => 'enableModule',
-      'arguments' => [],
-    ];
   }
 
   /**
@@ -164,16 +160,6 @@ class Tasks extends InstallTasks {
   }
 
   /**
-   * Enable the SQL Server module.
-   */
-  public function enableModule() {
-    // TODO: Looks like the module hanlder service is unavailable during
-    // this installation phase?
-    // $handler = new \Drupal\Core\Extension\ModuleHandler();
-    // $handler->enable(array('sqlsrv'), FALSE);.
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getFormOptions(array $database) {
@@ -195,7 +181,9 @@ class Tasks extends InstallTasks {
       '#return_value' => 'true',
     ];
     $form['advanced_options']['autoload'] = [
-      '#type' => 'hidden',
+      '#type' => 'textfield',
+      '#title' => t('Driver Path'),
+      '#description' => t('File path - will be automatically filled in when written to the settings file.'),
       '#default_value' => '',
     ];
     // Make username not required.
