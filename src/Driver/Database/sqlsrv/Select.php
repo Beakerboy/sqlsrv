@@ -271,7 +271,7 @@ class Select extends QuerySelect {
 
       // Don't use the AS keyword for table aliases, as some
       // databases don't support it (e.g., Oracle).
-      $query .= $table_string . ' ' . $this->connection->escapeTable($table['alias']);
+      $query .= $table_string . ' ' . $this->connection->escapeAlias($table['alias']);
 
       if (!empty($table['condition'])) {
         $query .= ' ON ' . $table['condition'];
