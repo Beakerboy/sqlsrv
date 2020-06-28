@@ -126,22 +126,6 @@ class SchemaTest extends DatabaseTestBase {
   }
 
   /**
-   * Exception thrown when field does not exist.
-   */
-  public function testAddDefaultException() {
-    $this->expectException(SchemaObjectDoesNotExistException::class);
-    $this->schema->fieldSetDefault('test', 'noname', 'Elvis');
-  }
-
-  /**
-   * Exception thrown when field does not exist.
-   */
-  public function testAddNotDefaultException() {
-    $this->expectException(SchemaObjectDoesNotExistException::class);
-    $this->schema->fieldSetNoDefault('test', 'noname');
-  }
-
-  /**
    * Exception thrown when table exists.
    */
   public function testCreateTableExists() {
