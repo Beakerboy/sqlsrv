@@ -13,3 +13,6 @@ git apply connectionUnit.patch
 # Enable sqlsrv module in specific kernel tests
 wget https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch
 git apply 2966272-16.patch
+# Sort order must be specified
+wget https://www.drupal.org/files/issues/2020-06-12/3146016-5.patch
+git apply 3146016-5.patch
