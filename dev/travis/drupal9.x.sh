@@ -16,6 +16,3 @@ git apply 2966272-16.patch
 # Sort order must be specified
 wget https://www.drupal.org/files/issues/2020-06-12/3146016-5.patch
 git apply 3146016-5.patch
-# include bootstrap earlier
-wget https://www.drupal.org/files/issues/2020-06-16/3152003-2.patch
-git apply 3152003-2.patch
