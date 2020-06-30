@@ -16,7 +16,7 @@ use Drupal\Core\Database\TransactionNameNonUniqueException;
  */
 class Connection extends DatabaseConnection {
 
-/**
+  /**
    * The identifier quote characters for the database type.
    *
    * An array containing the start and end identifier quote characters for the
