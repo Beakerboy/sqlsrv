@@ -40,6 +40,9 @@ install:
   - export COMPOSER_MEMORY_LIMIT=-1
   - git clone https://git.drupalcode.org/project/drupal.git -b $DRUPAL_VERSION drupal-project
   - cd drupal-project
+  - wget https://www.drupal.org/files/issues/2020-06-21/3151118-25.patch
+  - git apply 3151118-25.patch
+  - rm 3151118-25.patch
   - composer config -g github-oauth.github.com $GITHUB_OAUTH
   - composer install
   - bash ../sqlsrv/dev/travis/drupal${DRUPAL_VERSION}.sh
