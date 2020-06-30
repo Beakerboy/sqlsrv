@@ -178,6 +178,12 @@ abstract class TestSuiteBase extends TestSuite {
     $this->addTestFiles($subset);
   }
 
+  /**
+   * Get the path to webroot.
+   *
+   * @return string
+   *   Path to webroot.
+   */
   protected static function getDrupalRoot() {
     return dirname(__DIR__, 5);
   }
