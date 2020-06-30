@@ -5,6 +5,9 @@ git apply 3136974-4.patch
 # Core Condition not able to be overridden in views...needs work.
 wget https://www.drupal.org/files/issues/2020-05-04/3130655-13.patch
 git apply 3130655-27.patch
+# Include bootstrap.inc by composer
+wget https://www.drupal.org/files/issues/2020-06-21/3151118-25.patch
+git apply 3151118-25.patch
 
 # Testing Patches
 # ConnectionUnitTest defaults to MySQL syntax
