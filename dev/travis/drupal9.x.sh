@@ -17,5 +17,5 @@ git apply 2966272-16.patch
 wget https://www.drupal.org/files/issues/2020-06-12/3146016-5.patch
 git apply 3146016-5.patch
 # include bootstrap earlier
-https://www.drupal.org/files/issues/2020-06-16/3152003-2.patch
+wget https://www.drupal.org/files/issues/2020-06-16/3152003-2.patch
 git apply 3152003-2.patch
