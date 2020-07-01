@@ -58,7 +58,7 @@ class ConditionTest extends DatabaseTestBase {
     // Set Condition to use parent::compile()
     $condition = new CoreCondition('AND');
 
-    $query = new Select('test', 't', $connection);
+    $query = new Select($connection, 'test', 't');
     $reflection = new \ReflectionClass($query);
     $reflection_property = $reflection->getProperty('condition');
     $reflection_property->setAccessible(TRUE);
@@ -83,7 +83,7 @@ class ConditionTest extends DatabaseTestBase {
   public function testPdoBugFix() {
     $connection = $this->connection;
 
-    $query = new Select('test', 't', $connection);
+    $query = new Select($connection, 'test', 't');
 
     // Create and execute buggy query.
     $query->addField('t', 'job');
