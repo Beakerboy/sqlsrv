@@ -83,5 +83,6 @@ script:
     fi
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
+      composer require phpstan/phpstan phpstan/phpstan-phpunit jangregor/phpstan-prophecy
       vendor/bin/phpstan analyze modules/sqlsrv --level 4 -c $TRAVIS_BUILD_DIR/dev/phpstan.neon
     fi
