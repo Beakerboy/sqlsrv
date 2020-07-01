@@ -39,6 +39,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/language/tests/src/Functional/ConfigurableLanguageManagerTest.php',
     '/core/modules/locale/tests/src/Functional/LocaleLocaleLookupTest.php',
     '/core/modules/path/tests/src/Functional/PathAliasTest.php',
+    '/core/modules/search/tests/src/Functional/SearchConfigSettingsFormTest.php',
   ];
 
   /**
