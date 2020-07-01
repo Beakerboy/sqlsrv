@@ -72,6 +72,15 @@ class Connection extends DatabaseConnection {
   /Six';
 
   /**
+   * The schema object for this connection.
+   *
+   * Set to NULL when the schema is destroyed.
+   *
+   * @var \Drupal\sqlsrv\Driver\Database\sqlsrv\Schema|null
+   */
+  protected $schema = NULL;
+
+  /**
    * The temporary table prefix.
    *
    * @var string
@@ -184,8 +193,7 @@ class Connection extends DatabaseConnection {
 
     // This driver defaults to transaction support, except if explicitly passed
     // FALSE.
-    $this->transactionSupport = !isset($connection_options['transactions']) || $connection_options['transactions'] !== FALSE;
-    $this->transactionalDDLSupport = $this->transactionSupport;
+    $this->transactionalDDLSupport = !isset($connection_options['transactions']) || $connection_options['transactions'] !== FALSE;
 
     // Store connection options for future reference.
     $this->connectionOptions = $connection_options;
