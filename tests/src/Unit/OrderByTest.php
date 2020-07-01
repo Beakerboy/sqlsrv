@@ -48,7 +48,7 @@ class OrderByTest extends UnitTestCase {
   public function testFieldEscaping() {
     $this->query->orderBy('x; DROP table node; --');
     $sql = $this->query->__toString();
-    $this->assertStringEndsWith('ORDER BY xDROPtablenode ASC', $sql, 'Order by field is escaped correctly.');
+    $this->assertStringEndsWith('ORDER BY [xDROPtablenode] ASC', $sql, 'Order by field is escaped correctly.');
   }
 
 }
