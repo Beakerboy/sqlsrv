@@ -104,7 +104,7 @@ class Connection extends DatabaseConnection {
 
     // Having comments in the query can be tricky and break the
     // SELECT FROM  -> SELECT INTO conversion.
-    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    /** @var \Drupal\sqlsrv\Driver\Database\sqlsrv\Schema $schema */
     $schema = $this->schema();
     $query = $schema->removeSQLComments($query);
 
@@ -745,7 +745,7 @@ class Connection extends DatabaseConnection {
     $replacements = [];
 
     // Add prefixes to Drupal-specific functions.
-    /** @var \Drupal\Driver\Database\sqlsrv\Schema $schema */
+    /** @var \Drupal\sqlsrv\Driver\Database\sqlsrv\Schema $schema */
     $schema = $this->schema();
     $defaultSchema = $schema->GetDefaultSchema();
     foreach ($schema->DrupalSpecificFunctions() as $function) {
