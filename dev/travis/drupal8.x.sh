@@ -12,9 +12,6 @@ git apply 3130655-10.patch
 # Enable sqlsrv module in specific kernel tests
 wget https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch
 git apply 2966272-16.patch
-# include bootstrap earlier
-wget https://www.drupal.org/files/issues/2020-06-16/3152003-2.patch
-git apply 3152003-2.patch
 # view sort order bug
 wget https://www.drupal.org/files/issues/2020-06-05/3146016-3.patch
 git apply 3146016-3.patch
