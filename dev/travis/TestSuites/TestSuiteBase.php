@@ -41,6 +41,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/path/tests/src/Functional/PathAliasTest.php',
     '/core/modules/search/tests/src/Functional/SearchConfigSettingsFormTest.php',
     '/core/modules/system/tests/src/Functional/Module/InstallUninstallTest.php',
+    '/core/modules/views_ui/tests/src/Functional/UnsavedPreviewTest.php',
   ];
 
   /**
