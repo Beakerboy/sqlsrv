@@ -348,6 +348,9 @@ class Connection extends DatabaseConnection {
 
   /**
    * {@inheritdoc}
+   *
+   * @return \Drupal\Core\Database\Statement
+   *   A PDO prepared statement ready for its execute() method.
    */
   public function prepareStatement(string $query, array $options): StatementInterface {
     $default_options = [
