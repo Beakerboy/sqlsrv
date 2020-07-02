@@ -627,7 +627,7 @@ class Connection extends DatabaseConnection {
     // piece.
     $default_parts = explode('.', $this->prefixes['default']);
     $table_part = array_pop($default_parts);
-    $default_parts[] = $this->tempTablePrefix . $table_part;
+    $default_parts[] = '[' . $this->tempTablePrefix . $table_part;
     $full_prefix = implode('.', $default_parts);
     array_unshift($this->prefixReplace, $full_prefix . 'db_temporary_');
   }
