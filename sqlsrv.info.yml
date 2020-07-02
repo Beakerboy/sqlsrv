@@ -3,4 +3,4 @@ type: module
 description: 'Driver for SQL Server and SQL Azure'
 package: Database engines
 # version: VERSION
-core_version_requirement: ^8.9
+core_version_requirement: ^9.1
