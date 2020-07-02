@@ -40,6 +40,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/locale/tests/src/Functional/LocaleLocaleLookupTest.php',
     '/core/modules/path/tests/src/Functional/PathAliasTest.php',
     '/core/modules/search/tests/src/Functional/SearchConfigSettingsFormTest.php',
+    '/core/modules/system/tests/src/Functional/Module/InstallUninstallTest.php',
   ];
 
   /**
