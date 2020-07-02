@@ -605,8 +605,6 @@ class Schema extends DatabaseSchema {
 
     // SQL Server supports transactional DDL, so we can just start a transaction
     // here and pray for the best.
-
-    /** @var Transaction $transaction */
     $transaction = $this->connection->startTransaction();
 
     // Prepare the specifications.
