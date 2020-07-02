@@ -399,7 +399,10 @@ class Connection extends DatabaseConnection {
 
     // Lets you access rows in any order. Creates a client-side cursor query.
     $driver_options['pdo'][\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
-    return parent::prepareStatement($query, $driver_options);
+
+    /** @var \Drupal\Core\Database\Statement $stmt */
+    $stmt = parent::prepareStatement($query, $driver_options);
+    return $stmt;
   }
 
   /**
