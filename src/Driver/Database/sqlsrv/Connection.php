@@ -347,6 +347,36 @@ class Connection extends DatabaseConnection {
   }
 
   /**
+   * Prepares a query string and returns the prepared statement.
+   *
+   * This method caches prepared statements, reusing them when possible. It also
+   * prefixes tables names enclosed in curly-braces and, optionally, quotes
+   * identifiers enclosed in square brackets.
+   *
+   * @param $query
+   *   The query string as SQL, with curly-braces surrounding the
+   *   table names.
+   * @param bool $quote_identifiers
+   *   (optional) Quote any identifiers enclosed in square brackets. Defaults to
+   *   TRUE.
+   * @param array $options
+   *   (optional) Options to affect how the statement is prepared.
+   *
+   * @return \Drupal\Core\Database\StatementInterface
+   *   A PDO prepared statement ready for its execute() method.
+   *
+   * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
+   *   ::prepareStatement instead.
+   *
+   * @see https://www.drupal.org/node/3137786
+   */
+  public function prepareQuery($query, $quote_identifiers = TRUE, array $options = []) {
+    @trigger_error('Connection::prepareQuery() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use ::prepareStatement() instead. See https://www.drupal.org/node/3137786', E_USER_DEPRECATED);
+    $options += ['allow_square_brackets' => !$quote_identifiers];
+    return $this->prepareStatement($query, $options);
+  }
+
+  /**
    * {@inheritdoc}
    *
    * @return \Drupal\Core\Database\Statement
