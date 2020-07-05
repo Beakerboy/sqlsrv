@@ -347,6 +347,33 @@ class Connection extends DatabaseConnection {
   }
 
   /**
+   * Prepares a query string and returns the prepared statement.
+   *
+   * This method caches prepared statements, reusing them when possible. It also
+   * prefixes tables names enclosed in curly-braces and, optionally, quotes
+   * identifiers enclosed in square brackets.
+   *
+   * @param $query
+   *   The query string as SQL, with curly-braces surrounding the
+   *   table names.
+   * @param bool $quote_identifiers
+   *   (optional) Quote any identifiers enclosed in square brackets. Defaults to
+   *   TRUE.
+   *
+   * @return \Drupal\Core\Database\StatementInterface
+   *   A PDO prepared statement ready for its execute() method.
+   *
+   * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
+   *   ::prepareStatement instead.
+   *
+   * @see https://www.drupal.org/node/3137786
+   */
+  public function prepareQuery($query, $quote_identifiers = TRUE) {
+    @trigger_error('Connection::prepareQuery() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use ::prepareStatement() instead. See https://www.drupal.org/node/3137786', E_USER_DEPRECATED);
+    return $this->prepareStatement($query, ['allow_square_brackets' => !$quote_identifiers]);
+  }
+
+  /**
    * {@inheritdoc}
    *
    * @return \Drupal\Core\Database\Statement
@@ -399,9 +426,12 @@ class Connection extends DatabaseConnection {
 
     // Lets you access rows in any order. Creates a client-side cursor query.
     $driver_options['pdo'][\PDO::SQLSRV_ATTR_CURSOR_SCROLL_TYPE] = \PDO::SQLSRV_CURSOR_BUFFERED;
-
+    $query = $this->prefixTables($query);
+    if (!($options['allow_square_brackets'] ?? FALSE)) {
+      $query = $this->quoteIdentifiers($query);
+    }
     /** @var \Drupal\Core\Database\Statement $stmt */
-    $stmt = parent::prepareStatement($query, $driver_options);
+    $stmt = $this->connection->prepare($query, $options['pdo'] ?? []);
     return $stmt;
   }
 
