@@ -90,7 +90,7 @@ class HandlerFieldFieldTest extends KernelTestBase {
       }
       // Set this field to be empty.
       $values[$this->fieldStorages[4]->getName()] = [['value' => NULL]];
-
+      fwrite(STDOUT, print_r($values, TRUE));
       $this->nodes[$i] = $this->createNode($values);
     }
 
