@@ -115,7 +115,7 @@ class HandlerFieldFieldTest extends KernelTestBase {
         $field_name = $this->fieldStorages[$key]->getName();
         $rendered_field = $view->style_plugin->getField($i, $field_name);
         $expected_field = $this->nodes[$i]->$field_name->value;
-        $this->assertEquals($expected_field, $rendered_field);
+        $this->assertEquals($expected_field, $rendered_field, "Field name, " . $field_name . ", with key " . $key . " and index " . $i);
       }
     }
   }
