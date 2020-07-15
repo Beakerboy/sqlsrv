@@ -31,7 +31,6 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
     '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
     '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
-    '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
     '/core/modules/migrate_drupal/tests/src/Kernel/d7/FieldDiscoveryTest.php',
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     // Functional Test Failures.
