@@ -23,8 +23,8 @@ git apply 3146016-5.patch
 wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
 git apply drupal-3111134-database_specific_types-3.patch
 # Field Render Bug
-wget http://beakerboy.com/~kevin/field_render.patch
-git apply field_render.patch
+wget https://www.drupal.org/files/issues/2020-07-15/3159382-2.patch
+git apply 3159382-2.patch
 
 # Reorganize files and directories.
 mv $TRAVIS_BUILD_DIR/dev/travis/TestSuites $TRAVIS_BUILD_DIR/tests/src/
