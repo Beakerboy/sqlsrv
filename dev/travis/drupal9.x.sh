@@ -22,6 +22,9 @@ git apply 3146016-5.patch
 # Add a sqlsrv-specific datatype to test
 wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
 git apply drupal-3111134-database_specific_types-3.patch
+# Field Render Bug
+wget http://beakerboy.com/~kevin/field_render.patch
+git apply field_render.patch
 
 # Reorganize files and directories.
 mv $TRAVIS_BUILD_DIR/dev/travis/TestSuites $TRAVIS_BUILD_DIR/tests/src/
