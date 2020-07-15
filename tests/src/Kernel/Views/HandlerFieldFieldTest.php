@@ -74,7 +74,6 @@ class HandlerFieldFieldTest extends KernelTestBase {
     // Setup basic fields.
     $this->createFields();
 
-
     // Create some nodes.
     $this->nodes = [];
     for ($i = 0; $i < 3; $i++) {
