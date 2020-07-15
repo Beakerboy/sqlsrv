@@ -121,6 +121,23 @@ class HandlerFieldFieldTest extends KernelTestBase {
   }
 
   /**
+   * Sets up the testing view with random field data.
+   *
+   * @param \Drupal\views\ViewExecutable $view
+   *   The view to add field data to.
+   */
+  protected function prepareView(ViewExecutable $view) {
+    $view->storage->invalidateCaches();
+    $view->initDisplay();
+    foreach ($this->fieldStorages as $field_storage) {
+      $field_name = $field_storage->getName();
+      $view->display_handler->options['fields'][$field_name]['id'] = $field_name;
+      $view->display_handler->options['fields'][$field_name]['table'] = 'node__' . $field_name;
+      $view->display_handler->options['fields'][$field_name]['field'] = $field_name;
+    }
+  }
+
+  /**
    * Creates the testing fields.
    */
   protected function createFields() {
