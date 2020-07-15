@@ -120,4 +120,58 @@ class HandlerFieldFieldTest extends KernelTestBase {
     }
   }
 
+  /**
+   * Creates the testing fields.
+   */
+  protected function createFields() {
+    $fields_data = [
+      [
+        'field_name' => 'field_name_0',
+        'type' => 'string',
+      ],
+      [
+        'field_name' => 'field_name_1',
+        'type' => 'string',
+      ],
+      [
+        'field_name' => 'field_name_2',
+        'type' => 'string',
+      ],
+      // Field with cardinality > 1.
+      [
+        'field_name' => 'field_name_3',
+        'type' => 'string',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+      ],
+      // Field that will have no value.
+      [
+        'field_name' => 'field_name_4',
+        'type' => 'string',
+        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+      ],
+      // Text field.
+      [
+        'field_name' => 'field_name_5',
+        'type' => 'text',
+      ],
+      // Text field with access control.
+      // @see field_test_entity_field_access()
+      [
+        'field_name' => 'field_no_view_access',
+        'type' => 'text',
+      ],
+    ];
+
+    foreach ($fields_data as $field_data) {
+      $field_data += ['entity_type' => 'node'];
+      $field_storage = FieldStorageConfig::create($field_data);
+      $field_storage->save();
+      $this->fieldStorages[] = $field_storage;
+      FieldConfig::create([
+        'field_storage' => $field_storage,
+        'bundle' => 'page',
+      ])->save();
+    }
+  }
+
 }
