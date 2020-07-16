@@ -148,7 +148,7 @@ class EntityDisplayTest extends KernelTestBase {
       ->fields('w', ['wid'])
       ->condition('type', 'system')
     //  ->condition('message', "@display '@id': Component '@name' was disabled because its settings depend on removed dependencies.")
-     // ->condition('variables', serialize($arguments))
+      ->condition('variables', serialize($arguments))
       ->execute()
       ->fetchAll();
     $log = Database::getLog('testing');
