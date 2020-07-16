@@ -154,6 +154,23 @@ class EntityDisplayTest extends KernelTestBase {
   }
 
   /**
+   * Asserts that $key is a $type type dependency of $display config entity.
+   *
+   * @param string $type
+   *   The dependency type: 'config', 'content', 'module' or 'theme'.
+   * @param string $key
+   *   The string to be checked.
+   * @param \Drupal\Core\Entity\Display\EntityDisplayInterface $display
+   *   The entity display object to get dependencies from.
+   *
+   * @return bool
+   *   TRUE if the assertion succeeded, FALSE otherwise.
+   */
+  protected function assertDependency($type, $key, EntityDisplayInterface $display) {
+    return $this->assertDependencyHelper(TRUE, $type, $key, $display);
+  }
+
+  /**
    * Asserts that $key is not a $type type dependency of $display config entity.
    *
    * @param string $type
