@@ -134,6 +134,7 @@ class EntityDisplayTest extends KernelTestBase {
     $this->assertNoDependency('module', 'color', $form_display);
     // Delete the 2nd user role entity.
     $roles[1]->delete();
+    Database::startLog('testing');
     // Reload the form display.
     $form_display = EntityFormDisplay::load($form_display->id());
     // The display exists.
@@ -150,6 +151,8 @@ class EntityDisplayTest extends KernelTestBase {
       ->condition('variables', serialize($arguments))
       ->execute()
       ->fetchAll();
+    $log = Database::getLog('testing');
+    fwrite(STDOUT, print_r($log, TRUE));
     $this->assertTrue($logged);
   }
 
