@@ -153,4 +153,45 @@ class EntityDisplayTest extends KernelTestBase {
     $this->assertTrue($logged);
   }
 
+  /**
+   * Asserts that $key is not a $type type dependency of $display config entity.
+   *
+   * @param string $type
+   *   The dependency type: 'config', 'content', 'module' or 'theme'.
+   * @param string $key
+   *   The string to be checked.
+   * @param \Drupal\Core\Entity\Display\EntityDisplayInterface $display
+   *   The entity display object to get dependencies from.
+   *
+   * @return bool
+   *   TRUE if the assertion succeeded, FALSE otherwise.
+   */
+  protected function assertNoDependency($type, $key, EntityDisplayInterface $display) {
+    return $this->assertDependencyHelper(FALSE, $type, $key, $display);
+  }
+  /**
+   * Provides a helper for dependency assertions.
+   *
+   * @param bool $assertion
+   *   Assertion: positive or negative.
+   * @param string $type
+   *   The dependency type: 'config', 'content', 'module' or 'theme'.
+   * @param string $key
+   *   The string to be checked.
+   * @param \Drupal\Core\Entity\Display\EntityDisplayInterface $display
+   *   The entity display object to get dependencies from.
+   *
+   * @return bool
+   *   TRUE if the assertion succeeded, FALSE otherwise.
+   */
+  protected function assertDependencyHelper($assertion, $type, $key, EntityDisplayInterface $display) {
+    $all_dependencies = $display->getDependencies();
+    $dependencies = !empty($all_dependencies[$type]) ? $all_dependencies[$type] : [];
+    $context = $display instanceof EntityViewDisplayInterface ? 'View' : 'Form';
+    $value = $assertion ? in_array($key, $dependencies) : !in_array($key, $dependencies);
+    $args = ['@context' => $context, '@id' => $display->id(), '@type' => $type, '@key' => $key];
+    $message = $assertion ? new FormattableMarkup("@context display '@id' depends on @type '@key'.", $args) : new FormattableMarkup("@context display '@id' do not depend on @type '@key'.", $args);
+    return $this->assert($value, $message);
+  }
+
 }
