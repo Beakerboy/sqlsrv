@@ -154,7 +154,7 @@ class EntityDisplayTest extends KernelTestBase {
     $log = Database::getLog('testing');
     // fwrite(STDOUT, print_r($log, TRUE));
     $query = "SELECT * from {watchdog}";
-    $results = Database::getConnection()->query($sql)->fetchAll();
+    $results = Database::getConnection()->query($query)->fetchAll();
     while ($row = $results->fetchAssoc()) {
       fwrite(STDOUT, print_r($row, TRUE) . "\n");
     }
