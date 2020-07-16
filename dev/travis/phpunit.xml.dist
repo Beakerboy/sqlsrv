@@ -110,7 +110,7 @@
       <directory suffix="Test.php">tests/Drupal/FunctionalTests/Update</directory>
     </testsuite>
     <testsuite name="sqlsrv">
-      <directory suffix="Test.php">../modules/sqlsrv</directory>
+      <directory suffix="Test.php">../modules/sqlsrv/tests/src/Kernel</directory>
     </testsuite>
   </testsuites>
   <listeners>
