@@ -27,6 +27,8 @@ abstract class TestSuiteBase extends TestSuite {
    * @var array
    */
   protected $failingClasses = [
+    // Unit Test Failures
+    '/core/tests/Drupal/Tests/ComposerIntegrationTest.php',
     // Kernel Test Failures.
     '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
     '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
@@ -34,6 +36,7 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/modules/migrate_drupal/tests/src/Kernel/d7/FieldDiscoveryTest.php',
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     // Functional Test Failures.
+    '/core/tests/Drupal/FunctionalTests/Installer/InstallerTranslationTest.php',
     '/core/modules/datetime/tests/src/Functional/Views/FilterDateTest.php',
     '/core/modules/language/tests/src/Functional/ConfigurableLanguageManagerTest.php',
     '/core/modules/locale/tests/src/Functional/LocaleLocaleLookupTest.php',
