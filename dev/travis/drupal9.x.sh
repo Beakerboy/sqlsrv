@@ -16,15 +16,9 @@ wget https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch
 wget http://beakerboy.com/~kevin/Function-timestamp.patch
 git apply Function-timestamp.patch
 git apply 2966272-16.patch
-# Sort order must be specified
-wget https://www.drupal.org/files/issues/2020-06-12/3146016-5.patch
-git apply 3146016-5.patch
 # Add a sqlsrv-specific datatype to test
 wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
 git apply drupal-3111134-database_specific_types-3.patch
-# Field Render Bug
-wget https://www.drupal.org/files/issues/2020-07-15/3159382-2.patch
-git apply 3159382-2.patch
 
 # Reorganize files and directories.
 mv $TRAVIS_BUILD_DIR/dev/travis/TestSuites $TRAVIS_BUILD_DIR/tests/src/
