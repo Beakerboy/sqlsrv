@@ -4,6 +4,7 @@ namespace Drupal\Tests\sqlsrv\Unit;
 
 use Drupal\Composer\Plugin\VendorHardening\Config;
 use Drupal\Core\Composer\Composer;
+use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\Composer\ComposerIntegrationTrait;
 use Symfony\Component\Yaml\Yaml;
 
