@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests;
+namespace Drupal\Tests\sqlsrv\Unit;
 
 use Drupal\Composer\Plugin\VendorHardening\Config;
 use Drupal\Core\Composer\Composer;
