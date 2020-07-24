@@ -5,7 +5,7 @@ env:
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.1.x TEST_SUITE=core-extensions-kernel-1
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.1.x TEST_SUITE=core-extensions-kernel-2
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.1.x TEST_SUITE=core-extensions-kernel-3
-  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.1.x TEST_SUITE=passing_functional,passing_unit CODE_SNIFF=yes APACHE=yes
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.1.x TEST_SUITE=passing_functional,unit CODE_SNIFF=yes APACHE=yes
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.1.x TEST_SUITE=passing_functional2 APACHE=yes
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.1.x TEST_SUITE=failing APACHE=yes
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.1.x TEST_SUITE=core-extensions-functional-1 APACHE=yes
@@ -70,8 +70,8 @@ script:
   - vendor/bin/phpunit -v -c core/phpunit.xml --testsuite=$TEST_SUITE
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
-      phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
-      phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/sqlsrv
+      vendor/bin/phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
+      vendor/bin/phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/sqlsrv
     fi
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
