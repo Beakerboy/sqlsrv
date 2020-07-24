@@ -1,7 +1,7 @@
 language: php
 # Functional and Unit tests require Apache
 env:
-  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.1.x TEST_SUITE=passing_functional,passing_unit CODE_SNIFF=yes APACHE=yes
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.1.x TEST_SUITE=passing_unit CODE_SNIFF=yes APACHE=yes
 
 php:
   - '7.4'
