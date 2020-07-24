@@ -24,7 +24,6 @@ install:
   - git apply 3151118-25.patch
   - rm 3151118-25.patch
   - composer config -g github-oauth.github.com $GITHUB_OAUTH
-  - composer require squizlabs/php_codesniffer
   - composer install
   - bash ../sqlsrv/dev/travis/drupal${DRUPAL_VERSION}.sh
 before_script:
@@ -51,6 +50,8 @@ script:
   - vendor/bin/phpunit -v -c core/phpunit.xml --testsuite=$TEST_SUITE
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
+      composer require squizlabs/php_codesniffer
+      composer install
       phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
       phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/sqlsrv
     fi
