@@ -1,7 +1,4 @@
 #Core Patches
-# Encapsulate fields.
-wget http://beakerboy.com/~kevin/3136974-4.patch
-git apply 3136974-4.patch
 # Core Condition not able to be overridden in views.
 wget https://www.drupal.org/files/issues/2020-05-31/3130655-27.patch
 git apply 3130655-27.patch
