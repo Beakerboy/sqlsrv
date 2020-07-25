@@ -27,8 +27,6 @@ abstract class TestSuiteBase extends TestSuite {
    * @var array
    */
   protected $failingClasses = [
-    // Unit Test Failures
-    '/core/tests/Drupal/Tests/ComposerIntegrationTest.php',
     // Kernel Test Failures.
     '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
     '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
