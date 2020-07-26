@@ -12,14 +12,14 @@ environment:
     - TEST_SUITE: core-extensions-kernel-1
 install:
   # Set up the Environment
-  - cmd: mkdir c:\testlogs
+  #- cmd: mkdir c:\testlogs
   # SET UP DATABASE
   - ps: Start-Service 'MSSQL$SQL2016' | out-null
-  - ps: Set-Service 'SQLAgent$SQL2016' -StartupType Manual | out-null
+  #- ps: Set-Service 'SQLAgent$SQL2016' -StartupType Manual | out-null
   # configure RPC server
   - ps: netsh advfirewall firewall set rule group="Windows Management Instrumentation (WMI)" new enable=yes
   # is this needed
-  - ps: Start-Service W3SVC | out-null
+  #- ps: Start-Service W3SVC | out-null
   - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
   # Enable Regex
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\testlogs\RegEx.dll')
