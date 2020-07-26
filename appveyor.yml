@@ -2,7 +2,7 @@
 services:
   - mssql2016
 image:
-  - Visual Studio 2017
+  - Visual Studio 2015
 install:
   - ps: Start-Service 'MSSQL$SQL2016' | out-null
   - ps: Invoke-Sqlcmd -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
