@@ -4,4 +4,4 @@ services:
 image:
   - Visual Studio 2015
 install:
-  - ps: Invoke-Sqlcmd -ServerInstance "(local)\SQL2016" -Username sa -Password "Password12!" -Query "CREATE DATABASE mydrupalsite"
+  - ps: Invoke-Sqlcmd -Query "CREATE DATABASE mydrupalsite" -ConnectionString "(local)\SQL2016;Database=master;User ID=sa;Password=Password12!"
