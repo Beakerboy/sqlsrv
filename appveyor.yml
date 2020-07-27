@@ -56,16 +56,20 @@ build_script:
   - cmd: choco install composer --version=4.10.0 -y --no-progress
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
-  #- cmd: composer global require hirak/prestissimo --no-progress
   - cmd: cd /d c:\projects
   # Create a new drupal project
   - cmd: set COMPOSER_MEMORY_LIMIT=-1
   - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x drupal-project
+  - cmd: cd /d C:\projects\drupal-project
+  # Apply and pre-composer patches
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-21/3151118-25.patch', 'C:\projects\drupal-project\3151118-25.patch')
+  - cmd: git apply 3151118-25.patch
+  - cmd: del 3151118-25.patch
+  - cmd: composer install
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
   - cmd: cd /d C:\projects\drupal-project
   # Install other composer packages for production
-  #- cmd: composer require symfony/psr-http-message-bridge:1.1.x-dev
   # Copy in the module
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\contrib\sqlsrv
