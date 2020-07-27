@@ -3,7 +3,7 @@ services:
   - mssql2016
 image:
   - Visual Studio 2015
-install:
+build_script:
   - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\testlogs\RegEx.dll')
   - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
@@ -65,7 +65,6 @@ install:
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\drivers
   - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest
-build_script:
   # Override core condition
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch', 'C:\projects\drupal-project\3113403-33.patch')
   - cmd: git apply 3113403-33.patch
