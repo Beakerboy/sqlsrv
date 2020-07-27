@@ -15,9 +15,9 @@ build_script:
   - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
 # SET UP PHP
   # is OpenSSL needed?
-  - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
-  - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\TestLogs\choco_install_urlrewrite.txt
-  - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\TestLogs\choco_install_openssl.txt
+  - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\testlogs\choco_install_php.txt
+  - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\testlogs\choco_install_urlrewrite.txt
+  - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\testlogs\choco_install_openssl.txt
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
   - ps: |
       $cli = New-Object Net.WebClient
