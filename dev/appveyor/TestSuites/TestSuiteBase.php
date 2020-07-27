@@ -16,8 +16,8 @@ abstract class TestSuiteBase extends TestSuite {
    * @var array
    */
   protected static $coreExtensionPatterns = [
-    '[a-h]',
-    '[i-q]',
+    '[a-g]',
+    '[h-q]',
     '[r-z]',
   ];
 
@@ -32,47 +32,16 @@ abstract class TestSuiteBase extends TestSuite {
     '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
     '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
     '/core/modules/migrate_drupal/tests/src/Kernel/d7/FieldDiscoveryTest.php',
-    '/core/modules/field/tests/src/Kernel/Views/HandlerFieldFieldTest.php',
     '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
-    '/core/modules/workspaces/tests/src/Kernel/WorkspaceIntegrationTest.php',
     // Functional Test Failures.
-    '/core/modules/aggregator/tests/src/Functional/Rest/FeedJsonAnonTest.php',
-    '/core/modules/aggregator/tests/src/Functional/Rest/FeedJsonBasicAuthTest.php',
-    '/core/modules/aggregator/tests/src/Functional/Hal/FeedHalJsonAnonTest.php',
+    '/core/tests/Drupal/FunctionalTests/Installer/InstallerTranslationTest.php',
     '/core/modules/datetime/tests/src/Functional/Views/FilterDateTest.php',
     '/core/modules/language/tests/src/Functional/ConfigurableLanguageManagerTest.php',
     '/core/modules/locale/tests/src/Functional/LocaleLocaleLookupTest.php',
     '/core/modules/path/tests/src/Functional/PathAliasTest.php',
-    '/core/modules/rest/tests/src/Functional/ResourceTestBase.php',
-    '/core/modules/taxonomy/tests/src/Functional/Views/TermDisplayConfigurableTest.php',
-    // Update Test Failures.
-    '/core/modules/block_content/tests/src/Functional/Update/BlockContentReusableUpdateTest.php',
-    '/core/modules/block_content/tests/src/Functional/Update/BlockContentUpdateTest.php',
-    '/core/modules/content_moderation/tests/src/Functional/Update/DefaultContentModerationStateRevisionUpdateTest.php',
-    '/core/modules/dblog/tests/src/Functional/Update/DblogFiltersAndFieldsUpgradeTest.php',
-    '/core/modules/dblog/tests/src/Functional/Update/DblogRecentLogsUsingViewsUpdateTest.php',
-    '/core/modules/aggregator/tests/src/Functional/Update/AggregatorUpdateTest.php',
-    '/core/modules/field/tests/src/Functional/Update/EntityReferenceHandlerSettingUpdateTest.php',
-    '/core/modules/field/tests/src/Functional/Update/EmailWidgetSizeSettingUpdateTest.php',
-    '/core/modules/field/tests/src/Functional/Update/FieldUpdateTest.php',
-    '/core/modules/file/tests/src/Functional/Update/FileUpdateTest.php',
-    '/core/modules/file/tests/src/Functional/Update/FileUsageTemporaryDeletionConfigurationUpdateTest.php',
-    '/core/modules/hal/tests/src/Functional/Update/CreateHalSettingsForLinkDomainUpdateTest.php',
-    '/core/modules/hal/tests/src/Functional/Update/MigrateLinkDomainSettingFromRestToHalUpdateTest.php',
-    '/core/modules/layout_builder/tests/src/Functional/Update/LayoutBuilderContextMappingUpdatePathTest.php',
-    '/core/modules/layout_builder/tests/src/Functional/Update/Translatability/MakeLayoutUntranslatableUpdatePathTestBase.php',
-    '/core/modules/layout_builder/tests/src/Functional/Update/TempstoreKeyUpdatePathTest.php',
-    '/core/modules/system/tests/src/Functional/Update/AutomatedCronUpdateWithAutomatedCronTest.php',
-    '/core/modules/system/tests/src/Functional/Update/ConfigOverridesUpdateTest.php',
-    '/core/modules/system/tests/src/Functional/Update/EntityUpdateAddRevisionDefaultTest.php',
-    '/core/modules/system/tests/src/Functional/Update/EntityUpdateAddRevisionTranslationAffectedTest.php',
-    '/core/modules/system/tests/src/Functional/Update/LocalActionsAndTasksConvertedIntoBlocksUpdateTest.php',
-    '/core/modules/system/tests/src/Functional/Update/MenuTreeSerializationTitleTest.php',
-    '/core/modules/system/tests/src/Functional/Update/SiteBrandingConvertedIntoBlockUpdateTest.php',
-    '/core/modules/system/tests/src/Functional/Update/UpdateActionsWithEntityPluginsTest.php',
-    '/core/modules/user/tests/src/Functional/Update/UserUpdateEmailToken.php',
-    '/core/modules/views/tests/src/Functional/Update/CacheabilityMetadataUpdateTest.php',
-    '/core/modules/workspaces/tests/src/Functional/Update/WorkspacesUpdateTest.php',
+    '/core/modules/search/tests/src/Functional/SearchConfigSettingsFormTest.php',
+    '/core/modules/system/tests/src/Functional/Module/InstallUninstallTest.php',
+    '/core/modules/views_ui/tests/src/Functional/UnsavedPreviewTest.php',
   ];
 
   /**
@@ -166,12 +135,12 @@ abstract class TestSuiteBase extends TestSuite {
       25, 25, 25, 30, 25,
       25, 25, 25, 25, 25,
       25, 25, 25, 25, 25,
-      25, 25, 25, 25, 25,
+      25, 25, 25, 20, 20,
       25, 25, 25, 25, 25,
       25, 25, 25, 25, 25,
       30, 25, 25, 25, 25,
       25, 25, 25, 25, 25,
-      25, 25, 25,
+      25, 25, 25, 25,
     ];
     $index = rand(0, 58);
     $length = $sizes[$index];
@@ -179,6 +148,16 @@ abstract class TestSuiteBase extends TestSuite {
     $subset = array_splice($passing_tests, $offset, $length);
     fwrite(STDOUT, "SPLICE:" . $index);
     $this->addTestFiles($subset);
+  }
+
+  /**
+   * Get the path to webroot.
+   *
+   * @return string
+   *   Path to webroot.
+   */
+  protected static function getDrupalRoot() {
+    return dirname(__DIR__, 5);
   }
 
 }
