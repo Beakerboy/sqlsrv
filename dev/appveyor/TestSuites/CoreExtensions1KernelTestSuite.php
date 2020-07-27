@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\sqlsrv\TestSuites;
 
+require_once __DIR__ . '/AppveyorTestSuiteBase.php';
+
 /**
  * Discovers tests for the kernel test suite.
  */
