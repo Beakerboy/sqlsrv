@@ -4,4 +4,4 @@ services:
 image:
   - Visual Studio 2015
 build_script:
-  - cmd: sqlcmd -Q "CREATE DATABASE mydrupalsite"
+  - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
