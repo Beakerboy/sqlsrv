@@ -4,8 +4,11 @@ services:
   - iis
 image:
   - Visual Studio 2017
+environment:
+  matrix:
+    - TEST_SUITE: core-kernel
+    - TEST_SUITE: core-extensions-kernel-1
 install:
-
 # Set up the Environment
   - cmd: mkdir c:\testlogs
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\testlogs\RegEx.dll')
@@ -73,10 +76,9 @@ build_script:
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-18/3130655-44.patch', 'C:\projects\drupal-project\3130655-44.patch')
   - cmd: git apply 3130655-44.patch
 before_test:
-  - cmd: cd C:\projects\drupal-project
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - cmd: cp dev\travis\phpunit.xml.dist C:\projects\drupal-project\core\phpunit.xml
   - cmd: mkdir .\build\logs
 test_script:
   - cmd: cd C:\projects\drupal-project
-  - cmd: phpunit -vvv -c core\phpunit.xml --testsuite=%TEST_SUITE%
+  - cmd: C:\projects\drupal-project\vendor\bin\phpunit -vvv -c C:\projects\drupal-project\core\phpunit.xml --testsuite=%TEST_SUITE%
