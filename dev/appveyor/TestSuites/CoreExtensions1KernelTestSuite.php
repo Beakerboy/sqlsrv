@@ -2,12 +2,10 @@
 
 namespace Drupal\Tests\sqlsrv\TestSuites;
 
-require_once __DIR__ . '/TestSuiteBase.php';
-
 /**
  * Discovers tests for the kernel test suite.
  */
-final class CoreExtensions1KernelTestSuite extends TestSuiteBase {
+final class CoreExtensions1KernelTestSuite extends AppveyorTestSuiteBase {
 
   /**
    * Factory method which loads up a suite with all kernel tests.
