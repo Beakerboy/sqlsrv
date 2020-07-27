@@ -69,31 +69,9 @@ build_script:
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\contrib\sqlsrv
   - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest
-  # Override core condition
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch', 'C:\projects\drupal-project\3113403-33.patch')
-  - cmd: git apply 3113403-33.patch
-  # Logger backtrace incorrect. pushed to 9.x
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-27/2867788-92.patch', 'C:\projects\drupal-project\2867788-92.patch')
-  # core Condition not able to be overridden in views...needs work. 
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-04/3130655-10.patch', 'C:\projects\drupal-project\3130655-10.patch')
-  - cmd: git apply 2867788-92.patch
-  - cmd: git apply 3130655-10.patch
-  # Testing-only patches
-  # directory separator
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-11/3150731-11.patch', 'C:\projects\drupal-project\3150731-11.patch')
-  - cmd: git apply 3150731-11.patch
-  # view sort order bug
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-05/3146016-3.patch', 'C:\projects\drupal-project\3146016-3.patch')
-  - cmd: git apply 3146016-3.patch
-  # Fix format of deprecation notices for phpcs 
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch', 'C:\projects\drupal-project\3108540-11.patch')
-  # Add a sqlsrv-specific datatype to test
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch', 'C:\projects\drupal-project\drupal-3111134-database_specific_types-3.patch')
-  # Enable sqlsrv module in specific kernel tests
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch', 'C:\projects\drupal-project\2966272-16.patch')
-  - cmd: git apply 2966272-16.patch
-  - cmd: git apply drupal-3111134-database_specific_types-3.patch
-  - cmd: git apply 3108540-11.patch
+  # Core Condition not able to be overridden in views.
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-18/3130655-44.patch', 'C:\projects\drupal-project\3130655-44.patch')
+  - cmd: git apply 3130655-44.patch
 before_test:
   - cmd: cd C:\projects\drupal-project
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
