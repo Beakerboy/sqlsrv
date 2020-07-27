@@ -5,7 +5,7 @@ image:
   - Visual Studio 2017
 environment:
   matrix:
-    - TEST_SUITE: core-kernel
+    - TEST_SUITE: unit
     - TEST_SUITE: core-extensions-kernel-1
 install:
 # Set up the Environment
