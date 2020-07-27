@@ -79,9 +79,9 @@ build_script:
   # Core Condition not able to be overridden in views.
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-18/3130655-44.patch', 'C:\projects\drupal-project\3130655-44.patch')
   - cmd: git apply 3130655-44.patch
-  - ps: ((Get-Content -path %APPVEYOR_BUILD_FOLDER%\dev\travis\phpunit.xml.dist -Raw) -replace 'WEB_DIR/sites/simpletest/browser_output','C:\projects\drupal-project\sites\simpletest\browser_output') | Set-Content -Path %APPVEYOR_BUILD_FOLDER%\dev\travis\phpunit.xml.dist
-before_test:
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - ps: ((Get-Content -path dev\travis\phpunit.xml.dist -Raw) -replace 'WEB_DIR/sites/simpletest/browser_output','C:\projects\drupal-project\sites\simpletest\browser_output') | Set-Content -Path dev\travis\phpunit.xml.dist
+before_test:
   - cmd: cp dev\travis\phpunit.xml.dist C:\projects\drupal-project\core\phpunit.xml
   - cmd: mkdir .\build\logs
 test_script:
