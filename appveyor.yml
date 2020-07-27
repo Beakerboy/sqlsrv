@@ -63,9 +63,9 @@ build_script:
   - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x drupal-project
   - cmd: cd /d C:\projects\drupal-project
   # Apply and pre-composer patches
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-21/3151118-25.patch', 'C:\projects\drupal-project\3151118-25.patch')
-  - cmd: git apply 3151118-25.patch
-  - cmd: del 3151118-25.patch
+  #- ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-21/3151118-25.patch', 'C:\projects\drupal-project\3151118-25.patch')
+  #- cmd: git apply 3151118-25.patch
+  #- cmd: del 3151118-25.patch
   - cmd: composer install
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
