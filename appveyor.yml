@@ -46,6 +46,7 @@ build_script:
   - ps: Add-Content C:\tools\php\php.ini "extension=php_openssl"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_mbstring"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_curl"
+  - ps: Add-Content C:\tools\php\php.ini "extension=php_yaml"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_gd2.dll"
   - ps: Add-Content C:\tools\php\php.ini 'curl.cainfo="C:\tools\php\cacert.pem"'
   - ps: Add-Content C:\tools\php\php.ini 'openssl.cafile="C:\tools\php\cacert.pem"'
