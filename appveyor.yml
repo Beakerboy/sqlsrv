@@ -4,4 +4,4 @@ services:
 image:
   - Visual Studio 2015
 build_script:
-  - ps: powershell .\dev\appveyor\mssql2016.ps1
+  - cmd: sqlcmd -Q "CREATE DATABASE mydrupalsite"
