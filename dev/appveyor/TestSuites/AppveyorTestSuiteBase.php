@@ -13,8 +13,8 @@ abstract class AppveyorTestSuiteBase extends TestSuiteBase {
    * @var array
    */
   protected static $coreExtensionPatterns = [
-    '[a-g]',
-    '[h-q]',
+    '[a-f]',
+    '[g-q]',
     '[r-z]',
   ];
 
