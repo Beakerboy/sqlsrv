@@ -16,7 +16,7 @@ final class CoreExtensions1KernelTestSuite extends TestSuiteBase {
    *   The test suite.
    */
   public static function suite() {
-    $root = dirname(__DIR__, 6);
+    $root = self::getDrupalRoot();
     $suite = new static('kernel');
     $suite->addExtensionTestsBySuiteNamespace($root, 'Kernel', self::$coreExtensionPatterns[0]);
     return $suite;
