@@ -1,6 +1,3 @@
-skip_tags: true
-init:
-  - ps: ''
 services:
   - mssql2016
   - iis
@@ -8,18 +5,22 @@ image:
   - Visual Studio 2017
 environment:
   matrix:
-    - TEST_SUITE: core-kernel
+    - TEST_SUITE: unit
     - TEST_SUITE: core-extensions-kernel-1
 install:
-  # Set up the Environment
+# Set up the Environment
   - cmd: mkdir c:\testlogs
-  # SET UP DATABASE
-  - ps: powershell .\dev\appveyor\mssql2016.ps1
-  # SET UP PHP
+  - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\testlogs\RegEx.dll')
+build_script:
+  - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
+  - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
+  - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "CREATE ASSEMBLY Regex from 'C:\testlogs\RegEx.dll' WITH PERMISSION_SET = SAFE"
+  - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
+# SET UP PHP
   # is OpenSSL needed?
   - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
-  - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\TestLogs\choco_install_urlrewrite.txt
-  - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\TestLogs\choco_install_openssl.txt
+  - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\testlogs\choco_install_urlrewrite.txt
+  - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\testlogs\choco_install_openssl.txt
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
   - ps: |
       $cli = New-Object Net.WebClient
@@ -55,53 +56,34 @@ install:
   - cmd: choco install composer --version=4.10.0 -y --no-progress
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
-  - cmd: composer global require hirak/prestissimo --no-progress
   - cmd: cd /d c:\projects
   # Create a new drupal project
   - cmd: set COMPOSER_MEMORY_LIMIT=-1
   - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x drupal-project
+  - cmd: cd /d C:\projects\drupal-project
+  # Apply and pre-composer patches
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-21/3151118-25.patch', 'C:\projects\drupal-project\3151118-25.patch')
+  - cmd: git apply 3151118-25.patch
+  - cmd: del 3151118-25.patch
+  - cmd: composer install
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
   - cmd: cd /d C:\projects\drupal-project
   # Install other composer packages for production
-  - cmd: composer require symfony/psr-http-message-bridge:1.1.x-dev
   # Copy in the module
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\contrib\sqlsrv
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\drivers %cd%\drivers
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\sqlsrv
   - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest
-build_script:
-  # Override core condition
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-03-10/3113403-33.patch', 'C:\projects\drupal-project\3113403-33.patch')
-  - cmd: git apply 3113403-33.patch
-  # Logger backtrace incorrect. pushed to 9.x
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-27/2867788-92.patch', 'C:\projects\drupal-project\2867788-92.patch')
-  # core Condition not able to be overridden in views...needs work. 
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-04/3130655-10.patch', 'C:\projects\drupal-project\3130655-10.patch')
-  - cmd: git apply 2867788-92.patch
-  - cmd: git apply 3130655-10.patch
-  # Testing-only patches
-  # directory separator
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-11/3150731-11.patch', 'C:\projects\drupal-project\3150731-11.patch')
-  - cmd: git apply 3150731-11.patch
-  # view sort order bug
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-05/3146016-3.patch', 'C:\projects\drupal-project\3146016-3.patch')
-  - cmd: git apply 3146016-3.patch
-  # Fix format of deprecation notices for phpcs 
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-25/3108540-11.patch', 'C:\projects\drupal-project\3108540-11.patch')
-  # Add a sqlsrv-specific datatype to test
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch', 'C:\projects\drupal-project\drupal-3111134-database_specific_types-3.patch')
-  # Enable sqlsrv module in specific kernel tests
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch', 'C:\projects\drupal-project\2966272-16.patch')
-  - cmd: git apply 2966272-16.patch
-  - cmd: git apply drupal-3111134-database_specific_types-3.patch
-  - cmd: git apply 3108540-11.patch
-before_test:
-  - cmd: cd C:\projects\drupal-project
+  - cmd: mkdir C:\projects\drupal-project\sites\simpletest\browser_output
+  # Core Condition not able to be overridden in views.
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-18/3130655-44.patch', 'C:\projects\drupal-project\3130655-44.patch')
+  - cmd: git apply 3130655-44.patch
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
+  - ps: ((Get-Content -path dev\travis\phpunit.xml.dist -Raw) -replace 'WEB_DIR/sites/simpletest/browser_output','C:\projects\drupal-project\sites\simpletest\browser_output') | Set-Content -Path dev\travis\phpunit.xml.dist
+before_test:
   - cmd: cp dev\travis\phpunit.xml.dist C:\projects\drupal-project\core\phpunit.xml
   - cmd: mkdir .\build\logs
 test_script:
   - cmd: cd C:\projects\drupal-project
-  - cmd: phpunit -vvv -c core\phpunit.xml --testsuite=%TEST_SUITE%
+  - cmd: vendor\bin\phpunit -vvv -c core\phpunit.xml --testsuite=%TEST_SUITE%

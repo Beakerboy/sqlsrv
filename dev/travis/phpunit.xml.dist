@@ -123,7 +123,6 @@
   <!-- Filter for coverage reports. -->
   <filter>
     <whitelist>
-      <directory>../drivers/lib</directory>
       <!-- Extensions can have their own test directories, so exclude those. -->
       <directory>../modules/contrib</directory>
       <exclude>
