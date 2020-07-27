@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\sqlsrv\TestSuites;
 
+require_once __DIR__ . '/TestSuiteBase.php';
+
 /**
  * Base class for Drupal test suites.
  */
