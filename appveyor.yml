@@ -3,7 +3,7 @@ services:
   - mssql2016
   - iis
 image:
-  - Visual Studio 2015
+  - Visual Studio 2017
 install:
 
 # Set up the Environment
