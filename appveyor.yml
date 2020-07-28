@@ -74,7 +74,7 @@ build_script:
   # Install other composer packages for production
   # Copy in the module
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\CITestSuiteBase.php %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\CITestSuiteBase.php %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\sqlsrv
   - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest
