@@ -71,20 +71,8 @@
     <testsuite name="core-extensions-kernel-5">
       <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions5KernelTestSuite.php</file>
     </testsuite>
-   <testsuite name="core-extensions-functional-1">
-      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions1FunctionalTestSuite.php</file>
-    </testsuite>
-   <testsuite name="core-extensions-functional-2">
-      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions2FunctionalTestSuite.php</file>
-    </testsuite>
-   <testsuite name="core-extensions-functional-3">
-      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions3FunctionalTestSuite.php</file>
-    </testsuite>
-   <testsuite name="core-extensions-functional-4">
-      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions4FunctionalTestSuite.php</file>
-    </testsuite>
-   <testsuite name="core-extensions-functional-5">
-      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensions5FunctionalTestSuite.php</file>
+   <testsuite name="core-extensions-functional">
+      <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensionsFunctionalTestSuite.php</file>
     </testsuite>
     <testsuite name="failing">
       <file>../modules/sqlsrv/tests/src/TestSuites/FailingTestsTestSuite.php</file>
