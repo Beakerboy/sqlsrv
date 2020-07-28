@@ -28,7 +28,7 @@ abstract class CITestSuiteBase extends TestSuiteBase {
    *
    * @var array
    */
-  protected $functionalSizes = [
+  protected static $functionalSizes = [
       17, 34, 25, 30, 30,
       25, 25, 25, 30, 25,
       25, 15, 25, 25, 25,

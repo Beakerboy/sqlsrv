@@ -16,7 +16,7 @@ final class CoreExtensions4KernelTestSuite extends CITestSuiteBase {
    *   The test suite.
    */
   public static function suite() {
-    return $this->getCoreExtensionSuite(4);
+    return self::getCoreExtensionSuite(4);
   }
 
 }

@@ -117,7 +117,7 @@ abstract class TestSuiteBase extends TestSuite {
         }
       }
     }
-    $sizes =$this->functionalSizes; 
+    $sizes = static::$functionalSizes; 
     if ($index == -1) {
       $index = rand(0, 58);
     }
@@ -149,7 +149,7 @@ abstract class TestSuiteBase extends TestSuite {
    *   The test suite.
    */
   public static function getCoreExtensionSuite($index) {
-    $root = self::getDrupalRoot();
+    $root = static::getDrupalRoot();
     $suite = new static('kernel');
     $suite->addExtensionTestsBySuiteNamespace($root, 'Kernel', self::$coreExtensionPatterns[$index]);
     return $suite;
