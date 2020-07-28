@@ -151,7 +151,7 @@ abstract class TestSuiteBase extends TestSuite {
   public static function getCoreExtensionSuite($index) {
     $root = static::getDrupalRoot();
     $suite = new static('kernel');
-    $suite->addExtensionTestsBySuiteNamespace($root, 'Kernel', self::$coreExtensionPatterns[$index]);
+    $suite->addExtensionTestsBySuiteNamespace($root, 'Kernel', static::$coreExtensionPatterns[$index]);
     return $suite;
   }
 
