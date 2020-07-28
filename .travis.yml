@@ -65,7 +65,7 @@ before_script:
        sudo service apache2 restart
      fi
 script:
-  - cp $TRAVIS_BUILD_DIR/dev/travis/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
+  - cp $TRAVIS_BUILD_DIR/dev/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
   - cd $TRAVIS_BUILD_DIR/../drupal-project
   - vendor/bin/phpunit -v -c core/phpunit.xml --testsuite=$TEST_SUITE
   - |
