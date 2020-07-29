@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\sqlsrv\TestSuites;
 
-require_once __DIR__ . '/TestSuiteBase.php';
+require_once __DIR__ . '/CITestSuiteBase.php';
 
 /**
  * Discovers tests for the kernel test suite.
  */
-final class CoreExtensions4FunctionalTestSuite extends TestSuiteBase {
+final class CoreExtensionsFunctionalTestSuite extends CITestSuiteBase {
 
   /**
    * Factory method which loads up a suite with all kernel tests.
@@ -18,7 +18,7 @@ final class CoreExtensions4FunctionalTestSuite extends TestSuiteBase {
   public static function suite() {
     $root = self::getDrupalRoot();
     $suite = new static('functional');
-    $suite->addExtensionTestsBySuiteNamespaceAndChunk($root, 'Functional', 3);
+    $suite->addExtensionTestsBySuiteNamespaceAndChunk($root, 'Functional');
     return $suite;
   }
 

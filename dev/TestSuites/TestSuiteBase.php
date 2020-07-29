@@ -11,17 +11,6 @@ use Drupal\Core\Test\TestDiscovery;
 abstract class TestSuiteBase extends TestSuite {
 
   /**
-   * Regex patterns to split up core Kernel extensions.
-   *
-   * @var array
-   */
-  protected static $coreExtensionPatterns = [
-    '[a-g]',
-    '[h-q]',
-    '[r-z]',
-  ];
-
-  /**
    * The failing test files.
    *
    * @var array
@@ -107,7 +96,7 @@ abstract class TestSuiteBase extends TestSuite {
    * @param int $index
    *   The chunk number to test.
    */
-  protected function addExtensionTestsBySuiteNamespaceAndChunk($root, $suite_namespace, $index = 0) {
+  protected function addExtensionTestsBySuiteNamespaceAndChunk($root, $suite_namespace, $index = -1) {
     $failing_classes = [];
     foreach ($this->failingClasses as $failing_class) {
       $failing_classes[] = $root . $failing_class;
@@ -128,25 +117,18 @@ abstract class TestSuiteBase extends TestSuite {
         }
       }
     }
-    $sizes = [
-      17, 34, 25, 30, 30,
-      25, 25, 25, 30, 25,
-      25, 15, 25, 25, 25,
-      25, 25, 25, 30, 25,
-      25, 25, 25, 25, 25,
-      25, 25, 25, 25, 25,
-      25, 25, 25, 20, 20,
-      25, 25, 25, 25, 25,
-      25, 25, 25, 25, 25,
-      30, 25, 25, 25, 25,
-      25, 25, 25, 25, 25,
-      25, 25, 25, 25,
-    ];
-    $index = rand(0, 58);
+    $sizes = static::$functionalSizes;
+    $total_size = array_sum($sizes);
+    $total_tests = count($passing_tests);
+    if ($index == -1) {
+      $index = rand(0, count($sizes) - 1);
+    }
     $length = $sizes[$index];
     $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index));
     $subset = array_splice($passing_tests, $offset, $length);
-    fwrite(STDOUT, "SPLICE:" . $index);
+    $extend = max(0, $total_tests - $total_size);
+    $message =  "  SPLICE:" . $index . "  EXTEND:" . $extend . "  ";
+    fwrite(STDOUT, $message);
     $this->addTestFiles($subset);
   }
 
@@ -158,6 +140,19 @@ abstract class TestSuiteBase extends TestSuite {
    */
   protected static function getDrupalRoot() {
     return dirname(__DIR__, 5);
+  }
+
+  /**
+   * Fetch a subset of the Core Extension tests.
+   *
+   * @return static
+   *   The test suite.
+   */
+  public static function getCoreExtensionSuite($index) {
+    $root = static::getDrupalRoot();
+    $suite = new static('kernel');
+    $suite->addExtensionTestsBySuiteNamespace($root, 'Kernel', static::$coreExtensionPatterns[$index]);
+    return $suite;
   }
 
 }

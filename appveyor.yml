@@ -5,8 +5,12 @@ image:
   - Visual Studio 2017
 environment:
   matrix:
-    - TEST_SUITE: unit
+    - TEST_SUITE: core-kernel
     - TEST_SUITE: core-extensions-kernel-1
+    - TEST_SUITE: core-extensions-kernel-2
+    - TEST_SUITE: core-extensions-kernel-3
+    - TEST_SUITE: passing_functional,unit
+    - TEST_SUITE: passing_functional2
 install:
 # Set up the Environment
   - cmd: mkdir c:\testlogs
@@ -16,7 +20,7 @@ build_script:
   - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'clr enable', 1; RECONFIGURE"
   - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "CREATE ASSEMBLY Regex from 'C:\testlogs\RegEx.dll' WITH PERMISSION_SET = SAFE"
   - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
-# SET UP PHP
+  # SET UP PHP
   # is OpenSSL needed?
   - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\testlogs\choco_install_urlrewrite.txt
@@ -63,16 +67,17 @@ build_script:
   - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x drupal-project
   - cmd: cd /d C:\projects\drupal-project
   # Apply and pre-composer patches
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-06-21/3151118-25.patch', 'C:\projects\drupal-project\3151118-25.patch')
-  - cmd: git apply 3151118-25.patch
-  - cmd: del 3151118-25.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-28/3151118-31.patch', 'C:\projects\drupal-project\3151118.patch')
+  - cmd: git apply 3151118.patch
+  - cmd: del 3151118.patch
   - cmd: composer install
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
   - cmd: cd /d C:\projects\drupal-project
   # Install other composer packages for production
   # Copy in the module
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\CITestSuiteBase.php %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\sqlsrv
   - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest
@@ -81,9 +86,9 @@ build_script:
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-18/3130655-44.patch', 'C:\projects\drupal-project\3130655-44.patch')
   - cmd: git apply 3130655-44.patch
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - ps: ((Get-Content -path dev\travis\phpunit.xml.dist -Raw) -replace 'WEB_DIR/sites/simpletest/browser_output','C:\projects\drupal-project\sites\simpletest\browser_output') | Set-Content -Path dev\travis\phpunit.xml.dist
+  - ps: ((Get-Content -path dev\phpunit.xml.dist -Raw) -replace 'WEB_DIR/sites/simpletest/browser_output','C:\projects\drupal-project\sites\simpletest\browser_output') | Set-Content -Path dev\phpunit.xml.dist
 before_test:
-  - cmd: cp dev\travis\phpunit.xml.dist C:\projects\drupal-project\core\phpunit.xml
+  - cmd: cp dev\phpunit.xml.dist C:\projects\drupal-project\core\phpunit.xml
   - cmd: mkdir .\build\logs
 test_script:
   - cmd: cd C:\projects\drupal-project
