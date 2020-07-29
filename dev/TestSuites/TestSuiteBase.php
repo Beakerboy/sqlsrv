@@ -127,7 +127,7 @@ abstract class TestSuiteBase extends TestSuite {
     $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index));
     $subset = array_splice($passing_tests, $offset, $length);
     $extend = max(0, $total_tests - $total_size);
-    $message =  "  SPLICE:" . $index . "  EXTEND:" . $total_tests . '-' . $total_size . '=' . $extend . "  ";
+    $message =  "  SPLICE:" . $index . "  EXTEND:" . $extend . "  ";
     fwrite(STDOUT, $message);
     $this->addTestFiles($subset);
   }
