@@ -86,6 +86,14 @@ build_script:
   # Core Condition not able to be overridden in views.
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-18/3130655-44.patch', 'C:\projects\drupal-project\3130655-44.patch')
   - cmd: git apply 3130655-44.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/connectionUnit.patch', 'C:\projects\drupal-project\connectionUnit.patch')
+  - cmd: git apply connectionUnit.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch', 'C:\projects\drupal-project\2966272.patch')
+  - cmd: git apply 2966272.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/Function-timestamp.patch', 'C:\projects\drupal-project\Function-timestamp.patch')
+  - cmd: git apply Function-timestamp.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch', 'C:\projects\drupal-project\ drupal-3111134-database_specific_types.patch')
+  - cmd: git apply drupal-3111134-database_specific_types.patch
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - ps: ((Get-Content -path dev\phpunit.xml.dist -Raw) -replace 'WEB_DIR/sites/simpletest/browser_output','C:\projects\drupal-project\sites\simpletest\browser_output') | Set-Content -Path dev\phpunit.xml.dist
 before_test:
