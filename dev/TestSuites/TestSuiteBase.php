@@ -117,15 +117,15 @@ abstract class TestSuiteBase extends TestSuite {
         }
       }
     }
-    $sizes = static::$functionalSizes; 
+    $sizes = static::$functionalSizes;
+    $total_size = array_sum($sizes);
+    $total_tests = count($passing_tests);
     if ($index == -1) {
       $index = rand(0, count($sizes) - 1);
     }
     $length = $sizes[$index];
     $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index));
     $subset = array_splice($passing_tests, $offset, $length);
-    $total_size = array_sum($sizes);
-    $total_tests = count($passing_tests);
     $extend = max(0, $total_tests - $total_size);
     $message =  "  SPLICE:" . $index . "  EXTEND:" . $total_tests . '-' . $total_size . '=' . $extend . "  ";
     fwrite(STDOUT, $message);
