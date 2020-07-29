@@ -119,7 +119,7 @@ abstract class TestSuiteBase extends TestSuite {
     }
     $sizes = static::$functionalSizes; 
     if ($index == -1) {
-      $index = rand(0, count($sizes));
+      $index = rand(0, count($sizes) - 1);
     }
     $length = $sizes[$index];
     $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index));
