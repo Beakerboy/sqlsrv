@@ -47,18 +47,4 @@ final class CoreKernelTestSuite extends TestSuiteBase {
     $this->addTestFiles($passing_tests);
   }
 
-  /**
-   * Find and add tests to the suite for core and any extensions.
-   *
-   * @param string $root
-   *   Path to the root of the Drupal installation.
-   * @param string $suite_namespace
-   *   SubNamespace used to separate test suite. Examples: Unit, Functional.
-   * @param string $pattern
-   *   REGEXP pattern to apply to file name.
-   */
-  protected function addExtensionTestsBySuiteNamespace($root, $suite_namespace, $pattern) {
-    // Do nothing.
-  }
-
 }
