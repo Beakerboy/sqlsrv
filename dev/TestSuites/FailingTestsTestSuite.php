@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\sqlsrv\TestSuites;
 
-require_once __DIR__ . '/TestSuiteBase.php';
+require_once __DIR__ . '/CITestSuiteBase.php';
 
 /**
  * Discovers tests for the kernel test suite.
  */
-final class FailingTestsTestSuite extends TestSuiteBase {
+final class FailingTestsTestSuite extends CITestSuiteBase {
 
   /**
    * Factory method which loads up a suite with all core kernel tests.
@@ -37,20 +37,6 @@ final class FailingTestsTestSuite extends TestSuiteBase {
       }
     }
     $this->addTestFiles($failing_classes);
-  }
-
-  /**
-   * Find and add tests to the suite for core and any extensions.
-   *
-   * @param string $root
-   *   Path to the root of the Drupal installation.
-   * @param string $suite_namespace
-   *   SubNamespace used to separate test suite. Examples: Unit, Functional.
-   * @param string $pattern
-   *   REGEXP pattern to apply to file name.
-   */
-  protected function addExtensionTestsBySuiteNamespace($root, $suite_namespace, $pattern) {
-    // Do nothing.
   }
 
 }
