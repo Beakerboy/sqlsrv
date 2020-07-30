@@ -44,7 +44,7 @@ abstract class TestSuiteBase extends TestSuite {
    * @return string[]
    *   Associative array of extension paths, with extension name as keys.
    */
-  protected function findExtensionDirectories($root, $pattern) {
+  protected function findExtensionDirectories($root) {
     $extension_roots = \drupal_phpunit_contrib_extension_directory_roots($root);
     $extension_directories = array_map('drupal_phpunit_find_extension_directories', $extension_roots);
     return array_reduce($extension_directories, 'array_merge', []);
@@ -56,7 +56,7 @@ abstract class TestSuiteBase extends TestSuite {
    * @param string $root
    *   Path to the root of the Drupal installation.
    */
-  protected function addCoreKernelTestsByName($root) {
+  protected function addCoreKernelTestsByName($root, $pattern) {
     $failing_classes = [];
     foreach ($this->failingClasses as $failing_class) {
       $failing_classes[] = $root . $failing_class;
