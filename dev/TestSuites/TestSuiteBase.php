@@ -50,6 +50,7 @@ abstract class TestSuiteBase extends TestSuite {
     return array_reduce($extension_directories, 'array_merge', []);
   }
 
+  
   /**
    * Find and add tests to the suite for core and any extensions.
    *
