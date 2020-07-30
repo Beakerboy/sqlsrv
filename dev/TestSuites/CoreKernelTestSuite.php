@@ -4,12 +4,12 @@ namespace Drupal\Tests\sqlsrv\TestSuites;
 
 use Drupal\Core\Test\TestDiscovery;
 
-require_once __DIR__ . '/TestSuiteBase.php';
+require_once __DIR__ . '/CITestSuiteBase.php';
 
 /**
  * Discovers tests for the kernel test suite.
  */
-final class CoreKernelTestSuite extends TestSuiteBase {
+final class CoreKernelTestSuite extends CITestSuiteBase {
 
   /**
    * Factory method which loads up a suite with all core kernel tests.
