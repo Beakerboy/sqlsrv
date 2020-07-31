@@ -6,9 +6,11 @@ image:
 environment:
   matrix:
     - TEST_SUITE: core-kernel
+    - TEST_SUITE: core-kernel-2
     - TEST_SUITE: core-extensions-kernel-1
     - TEST_SUITE: core-extensions-kernel-2
     - TEST_SUITE: core-extensions-kernel-3
+    - TEST_SUITE: core-extensions-kernel-4
     - TEST_SUITE: passing_functional,unit
     - TEST_SUITE: passing_functional2
 install:
@@ -24,8 +26,8 @@ build_script:
   # is OpenSSL needed?
   - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\testlogs\choco_install_urlrewrite.txt
-  - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\testlogs\choco_install_openssl.txt
-  - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
+  #- ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\testlogs\choco_install_openssl.txt
+  #- ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
   - ps: |
       $cli = New-Object Net.WebClient
       $cli.Headers['User-Agent'] = 'Appveyor';
@@ -41,7 +43,7 @@ build_script:
   # Start Windows Update service
   - cmd: sc config wuauserv start= auto
   - cmd: net start wuauserv
-  - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php\cacert.pem')
+  #- ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php\cacert.pem')
   # Add php binary to PATH
   - ps: $Env:Path = "C:\tools\php;" + $Env:Path;
   # Edit the php.ini file - Should we have a php.ini.dist file somewhere that we just `cat` into the exiting file?
@@ -52,13 +54,13 @@ build_script:
   - ps: Add-Content C:\tools\php\php.ini "extension=php_curl"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_yaml"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_gd2.dll"
-  - ps: Add-Content C:\tools\php\php.ini 'curl.cainfo="C:\tools\php\cacert.pem"'
-  - ps: Add-Content C:\tools\php\php.ini 'openssl.cafile="C:\tools\php\cacert.pem"'
+  #- ps: Add-Content C:\tools\php\php.ini 'curl.cainfo="C:\tools\php\cacert.pem"'
+  #- ps: Add-Content C:\tools\php\php.ini 'openssl.cafile="C:\tools\php\cacert.pem"'
   # Set up Drupal
   # Create a directory for composer and install
   - ps: new-item c:\composer -itemtype directory
   - cmd: cd /d C:\composer
-  - cmd: choco install composer --version=4.10.0 -y --no-progress
+  - cmd: choco install composer -y -v
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
   - cmd: cd /d c:\projects
@@ -73,18 +75,25 @@ build_script:
   - cmd: composer install
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
-  - cmd: cd /d C:\projects\drupal-project
   # Install other composer packages for production
   # Copy in the module
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests\database_statement_monitoring_test .\core\modules\system\tests\modules\database_statement_monitoring_test\src\sqlsrv
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\CITestSuiteBase.php %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\sqlsrv
-  - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest\browser_output
   # Core Condition not able to be overridden in views.
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-18/3130655-44.patch', 'C:\projects\drupal-project\3130655-44.patch')
-  - cmd: git apply 3130655-44.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-31/3130655-49.patch', 'C:\projects\drupal-project\3130655.patch')
+  #- cmd: git apply 3130655.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/connectionUnit.patch', 'C:\projects\drupal-project\connectionUnit.patch')
+  - cmd: git apply connectionUnit.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch', 'C:\projects\drupal-project\2966272.patch')
+  - cmd: git apply 2966272.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/Function-timestamp.patch', 'C:\projects\drupal-project\Function-timestamp.patch')
+  - cmd: git apply Function-timestamp.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch', 'C:\projects\drupal-project\drupal-3111134-database_specific_types.patch')
+  - cmd: git apply drupal-3111134-database_specific_types.patch
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - ps: ((Get-Content -path dev\phpunit.xml.dist -Raw) -replace 'WEB_DIR/sites/simpletest/browser_output','C:\projects\drupal-project\sites\simpletest\browser_output') | Set-Content -Path dev\phpunit.xml.dist
 before_test:

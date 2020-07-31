@@ -8,6 +8,15 @@ require_once __DIR__ . '/TestSuiteBase.php';
  * Base class for Drupal test suites.
  */
 abstract class CITestSuiteBase extends TestSuiteBase {
+  /**
+   * Regex patterns to split up core Kernel tests.
+   *
+   * @var array
+   */
+  protected static $coreKernelPatterns = [
+    '[A-M]',
+    '[N-Z]',
+  ];
 
   /**
    * Regex patterns to split up core Kernel extensions.
@@ -15,9 +24,10 @@ abstract class CITestSuiteBase extends TestSuiteBase {
    * @var array
    */
   protected static $coreExtensionPatterns = [
-    '[a-f]',
-    '[g-q]',
-    '[r-z]',
+    '[a-e]',
+    '[f-k]',
+    '[o-s]',
+    '[t-z]',
   ];
 
   /**

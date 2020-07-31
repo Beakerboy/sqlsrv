@@ -9,7 +9,7 @@ require_once __DIR__ . '/CITestSuiteBase.php';
 /**
  * Discovers tests for the kernel test suite.
  */
-final class CoreKernelTestSuite extends CITestSuiteBase {
+final class CoreKernelTestSuite2 extends CITestSuiteBase {
 
   /**
    * Factory method which loads up a suite with all core kernel tests.
@@ -20,7 +20,7 @@ final class CoreKernelTestSuite extends CITestSuiteBase {
   public static function suite() {
     $root = self::getDrupalRoot();
     $suite = new static('kernel');
-    $suite->addCoreKernelTestsByName($root, self::$coreKernelPatterns[0]);
+    $suite->addCoreKernelTestsByName($root, self::$coreKernelPatterns[1]);
     return $suite;
   }
 
