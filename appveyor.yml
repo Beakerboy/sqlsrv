@@ -84,8 +84,8 @@ build_script:
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest\browser_output
   # Core Condition not able to be overridden in views.
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-18/3130655-44.patch', 'C:\projects\drupal-project\3130655-44.patch')
-  - cmd: git apply 3130655-44.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-18/3130655-44.patch', 'C:\projects\drupal-project\3130655.patch')
+  #- cmd: git apply 3130655.patch
   - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/connectionUnit.patch', 'C:\projects\drupal-project\connectionUnit.patch')
   - cmd: git apply connectionUnit.patch
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch', 'C:\projects\drupal-project\2966272.patch')
