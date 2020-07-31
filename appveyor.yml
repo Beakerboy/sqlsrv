@@ -102,3 +102,5 @@ before_test:
 test_script:
   - cmd: cd C:\projects\drupal-project
   - cmd: vendor\bin\phpunit -vvv -c core\phpunit.xml --testsuite=%TEST_SUITE%
+on_failure:
+  - cmd: type C:\ProgramData\chocolatey\logs\chocolatey.log
