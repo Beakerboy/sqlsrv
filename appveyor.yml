@@ -60,7 +60,7 @@ build_script:
   # Create a directory for composer and install
   - ps: new-item c:\composer -itemtype directory
   - cmd: cd /d C:\composer
-  - cmd: choco install composer --version=4.10.0 -y --no-progress
+  - cmd: choco install composer -y --no-progress
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
   - cmd: cd /d c:\projects
