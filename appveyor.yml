@@ -24,18 +24,18 @@ build_script:
   - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
   # SET UP PHP
   # is OpenSSL needed?
-  - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
+  - ps: choco install php --version=7.4.8 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\testlogs\choco_install_urlrewrite.txt
   - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\testlogs\choco_install_openssl.txt
   - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
   - ps: |
       $cli = New-Object Net.WebClient
       $cli.Headers['User-Agent'] = 'Appveyor';
-      $cli.DownloadFile('https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.8.1/php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_pdo_sqlsrv.zip')
+      $cli.DownloadFile('https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.8.1/php_pdo_sqlsrv-5.8.1-7.4-nts-vc15-x64.zip', 'C:\testlogs\php_pdo_sqlsrv.zip')
   - ps: |
       $cli = New-Object Net.WebClient
       $cli.Headers['User-Agent'] = 'Appveyor';
-      $cli.DownloadFile('http://windows.php.net/downloads/pecl/releases/yaml/2.1.0/php_yaml-2.1.0-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_yaml.zip')
+      $cli.DownloadFile('http://windows.php.net/downloads/pecl/releases/yaml/2.1.0/php_yaml-2.1.0-7.4-nts-vc15-x64.zip', 'C:\testlogs\php_yaml.zip')
   - ps: Expand-Archive -Path 'C:\testlogs\php_pdo_sqlsrv.zip' -Destinationpath 'C:\testlogs\php_pdo_sqlsrv'
   - cmd: copy C:\testlogs\php_pdo_sqlsrv\php_pdo_sqlsrv.dll C:\tools\php\ext
   - ps: Expand-Archive -Path 'C:\testlogs\php_yaml.zip' -Destinationpath 'C:\testlogs\php_yaml'
