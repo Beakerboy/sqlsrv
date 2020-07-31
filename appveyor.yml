@@ -75,13 +75,12 @@ build_script:
   - cmd: composer install
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
-  - cmd: cd /d C:\projects\drupal-project
   # Install other composer packages for production
   # Copy in the module
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests\database_statement_monitoring_test .\core\modules\system\tests\modules\database_statement_monitoring_test\src\sqlsrv
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\CITestSuiteBase.php %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\sqlsrv
-  - cmd: cd /d C:\projects\drupal-project
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest
   - cmd: mkdir C:\projects\drupal-project\sites\simpletest\browser_output
   # Core Condition not able to be overridden in views.
