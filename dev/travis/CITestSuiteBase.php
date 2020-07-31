@@ -47,7 +47,7 @@ abstract class CITestSuiteBase extends TestSuiteBase {
       25, 25, 25, 25, 25,
       25, 25, 25, 25, 25,
       30, 25, 25, 25, 25,
-      25, 25, 25, 10, 25,
+      25, 25, 25, 10, 15,
       25, 25, 25, 25,
   ];
 
