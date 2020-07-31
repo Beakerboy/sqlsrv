@@ -26,8 +26,8 @@ build_script:
   # is OpenSSL needed?
   - ps: choco install php --version=7.4.7 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\testlogs\choco_install_urlrewrite.txt
-  - ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\testlogs\choco_install_openssl.txt
-  - ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
+  #- ps: choco install OpenSSL.Light -y --no-progress 2>&1 > C:\testlogs\choco_install_openssl.txt
+  #- ps: $Env:Path = "C:\Program Files\OpenSSL;" + $Env:Path;
   - ps: |
       $cli = New-Object Net.WebClient
       $cli.Headers['User-Agent'] = 'Appveyor';
@@ -43,7 +43,7 @@ build_script:
   # Start Windows Update service
   - cmd: sc config wuauserv start= auto
   - cmd: net start wuauserv
-  - ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php\cacert.pem')
+  #- ps: (New-Object Net.WebClient).DownloadFile('https://curl.haxx.se/ca/cacert.pem', 'C:\tools\php\cacert.pem')
   # Add php binary to PATH
   - ps: $Env:Path = "C:\tools\php;" + $Env:Path;
   # Edit the php.ini file - Should we have a php.ini.dist file somewhere that we just `cat` into the exiting file?
@@ -54,8 +54,8 @@ build_script:
   - ps: Add-Content C:\tools\php\php.ini "extension=php_curl"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_yaml"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_gd2.dll"
-  - ps: Add-Content C:\tools\php\php.ini 'curl.cainfo="C:\tools\php\cacert.pem"'
-  - ps: Add-Content C:\tools\php\php.ini 'openssl.cafile="C:\tools\php\cacert.pem"'
+  #- ps: Add-Content C:\tools\php\php.ini 'curl.cainfo="C:\tools\php\cacert.pem"'
+  #- ps: Add-Content C:\tools\php\php.ini 'openssl.cafile="C:\tools\php\cacert.pem"'
   # Set up Drupal
   # Create a directory for composer and install
   - ps: new-item c:\composer -itemtype directory
