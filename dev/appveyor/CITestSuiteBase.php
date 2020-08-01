@@ -25,8 +25,8 @@ abstract class CITestSuiteBase extends TestSuiteBase {
    */
   protected static $coreExtensionPatterns = [
     '[a-e]',
-    '[f-k]',
-    '[o-s]',
+    '[f-l]',
+    '[m-s]',
     '[t-z]',
   ];
 
