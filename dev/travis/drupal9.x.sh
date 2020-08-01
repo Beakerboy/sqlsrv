@@ -16,6 +16,9 @@ git apply 2966272-16.patch
 # Add a sqlsrv-specific datatype to test
 wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
 git apply drupal-3111134-database_specific_types-3.patch
+# charset in header is case insensitive
+wget http://beakerboy.com/~kevin/caseInsensitiveCharset.patch
+git apply caseInsensitiveCharset.patch
 
 # Reorganize files and directories.
 mv $TRAVIS_BUILD_DIR/dev/TestSuites $TRAVIS_BUILD_DIR/tests/src/
