@@ -94,6 +94,8 @@ build_script:
   - cmd: git apply Function-timestamp.patch
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch', 'C:\projects\drupal-project\drupal-3111134-database_specific_types.patch')
   - cmd: git apply drupal-3111134-database_specific_types.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/caseInsensitiveCharset.patch', 'C:\projects\drupal-project\ caseInsensitiveCharset.patch')
+  - cmd: git apply caseInsensitiveCharset.patch
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
   - ps: ((Get-Content -path dev\phpunit.xml.dist -Raw) -replace 'WEB_DIR/sites/simpletest/browser_output','C:\projects\drupal-project\sites\simpletest\browser_output') | Set-Content -Path dev\phpunit.xml.dist
 before_test:
