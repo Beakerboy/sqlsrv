@@ -58,7 +58,7 @@ class Insert extends QueryInsert {
       $this->insertValues = [];
 
       /** @var \Drupal\Core\Database\Statement $stmt */
-      $stmt = $this->connection->prepareQuery((string) $this);
+      $stmt = $this->connection->prepareStatement((string) $this, []);
 
       // Handle the case of SELECT-based INSERT queries first.
       $arguments = $this->fromQuery->getArguments();
@@ -84,7 +84,7 @@ class Insert extends QueryInsert {
       $this->insertValues = [];
 
       /** @var \Drupal\Core\Database\Statement $stmt */
-      $stmt = $this->connection->prepareQuery((string) $this);
+      $stmt = $this->connection->prepareStatement((string) $this, []);
 
       // Run the query.
       $this->connection->query($stmt, [], $options);
@@ -121,7 +121,7 @@ class Insert extends QueryInsert {
 
       // Prepare the query.
       /** @var \Drupal\Core\Database\Statement $stmt */
-      $stmt = $this->connection->prepareQuery($query);
+      $stmt = $this->connection->prepareStatement($query, []);
 
       // We use this array to store references to the blob handles.
       // This is necessary because the PDO will otherwise mess up with
