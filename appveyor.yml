@@ -8,8 +8,8 @@ image:
   - Visual Studio 2017
 environment:
   matrix:
-    - TEST_SUITE: core-kernel
-    - TEST_SUITE: core-extensions-kernel-1
+    #- TEST_SUITE: core-kernel
+    - TEST_SUITE: sqlsrv
 install:
   # Set up the Environment
   - cmd: mkdir c:\testlogs
@@ -97,6 +97,8 @@ build_script:
   - cmd: git apply 2966272-16.patch
   - cmd: git apply drupal-3111134-database_specific_types-3.patch
   - cmd: git apply 3108540-11.patch
+  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/3161710-5.patch', 'C:\projects\drupal-project\3161710.patch')
+  - cmd: git apply 3161710.patch
 before_test:
   - cmd: cd C:\projects\drupal-project
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
