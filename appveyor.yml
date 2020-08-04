@@ -101,4 +101,4 @@ before_test:
   - cmd: mkdir .\build\logs
 test_script:
   - cmd: cd C:\projects\drupal-project
-  - cmd: vendor\bin\phpunit -vvv -c core\phpunit.xml --testsuite=%TEST_SUITE%
+  - cmd: vendor\bin\phpunit -c core\phpunit.xml --testsuite=%TEST_SUITE%
