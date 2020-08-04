@@ -57,7 +57,7 @@ install:
   - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x wwwroot
   # IIS Config
   - cmd: powershell %APPVEYOR_BUILD_FOLDER%\dev\appveyor\iis.ps1
-  - ps: wget http://127.0.0.1/index.php
+  - ps: wget http://127.0.0.1:80/index.php
 build_script:
   # For some reason this cannot go in the install potion of the appveyor config
   - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
