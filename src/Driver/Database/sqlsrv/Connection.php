@@ -434,9 +434,6 @@ class Connection extends DatabaseConnection {
    * Using SQL Server query syntax.
    */
   public function pushTransaction($name) {
-    if (!$this->supportsTransactions()) {
-      return;
-    }
     if (isset($this->transactionLayers[$name])) {
       throw new TransactionNameNonUniqueException($name . " is already in use.");
     }
@@ -572,9 +569,6 @@ class Connection extends DatabaseConnection {
    * Using SQL Server query syntax.
    */
   public function rollBack($savepoint_name = 'drupal_transaction') {
-    if (!$this->supportsTransactions()) {
-      return;
-    }
     if (!$this->inTransaction()) {
       throw new TransactionNoActiveException();
     }
@@ -595,7 +589,7 @@ class Connection extends DatabaseConnection {
         if (empty($this->transactionLayers)) {
           break;
         }
-        $this->query('ROLLBACK TRANSACTION ' . $savepoint);
+        $this->queryDirect('ROLLBACK TRANSACTION ' . $savepoint);
         $this->popCommittableTransactions();
         if ($rolled_back_other_active_savepoints) {
           throw new TransactionOutOfOrderException();
