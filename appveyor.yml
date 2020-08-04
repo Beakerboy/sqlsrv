@@ -51,9 +51,10 @@ install:
   - cmd: choco install composer -y -v
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
-  - cmd: cd /d C:\inetpub\wwwroot
   # Download Drupal
-  - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x .
+  - cmd: cd /d C:\inetpub\
+  - cmd: mv wwwroot wwwroot-old
+  - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x wwwroot
 build_script:
   # For some reason this cannot go in the install potion of the appveyor config
   - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
