@@ -3,7 +3,7 @@
 namespace Drupal\sqlsrv\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Connection as DatabaseConnection;
-use Drupal\Core\Database\Query\Condition as QueryCondition;
+use Drupal\Core\Database\Query\CoreCondition as QueryCondition;
 use Drupal\Core\Database\Query\PlaceholderInterface;
 
 /**
