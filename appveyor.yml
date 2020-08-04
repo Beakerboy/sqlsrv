@@ -51,9 +51,9 @@ install:
   - cmd: choco install composer -y -v
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
-  - cmd: cd /d C:\projects
+  - cmd: cd /d C:\inetpub\wwwroot
   # Download Drupal
-  - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x drupal-project
+  - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x .
 build_script:
   # For some reason this cannot go in the install potion of the appveyor config
   - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
@@ -61,43 +61,42 @@ build_script:
   - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "CREATE ASSEMBLY Regex from 'C:\testlogs\RegEx.dll' WITH PERMISSION_SET = SAFE"
   - cmd: sqlcmd -d mydrupalsite -U sa -P Password12! -Q "CREATE FUNCTION dbo.REGEXP(@pattern NVARCHAR(100), @matchString NVARCHAR(100)) RETURNS bit EXTERNAL NAME Regex.RegExCompiled.RegExCompiledMatch"
   # Set up Drupal
-  - cmd: cd /d C:\projects\drupal-project
+  - cmd: cd /d C:\inetpub\wwwroot
   # Apply any pre-composer patches
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-28/3151118-31.patch', 'C:\projects\drupal-project\3151118.patch')
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-28/3151118-31.patch', 'C:\inetpub\wwwroot\3151118.patch')
   - cmd: git apply 3151118.patch
   - cmd: del 3151118.patch
   - cmd: set COMPOSER_MEMORY_LIMIT=-1
   - cmd: composer install
   # Add composer installed binaries to PATH
-  - cmd: SET PATH=C:\projects\drupal-project\vendor\bin;%PATH%
+  - cmd: SET PATH=C:\inetpub\wwwroot\vendor\bin;%PATH%
   # Install other composer packages for production
   # Copy in the module
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests\database_statement_monitoring_test .\core\modules\system\tests\modules\database_statement_monitoring_test\src\sqlsrv
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\CITestSuiteBase.php %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\sqlsrv
-  - cmd: mkdir C:\projects\drupal-project\sites\simpletest
-  - cmd: mkdir C:\projects\drupal-project\sites\simpletest\browser_output
+  - cmd: mkdir C:\inetpub\wwwroot\sites\simpletest
+  - cmd: mkdir C:\inetpub\wwwroot\sites\simpletest\browser_output
   # Core Condition not able to be overridden in views.
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-31/3130655-49.patch', 'C:\projects\drupal-project\3130655.patch')
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-31/3130655-49.patch', 'C:\inetpub\wwwroot\3130655.patch')
   - cmd: git apply 3130655.patch
   # ConnectionUnitTest defaults to MySQL syntax
-  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/connectionUnit.patch', 'C:\projects\drupal-project\connectionUnit.patch')
+  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/connectionUnit.patch', 'C:\inetpub\wwwroot\connectionUnit.patch')
   - cmd: git apply connectionUnit.patch
   # Enable sqlsrv module for Kernel Tests
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch', 'C:\projects\drupal-project\2966272.patch')
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch', 'C:\inetpub\wwwroot\2966272.patch')
   - cmd: git apply 2966272.patch
   # Enable sqlsrv in specific Functional Tests
-  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/Function-timestamp.patch', 'C:\projects\drupal-project\Function-timestamp.patch')
+  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/Function-timestamp.patch', 'C:\inetpub\wwwroot\Function-timestamp.patch')
   - cmd: git apply Function-timestamp.patch
   # Add a sqlsrv-specific data type to the core test
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch', 'C:\projects\drupal-project\drupal-3111134-database_specific_types.patch')
+  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch', 'C:\inetpub\wwwroot\drupal-3111134-database_specific_types.patch')
   - cmd: git apply drupal-3111134-database_specific_types.patch
   # CharacterSet does not need to be uppercase
-  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/caseInsensitiveCharset.patch', 'C:\projects\drupal-project\caseInsensitiveCharset.patch')
+  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/caseInsensitiveCharset.patch', 'C:\inetpub\wwwroot\caseInsensitiveCharset.patch')
   - cmd: git apply caseInsensitiveCharset.patch
   - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - cmd: xcopy /S /I /E /Y C:\projects\drupal-project\* C:\inetpub\wwwroot
   - ps: ((Get-Content -path dev\phpunit.xml.dist -Raw) -replace 'WEB_DIR/sites/simpletest/browser_output','C:\inetpub\wwwroot\sites\simpletest\browser_output') | Set-Content -Path dev\phpunit.xml.dist
 before_test:
   - cmd: cp dev\phpunit.xml.dist C:\inetpub\wwwroot\core\phpunit.xml
