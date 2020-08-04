@@ -572,9 +572,6 @@ class Connection extends DatabaseConnection {
    * Using SQL Server query syntax.
    */
   public function rollBack($savepoint_name = 'drupal_transaction') {
-    if (!$this->supportsTransactions()) {
-      return;
-    }
     if (!$this->inTransaction()) {
       throw new TransactionNoActiveException();
     }
