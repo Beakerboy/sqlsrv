@@ -55,7 +55,7 @@ install:
   # Download Drupal
   - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x drupal-project
   # Set up IIS
-  - ps: New-WebVirtualDirectory -Site "Default Web Site" -Name Drupal -PhysicalPath C:\projects\drupal-project
+  - ps: New-WebVirtualDirectory -Site "Default Web Site" -Name "/" -PhysicalPath C:\projects\drupal-project
 build_script:
   # For some reason this cannot go in the install potion of the appveyor config
   - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
