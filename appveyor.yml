@@ -73,10 +73,10 @@ build_script:
   - cmd: SET PATH=C:\inetpub\wwwroot\vendor\bin;%PATH%
   # Install other composer packages for production
   # Copy in the module
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\tests\database_statement_monitoring_test .\core\modules\system\tests\modules\database_statement_monitoring_test\src\sqlsrv
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\dev\appveyor\CITestSuiteBase.php %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER% %cd%\modules\sqlsrv
+  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER%\tests\database_statement_monitoring_test .\core\modules\system\tests\modules\database_statement_monitoring_test\src\sqlsrv
+  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER%\dev\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
+  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER%\dev\appveyor\CITestSuiteBase.php %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
+  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% %cd%\modules\sqlsrv
   - cmd: mkdir C:\inetpub\wwwroot\sites\simpletest
   - cmd: mkdir C:\inetpub\wwwroot\sites\simpletest\browser_output
   # Core Condition not able to be overridden in views.
