@@ -440,7 +440,7 @@ class Connection extends DatabaseConnection {
     // If we're already in a transaction then we want to create a savepoint
     // rather than try to create another transaction.
     if ($this->inTransaction()) {
-      $this->query('SAVE TRANSACTION ' . $name);
+      $this->queryDirect('SAVE TRANSACTION ' . $name);
     }
     else {
       $this->connection->beginTransaction();
@@ -589,7 +589,7 @@ class Connection extends DatabaseConnection {
         if (empty($this->transactionLayers)) {
           break;
         }
-        $this->query('ROLLBACK TRANSACTION ' . $savepoint);
+        $this->queryDirect('ROLLBACK TRANSACTION ' . $savepoint);
         $this->popCommittableTransactions();
         if ($rolled_back_other_active_savepoints) {
           throw new TransactionOutOfOrderException();
