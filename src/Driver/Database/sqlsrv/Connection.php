@@ -434,16 +434,13 @@ class Connection extends DatabaseConnection {
    * Using SQL Server query syntax.
    */
   public function pushTransaction($name) {
-    if (!$this->supportsTransactions()) {
-      return;
-    }
     if (isset($this->transactionLayers[$name])) {
       throw new TransactionNameNonUniqueException($name . " is already in use.");
     }
     // If we're already in a transaction then we want to create a savepoint
     // rather than try to create another transaction.
     if ($this->inTransaction()) {
-      $this->queryDirect('SAVE TRANSACTION ' . $name);
+      $this->query('SAVE TRANSACTION ' . $name);
     }
     else {
       $this->connection->beginTransaction();
