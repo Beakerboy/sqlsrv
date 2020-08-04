@@ -56,7 +56,7 @@ install:
   - cmd: mv wwwroot wwwroot-old
   - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x wwwroot
   # IIS Config
-  - cmd: iisreset /noforce
+  - cmd: powershell %APPVEYOR_BUILD_FOLDER%\dev\appveyor\iis.ps1
 build_script:
   # For some reason this cannot go in the install potion of the appveyor config
   - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
