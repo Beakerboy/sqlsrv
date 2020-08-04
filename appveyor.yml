@@ -48,7 +48,7 @@ install:
   # Install Composer
   - ps: new-item c:\composer -itemtype directory
   - cmd: cd /d C:\composer
-  - cmd: choco install composer -y -v
+  - cmd: choco install composer -y
   - ps: refreshenv
   - cmd: SET PATH=C:\ProgramData\ComposerSetup\bin;%PATH%
   # Download Drupal
@@ -68,7 +68,7 @@ build_script:
   - cmd: git apply 3151118.patch
   - cmd: del 3151118.patch
   - cmd: set COMPOSER_MEMORY_LIMIT=-1
-  - cmd: composer install
+  - cmd: composer install -q
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\inetpub\wwwroot\vendor\bin;%PATH%
   # Install other composer packages for production
