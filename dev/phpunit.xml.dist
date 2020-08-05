@@ -102,7 +102,6 @@
     </testsuite>
     <testsuite name="sqlsrv">
       <directory suffix="Test.php">../modules/sqlsrv</directory>
-      <file>tests/Drupal/FunctionalTests/Routing/DefaultFormatTest.php</file>
     </testsuite>
   </testsuites>
   <listeners>
