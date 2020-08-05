@@ -82,7 +82,7 @@ build_script:
   - cmd: mkdir C:\inetpub\wwwroot\sites\simpletest
   - cmd: mkdir C:\inetpub\wwwroot\sites\simpletest\browser_output
   - ps: |
-      $sharepath = "C:\inetpub\wwwroot\simpletest\browser_output"
+      $sharepath = "C:\inetpub\wwwroot\sites\simpletest\browser_output"
       $Acl = Get-ACL $SharePath
       $AccessRule= New-Object System.Security.AccessControl.FileSystemAccessRule("everyone","FullControl","ContainerInherit,Objectinherit","none","Allow")
       $Acl.AddAccessRule($AccessRule)
