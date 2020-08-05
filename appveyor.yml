@@ -11,7 +11,7 @@ environment:
     #- TEST_SUITE: core-extensions-kernel-2
     #- TEST_SUITE: core-extensions-kernel-3
     #- TEST_SUITE: core-extensions-kernel-4
-    - TEST_SUITE: passing_functional,unit
+    #- TEST_SUITE: passing_functional,unit
     - TEST_SUITE: passing_functional2
 install:
   # Set up the Environment
@@ -81,6 +81,12 @@ build_script:
   - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% %cd%\modules\sqlsrv
   - cmd: mkdir C:\inetpub\wwwroot\sites\simpletest
   - cmd: mkdir C:\inetpub\wwwroot\sites\simpletest\browser_output
+  - ps: |
+    $sharepath = "C:\inetpub\wwwroot\simpletest\browser_output"
+    $Acl = Get-ACL $SharePath
+    $AccessRule= New-Object System.Security.AccessControl.FileSystemAccessRule("everyone","FullControl","ContainerInherit,Objectinherit","none","Allow")
+    $Acl.AddAccessRule($AccessRule)
+    Set-Acl $SharePath $Acl
   # Core Condition not able to be overridden in views.
   - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-31/3130655-49.patch', 'C:\inetpub\wwwroot\3130655.patch')
   - cmd: git apply 3130655.patch
