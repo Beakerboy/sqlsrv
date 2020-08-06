@@ -6,7 +6,7 @@ use Drupal\Core\Database\Connection as DatabaseConnection;
 use Drupal\Core\Database\Query\PlaceholderInterface;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Database\Query\Select as QuerySelect;
-use Drupal\Core\Database\Query\CoreCondition as DatabaseCondition;
+use Drupal\Core\Database\Query\Condition as DatabaseCondition;
 
 /**
  * @addtogroup database
