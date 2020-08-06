@@ -775,6 +775,15 @@ class Connection extends DatabaseConnection {
 
     // Now do all the replacements at once.
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
+    
+    // Replace CONCAT_WS with STUFF / COALESCE syntax for SQL Server 2016 support
+    $pos = stristr($query, 'CONCAT_WS');
+    if (!$pos) {
+      $beginning = substr();
+      $end = substr();
+      $middle = substr();
+      $concat_statement = new Expression($middle);
+    }
 
     return $query;
   }
