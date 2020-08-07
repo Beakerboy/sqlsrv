@@ -2,14 +2,12 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
-
 /**
  * Tests the MERGE query builder.
  *
  * @group Database
  */
-class MergeTest extends DatabaseTestBase {
+class MergeTest extends SqlsrvTestBase {
 
   /**
    * Tests namespace of the condition object.

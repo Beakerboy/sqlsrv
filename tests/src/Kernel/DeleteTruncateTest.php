@@ -2,8 +2,6 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
-
 /**
  * Tests delete and truncate queries.
  *
@@ -17,7 +15,7 @@ use Drupal\KernelTests\Core\Database\DatabaseTestBase;
  *
  * @group Database
  */
-class DeleteTruncateTest extends DatabaseTestBase {
+class DeleteTruncateTest extends SqlsrvTestBase {
 
   /**
    * Tests namespace of the condition object.

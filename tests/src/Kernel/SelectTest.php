@@ -2,14 +2,12 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
-
 /**
  * Tests the Select query builder.
  *
  * @group Database
  */
-class SelectTest extends DatabaseTestBase {
+class SelectTest extends SqlsrvTestBase {
 
   /**
    * Tests namespace of the condition and having objects.

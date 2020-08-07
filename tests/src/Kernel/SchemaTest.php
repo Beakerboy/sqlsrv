@@ -4,14 +4,13 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\SchemaObjectDoesNotExistException;
 use Drupal\Core\Database\SchemaObjectExistsException;
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Tests table creation and modification via the schema API.
  *
  * @group Database
  */
-class SchemaTest extends DatabaseTestBase {
+class SchemaTest extends SqlsrvTestBase {
 
   /**
    * The table definition.
