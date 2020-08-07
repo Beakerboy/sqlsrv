@@ -2,14 +2,12 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
-
 /**
  * Test aliases within GROUP BY and ORDER BY.
  *
  * @group Database
  */
-class AliasTest extends DatabaseTestBase {
+class AliasTest extends SqlsrvTestBase {
 
   /**
    * Test GROUP BY alias expansion.
