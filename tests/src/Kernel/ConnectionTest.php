@@ -3,14 +3,13 @@
 namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\Database;
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Tests of the sqlsrv database system.
  *
  * @group Database
  */
-class ConnectionTest extends DatabaseTestBase {
+class ConnectionTest extends SqlsrvTestBase {
 
   /**
    * Tests ::condition()

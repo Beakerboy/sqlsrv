@@ -2,14 +2,12 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
-
 /**
  * Tests parameter behavior.
  *
  * @group Database
  */
-class ParameterTest extends DatabaseTestBase {
+class ParameterTest extends SqlsrvTestBase {
 
   /**
    * Test for weird key names in array arguments.

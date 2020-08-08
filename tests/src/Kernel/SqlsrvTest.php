@@ -5,7 +5,6 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 use Drupal\Core\Database\Database;
 use Drupal\sqlsrv\Driver\Database\sqlsrv\Condition;
 use Drupal\sqlsrv\Driver\Database\sqlsrv\Connection;
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Test behavior that is unique to the Sql Server Driver.
@@ -14,7 +13,7 @@ use Drupal\KernelTests\Core\Database\DatabaseTestBase;
  *
  * @group Database
  */
-class SqlsrvTest extends DatabaseTestBase {
+class SqlsrvTest extends SqlsrvTestBase {
 
   /**
    * Test the 2100 parameter limit per query.

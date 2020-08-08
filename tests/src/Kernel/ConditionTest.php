@@ -4,14 +4,13 @@ namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\Query\Condition as CoreCondition;
 use Drupal\sqlsrv\Driver\Database\sqlsrv\Select;
-use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Test the functions of the custom Condition class.
  *
  * @group Database
  */
-class ConditionTest extends DatabaseTestBase {
+class ConditionTest extends SqlsrvTestBase {
 
   // Testing of custom Condition class in select->where already happens in core.
   // Test custom Condition class in select->having.
