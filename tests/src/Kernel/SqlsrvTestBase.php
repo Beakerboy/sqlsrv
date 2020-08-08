@@ -10,7 +10,7 @@ use Drupal\KernelTests\Core\Database\DatabaseTestBase;
  *
  * @group Database
  */
-class SqlsrvTestBase extends DatabaseTestBase {
+abstract class SqlsrvTestBase extends DatabaseTestBase {
 
   /**
    * {@inheritdoc}
