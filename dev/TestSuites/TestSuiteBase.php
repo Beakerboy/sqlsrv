@@ -55,6 +55,8 @@ abstract class TestSuiteBase extends TestSuite {
    *
    * @param string $root
    *   Path to the root of the Drupal installation.
+   * @param string $pattern
+   *   Regex pattern to match to the test class name.
    */
   protected function addCoreKernelTestsByName($root, $pattern) {
     $failing_classes = [];
@@ -72,7 +74,7 @@ abstract class TestSuiteBase extends TestSuite {
     }
     $this->addTestFiles($passing_tests);
   }
-  
+
   /**
    * Find and add tests to the suite for core and any extensions.
    *
@@ -150,7 +152,7 @@ abstract class TestSuiteBase extends TestSuite {
     $offset = $index == 0 ? 0 : array_sum(array_splice($sizes, 0, $index));
     $subset = array_splice($passing_tests, $offset, $length);
     $extend = max(0, $total_tests - $total_size);
-    $message =  "  SPLICE:" . $index . "  EXTEND:" . $extend . "  ";
+    $message = "  SPLICE:" . $index . "  EXTEND:" . $extend . "  ";
     fwrite(STDOUT, $message);
     $this->addTestFiles($subset);
   }
