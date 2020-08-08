@@ -23,6 +23,7 @@ class SqlsrvTestBase extends DatabaseTestBase {
    * Skip any kernel tests if not running on the correct database.
    */
   protected function setup() {
+    parent::setup();
     if (Database::getConnection()->databaseType() !== 'sqlsrv') {
       $this->markTestSkipped("This test only runs for MS SQL Server");
     }
