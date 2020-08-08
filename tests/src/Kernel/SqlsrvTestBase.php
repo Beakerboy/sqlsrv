@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\sqlsrv\Kernel;
 
+use Drupal\Core\Database\Database;
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
