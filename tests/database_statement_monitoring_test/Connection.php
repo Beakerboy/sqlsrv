@@ -10,4 +10,5 @@ use Drupal\database_statement_monitoring_test\LoggedStatementsTrait;
  */
 class Connection extends BaseConnection {
   use LoggedStatementsTrait;
+
 }
