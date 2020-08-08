@@ -1,15 +1,10 @@
 #Core Patches
-
+wget -O 3129534.patch https://www.drupal.org/files/issues/2020-08-08/3129534-14.patch
+git apply 3129534.patch
 # Testing Patches
 # ConnectionUnitTest defaults to MySQL syntax
 wget http://beakerboy.com/~kevin/connectionUnit.patch
 git apply connectionUnit.patch
-# Enable sqlsrv module in specific kernel tests
-wget https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch
-# Enable sqlsrv in specific Functional Tests splice16
-wget http://beakerboy.com/~kevin/Function-timestamp.patch
-git apply Function-timestamp.patch
-git apply 2966272-16.patch
 # Add a sqlsrv-specific datatype to test
 wget https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch
 git apply drupal-3111134-database_specific_types-3.patch
