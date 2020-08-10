@@ -1,5 +1,5 @@
 #Core Patches
-wget -O 3129534.patch https://www.drupal.org/files/issues/2020-08-08/3129534-14.patch
+wget -O 3129534.patch https://www.drupal.org/files/issues/2020-08-10/3129534-25.patch
 git apply 3129534.patch
 # Testing Patches
 # ConnectionUnitTest defaults to MySQL syntax
