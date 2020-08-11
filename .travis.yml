@@ -5,23 +5,23 @@ env:
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-kernel-1
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-kernel-2
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-kernel-3
-  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=passing_functional,passing_unit CODE_SNIFF=yes APACHE=yes
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=passing_functional,unit APACHE=yes
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=passing_functional2 APACHE=yes
-  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=failing APACHE=yes
-  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional-1 APACHE=yes
-  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional-2 APACHE=yes
-  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional-3 APACHE=yes
-  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional-4 APACHE=yes
-  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional-5 APACHE=yes
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=failing CODE_SNIFF=yes APACHE=yes
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional APACHE=yes foo=1
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional APACHE=yes foo=2
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional APACHE=yes foo=3
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional APACHE=yes foo=4
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional APACHE=yes foo=5
 
 matrix:
   allow_failures:
-    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=failing APACHE=yes
-    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional-1 APACHE=yes
-    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional-2 APACHE=yes
-    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional-3 APACHE=yes
-    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional-4 APACHE=yes
-    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional-5 APACHE=yes
+    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=failing CODE_SNIFF=yes APACHE=yes
+    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional APACHE=yes foo=1
+    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional APACHE=yes foo=2
+    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional APACHE=yes foo=3
+    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional APACHE=yes foo=4
+    - env: DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=9.0.x TEST_SUITE=core-extensions-functional APACHE=yes foo=5
 
 php:
   - '7.4'
@@ -40,9 +40,9 @@ install:
   - export COMPOSER_MEMORY_LIMIT=-1
   - git clone https://git.drupalcode.org/project/drupal.git -b $DRUPAL_VERSION drupal-project
   - cd drupal-project
-  - wget https://www.drupal.org/files/issues/2020-06-21/3151118-25.patch
-  - git apply 3151118-25.patch
-  - rm 3151118-25.patch
+  - wget https://www.drupal.org/files/issues/2020-07-28/3151118-31.patch
+  - git apply 3151118-31.patch
+  - rm 3151118-31.patch
   - composer config -g github-oauth.github.com $GITHUB_OAUTH
   - composer install
   - bash ../sqlsrv/dev/travis/drupal${DRUPAL_VERSION}.sh
@@ -65,16 +65,17 @@ before_script:
        sudo service apache2 restart
      fi
 script:
-  - cp $TRAVIS_BUILD_DIR/dev/travis/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
+  - cp $TRAVIS_BUILD_DIR/dev/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
   - cd $TRAVIS_BUILD_DIR/../drupal-project
   - vendor/bin/phpunit -v -c core/phpunit.xml --testsuite=$TEST_SUITE
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
-      phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
-      phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/sqlsrv
+      vendor/bin/phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/../drupal-project/vendor/drupal/coder/coder_sniffer
+      vendor/bin/phpcs --standard=Drupal --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml modules/sqlsrv
     fi
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
       composer require phpstan/phpstan phpstan/phpstan-phpunit jangregor/phpstan-prophecy mglaman/phpstan-drupal
       vendor/bin/phpstan analyze modules/sqlsrv --level 4 -c $TRAVIS_BUILD_DIR/dev/phpstan.neon
     fi
+
