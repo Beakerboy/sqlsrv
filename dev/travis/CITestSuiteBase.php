@@ -23,8 +23,8 @@ abstract class CITestSuiteBase extends TestSuiteBase {
    * @var array
    */
   protected static $coreExtensionPatterns = [
-    '[a-g]',
-    '[h-q]',
+    '[a-i]',
+    '[j-q]',
     '[r-z]',
   ];
 
