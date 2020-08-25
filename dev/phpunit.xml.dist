@@ -56,9 +56,6 @@
     <testsuite name="core-kernel">
       <file>../modules/sqlsrv/tests/src/TestSuites/CoreKernelTestSuite.php</file>
     </testsuite>
-    <testsuite name="core-kernel-2">
-      <file>../modules/sqlsrv/tests/src/TestSuites/CoreKernelTestSuite2.php</file>
-    </testsuite>
     <testsuite name="core-extensions-kernel">
       <file>../modules/sqlsrv/tests/src/TestSuites/CoreExtensionsKernelTestSuite.php</file>
     </testsuite>
