@@ -790,7 +790,7 @@ class Connection extends DatabaseConnection {
       $replace = "STUFF(";
       $coalesce = [];
       foreach ($arguments as $argument) {
-        $coalesce[] = "CASE WHEN ISNULL($argument) THEN '' ELSE CONCAT('{$separator}', {$argument})";
+        $coalesce[] = "CASE WHEN $argument IS NULL THEN '' ELSE CONCAT('{$separator}', {$argument})";
         //$coalesce[] = "COALESCE(CONCAT('{$separator}', {$argument}), '')";
       }
       $coalesce_string = implode(' + ', $coalesce);
