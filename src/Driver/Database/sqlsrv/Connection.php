@@ -780,8 +780,8 @@ class Connection extends DatabaseConnection {
     while ($pos1 = strpos($query, 'CONCAT_WS') !== FALSE) {
       // We assume the the separator does not contain any single-quotes
       // and none of the arguments contain commas.
-      $pos2 = $this->findParenMatch($snippet, $pos1 + 9);
-      $argument_list = substr($snippet, $pos1 + 10, $pos2 - 10 - $pos1);
+      $pos2 = $this->findParenMatch($query, $pos1 + 9);
+      $argument_list = substr($query, $pos1 + 10, $pos2 - 10 - $pos1);
       $arguments = explode(', ', $argument_list);
       $closing_quote_pos = stripos($argument_list, '\'', 1);
       $separator = substr($argument_list, 1, $closing_quote_pos - 1);
@@ -795,8 +795,7 @@ class Connection extends DatabaseConnection {
       $coalesce_string = implode(' + ', $coalesce);
       $sep_len = strlen($separator);
       $replace = "STUFF({$coalesce_string}, 1, {$sep_len}, '')";
-      $snippet = substr($snippet, 0, $pos1) . $replace . substr($snippet, $pos2 + 1);
-      $operator = NULL;
+      $snippet = substr($query, 0, $pos1) . $replace . substr($query, $pos2 + 1);
     }
     return $query;
   }
