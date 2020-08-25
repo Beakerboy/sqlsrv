@@ -795,7 +795,7 @@ class Connection extends DatabaseConnection {
       $coalesce_string = implode(' + ', $coalesce);
       $sep_len = strlen($separator);
       $replace = "STUFF({$coalesce_string}, 1, {$sep_len}, '')";
-      $snippet = substr($query, 0, $pos1) . $replace . substr($query, $pos2 + 1);
+      $query = substr($query, 0, $pos1) . $replace . substr($query, $pos2 + 1);
     }
     return $query;
   }
