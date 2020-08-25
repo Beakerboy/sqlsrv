@@ -777,7 +777,7 @@ class Connection extends DatabaseConnection {
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
 
     // Replace CONCAT_WS to ensure SQL Server 2016 compatibility
-    while ($pos1 = strpos($query, 'CONCAT_WS') !== FALSE) {
+    while (($pos1 = strpos($query, 'CONCAT_WS')) !== FALSE) {
       // We assume the the separator does not contain any single-quotes
       // and none of the arguments contain commas.
       $pos2 = $this->findParenMatch($query, $pos1 + 9);
