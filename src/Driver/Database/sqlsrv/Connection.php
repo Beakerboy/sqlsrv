@@ -790,13 +790,14 @@ class Connection extends DatabaseConnection {
       $replace = "STUFF(";
       $coalesce = [];
       foreach ($arguments as $argument) {
-        $coalesce[] = "COALESCE(CONCAT('{$separator}', {$argument}), '')";
+        $coalesce[] = "CASE WHEN ISNULL($argument) THEN '' ELSE CONCAT('{$separator}', {$argument})";
+        //$coalesce[] = "COALESCE(CONCAT('{$separator}', {$argument}), '')";
       }
       $coalesce_string = implode(' + ', $coalesce);
       $sep_len = strlen($separator);
       $replace = "STUFF({$coalesce_string}, 1, {$sep_len}, '')";
       $query = substr($query, 0, $pos1) . $replace . substr($query, $pos2 + 1);
-      fwrite(STDOUT, "\n" . $query . "\n");
+      //fwrite(STDOUT, "\n" . $query . "\n");
     }
     return $query;
   }
