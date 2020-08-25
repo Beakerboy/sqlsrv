@@ -530,6 +530,34 @@ class Connection extends DatabaseConnection {
         if ($emulate === TRUE || $argcount >= 2100 || ($argcount != substr_count($query, ':'))) {
           $emulate = TRUE;
         }
+        // Replace CONCAT_WS to ensure SQL Server 2016 compatibility
+        while (($pos1 = strpos($query, 'CONCAT_WS')) !== FALSE) {
+          // We assume the the separator does not contain any single-quotes
+          // and none of the arguments contain commas.
+          $pos2 = $this->findParenMatch($query, $pos1 + 9);
+          $argument_list = substr($query, $pos1 + 10, $pos2 - 10 - $pos1);
+          $arguments = explode(', ', $argument_list);
+          $closing_quote_pos = stripos($argument_list, '\'', 1);
+          $separator = substr($argument_list, 1, $closing_quote_pos - 1);
+          $strings_list = substr($argument_list, $closing_quote_pos + 3);
+          $arguments = explode(', ', $strings_list);
+          $replace = "STUFF(";
+          $coalesce = [];
+          foreach ($arguments as $argument) {
+            if (substr($argument, 0, 1) == ':') {
+              $args[$argument . '_sqlsrv_concat'] = $args[$argument];
+              $coalesce[] = "CASE WHEN $argument IS NULL THEN '' ELSE CONCAT('{$separator}', {$argument}_sqlsrv_concat) END";
+            }
+            else {
+                $coalesce[] = "CASE WHEN $argument IS NULL THEN '' ELSE CONCAT('{$separator}', {$argument}) END";
+            }
+          }
+          $coalesce_string = implode(' + ', $coalesce);
+          $sep_len = strlen($separator);
+          $replace = "STUFF({$coalesce_string}, 1, {$sep_len}, '')";
+          $query = substr($query, 0, $pos1) . $replace . substr($query, $pos2 + 1);
+          fwrite(STDOUT, "\n" . $query . "\n");
+        }
         $stmt = $this->prepareStatement($query, ['emulate_prepares' => $emulate]);
         $stmt->execute($args, $options);
       }
@@ -776,29 +804,6 @@ class Connection extends DatabaseConnection {
     // Now do all the replacements at once.
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
 
-    // Replace CONCAT_WS to ensure SQL Server 2016 compatibility
-    while (($pos1 = strpos($query, 'CONCAT_WS')) !== FALSE) {
-      // We assume the the separator does not contain any single-quotes
-      // and none of the arguments contain commas.
-      $pos2 = $this->findParenMatch($query, $pos1 + 9);
-      $argument_list = substr($query, $pos1 + 10, $pos2 - 10 - $pos1);
-      $arguments = explode(', ', $argument_list);
-      $closing_quote_pos = stripos($argument_list, '\'', 1);
-      $separator = substr($argument_list, 1, $closing_quote_pos - 1);
-      $strings_list = substr($argument_list, $closing_quote_pos + 3);
-      $arguments = explode(', ', $strings_list);
-      $replace = "STUFF(";
-      $coalesce = [];
-      foreach ($arguments as $argument) {
-        $coalesce[] = "CASE WHEN $argument IS NULL THEN '' ELSE CONCAT('{$separator}', {$argument}) END";
-        //$coalesce[] = "COALESCE(CONCAT('{$separator}', {$argument}), '')";
-      }
-      $coalesce_string = implode(' + ', $coalesce);
-      $sep_len = strlen($separator);
-      $replace = "STUFF({$coalesce_string}, 1, {$sep_len}, '')";
-      $query = substr($query, 0, $pos1) . $replace . substr($query, $pos2 + 1);
-      fwrite(STDOUT, "\n" . $query . "\n");
-    }
     return $query;
   }
 
