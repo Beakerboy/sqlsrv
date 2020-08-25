@@ -790,7 +790,7 @@ class Connection extends DatabaseConnection {
       $replace = "STUFF(";
       $coalesce = [];
       foreach ($arguments as $argument) {
-        $coalesce[] = "COALESCE('{$separator}' + {$argument}, '')";
+        $coalesce[] = "COALESCE(CONCAT('{$separator}', {$argument}), '')";
       }
       $coalesce_string = implode(' + ', $coalesce);
       $sep_len = strlen($separator);
