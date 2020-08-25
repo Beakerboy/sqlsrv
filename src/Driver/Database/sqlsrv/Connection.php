@@ -797,7 +797,7 @@ class Connection extends DatabaseConnection {
       $sep_len = strlen($separator);
       $replace = "STUFF({$coalesce_string}, 1, {$sep_len}, '')";
       $query = substr($query, 0, $pos1) . $replace . substr($query, $pos2 + 1);
-      //fwrite(STDOUT, "\n" . $query . "\n");
+      fwrite(STDOUT, "\n" . $query . "\n");
     }
     return $query;
   }
