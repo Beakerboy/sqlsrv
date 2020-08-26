@@ -18,7 +18,7 @@ final class CoreKernelTestSuite extends CITestSuiteBase {
   public static function suite() {
     $root = self::getDrupalRoot();
     $suite = new static('kernel');
-    $suite->addCoreKernelTestsByName($root, self::$coreKernelPatterns[0]);
+    $suite->addCoreKernelTestsByName($root, self::$coreKernelPatterns[getenv('TEST_INDEX')]);
     return $suite;
   }
 

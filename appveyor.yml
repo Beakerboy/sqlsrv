@@ -6,7 +6,9 @@ image:
 environment:
   matrix:
     - TEST_SUITE: core-kernel
-    - TEST_SUITE: core-kernel-2
+      TEST_INDEX: 0
+    - TEST_SUITE: core-kernel
+      TEST_INDEX: 1
     - TEST_SUITE: core-extensions-kernel
       TEST_INDEX: 0
     - TEST_SUITE: core-extensions-kernel
