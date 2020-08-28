@@ -17,7 +17,6 @@ abstract class TestSuiteBase extends TestSuite {
    */
   protected $failingClasses = [
     // Kernel Test Failures.
-    '/core/tests/Drupal/KernelTests/Core/Database/SelectLeastTest.php',
     '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
     '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
     '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
