@@ -803,6 +803,15 @@ class Connection extends DatabaseConnection {
     // Now do all the replacements at once.
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
 
+    while (($pos1 = strpos($query, 'LEAST(')) !== FALSE) {
+      $name_length = 5;
+      $pos2 = $this->findParenMatch($query, $pos1 + $name_length);
+      $argument_list = substr($query, $pos1 + $name_length + 1, $pos2 - $name_length - 1 - $pos1);
+      $arguments = explode(', ', $argument_list);
+      $new_arguments = implode('), (', $arguments);
+      $replace = '(SELECT MIN(i) FROM (VALUES (' . $new_arguments . ')) AS T(i)) sqlsrv_least';
+      $query = substr($query, 0, $pos1) . $replace . substr($query, $pos2 + 1);
+    }
     return $query;
   }
 
