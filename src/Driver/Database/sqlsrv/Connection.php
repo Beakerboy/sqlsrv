@@ -809,7 +809,7 @@ class Connection extends DatabaseConnection {
       $argument_list = substr($query, $pos1 + $name_length + 1, $pos2 - $name_length - 1 - $pos1);
       $arguments = explode(', ', $argument_list);
       $new_arguments = implode('), (', $arguments);
-      $replace = '(SELECT MAX(i) FROM (VALUES (' . $new_arguments . ')) AS T(i)) sqlsrv_least';
+      $replace = '(SELECT MIN(i) FROM (VALUES (' . $new_arguments . ')) AS T(i)) sqlsrv_least';
       $query = substr($query, 0, $pos1) . $replace . substr($query, $pos2 + 1);
     }
     return $query;
