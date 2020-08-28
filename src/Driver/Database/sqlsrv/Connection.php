@@ -804,8 +804,9 @@ class Connection extends DatabaseConnection {
     $query = preg_replace(array_keys($replacements), array_values($replacements), $query);
 
     while (($pos1 = strpos($query, 'LEAST(')) !== FALSE) {
-      $pos2 = $this->findParenMatch($query, $pos1 + 9);
-      $argument_list = substr($query, $pos1 + 10, $pos2 - 10 - $pos1);
+      $name_length = 5;
+      $pos2 = $this->findParenMatch($query, $pos1 + $name_length);
+      $argument_list = substr($query, $pos1 + $name_length + 1, $pos2 - $name_length - 1 - $pos1);
       $arguments = explode(', ', $argument_list);
       $new_arguments = implode('), (', $arguments);
       $replace = '(SELECT MAX(i) FROM (VALUES (' . $new_arguments . ')) AS T(i)) sqlsrv_least';
