@@ -1,0 +1,9 @@
+name: 'sqlsrv'
+description: 'Microsoft SQL Server driver for Drupal'
+author: 'Kevin Nowaczyk'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+branding:
+  icon: 'code'
+  color: 'blue'
