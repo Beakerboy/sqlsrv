@@ -14,6 +14,7 @@ use Drupal\KernelTests\Core\DatabaseTestBase;
  */
 class StatementWrapperLegacyTest extends DatabaseTestBase {
   protected $statement;
+
   /**
    * {@inheritdoc}
    */
@@ -24,14 +25,7 @@ class StatementWrapperLegacyTest extends DatabaseTestBase {
       $this->markTestSkipped('This test only works for drivers implementing Drupal\Core\Database\StatementWrapper.');
     }
   }
-  /**
-   * @covers ::getQueryString
-   */
-  public function testQueryString() {
-    $this->expectDeprecation('StatementWrapper::$queryString should not be accessed in drupal:9.1.0 and will error in drupal:10.0.0. Access the client-level statement object via ::getClientStatement(). See https://www.drupal.org/node/3177488');
-    $this->assertStringContainsString('SELECT * FROM ', $this->statement->queryString);
-    $this->assertStringContainsString('SELECT * FROM ', $this->statement->getQueryString());
-  }
+
   /**
    * Tests calling a non existing \PDOStatement method.
    */
@@ -39,6 +33,7 @@ class StatementWrapperLegacyTest extends DatabaseTestBase {
     $this->expectException('\BadMethodCallException');
     $this->statement->boo();
   }
+
   /**
    * Tests calling an existing \PDOStatement method.
    */
