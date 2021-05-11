@@ -1,6 +1,6 @@
 <?php
 
-namespace D Drupal\Tests\sqlsrv\Kernel;
+namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\StatementWrapper;
 use Drupal\KernelTests\Core\DatabaseTestBase;
