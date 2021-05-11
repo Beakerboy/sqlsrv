@@ -7,6 +7,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\StatementInterface;
+use Drupal\Core\Database\StatementWrapper;
 use Drupal\Core\Database\TransactionNoActiveException;
 use Drupal\Core\Database\TransactionOutOfOrderException;
 use Drupal\Core\Database\TransactionNameNonUniqueException;
@@ -15,6 +16,16 @@ use Drupal\Core\Database\TransactionNameNonUniqueException;
  * Sqlsvr implementation of \Drupal\Core\Database\Connection.
  */
 class Connection extends DatabaseConnection {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $statementClass = NULL;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $statementWrapperClass = StatementWrapper::class;
 
   /**
    * The identifier quote characters for the database type.
