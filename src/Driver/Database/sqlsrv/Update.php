@@ -37,14 +37,14 @@ class Update extends QueryUpdate {
           // We assume that an expression will never happen on a BLOB field,
           // which is a fairly safe assumption to make since in most cases
           // it would be an invalid query anyway.
-          $stmt->bindParam($placeholder, $data['arguments'][$placeholder]);
+          $stmt->getClientStatement()->bindParam($placeholder, $data['arguments'][$placeholder]);
         }
       }
       if ($data['expression'] instanceof SelectInterface) {
         $data['expression']->compile($this->connection, $this);
         $select_query_arguments = $data['expression']->arguments();
         foreach ($select_query_arguments as $placeholder => $argument) {
-          $stmt->bindParam($placeholder, $select_query_arguments[$placeholder]);
+          $stmt->getClientStatement()->bindParam($placeholder, $select_query_arguments[$placeholder]);
         }
       }
       unset($fields[$field]);
