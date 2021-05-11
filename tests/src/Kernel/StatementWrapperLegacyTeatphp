@@ -1,6 +1,10 @@
 <?php
-namespace Drupal\KernelTests\Core\Database;
+
+namespace D Drupal\Tests\sqlsrv\Kernel;
+
 use Drupal\Core\Database\StatementWrapper;
+use Drupal\KernelTests\Core\DatabaseTestBase;
+
 /**
  * Tests the deprecations of the StatementWrapper class.
  *
