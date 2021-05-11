@@ -2,6 +2,7 @@
 
 namespace Drupal\sqlsrv\Driver\Database\sqlsrv;
 
+use Drupal\Core\Database\StatementWrapper;
 use Symfony\Component\Yaml\Parser;
 
 /**
@@ -12,12 +13,12 @@ class Utils {
   /**
    * Bind the arguments to the statement.
    *
-   * @param \PDOStatement $stmt
+   * @param StatementWrapper $stmt
    *   Statement.
    * @param array $values
    *   Argument values.
    */
-  public static function bindArguments(\PDOStatement $stmt, array &$values) {
+  public static function bindArguments(StatementWrapper $stmt, array &$values) {
     foreach ($values as $key => &$value) {
       $stmt->getClientStatement()->bindParam($key, $value, \PDO::PARAM_STR);
     }
@@ -28,7 +29,7 @@ class Utils {
    *
    * Takes care of properly managing binary data.
    *
-   * @param \PDOStatement $stmt
+   * @param StatementWrapper $stmt
    *   PDOStatement to bind the values to.
    * @param array $values
    *   Values to bind. It's an array where the keys are column
@@ -45,7 +46,7 @@ class Utils {
    * @param mixed $blob_suffix
    *   Suffix for the blob key.
    */
-  public static function bindValues(\PDOStatement $stmt, array &$values, array &$blobs, $placeholder_prefix, array $columnInformation, &$max_placeholder = NULL, $blob_suffix = NULL) {
+  public static function bindValues(StatementWrapper $stmt, array &$values, array &$blobs, $placeholder_prefix, array $columnInformation, &$max_placeholder = NULL, $blob_suffix = NULL) {
     if (empty($max_placeholder)) {
       $max_placeholder = 0;
     }
