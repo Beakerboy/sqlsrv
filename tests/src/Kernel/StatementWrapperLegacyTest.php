@@ -3,7 +3,7 @@
 namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\StatementWrapper;
-use Drupal\KernelTests\Core\DatabaseTestBase;
+use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
  * Tests the deprecations of the StatementWrapper class.
