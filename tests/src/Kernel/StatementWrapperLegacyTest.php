@@ -30,8 +30,8 @@ class StatementWrapperLegacyTest extends DatabaseTestBase {
    * Tests calling a non existing \PDOStatement method.
    */
   public function testMissingMethod() {
-    $this->expectException('\BadMethodCallException');
-    $this->statement->boo();
+    $PDO = new \PDOStatement();
+    $this-assertFalse(is_callable([$PDO, 'uehdbsyyddh']);
   }
 
   /**
