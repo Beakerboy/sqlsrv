@@ -32,6 +32,8 @@ class StatementWrapperLegacyTest extends DatabaseTestBase {
   public function testMissingMethod() {
     $pdo = new \PDO("sqlsrv:Server=localhost;Database=mydrupalsite", "sa", "Password12!");
     $pdoStatement = $pdo->prepare("SELECT id FROM test");
+    $functionExists = is_callable([$pdoStatement, 'bindParam']);
+    $this->assertTrue($functionExists);
     $functionExists = is_callable([$pdoStatement, 'boo']);
     $this->assertFalse($functionExists);
     $clientStatement = $this->statement->getClientStatement();
