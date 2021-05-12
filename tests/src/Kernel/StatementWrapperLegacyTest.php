@@ -40,7 +40,7 @@ class StatementWrapperLegacyTest extends DatabaseTestBase {
   public function testClientStatementMethod() {
     $this->expectDeprecation('StatementWrapper::columnCount should not be called in drupal:9.1.0 and will error in drupal:10.0.0. Access the client-level statement object via ::getClientStatement(). See https://www.drupal.org/node/3177488');
     $this->statement->execute();
-    $array = $this->statement->fetch(PDO::FETCH_ASSOC);
+    $array = $this->statement->fetch(\PDO::FETCH_ASSOC);
     $this->assertEquals($array, array("1", "Foo"));
     $this->assertEquals(4, $this->statement->columnCount());
   }
