@@ -31,7 +31,7 @@ class StatementWrapperLegacyTest extends DatabaseTestBase {
    */
   public function testMissingMethod() {
     $PDO = new \PDOStatement();
-    $this->assertFalse(is_callable([$PDO, 'uehdbsyyddh']));
+    $this->assertFalse(is_callable([$PDO, 'boo']));
   }
 
   /**
