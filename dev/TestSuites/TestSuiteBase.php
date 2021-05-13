@@ -18,13 +18,8 @@ abstract class TestSuiteBase extends TestSuite {
   protected $failingClasses = [
     // Kernel Test Failures.
     '/core/tests/Drupal/KernelTests/Core/Database/SelectSubqueryTest.php',
-    '/core/tests/Drupal/KernelTests/Core/Database/SchemaTest.php',
-    '/core/modules/aggregator/tests/src/Kernel/Migrate/MigrateAggregatorStubTest.php',
     '/core/modules/migrate_drupal/tests/src/Kernel/d7/FieldDiscoveryTest.php',
-    '/core/modules/field_ui/tests/src/Kernel/EntityDisplayTest.php',
     // Functional Test Failures.
-    '/core/tests/Drupal/FunctionalTests/Installer/InstallerTranslationTest.php',
-    '/core/modules/datetime/tests/src/Functional/Views/FilterDateTest.php',
     '/core/modules/language/tests/src/Functional/ConfigurableLanguageManagerTest.php',
     '/core/modules/locale/tests/src/Functional/LocaleLocaleLookupTest.php',
     '/core/modules/path/tests/src/Functional/PathAliasTest.php',

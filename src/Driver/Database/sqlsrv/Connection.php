@@ -7,6 +7,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\StatementInterface;
+use Drupal\Core\Database\StatementWrapper;
 use Drupal\Core\Database\TransactionNoActiveException;
 use Drupal\Core\Database\TransactionOutOfOrderException;
 use Drupal\Core\Database\TransactionNameNonUniqueException;
@@ -15,6 +16,16 @@ use Drupal\Core\Database\TransactionNameNonUniqueException;
  * Sqlsvr implementation of \Drupal\Core\Database\Connection.
  */
 class Connection extends DatabaseConnection {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $statementClass = NULL;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $statementWrapperClass = StatementWrapper::class;
 
   /**
    * The identifier quote characters for the database type.
@@ -458,7 +469,7 @@ class Connection extends DatabaseConnection {
    * This method is overriden to manage EMULATE_PREPARE
    * behaviour to prevent some compatibility issues with SQL Server.
    *
-   * @param string|\Drupal\Core\Database\Statement $query
+   * @param string|\Drupal\Core\Database\Statement $query|\PDOStatement $query
    *   The query to execute. In most cases this will be a string containing
    *   an SQL query with placeholders. An already-prepared instance of
    *   StatementInterface may also be passed in order to allow calling
@@ -514,6 +525,10 @@ class Connection extends DatabaseConnection {
       if ($query instanceof StatementInterface) {
         $stmt = $query;
         $stmt->execute(NULL, $options);
+      }
+      elseif ($query instanceof \PDOStatement) {
+        $stmt = $query;
+        $stmt->execute();
       }
       else {
         $this->expandArguments($query, $args);
