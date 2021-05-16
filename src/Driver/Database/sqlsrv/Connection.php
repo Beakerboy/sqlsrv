@@ -421,7 +421,7 @@ class Connection extends DatabaseConnection {
       if ($e->getCode() == static::DATABASE_NOT_FOUND) {
         throw new DatabaseNotFoundException($e->getMessage(), $e->getCode(), $e);
       }
-      throw $e();
+      throw new $e();
     }
 
     return $pdo;
