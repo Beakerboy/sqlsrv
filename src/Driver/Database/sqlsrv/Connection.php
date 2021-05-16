@@ -4,6 +4,7 @@ namespace Drupal\sqlsrv\Driver\Database\sqlsrv;
 
 use Drupal\Core\Database\Connection as DatabaseConnection;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Database\DatabaseAccessDeniedException;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\StatementInterface;
@@ -26,11 +27,14 @@ class Connection extends DatabaseConnection {
   protected $schema = NULL;
 
   /**
-   * Error code for Login Failed.
-   *
-   * Usually happens when the database does not exist.
+   * Error code for "Unknown database" error.
    */
-  const DATABASE_NOT_FOUND = 28000;
+  const DATABASE_NOT_FOUND = 42000;
+
+  /**
+   * Error code for "Access denied" error.
+   */
+   const ACCESS_DENIED = 28000;
 
   /**
    * This is the original replacement regexp from Microsoft.
@@ -417,9 +421,12 @@ class Connection extends DatabaseConnection {
     try {
       $pdo = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
     }
-    catch (\Exception $e) {
+    catch (\PDOException $e) {
       if ($e->getCode() == static::DATABASE_NOT_FOUND) {
         throw new DatabaseNotFoundException($e->getMessage(), $e->getCode(), $e);
+      }
+      if ($e->getCode() == static::ACCESS_DENIED) {
+        throw new DatabaseAccessDeniedException($e->getMessage(), $e->getCode(), $e);
       }
       throw $e;
     }
