@@ -3,6 +3,8 @@
 namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\Database\DatabaseAccessDeniedException;
+use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
 
 /**
@@ -62,9 +64,7 @@ class ConnectionTest extends DatabaseTestBase {
       'schema' => 'dbo',
       'cache_schema' => 'true',
     ];
-    // PDOException: SQLSTATE[28000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user 'sa'.
-    // PDOException: SQLSTATE[42000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "incorrect" requested by the login. The login failed.
-    $this->expectException(\PDOException::class);
+    $this->expectException(DatabaseAccessDeniedException::class);
     // Generate an exception
     $this->connection->open($connection_array);
   }
@@ -102,9 +102,7 @@ class ConnectionTest extends DatabaseTestBase {
       'schema' => 'dbo',
       'cache_schema' => 'true',
     ];
-    // PDOException: SQLSTATE[28000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user 'sa'.
-    // PDOException: SQLSTATE[42000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "incorrect" requested by the login. The login failed.
-    $this->expectException(\PDOException::class);
+    $this->expectException(DatabaseNotFoundException::class);
     // Generate an exception
     $this->connection->open($connection_array);
   }
