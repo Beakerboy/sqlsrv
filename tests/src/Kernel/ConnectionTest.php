@@ -72,13 +72,13 @@ class ConnectionTest extends DatabaseTestBase {
   /**
    * Test PDOExceptions are rethrowb.
    */
-  public function testRethrowPDPException() {
+  public function testRethrowPDOException() {
     $connection_array = [
       'driver' => 'sqlsrv',
-      'database' => 'incorrect',
+      'database' => 'mydrupalsite',
       'username' => 'sa',
       'password' => 'Password12!',
-      'host' => 'localhost',
+      'host' => '10.0.0.42',
       'schema' => 'dbo',
       'cache_schema' => 'true',
     ];
