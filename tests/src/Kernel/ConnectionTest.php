@@ -52,7 +52,47 @@ class ConnectionTest extends DatabaseTestBase {
   /**
    * Test PDOExceptions are rethrowb.
    */
+  public function testAccessDeniedException() {
+    $connection_array = [
+      'driver' => 'sqlsrv',
+      'database' => 'mydrupalsite',
+      'username' => 'sa',
+      'password' => 'incorrect!',
+      'host' => 'localhost',
+      'schema' => 'dbo',
+      'cache_schema' => 'true',
+    ];
+    // PDOException: SQLSTATE[28000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user 'sa'.
+    // PDOException: SQLSTATE[42000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "incorrect" requested by the login. The login failed.
+    $this->expectException(\PDOException::class);
+    // Generate an exception
+    $this->connection->open($connection_array);
+  }
+
+  /**
+   * Test PDOExceptions are rethrowb.
+   */
   public function testRethrowPDPException() {
+    $connection_array = [
+      'driver' => 'sqlsrv',
+      'database' => 'incorrect',
+      'username' => 'sa',
+      'password' => 'Password12!',
+      'host' => 'localhost',
+      'schema' => 'dbo',
+      'cache_schema' => 'true',
+    ];
+    // PDOException: SQLSTATE[28000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user 'sa'.
+    // PDOException: SQLSTATE[42000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "incorrect" requested by the login. The login failed.
+    $this->expectException(\PDOException::class);
+    // Generate an exception
+    $this->connection->open($connection_array);
+  }
+
+  /**
+   * Test PDOExceptions are rethrowb.
+   */
+  public function testDatabaseNotFoundException() {
     $connection_array = [
       'driver' => 'sqlsrv',
       'database' => 'incorrect',
