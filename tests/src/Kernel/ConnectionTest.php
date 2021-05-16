@@ -52,7 +52,7 @@ class ConnectionTest extends DatabaseTestBase {
   /**
    * Test createUrl.
    */
-  public function testCreateUrlFromConnectionOptions() {
+  public function testRethrowPDPException() {
     $connection_array = [
       'driver' => 'sqlsrv',
       'database' => 'mydrupalsite',
