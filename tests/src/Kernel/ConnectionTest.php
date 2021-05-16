@@ -50,13 +50,12 @@ class ConnectionTest extends DatabaseTestBase {
   }
 
   /**
-   * Test createUrl.
+   * Test PDOExceptions are rethrowb.
    */
   public function testRethrowPDPException() {
     $connection_array = [
       'driver' => 'sqlsrv',
       'database' => 'incorrect',
-      //'database' => 'mydrupalsite',
       'username' => 'sa',
       'password' => 'Password12!',
       'host' => 'localhost',
@@ -64,7 +63,8 @@ class ConnectionTest extends DatabaseTestBase {
       'cache_schema' => 'true',
     ];
     // PDOException: SQLSTATE[28000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user 'sa'.
-    // Expect Exception
+    // PDOException: SQLSTATE[42000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "incorrect" requested by the login. The login failed.
+    $this->expectException(\PDOException::class);
     // Generate an exception
     $this->connection->open($connection_array);
   }
