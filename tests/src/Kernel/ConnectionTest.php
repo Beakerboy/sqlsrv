@@ -82,7 +82,7 @@ class ConnectionTest extends DatabaseTestBase {
       'schema' => 'dbo',
       'cache_schema' => 'true',
     ];
-    //$this->expectException(\PDOException::class);
+    $this->expectException(\PDOException::class);
     // Generate an exception
     $this->connection->open($connection_array);
   }
