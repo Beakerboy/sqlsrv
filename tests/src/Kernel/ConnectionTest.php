@@ -49,4 +49,21 @@ class ConnectionTest extends DatabaseTestBase {
     $this->assertEquals($db_url, $url);
   }
 
+  /**
+   * Test createUrl.
+   */
+  public function testCreateUrlFromConnectionOptions() {
+    $connection_array = [
+      'driver' => 'sqlsrv',
+      'database' => 'mydrupalsite',
+      'username' => 'sa',
+      'password' => 'Incorrect',
+      'host' => 'localhost',
+      'schema' => 'dbo',
+      'cache_schema' => 'true',
+    ];
+    // Expect Exception
+    // Generate an exception
+    Database:open($connection_array);
+  }
 }
