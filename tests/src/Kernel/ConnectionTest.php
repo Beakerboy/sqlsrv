@@ -64,6 +64,6 @@ class ConnectionTest extends DatabaseTestBase {
     ];
     // Expect Exception
     // Generate an exception
-    Database::open($connection_array);
+    $this->connection->open($connection_array);
   }
 }
