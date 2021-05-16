@@ -55,13 +55,15 @@ class ConnectionTest extends DatabaseTestBase {
   public function testRethrowPDPException() {
     $connection_array = [
       'driver' => 'sqlsrv',
-      'database' => 'mydrupalsite',
+      'database' => 'incorrect',
+      //'database' => 'mydrupalsite',
       'username' => 'sa',
-      'password' => 'Incorrect',
+      'password' => 'Password12!',
       'host' => 'localhost',
       'schema' => 'dbo',
       'cache_schema' => 'true',
     ];
+    // PDOException: SQLSTATE[28000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user 'sa'.
     // Expect Exception
     // Generate an exception
     $this->connection->open($connection_array);
