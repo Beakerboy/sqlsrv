@@ -3,6 +3,8 @@
 namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\Database\DatabaseAccessDeniedException;
+use Drupal\Core\Database\DatabaseNotFoundException;
 
 /**
  * Tests of the sqlsrv database system.
@@ -46,6 +48,60 @@ class ConnectionTest extends SqlsrvTestBase {
     $url = $this->connection->createUrlFromConnectionOptions($connection_array);
     $db_url = "sqlsrv://sa:Password12!@localhost/mydrupalsite?schema=dbo&amp;cache_schema=true";
     $this->assertEquals($db_url, $url);
+  }
+
+  /**
+   * Test AccessDeniedException is thrown.
+   */
+  public function testAccessDeniedException() {
+    $connection_array = [
+      'driver' => 'sqlsrv',
+      'database' => 'mydrupalsite',
+      'username' => 'sa',
+      'password' => 'incorrect!',
+      'host' => 'localhost',
+      'schema' => 'dbo',
+      'cache_schema' => 'true',
+    ];
+    $this->expectException(DatabaseAccessDeniedException::class);
+    // Generate an exception
+    $this->connection->open($connection_array);
+  }
+
+  /**
+   * Test PDOExceptions are rethrown.
+   */
+  public function testRethrowPDOException() {
+    $connection_array = [
+      'driver' => 'sqlsrv',
+      'database' => 'mydrupalsite',
+      'username' => 'sa',
+      'password' => 'Password12!',
+      'host' => '10.0.0.42',
+      'schema' => 'dbo',
+      'cache_schema' => 'true',
+    ];
+    $this->expectException(\PDOException::class);
+    // Generate an exception
+    $this->connection->open($connection_array);
+  }
+
+  /**
+   * Test DatabaseNotFoundException is thrown.
+   */
+  public function testDatabaseNotFoundException() {
+    $connection_array = [
+      'driver' => 'sqlsrv',
+      'database' => 'incorrect',
+      'username' => 'sa',
+      'password' => 'Password12!',
+      'host' => 'localhost',
+      'schema' => 'dbo',
+      'cache_schema' => 'true',
+    ];
+    $this->expectException(DatabaseNotFoundException::class);
+    // Generate an exception
+    $this->connection->open($connection_array);
   }
 
 }
