@@ -1,0 +1,103 @@
+<?php
+
+use DatabaseConnection_sqlsrv as Connection;
+
+/**
+ * Implements hook_requirements().
+ *
+ * @status: Needs global revision.
+ */
+function sqlsrv_requirements($phase) {
+
+  $requirements = array();
+
+  if ($phase == 'runtime') {
+	  
+
+    $connection = Database::getConnection();
+
+    if ($connection->driver() == 'sqlsrv') {
+
+      $options = $connection->getConnectionOptions();
+      $schema = $connection->schema();
+      $version = $schema->EngineVersion();
+
+      // Find out where the driver is.
+      $object = new ReflectionObject($connection);
+      $driver_path = dirname($object->getFileName());
+      include_once($driver_path . DIRECTORY_SEPARATOR . 'reflexiondata.inc');
+
+      // Report PDO version
+      $extensiondata = sqlsrv_REData(new ReflectionExtension('pdo_sqlsrv'));
+
+      // Report database engine version
+      $uinfo = $schema->UserOptions();
+      $uinfo_parts = array_map(function($a, $b) { $a = strtoupper($a); $b = strtoupper($b); return "$a=$b"; }, array_keys($uinfo), $uinfo);
+      $requirements['sqlsrv_edition'] = array(
+        'title' => t('MS SQL Server'),
+        'severity' => REQUIREMENT_INFO,
+        'description' => implode(' | ', $uinfo_parts),
+        'value' => t('@version [@level] @edition',
+          array('@version' => $version['VERSION'],
+                 '@level' => $version['LEVEL'],
+                 '@edition' => $version['EDITION'])),
+      );
+
+      // Report database name and size.
+      $size = $schema->getSizeInfo();
+      $size_db = format_size($size->RowSizeMB * 1024 * 1024);
+      $requirements['sqlsrv_database'] = array(
+        'title' => t('MS SQL Server Database'),
+        'severity' => REQUIREMENT_OK,
+        'value' => "{$options['database']} ({$size_db})",
+      );
+
+      // Make sure enough size is set for buffered queries
+      $buffer_size = $extensiondata['getINIEntries']['pdo_sqlsrv.client_buffer_max_kb_size'];
+      $buffer_size_min = (12240 * 2);
+      $buffer_size_ok = $buffer_size >= $buffer_size_min;
+      $requirements['sqlsrv_database'] = array(
+        'title' => t('MS SQL Server client buffer size'),
+        'severity' => $buffer_size_ok ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+        'value' => "{$buffer_size} Kb",
+        'description' => "pdo_sqlsrv.client_buffer_max_kb_size setting must be of at least {$buffer_size_min}Kb. Currently {$buffer_size}Kb.",
+      );
+
+      // Is this a windows server?
+      // Probably yes, because this is the MS SQL Server driver!
+      $is_windows = strncasecmp(PHP_OS, 'WIN', 3) == 0;
+
+      if ($is_windows) {
+        // Test WinCache.
+        $wincache_enabled = function_exists('wincache_ucache_get');
+        $requirements['sqlsrv_wincache_extension'] = array(
+          'title' => t('MS SQL Server Wincache extension'),
+          'value' => $wincache_enabled ? phpversion('wincache') : t('Not available'),
+          'severity' => $wincache_enabled ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+          'description' => $wincache_enabled ? NULL : t('It is highly recommended to install and enable the <a href="http://sourceforge.net/projects/wincache/files/">Wincache PHP extension</a> on Windows Server systems to get the best performance from Drupal.'),
+        );
+      }
+
+      // Report encoding for database.
+      $collation = $schema->getCollation();
+      $case_insensitive = stripos($collation, '_CI') !== FALSE;
+      $requirements['sqlsrv_encoding_database'] = array(
+        'title' => t('MS SQL Server Database encoding'),
+        'severity' => $case_insensitive ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+        'description' => $case_insensitive ? NULL : t('Drupal needs a default case insensitive collation database to run on.'),
+        'value' => t('@collation', array('@collation' => $collation)),
+      );
+
+      // Report PDO version, and require at lest 3.2 version.
+      $version_ok = version_compare($extensiondata['getVersion'] , '3.2') >= 0;
+      $requirements['sqlsrv_pdo'] = array(
+        'title' => t('MS SQL Server PDO extension'),
+        'severity' => $version_ok ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+        'value' => t('@level', array('@level' => $extensiondata['getVersion'])),
+        'description' => t('Use at least the 3.2.0.0 version of the MSSQL PDO driver.')
+      );
+    }
+  }
+
+  return $requirements;
+}
