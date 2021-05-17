@@ -3,7 +3,6 @@
 namespace Drupal\Tests\sqlsrv\Kernel;
 
 use Drupal\Core\Database\Database;
-
 use Drupal\Core\Database\DatabaseAccessDeniedException;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\KernelTests\Core\Database\DatabaseTestBase;
