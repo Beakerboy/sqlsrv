@@ -1,0 +1,29 @@
+{
+  "name": "drupal/sqlsrv",
+  "description": "Driver for SQL Server and SQL Azure",
+  "type": "drupal-module",
+  "minimum-stability": "stable",
+  "authors": [
+    {
+      "name": "Kevin Nowaczyk",
+      "role": "Lead Developer",
+      "homepage": "https://github.com/Beakerboy"
+    },
+    {
+      "name": "David Garcia",
+      "role": "Contributor"
+    }
+  ],
+  "autoload-dev": {
+    "psr-4": { "Drupal\\Tests\\sqlsrv\\": "tests/src/" }
+  },
+  "require": {
+    "php" : "^7.0",
+    "drupal/core" : "^7.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^7",
+    "phpstan/phpstan": "*",
+    "php-coveralls/php-coveralls": "*"
+  }
+}
