@@ -19,10 +19,10 @@ install:
   - cd ..
   - export COMPOSER_MEMORY_LIMIT=-1
   - git clone https://git.drupalcode.org/project/drupal.git -b $DRUPAL_VERSION drupal-project
-  - cd drupal-project
+  - cp ../sqlsrv/composer.json .
   - composer config -g github-oauth.github.com $GITHUB_OAUTH
   - composer install
-  - bash ../sqlsrv/dev/travis/drupal${DRUPAL_VERSION}.sh
+  - bash dev/travis/drupal${DRUPAL_VERSION}.sh
 before_script:
   - |
     if ! [ -z "$APACHE" ]; then
