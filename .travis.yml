@@ -44,8 +44,8 @@ before_script:
      fi
 script:
   #- cp $TRAVIS_BUILD_DIR/dev/phpunit.xml.dist $TRAVIS_BUILD_DIR/../drupal-project/core/phpunit.xml
-  #- cd $TRAVIS_BUILD_DIR/../drupal-project
-  - php $TRAVIS_BUILD_DIR/../drupal-project/scripts/run-tests.sh --all
+  - cd $TRAVIS_BUILD_DIR/../drupal-project
+  - php ./scripts/run-tests.sh --all
   #- vendor/bin/phpunit -v -c core/phpunit.xml --testsuite=$TEST_SUITE
   - |
     if ! [ -z "$CODE_SNIFF" ]; then
