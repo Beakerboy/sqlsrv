@@ -44,4 +44,4 @@ before_script:
      fi
   - cd $TRAVIS_BUILD_DIR/../drupal-project
 script:
-  - sudo php ./scripts/run-tests.sh --list
+  - php ./scripts/run-tests.sh --list
