@@ -23,7 +23,7 @@ install:
   - cd drupal-project
   - composer config -g github-oauth.github.com $GITHUB_OAUTH
   - composer install
-  - bash dev/travis/drupal${DRUPAL_VERSION}.sh
+  - bash ../sqlsrv/dev/travis/drupal${DRUPAL_VERSION}.sh
 before_script:
   - |
     if ! [ -z "$APACHE" ]; then
