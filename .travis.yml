@@ -43,7 +43,7 @@ before_script:
        sudo service apache2 restart
      fi
   - rm ../drupal-project/scripts/run-tests.sh
-  - cp dev/travis/run-tests.sh ../drupal-project/scripts/
+  - cp $TRAVIS_BUILD_DIR/dev/travis/run-tests.sh ../drupal-project/scripts/
   - cd $TRAVIS_BUILD_DIR/../drupal-project
 script:
   - php ./scripts/run-tests.sh --list
