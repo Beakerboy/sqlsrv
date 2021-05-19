@@ -895,7 +895,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       if (empty($this->transactionLayers)) {
         try {
           // PDO::commit() can either return FALSE or throw an exception itself
-          if (!PDO::commit()) {
+          if (!$this->connection->commit()) {
             throw new DatabaseTransactionCommitFailedException();
           }
         }
