@@ -2334,6 +2334,7 @@ function drupal_bootstrap($phase = NULL, $new_phase = TRUE) {
       }
     }
   }
+  echo "leaving bootstrap\n";
   return $stored_phase;
 }
 /**
