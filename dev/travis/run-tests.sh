@@ -260,6 +260,7 @@ function simpletest_script_init($server_software) {
   chdir(realpath(dirname(__FILE__) . '/..'));
   define('DRUPAL_ROOT', getcwd());
   require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
+  echo "init\n";
 }
 /**
  * Execute a batch of tests.
