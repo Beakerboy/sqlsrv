@@ -137,7 +137,7 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
 
     // No worry for the tableExists() check, results
     // are cached.
-    if (empty($table) || !$this->tableExists($table)) {
+    if (!$this->tableExists($table)) {
       throw new DatabaseSchemaObjectDoesNotExistException("The table '{$table}' does not exist.");
     }
 
