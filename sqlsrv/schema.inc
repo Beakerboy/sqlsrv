@@ -3,7 +3,7 @@
 include_once __DIR__ . '/fastcache.inc';
 
 /**
- * @filefe
+ * @file
  * Database schema code for Microsoft SQL Server database servers.
  */
 
