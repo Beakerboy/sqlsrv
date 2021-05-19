@@ -16,7 +16,9 @@ sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev gcc g++ make auto
 # PHP7.1
 # pecl install sqlsrv-5.6.1 pdo_sqlsrv-5.6.1
 # PHP7.0
-pecl install sqlsrv-5.3.0 pdo_sqlsrv-5.3.0
+# pecl install sqlsrv-5.3.0 pdo_sqlsrv-5.3.0
+# PHP 5.6
+pecl install sqlsrv-3.0.1 pdo_sqlsrv-3.0.1
 yes "autodetect" | pecl install yaml
 # Install REGEX CLR
 wget https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll
