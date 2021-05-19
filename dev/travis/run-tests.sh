@@ -25,6 +25,7 @@ else {
   simpletest_script_init(NULL);
 }
 // Bootstrap to perform initial validation or other operations.
+echo "calling bootstrap\n";
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 echo "completed bootstrap\n";
 if (!module_exists('simpletest')) {
