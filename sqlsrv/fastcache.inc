@@ -5,7 +5,7 @@
  * fastcache class.
  */
 
-include_once 'fastcacheitem.inc';
+include_once __DIR__ . '/fastcacheitem.inc';
 
 /**
  * Static caching layer.
