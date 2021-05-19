@@ -44,6 +44,6 @@ before_script:
        sudo service apache2 restart
      fi
   - cd $TRAVIS_BUILD_DIR/../drupal-project
-  - php --version
+  - ls -al $TRAVIS_BUILD_DIR/../drupal-project/includes/database/sqlsrv
 script:
   - php ./scripts/run-tests.sh --list
