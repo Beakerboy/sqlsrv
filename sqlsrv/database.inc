@@ -10,11 +10,11 @@
  * @{
  */
 
-include_once 'fastcache.inc';
-include_once 'enum.inc';
-include_once 'transaction.inc';
-include_once 'utils.inc';
-include_once 'context.inc';
+include_once __DIR__ . '/fastcache.inc';
+include_once __DIR__ . '/enum.inc';
+include_once __DIR__ . '/transaction.inc';
+include_once __DIR__ . '/utils.inc';
+include_once __DIR__ . '/context.inc';
 
 /**
  * Summary of DatabaseConnection_sqlsrv
