@@ -2,7 +2,7 @@ language: php
 # Functional and Unit tests require Apache
 env:
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=7.x TEST_SUITE=sqlsrv
-  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=7.78 TEST_SUITE=sqlsrv
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=7.25 TEST_SUITE=sqlsrv
 
 php:
   - '7.1'
@@ -24,7 +24,7 @@ install:
   - cd drupal-project
   - composer config -g github-oauth.github.com $GITHUB_OAUTH
   - composer install
-  - bash ../sqlsrv/dev/travis/drupal${DRUPAL_VERSION}.sh
+  - bash ../sqlsrv/dev/travis/drupal7.x.sh
 before_script:
   - |
     if ! [ -z "$APACHE" ]; then
