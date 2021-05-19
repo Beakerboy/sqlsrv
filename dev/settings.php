@@ -238,7 +238,7 @@
    'driver' => 'sqlsrv',
    'database' => 'mydrupalsite',
    'username' => 'sa',
-   'password' => 'Password123!',
+   'password' => 'Password12!',
    'host' => 'localhost',
    'prefix' => 'main_',
    'collation' => 'utf8_general_ci',
