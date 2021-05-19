@@ -5,7 +5,7 @@ env:
   - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=7.78 TEST_SUITE=sqlsrv
 
 php:
-  - '5.6'
+  - '7.0'
 
 before_install:
   # remove Xdebug to speed up test runner
