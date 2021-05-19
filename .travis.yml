@@ -43,8 +43,8 @@ before_script:
        sudo service apache2 restart
      fi
   #- rm ../drupal-project/scripts/run-tests.sh
-  #- rm ../drupal-project/includes/bootstrap.inc
-  #- cp $TRAVIS_BUILD_DIR/dev/travis/bootstrap.inc ../drupal-project/includes
+  - rm ../drupal-project/includes/bootstrap.inc
+  - cp $TRAVIS_BUILD_DIR/dev/travis/bootstrap.inc ../drupal-project/includes
   #- cp $TRAVIS_BUILD_DIR/dev/travis/run-tests.sh ../drupal-project/scripts/
   - cd $TRAVIS_BUILD_DIR/../drupal-project
 script:
