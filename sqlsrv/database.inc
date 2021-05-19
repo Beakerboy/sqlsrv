@@ -142,7 +142,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
     $this->setPrefix(isset($this->connectionOptions['prefix']) ? $this->connectionOptions['prefix'] : '');
 
     // Call PDO::__construct and PDO::setAttribute.
-    $connection = new PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+    \PDO->construct($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
   }
 
   /**
