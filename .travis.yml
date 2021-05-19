@@ -42,10 +42,10 @@ before_script:
        sudo sed -e "s?%TRAVIS_WEB_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
        sudo service apache2 restart
      fi
-  #- rm ../drupal-project/scripts/run-tests.sh
+  - rm ../drupal-project/scripts/run-tests.sh
   - rm ../drupal-project/includes/bootstrap.inc
   - cp $TRAVIS_BUILD_DIR/dev/travis/bootstrap.inc ../drupal-project/includes
-  #- cp $TRAVIS_BUILD_DIR/dev/travis/run-tests.sh ../drupal-project/scripts/
+  - cp $TRAVIS_BUILD_DIR/dev/travis/run-tests.sh ../drupal-project/scripts/
   - cd $TRAVIS_BUILD_DIR/../drupal-project
 script:
   - php ./scripts/run-tests.sh --list
