@@ -2531,7 +2531,7 @@ function _drupal_bootstrap_database() {
   if (version_compare(PHP_VERSION, '5.4') >= 0) {
     spl_autoload_register('drupal_autoload_trait');
   }
-  echo "leave bootstrap database\n"
+  echo "leave bootstrap database\n";
 }
 /**
  * Loads system variables and all enabled bootstrap modules.
