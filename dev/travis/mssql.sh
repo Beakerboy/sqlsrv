@@ -13,7 +13,7 @@ sleep 15
 /opt/mssql-tools/bin/sqlcmd -P Password12! -S localhost -U SA -Q "CREATE DATABASE mydrupalsite COLLATE ${DB_COLLATION}"
 # Install the pdo_sqlsrv extension
 sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev gcc g++ make autoconf libc-dev pkg-config
-pecl install sqlsrv pdo_sqlsrv
+pecl install sqlsrv-5.6.1 pdo_sqlsrv-5.6.1
 yes "autodetect" | pecl install yaml
 # Install REGEX CLR
 wget https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll
