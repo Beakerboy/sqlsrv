@@ -2305,19 +2305,24 @@ function drupal_bootstrap($phase = NULL, $new_phase = TRUE) {
       }
       switch ($current_phase) {
         case DRUPAL_BOOTSTRAP_CONFIGURATION:
+          echo "bootstrap config\n";
           require_once DRUPAL_ROOT . '/includes/request-sanitizer.inc';
           _drupal_bootstrap_configuration();
           break;
         case DRUPAL_BOOTSTRAP_PAGE_CACHE:
+          echo "bootstrap cache\n";
           _drupal_bootstrap_page_cache();
           break;
         case DRUPAL_BOOTSTRAP_DATABASE:
+          echo "bootstrap database\n";
           _drupal_bootstrap_database();
           break;
         case DRUPAL_BOOTSTRAP_VARIABLES:
+          echo "bootstrap variables\n";
           _drupal_bootstrap_variables();
           break;
         case DRUPAL_BOOTSTRAP_SESSION:
+          echo "bootstrap session\n";
           require_once DRUPAL_ROOT . '/' . variable_get('session_inc', 'includes/session.inc');
           drupal_session_initialize();
           break;
