@@ -777,7 +777,7 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
         $rolled_back_other_active_savepoints = TRUE;
       }
     }
-    \PDO::rollBack();
+    $this->connection->rollBack();
     // Restore original transaction isolation level
     if ($level = static::DefaultTransactionIsolationLevelInStatement()) {
       if($savepoint['settings']->Get_IsolationLevel() != DatabaseTransactionIsolationLevel::Ignore()) {
@@ -840,7 +840,9 @@ class DatabaseConnection_sqlsrv extends DatabaseConnection {
       foreach($this->statement_cache as $statement) {
         $statement->closeCursor();
       }
-      \PDO::beginTransaction();
+      if (!$this->inTransaction()) {
+        $this->connection->beginTransaction();
+      }
     }
     // Store the name and settings in the stack.
     $this->transactionLayers[$name] = array('settings' => $settings, 'active' => TRUE, 'name' => $name, 'started' => $started);
