@@ -18,7 +18,8 @@
     "psr-4": { "Drupal\\Tests\\sqlsrv\\": "tests/src/" }
   },
   "require": {
-    "php" : "^7.0"
+    "php" : "^7.0",
+    "drush/drush": "^8.4.8"
   },
   "require-dev": {
     "phpunit/phpunit": "^7",
