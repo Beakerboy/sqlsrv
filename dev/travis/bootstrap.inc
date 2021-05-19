@@ -2486,7 +2486,7 @@ function _drupal_bootstrap_page_cache() {
  * Initializes the database system and registers autoload functions.
  */
 function _drupal_bootstrap_database() {
-  echo "bootstrap database\n";
+  echo "enter bootstrap database\n";
   // Redirect the user to the installation script if Drupal has not been
   // installed yet (i.e., if no $databases array has been defined in the
   // settings.php file) and we are not already installing.
@@ -2531,6 +2531,7 @@ function _drupal_bootstrap_database() {
   if (version_compare(PHP_VERSION, '5.4') >= 0) {
     spl_autoload_register('drupal_autoload_trait');
   }
+  echo "leave bootstrap database\n"
 }
 /**
  * Loads system variables and all enabled bootstrap modules.
