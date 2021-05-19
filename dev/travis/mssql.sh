@@ -14,9 +14,9 @@ sleep 15
 # Install the pdo_sqlsrv extension
 sudo ACCEPT_EULA=Y apt-get -y install msodbcsql17 unixodbc-dev gcc g++ make autoconf libc-dev pkg-config
 # PHP7.1
-# pecl install sqlsrv-5.6.1 pdo_sqlsrv-5.6.1
+pecl install sqlsrv-5.6.1 pdo_sqlsrv-5.6.1
 # PHP7.0
-pecl install sqlsrv-5.3.0 pdo_sqlsrv-5.3.0
+#pecl install sqlsrv-5.3.0 pdo_sqlsrv-5.3.0
 # PHP 5.6
 # pecl install sqlsrv-3.0.1
 # pecl install pdo_sqlsrv-3.0.1
