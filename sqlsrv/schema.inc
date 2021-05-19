@@ -1,6 +1,6 @@
 <?php
 
-include_once 'fastcache.inc';
+include_once __DIR__ . '/fastcache.inc';
 
 /**
  * @filefe
