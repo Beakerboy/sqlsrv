@@ -58,7 +58,7 @@ build_script:
   # Install other composer packages for production
   # Copy in the module
   - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% %cd%sites\all\modules\
-  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER%\sqlsrv %cd%includes\database\
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\sqlsrv %cd%includes\database\
   - cmd: mkdir C:\inetpub\wwwroot\sites\default\files
   - cmd: mkdir C:\inetpub\wwwroot\sites\default\files\tmp
   # Should we use recursive instead?
