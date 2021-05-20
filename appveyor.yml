@@ -75,8 +75,9 @@ build_script:
       $AccessRule= New-Object System.Security.AccessControl.FileSystemAccessRule("everyone","FullControl","ContainerInherit,Objectinherit","none","Allow")
       $Acl.AddAccessRule($AccessRule)
       Set-Acl $SharePath $Acl
-  # Core Patches
-  # Testing Patches
+  # Patches
+    # Core Patches
+    # Testing Patches
   # drush site install
   - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\appveyor\settings.php C:\inetpub\wwwroot\sites\default\
   - cmd: mkdir .\build\logs
