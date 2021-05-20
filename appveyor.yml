@@ -66,8 +66,7 @@ build_script:
   - cmd: mkdir C:\inetpub\wwwroot\sites\default\files\tmp
   # install wincache module
   - ps: (New-Object Net.WebClient).DownloadFile('https://ftp.drupal.org/files/projects/wincachedrupal-7.x-2.1.zip', 'C:\testlogs\wincachedrupal-7.x.zip')
-  - ps: Expand-Archive -Path 'C:\testlogs\wincachedrupal-7.x.zip' -Destinationpath 'C:\inetpub\wwwroot\sites\all\modules\contrib\wincachedrupal'
-  - cmd: dir C:\inetpub\wwwroot\sites\all\modules\contrib\wincachedrupal
+  - ps: Expand-Archive -Path 'C:\testlogs\wincachedrupal-7.x.zip' -Destinationpath 'C:\inetpub\wwwroot\sites\all\modules\contrib'
   # Should we use recursive instead?
   - ps: |
       $sharepath = "C:\inetpub\wwwroot\sites"
