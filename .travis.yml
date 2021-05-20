@@ -49,4 +49,4 @@ before_script:
   - cd $TRAVIS_BUILD_DIR/../drupal-project
   - ls -al $TRAVIS_BUILD_DIR/../drupal-project/includes/database
 script:
-  - php ./scripts/run-tests.sh --list
+  - php ./scripts/run-tests.sh --list --php `which php`
