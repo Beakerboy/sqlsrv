@@ -80,7 +80,7 @@ build_script:
   # drush site install
   - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\appveyor\settings.php C:\inetpub\wwwroot\sites\default\
   - cmd: mkdir .\build\logs
-  - cmd: drush si -y --db-url=sqlsrv://sa:Password12!@localhost/mydrupalsite --clean-url=0 --account-name=admin --account-pass=drupal
+  - cmd: drush si standard install_configure_form.update_status_module='array(FALSE,FALSE)' -y --db-url=sqlsrv://sa:Password12!@localhost/mydrupalsite --clean-url=0 --account-name=admin --account-pass=drupal
 before_test:
 test_script:
   - cmd: cd C:\inetpub\wwwroot
