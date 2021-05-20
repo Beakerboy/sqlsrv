@@ -57,8 +57,8 @@ build_script:
   - cmd: SET PATH=C:\inetpub\wwwroot\vendor\bin;%PATH%
   # Install other composer packages for production
   # Copy in the module
-  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% %cd%sites\all\modules\sqlsrv
-  - cmd: xcopy %APPVEYOR_BUILD_FOLDER%sqlsrv %cd%includes\database\
+  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% %cd%sites\all\modules\
+  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER%\sqlsrv %cd%includes\database\
   - cmd: mkdir C:\inetpub\wwwroot\sites\default\files
   - cmd: mkdir C:\inetpub\wwwroot\sites\default\files\tmp
   # Should we use recursive instead?
@@ -72,7 +72,7 @@ build_script:
 
   # Testing Patches
 before_test:
-  - cmd: cp %APPVEYOR_BUILD_FOLDER%dev\settings.inc C:\inetpub\wwwroot\sites\default\settings.inc
+  - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\settings.inc C:\inetpub\wwwroot\sites\default\settings.inc
   - cmd: mkdir .\build\logs
 test_script:
   - cmd: cd C:\inetpub\wwwroot
