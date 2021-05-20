@@ -72,7 +72,7 @@ build_script:
 
   # Testing Patches
 before_test:
-  - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\settings.php C:\inetpub\wwwroot\sites\default\settings.inc
+  - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\settings.php C:\inetpub\wwwroot\sites\default\
   - cmd: mkdir .\build\logs
 test_script:
   - cmd: cd C:\inetpub\wwwroot
