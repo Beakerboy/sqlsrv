@@ -20,6 +20,12 @@ install:
       $cli.DownloadFile('https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.6.1/php_pdo_sqlsrv-5.6.1-7.1-nts-vc14-x64.zip', 'C:\testlogs\php_pdo_sqlsrv.zip')
   - ps: Expand-Archive -Path 'C:\testlogs\php_pdo_sqlsrv.zip' -Destinationpath 'C:\testlogs\php_pdo_sqlsrv'
   - cmd: copy C:\testlogs\php_pdo_sqlsrv\php_pdo_sqlsrv.dll C:\tools\php\ext
+  - ps: |
+      $cli = New-Object Net.WebClient
+      $cli.Headers['User-Agent'] = 'Appveyor';
+      $cli.DownloadFile('http://windows.php.net/downloads/pecl/releases/wincache/2.0.0.8/php_wincache-2.0.0.8-7.1-nts-vc14-x64.zip', 'C:\testlogs\php_wincache.zip')
+  - ps: Expand-Archive -Path 'C:\testlogs\php_wincache.zip' -Destinationpath 'C:\testlogs\php_wincache'
+  - cmd: copy C:\testlogs\php_wincache\php_wincache.dll C:\tools\php\ext
   # Start Windows Update service
   - cmd: sc config wuauserv start= auto
   - cmd: net start wuauserv
