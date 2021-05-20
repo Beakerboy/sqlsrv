@@ -25,13 +25,8 @@ install:
   - cmd: net start wuauserv
   # Add php binary to PATH
   - ps: $Env:Path = "C:\tools\php;" + $Env:Path;
-  # Edit the php.ini file - Should we have a php.ini.dist file somewhere that we just `cat` into the exiting file?
-  - ps: Add-Content C:\tools\php\php.ini "extension_dir=ext"
-  - ps: Add-Content C:\tools\php\php.ini "extension=php_pdo_sqlsrv"
-  - ps: Add-Content C:\tools\php\php.ini "extension=php_openssl"
-  - ps: Add-Content C:\tools\php\php.ini "extension=php_mbstring"
-  - ps: Add-Content C:\tools\php\php.ini "extension=php_curl"
-  - ps: Add-Content C:\tools\php\php.ini "extension=php_gd2.dll"
+  # Edit the php.ini file.
+  - cmd: type C:\tools\php\php.ini %APPVEYOR_BUILD_FOLDER%\dev\appveyor\php.ini > C:\tools\php\php.ini
   # Install Composer
   - ps: new-item c:\composer -itemtype directory
   - cmd: cd /d C:\composer
@@ -71,7 +66,6 @@ build_script:
       $Acl.AddAccessRule($AccessRule)
       Set-Acl $SharePath $Acl
   # Core Patches
-  - cmd: where php
   # Testing Patches
 before_test:
   - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\settings.php C:\inetpub\wwwroot\sites\default\
