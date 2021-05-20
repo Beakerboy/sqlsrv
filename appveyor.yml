@@ -1,24 +1,12 @@
 services:
   - mssql2016
-  - iis
+  #- iis
 image:
   - Visual Studio 2017
 environment:
   matrix:
-    - TEST_SUITE: core-kernel
+    - TEST_SUITE: sqlsrv
       TEST_INDEX: 0
-    - TEST_SUITE: core-kernel
-      TEST_INDEX: 1
-    - TEST_SUITE: core-extensions-kernel
-      TEST_INDEX: 0
-    - TEST_SUITE: core-extensions-kernel
-      TEST_INDEX: 1
-    - TEST_SUITE: core-extensions-kernel
-      TEST_INDEX: 2
-    - TEST_SUITE: core-extensions-kernel
-      TEST_INDEX: 3
-    - TEST_SUITE: passing_functional,unit
-    - TEST_SUITE: passing_functional2
 install:
   # Set up the Environment
   - cmd: mkdir c:\testlogs
@@ -103,23 +91,6 @@ build_script:
   # Core Patches
 
   # Testing Patches
-  # ConnectionUnitTest defaults to MySQL syntax
-  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/connectionUnit.patch', 'C:\inetpub\wwwroot\connectionUnit.patch')
-  - cmd: git apply connectionUnit.patch
-  # Enable sqlsrv module for Kernel Tests
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-05-02/2966272-16.patch', 'C:\inetpub\wwwroot\2966272.patch')
-  - cmd: git apply 2966272.patch
-  # Enable sqlsrv in specific Functional Tests
-  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/Function-timestamp.patch', 'C:\inetpub\wwwroot\Function-timestamp.patch')
-  - cmd: git apply Function-timestamp.patch
-  # Add a sqlsrv-specific data type to the core test
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-02-05/drupal-3111134-database_specific_types-3.patch', 'C:\inetpub\wwwroot\drupal-3111134-database_specific_types.patch')
-  - cmd: git apply drupal-3111134-database_specific_types.patch
-  # CharacterSet does not need to be uppercase
-  - ps: (New-Object Net.WebClient).DownloadFile('http://beakerboy.com/~kevin/caseInsensitiveCharset.patch', 'C:\inetpub\wwwroot\caseInsensitiveCharset.patch')
-  - cmd: git apply caseInsensitiveCharset.patch
-  - cmd: cd %APPVEYOR_BUILD_FOLDER%
-  - ps: ((Get-Content -path dev\phpunit.xml.dist -Raw) -replace 'WEB_DIR/sites/simpletest/browser_output','C:\inetpub\wwwroot\sites\simpletest\browser_output') | Set-Content -Path dev\phpunit.xml.dist
 before_test:
   - cmd: cp dev\phpunit.xml.dist C:\inetpub\wwwroot\core\phpunit.xml
   - cmd: mkdir .\build\logs
