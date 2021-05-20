@@ -59,14 +59,8 @@ build_script:
   - cmd: SET PATH=C:\inetpub\wwwroot\vendor\bin;%PATH%
   # Install other composer packages for production
   # Copy in the module
-  - cmd: cd /d C:\inetpub\wwwroot\includes\database
-  - cmd: dir
-  - cmd: cd /d C:\inetpub\wwwroot
   - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% C:\inetpub\wwwroot\sites\all\modules\sqlsrv
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\sqlsrv C:\inetpub\wwwroot\includes\database\sqlsrv
-  - cmd: cd /d C:\inetpub\wwwroot\includes\database
-  - cmd: dir
-  - cmd: cd /d C:\inetpub\wwwroot
   - cmd: mkdir C:\inetpub\wwwroot\sites\default\files
   - cmd: mkdir C:\inetpub\wwwroot\sites\default\files\tmp
   # Should we use recursive instead?
@@ -77,7 +71,7 @@ build_script:
       $Acl.AddAccessRule($AccessRule)
       Set-Acl $SharePath $Acl
   # Core Patches
-
+  - cmd: where php
   # Testing Patches
 before_test:
   - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\settings.php C:\inetpub\wwwroot\sites\default\
