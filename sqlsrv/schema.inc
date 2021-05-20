@@ -134,7 +134,6 @@ class DatabaseSchema_sqlsrv extends DatabaseSchema {
    *      - default_value: Default value for the column (if any).
    */
   public function queryColumnInformation($table, $refresh = FALSE) {
-    echo "QueryColumnInfo($table)\n";
     // No worry for the tableExists() check, results
     // are cached.
     if (empty($table) || !$this->tableExists($table)) {
