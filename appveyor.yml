@@ -12,20 +12,14 @@ install:
   - cmd: mkdir c:\testlogs
   - ps: (New-Object Net.WebClient).DownloadFile('https://github.com/Beakerboy/drupal-sqlsrv-regex/releases/download/1.0/RegEx.dll', 'C:\testlogs\RegEx.dll')
     # SET UP PHP
-  - ps: choco install php --version=7.3.12 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
+  - ps: choco install php --version=7.1.33 --package-parameters="/InstallDir:C:\tools\php" -y --no-progress 2>&1 > C:\TestLogs\choco_install_php.txt
   - ps: choco install urlrewrite -y --no-progress 2>&1 > C:\testlogs\choco_install_urlrewrite.txt
   - ps: |
       $cli = New-Object Net.WebClient
       $cli.Headers['User-Agent'] = 'Appveyor';
-      $cli.DownloadFile('https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.8.1/php_pdo_sqlsrv-5.8.1-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_pdo_sqlsrv.zip')
-  - ps: |
-      $cli = New-Object Net.WebClient
-      $cli.Headers['User-Agent'] = 'Appveyor';
-      $cli.DownloadFile('http://windows.php.net/downloads/pecl/releases/yaml/2.1.0/php_yaml-2.1.0-7.3-nts-vc15-x64.zip', 'C:\testlogs\php_yaml.zip')
+      $cli.DownloadFile('https://windows.php.net/downloads/pecl/releases/pdo_sqlsrv/5.6.1/php_pdo_sqlsrv-5.6.1-7.1-nts-vc14-x64.zip', 'C:\testlogs\php_pdo_sqlsrv.zip')
   - ps: Expand-Archive -Path 'C:\testlogs\php_pdo_sqlsrv.zip' -Destinationpath 'C:\testlogs\php_pdo_sqlsrv'
   - cmd: copy C:\testlogs\php_pdo_sqlsrv\php_pdo_sqlsrv.dll C:\tools\php\ext
-  - ps: Expand-Archive -Path 'C:\testlogs\php_yaml.zip' -Destinationpath 'C:\testlogs\php_yaml'
-  - cmd: xcopy C:\testlogs\php_yaml\php_yaml.dll C:\tools\php\ext
   # Start Windows Update service
   - cmd: sc config wuauserv start= auto
   - cmd: net start wuauserv
@@ -37,7 +31,6 @@ install:
   - ps: Add-Content C:\tools\php\php.ini "extension=php_openssl"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_mbstring"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_curl"
-  - ps: Add-Content C:\tools\php\php.ini "extension=php_yaml"
   - ps: Add-Content C:\tools\php\php.ini "extension=php_gd2.dll"
   # Install Composer
   - ps: new-item c:\composer -itemtype directory
@@ -48,9 +41,7 @@ install:
   # Download Drupal
   - cmd: cd /d C:\inetpub\
   - cmd: mv wwwroot wwwroot-old
-  - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 9.1.x wwwroot
-  # IIS Config
-  - cmd: powershell %APPVEYOR_BUILD_FOLDER%\dev\appveyor\iis.ps1
+  - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 7.x wwwroot
 build_script:
   # For some reason this cannot go in the install potion of the appveyor config
   - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
@@ -60,30 +51,19 @@ build_script:
   # Set up Drupal
   - cmd: cd /d C:\inetpub\wwwroot
   # Apply any pre-composer patches
-  - ps: (New-Object Net.WebClient).DownloadFile('https://www.drupal.org/files/issues/2020-07-28/3151118-31.patch', 'C:\inetpub\wwwroot\3151118.patch')
-  - cmd: git apply 3151118.patch
-  - cmd: del 3151118.patch
-  - cmd: set COMPOSER_MEMORY_LIMIT=-1
-  - cmd: composer install -q
+  #- cmd: set COMPOSER_MEMORY_LIMIT=-1
+  #- cmd: composer install -q
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\inetpub\wwwroot\vendor\bin;%PATH%
   # Install other composer packages for production
   # Copy in the module
-  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER%\tests\database_statement_monitoring_test .\core\modules\system\tests\modules\database_statement_monitoring_test\src\sqlsrv
-  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER%\dev\TestSuites %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
-  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER%\dev\appveyor\CITestSuiteBase.php %APPVEYOR_BUILD_FOLDER%\tests\src\TestSuites
-  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% %cd%\modules\sqlsrv
-  - cmd: mkdir C:\inetpub\wwwroot\sites\simpletest
-  - cmd: mkdir C:\inetpub\wwwroot\sites\simpletest\browser_output
+  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% %cd%sites\all\modules\sqlsrv
+  - cmd: xcopy %APPVEYOR_BUILD_FOLDER%sqlsrv %cd%includes\database\
+  - cmd: mkdir C:\inetpub\wwwroot\sites\default\files
+  - cmd: mkdir C:\inetpub\wwwroot\sites\default\files\tmp
   # Should we use recursive instead?
   - ps: |
       $sharepath = "C:\inetpub\wwwroot\sites"
-      $Acl = Get-ACL $SharePath
-      $AccessRule= New-Object System.Security.AccessControl.FileSystemAccessRule("everyone","FullControl","ContainerInherit,Objectinherit","none","Allow")
-      $Acl.AddAccessRule($AccessRule)
-      Set-Acl $SharePath $Acl
-  - ps: |
-      $sharepath = "C:\inetpub\wwwroot\sites\simpletest\browser_output"
       $Acl = Get-ACL $SharePath
       $AccessRule= New-Object System.Security.AccessControl.FileSystemAccessRule("everyone","FullControl","ContainerInherit,Objectinherit","none","Allow")
       $Acl.AddAccessRule($AccessRule)
@@ -92,8 +72,8 @@ build_script:
 
   # Testing Patches
 before_test:
-  - cmd: cp dev\phpunit.xml.dist C:\inetpub\wwwroot\core\phpunit.xml
+  - cmd: cp %APPVEYOR_BUILD_FOLDER%dev\settings.inc C:\inetpub\wwwroot\sites\default\settings.inc
   - cmd: mkdir .\build\logs
 test_script:
   - cmd: cd C:\inetpub\wwwroot
-  - cmd: vendor\bin\phpunit -c core\phpunit.xml --testsuite=%TEST_SUITE%
+  - cmd: php scripts\run-tests.sh --list.xml
