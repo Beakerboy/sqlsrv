@@ -80,7 +80,7 @@ build_script:
 before_test:
   - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\appveyor\settings.php C:\inetpub\wwwroot\sites\default\
   - cmd: mkdir .\build\logs
-  - cmd: drush si -y --db-url= sqlsrv://sa:Password12!@localhost/mydrupalsite --clean-url=0 --account-name=admin --account-pass=drupal --account-mail=admin@example.com
+  - cmd: drush si -y --db-url=sqlsrv://sa:Password12!@localhost/mydrupalsite --clean-url=0 --account-name=admin --account-pass=drupal --account-mail=admin@example.com
 test_script:
   - cmd: cd C:\inetpub\wwwroot
   - cmd: php scripts\run-tests.sh --list --php C:\Tools\php\php.exe
