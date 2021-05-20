@@ -19,7 +19,10 @@ install:
   # Create a Drupal Site
   - cd ..
   - export COMPOSER_MEMORY_LIMIT=-1
-  - git clone https://git.drupalcode.org/project/drupal.git tags/$DRUPAL_VERSION -b 7.x drupal-project
+  - git clone https://git.drupalcode.org/project/drupal.git -b 7.x drupal-project
+  - cd drupal-project
+  - git checkout tags/$DRUPAL_VERSION -b 7.x
+  - cd ..
   - cp sqlsrv/composer.json drupal-project
   - cd drupal-project
   - composer config -g github-oauth.github.com $GITHUB_OAUTH
