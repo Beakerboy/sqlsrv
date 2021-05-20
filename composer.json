@@ -21,6 +21,7 @@
     "php" : "^7.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "*"
+    "phpunit/phpunit": "*",
+    "drush/drush": "8.4.8"
   }
 }
