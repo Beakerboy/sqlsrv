@@ -46,7 +46,6 @@ install:
   - cmd: cd wwwroot
   - cmd: git checkout tags/7.60
   - cmd: cp %APPVEYOR_BUILD_FOLDER%\composer.json .
-  - cmd: composer install
 build_script:
   # For some reason this cannot go in the install potion of the appveyor config
   - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
@@ -56,8 +55,8 @@ build_script:
   # Set up Drupal
   - cmd: cd /d C:\inetpub\wwwroot
   # Apply any pre-composer patches
-  #- cmd: set COMPOSER_MEMORY_LIMIT=-1
-  #- cmd: composer install -q
+  - cmd: set COMPOSER_MEMORY_LIMIT=-1
+  - cmd: composer install -q
   # Add composer installed binaries to PATH
   - cmd: SET PATH=C:\inetpub\wwwroot\vendor\bin;%PATH%
   # Install other composer packages for production
@@ -81,7 +80,7 @@ build_script:
 before_test:
   - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\appveyor\settings.php C:\inetpub\wwwroot\sites\default\
   - cmd: mkdir .\build\logs
-  - cmd: vendor\drush\drush si -y --db-url= sqlsrv://sa:Password12!@localhost/mydrupalsite --clean-url=0 --account-name=admin --account-pass=drupal --account-mail=admin@example.com
+  - cmd: drush si -y --db-url= sqlsrv://sa:Password12!@localhost/mydrupalsite --clean-url=0 --account-name=admin --account-pass=drupal --account-mail=admin@example.com
 test_script:
   - cmd: cd C:\inetpub\wwwroot
   - cmd: php scripts\run-tests.sh --list --php C:\Tools\php\php.exe
