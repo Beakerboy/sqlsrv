@@ -19,9 +19,9 @@ install:
   # Create a Drupal Site
   - cd ..
   - export COMPOSER_MEMORY_LIMIT=-1
-  - git clone https://git.drupalcode.org/project/drupal.git -b 7.x drupal-project
+  - git clone https://git.drupalcode.org/project/drupal.git drupal-project
   - cd drupal-project
-  - git checkout tags/$DRUPAL_VERSION -b 7.x
+  - git checkout tags/$DRUPAL_VERSION
   - cd ..
   - cp sqlsrv/composer.json drupal-project
   - cd drupal-project
