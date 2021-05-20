@@ -60,8 +60,8 @@ build_script:
   - cmd: cd /d C:\inetpub\wwwroot\includes\database
   - cmd: dir
   - cmd: cd /d C:\inetpub\wwwroot
-  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% C:\inetpub\wwwroot\sites\all\modules\
-  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\sqlsrv C:\inetpub\wwwroot\includes\database\
+  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% C:\inetpub\wwwroot\sites\all\modules\sqlsrv
+  - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\sqlsrv C:\inetpub\wwwroot\includes\database\sqlsrv
   - cmd: cd /d C:\inetpub\wwwroot\includes\database
   - cmd: dir
   - cmd: cd /d C:\inetpub\wwwroot
