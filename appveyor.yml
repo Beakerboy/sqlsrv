@@ -78,4 +78,4 @@ before_test:
   - cmd: mkdir .\build\logs
 test_script:
   - cmd: cd C:\inetpub\wwwroot
-  - cmd: php scripts\run-tests.sh --list
+  - cmd: php scripts\run-tests.sh --list --php C:\Tools\php\php.exe
