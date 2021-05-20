@@ -46,6 +46,7 @@ install:
   - cmd: cd wwwroot
   - cmd: git checkout tags/7.78
   - cmd: cp %APPVEYOR_BUILD_FOLDER%\composer.json .
+  - cmd: powershell %APPVEYOR_BUILD_FOLDER%\dev\appveyor\iis.ps1
 build_script:
   # For some reason this cannot go in the install potion of the appveyor config
   - cmd: sqlcmd -U sa -P Password12! -Q "CREATE DATABASE mydrupalsite"
