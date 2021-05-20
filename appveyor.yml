@@ -54,7 +54,7 @@ build_script:
   - cmd: SET PATH=C:\inetpub\wwwroot\vendor\bin;%PATH%
   # Install other composer packages for production
   # Copy in the module
-  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% C:\inetpub\wwwroot\sites\all\modules\sqlsrv
+  - cmd: xcopy /S /I /E /Y /Q %APPVEYOR_BUILD_FOLDER% C:\inetpub\wwwroot\sites\all\modules\contrib\sqlsrv
   - cmd: xcopy /S /I /E /Y %APPVEYOR_BUILD_FOLDER%\sqlsrv C:\inetpub\wwwroot\includes\database\sqlsrv
   - cmd: mkdir C:\inetpub\wwwroot\sites\default\files
   - cmd: mkdir C:\inetpub\wwwroot\sites\default\files\tmp
