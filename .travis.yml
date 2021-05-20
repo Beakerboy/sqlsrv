@@ -1,0 +1,52 @@
+language: php
+# Functional and Unit tests require Apache
+env:
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=7.70 TEST_SUITE=sqlsrv
+  - DBVERSION=mssql2019 DB_COLLATION=LATIN1_GENERAL_100_CI_AS_SC_UTF8 DRUPAL_VERSION=7.78 TEST_SUITE=sqlsrv
+
+php:
+  - '7.1'
+
+before_install:
+  # remove Xdebug to speed up test runner
+  - phpenv config-rm xdebug.ini
+  - pecl channel-update pecl.php.net
+  # Install the database
+  - bash dev/travis/${DBVERSION}.sh
+  # Install custom php.ini
+  - phpenv config-add dev/travis/travis-7.x.ini
+install:
+  # Create a Drupal Site
+  - cd ..
+  - export COMPOSER_MEMORY_LIMIT=-1
+  - git clone https://git.drupalcode.org/project/drupal.git drupal-project
+  - cd drupal-project
+  - git checkout tags/$DRUPAL_VERSION
+  - cd ..
+  - cp sqlsrv/composer.json drupal-project
+  - cd drupal-project
+  - composer config -g github-oauth.github.com $GITHUB_OAUTH
+  - composer install
+  - bash ../sqlsrv/dev/travis/drupal7.x.sh
+before_script:
+  - |
+    if ! [ -z "$APACHE" ]; then
+       sudo apt-get update
+       sudo apt-get install apache2 libapache2-mod-fastcgi
+       # enable php-fpm
+       sudo cp ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf.default ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
+       sudo a2enmod rewrite actions fastcgi alias
+       echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+       sudo sed -i -e "s,www-data,travis,g" /etc/apache2/envvars
+       sudo chown -R travis:travis /var/lib/apache2/fastcgi
+       ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
+       # configure apache virtual hosts
+       sudo cp -f $TRAVIS_BUILD_DIR/dev/travis/travis-ci-apache /etc/apache2/sites-available/000-default.conf
+       cd $TRAVIS_BUILD_DIR/../drupal-project
+       sudo sed -e "s?%TRAVIS_WEB_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
+       sudo service apache2 restart
+     fi
+  - cd $TRAVIS_BUILD_DIR/../drupal-project
+  - ls -al $TRAVIS_BUILD_DIR/../drupal-project/includes/database
+script:
+  - php ./scripts/run-tests.sh --list --php `which php`
