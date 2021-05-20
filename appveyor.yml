@@ -44,7 +44,7 @@ install:
   - cmd: mv wwwroot wwwroot-old
   - cmd: git clone https://git.drupalcode.org/project/drupal.git -b 7.x wwwroot
   - cmd: cd wwwroot
-  - cmd: git checkout tags/7.60
+  - cmd: git checkout tags/7.78
   - cmd: cp %APPVEYOR_BUILD_FOLDER%\composer.json .
 build_script:
   # For some reason this cannot go in the install potion of the appveyor config
