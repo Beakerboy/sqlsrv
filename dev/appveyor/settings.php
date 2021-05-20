@@ -498,19 +498,19 @@ ini_set('session.cookie_lifetime', 2000000);
 
  # If you have a small site then just set wincache as the default backend
  # and forget about memcache.
- $conf['cache_default_class'] = 'DrupalWinCache';
+# $conf['cache_default_class'] = 'DrupalWinCache';
  
  # Keep forms in persistent storage.
- $conf['cache_class_cache_form'] = 'DrupalDatabaseCache';
+# $conf['cache_class_cache_form'] = 'DrupalDatabaseCache';
 
  # I don't see any point in keeping the module update information in Memcached.
- $conf['cache_class_cache_update'] = 'DrupalDatabaseCache';
+# $conf['cache_class_cache_update'] = 'DrupalDatabaseCache';
 
  # Locking is way faster with Wincache.
- $conf['lock_inc'] = 'sites/all/modules/contrib/wincachedrupal/wincache-lock.inc';
+# $conf['lock_inc'] = 'sites/all/modules/contrib/wincachedrupal/wincache-lock.inc';
   
  # Session is also way faster.
- $conf['session_inc'] = 'sites/all/modules/contrib/wincachedrupal/wincache-session.inc';
+# $conf['session_inc'] = 'sites/all/modules/contrib/wincachedrupal/wincache-session.inc';
 
 /**
  * String overrides:
