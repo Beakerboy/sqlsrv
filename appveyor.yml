@@ -80,6 +80,8 @@ build_script:
     # Core Patches
     # Testing Patches
   # drush site install
+  - cmd: rm C:\inetpub\wwwroot\scripts\run-tests.sh
+  - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\run-tests.sh C:\inetpub\wwwroot\scripts\
   - cmd: cp %APPVEYOR_BUILD_FOLDER%\dev\appveyor\settings.php C:\inetpub\wwwroot\sites\default\
   - cmd: mkdir .\build\logs
   - cmd: drush si standard install_configure_form.update_status_module='array(FALSE,FALSE)' -y --db-url=sqlsrv://sa:Password12!@localhost/mydrupalsite --clean-url=0 --account-name=admin --account-pass=drupal
