@@ -1,6 +1,6 @@
 services:
   - mssql2016
-  #- iis
+  - iis
 image:
   - Visual Studio 2017
 environment:
