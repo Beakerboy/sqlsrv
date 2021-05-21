@@ -90,5 +90,5 @@ build_script:
 before_test:
 test_script:
   - cmd: cd C:\inetpub\wwwroot
-  - cmd: php scripts\run-tests.sh --php C:\Tools\php\php.exe --verbose "Database \(SQL Server\)"
+  - cmd: php scripts\run-tests.sh --php C:\Tools\php\php.exe --verbose 'Database \(SQL Server\)'
  # - cmd: php scripts\run-tests.sh --php C:\Tools\php\php.exe --verbose Actions, Aggregator, AJAX, Batch API, Block, Blog
