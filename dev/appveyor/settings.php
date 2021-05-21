@@ -311,7 +311,7 @@ $drupal_hash_salt = '';
  * It is not allowed to have a trailing slash; Drupal will add it
  * for you.
  */
-# $base_url = 'http://www.example.com';  // NO trailing slash!
+ $base_url = 'http://127.0.0.1';  // NO trailing slash!
 /**
  * PHP settings:
  *
