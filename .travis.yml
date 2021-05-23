@@ -11,10 +11,9 @@ php:
 install:
   - cd ..
   - git clone https://github.com/Beakerboy/DrupalSqlSrvCI.git DrupalCI
-  - cd $TRAVIS_BUILD_DIR
-  - bash ../DrupalCI/src/travis/install.sh
+  - bash DrupalCI/src/travis/install.sh
 before_script:
-  - bash ../DrupalCI/src/travis/build.sh
+  - bash DrupalCI/src/travis/build.sh
   # Replace the downloaded driver with this one.
   - rm -rf drupal-project/sites/all/modules/sqlsrv
   - cp -R sqlsrv drupal-project/sites/all/modules
