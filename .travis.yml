@@ -19,6 +19,6 @@ before_script:
   - cp -R sqlsrv drupal-project/sites/all/modules
   - rm -rf drupal-project/includes/database/sqlsrv
   - cp -R sqlsrv/sqlsrv drupal-project/includes/database
-  - cd drupal_project
+  - cd drupal-project
 script:
   - php ./scripts/run-tests.sh --php `which php` -all
