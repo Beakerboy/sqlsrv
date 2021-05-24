@@ -6,7 +6,8 @@ env:
     - DRUPAL_VERSION=7.78
   jobs:
     - TESTS=Actions,Aggregator,AJAX,Block,Blog,Book,Bootstrap,Cache,Color,Comment,Contact,Contextual,Dashboard,Database,DBLog
-    - TESTS=File,Filter,Forum,Help,Image,Locale,Mail,Menu,Node,Pager,Path,PHP,Poll,RDF
+    - TESTS=File,Filter,Forum,Help,Image,Locale,Mail,Menu,Node,Pager,Path,PHP
+    - TESTS=Poll,RDF,Search,Session,Shortcut,Simpletest,Statistics,Syslog,System,Taxonomy,Theme,Tracker,Translation,Trigger,Update,User,XML-RPC
 php:
   - '7.1'
 before_install:
