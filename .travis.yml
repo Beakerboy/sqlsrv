@@ -19,4 +19,4 @@ before_script:
   - bash DrupalCI/src/travis/build.sh
   - cd drupal-project
 script:
-  - php ./scripts/run-tests.sh --php `which php` Actions Aggregator AJAX
+  - php ./scripts/run-tests.sh --php `which php` Actions,Aggregator,AJAX
