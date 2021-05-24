@@ -2,8 +2,8 @@ os: linux
 arch: arm64-graviton2
 language: php
 env:
-  - DRUPAL_VERSION=7.78 TESTS='Actions, Aggregator, AJAX, Batch API, Block, Blog, Book, Bootstrap, Cache, Color, Comment, Contact, Contextual, Dashboard, Database, DBLog, Entity API'
-  - DRUPAL_VERSION=7.78 TESTS='Field API, Field types, Field UI, File, File API, "File API (remote)", Filter, Form API, Forum, Help, Image, Locale, Mail, Menu, Node, Open ID, Pager, Path, Path API, PHP, Poll, RDF' 
+  - DRUPAL_VERSION=7.78 TESTS="Actions, Aggregator, AJAX, Batch API, Block, Blog, Book, Bootstrap, Cache, Color, Comment, Contact, Contextual, Dashboard, Database, DBLog, Entity API"
+  - DRUPAL_VERSION=7.78 TESTS="Field API, Field types, Field UI, File, File API, "File API (remote)", Filter, Form API, Forum, Help, Image, Locale, Mail, Menu, Node, Open ID, Pager, Path, Path API, PHP, Poll, RDF"
 php:
   - '7.1'
 before_install:
