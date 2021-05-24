@@ -10,6 +10,7 @@ before_install:
   - git clone https://git.drupalcode.org/project/DrupalSqlSrvCI.git DrupalCI
 install:
   - bash DrupalCI/src/travis/install.sh
+  - export PATH="/opt/mssql-tools/bin:$PATH"
 before_script:
   - bash DrupalCI/src/travis/build.sh
   - cd drupal-project
