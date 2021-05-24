@@ -6,7 +6,7 @@ env:
     - DRUPAL_VERSION=7.78
   jobs:
     - TESTS='Actions, Aggregator, AJAX, "Batch API", Block, Blog Book Bootstrap Cache Color Comment Contact Contextual Dashboard Database DBLog "Entity API"'
-    - TESTS='"Field API", "Field types" \"Field UI\" File \"File API\" \"File API (remote)\" Filter \"Form API\" Forum Help Image Locale Mail Menu Node \"Open ID\" Pager Path \"Path API\" PHP Poll RDF'
+   # - TESTS='"Field API", "Field types" \"Field UI\" File \"File API\" \"File API (remote)\" Filter \"Form API\" Forum Help Image Locale Mail Menu Node \"Open ID\" Pager Path \"Path API\" PHP Poll RDF'
 php:
   - '7.1'
 before_install:
@@ -19,4 +19,4 @@ before_script:
   - bash DrupalCI/src/travis/build.sh
   - cd drupal-project
 script:
-  - php ./scripts/run-tests.sh --php `which php` $TESTS
+  - php ./scripts/run-tests.sh --php `which php` Actions Aggregator AJAX
