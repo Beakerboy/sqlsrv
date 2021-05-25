@@ -20,6 +20,11 @@ install:
 before_script:
   - bash DrupalCI/src/travis/build.sh
   - cd drupal-project
-  - echo $TESTS_WITH_SPACES
+  - |
+    if ! [ -z "$TESTS_WITH_SPACES" ]; then
+      echo $TESTS_WITH_SPACES
+      export TESTS="\"`sed 's/,/\",\"/g' ${TESTS_WITH_SPACES}`\""
+    fi
+  - echo $TESTS
 script:
   - php ./scripts/run-tests.sh --php `which php` $TESTS
