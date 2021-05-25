@@ -5,8 +5,7 @@ env:
   global:
     - DRUPAL_VERSION=7.78
   jobs:
-    - TESTS=Bootstrap
-    - TESTS=Actions,Aggregator,AJAX,Block,Blog,Book,Cache,Color,Comment,Contact,Contextual,Dashboard,Database,DBLog
+    - TESTS=Actions,Aggregator,AJAX,Block,Blog,Book,Bootstrap,Cache,Color,Comment,Contact,Contextual,Dashboard,Database,DBLog
     - TESTS=File,Filter,Forum,Help,Image,Locale,Mail,Menu,Node,OpenID
     - TESTS=Pager,Path,PHP,Poll,RDF,Search,Session,Shortcut,SimpleTest,Statistics,Syslog
     - TESTS=System,Taxonomy,Theme,Tracker,Translation,Trigger,Update,User,XML-RPC
@@ -23,4 +22,4 @@ before_script:
   - bash DrupalCI/src/travis/build.sh
   - cd drupal-project
 script:
-  - php ./scripts/run-tests.sh --php `which php` $TESTS
+  - php ./scripts/run-tests.sh --verbose --php `which php` $TESTS
