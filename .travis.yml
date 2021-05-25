@@ -8,7 +8,7 @@ env:
     - TESTS=Actions,Aggregator,AJAX,Block,Blog,Book,Bootstrap,Cache,Color,Comment,Contact,Contextual,Dashboard,Database,DBLog
     - TESTS=File,Filter,Forum,Help,Image,Locale,Mail,Menu,Node,OpenID,Pager,Path,PHP
     - TESTS=Poll,RDF,Search,Session,Shortcut,Simpletest,Statistics,Syslog,System,Taxonomy,Theme,Tracker,Translation,Trigger,Update,User,XML-RPC
-    - TESTS_WITH_SPACES="Entity API,Batch API,Field API,Field types,Field UI,File API,File API (remote),Form API,Path API
+    - TESTS_WITH_SPACES="Entity API,Batch API,Field API,Field types,Field UI,File API,File API (remote),Form API,Path API"
 php:
   - '7.1'
 before_install:
@@ -20,5 +20,6 @@ install:
 before_script:
   - bash DrupalCI/src/travis/build.sh
   - cd drupal-project
+  - echo $TESTS_WITH_SPACES
 script:
   - php ./scripts/run-tests.sh --php `which php` $TESTS
