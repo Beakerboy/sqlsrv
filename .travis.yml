@@ -26,4 +26,4 @@ before_script:
   - cp run-tests.sh scripts/run-tests.sh
   - phpenv config-add ../sqlsrv/dev/travis/travis-7.x.ini
 script:
-  - php ./scripts/run-tests.sh --verbose --php `which php` $TESTS
+  - php ./scripts/run-tests.sh --verbose --fail-only --php `which php` $TESTS
