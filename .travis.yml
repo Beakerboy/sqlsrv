@@ -9,7 +9,7 @@ env:
     - TESTS=File,Filter,Forum,Help,Image,Locale,Mail,Menu,Node,OpenID
     - TESTS=Pager,Path,PHP,Poll,RDF,Search,Session,Shortcut,SimpleTest,Statistics,Syslog
     - TESTS=System,Taxonomy,Theme,Tracker,Translation,Trigger,Update,User,XML-RPC
-#    - TESTS_WITH_SPACES="Entity API,Batch API,Field API,Field types,Field UI,File API,File API (remote),Form API,Path API"
+#   - TESTS_WITH_SPACES="Entity API,Batch API,Field API,Field types,Field UI,File API,File API (remote),Form API,Path API"
 php:
   - '7.1'
 before_install:
