@@ -21,9 +21,9 @@ install:
 before_script:
   - bash DrupalCI/src/travis/build.sh
   - cd drupal-project
-  - wget https://git.drupalcode.org/issue/drupal-3215724/-/raw/7.x/scripts/run-tests.sh
-  - rm scripts/run-tests.sh
-  - cp run-tests.sh scripts/run-tests.sh
+ # - wget https://git.drupalcode.org/issue/drupal-3215724/-/raw/7.x/scripts/run-tests.sh
+  #- rm scripts/run-tests.sh
+ # - cp run-tests.sh scripts/run-tests.sh
   - phpenv config-add ../sqlsrv/dev/travis/travis-7.x.ini
 script:
   - php ./scripts/run-tests.sh --no_pass --verbose --php `which php` $TESTS
