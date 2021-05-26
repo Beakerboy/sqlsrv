@@ -14,7 +14,7 @@ php:
   - '7.1'
 before_install:
   - cd ..
-  - git clone https://git.drupalcode.org/project/DrupalSqlSrvCI.git DrupalCI
+  - git clone https://GitHub.com/Beakerboy/DrupalSqlSrvCI.git DrupalCI
 install:
   - bash DrupalCI/src/travis/install.sh
   - export PATH="/opt/mssql-tools/bin:$PATH"
