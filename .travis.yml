@@ -5,7 +5,8 @@ env:
   global:
     - DRUPAL_VERSION=7.78
   jobs:
-    - TESTS=Actions,Aggregator,AJAX,Block,Blog,Book,Bootstrap,Cache,Color,Comment,Contact,Contextual,Dashboard,Database,DBLog
+    - TESTS=Actions,AJAX,Block,Book,Bootstrap,Cache,Color,Comment,Contextual,Dashboard,DBLog
+    - TESTS=Aggregator,Block,Contact,Database
     - TESTS=File,Filter,Forum,Help,Image,Locale,Mail,Menu
     - TESTS=Node,OpenID,Pager,Path,PHP,Poll,RDF,Search,Session,Shortcut,SimpleTest,Statistics,Syslog
     - TESTS=System,Taxonomy,Theme,Tracker,Translation,Trigger,Update,User,XML-RPC
