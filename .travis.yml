@@ -8,7 +8,8 @@ env:
     - TESTS=Actions,AJAX,Block,Book,Bootstrap,Cache,Color,Comment,Contextual,Dashboard,DBLog,File,Filter,Forum,Help,Locale,Mail,Menu
     - TESTS=Aggregator,Block,Contact,Database,Image,OpenID,Node,Search,Statistics,SimpleTest
     - TESTS=Pager,Path,PHP,Poll,RDF,Session,Shortcut,Syslog
-    - TESTS=System,Taxonomy,Theme,Tracker,Translation,Trigger,Update,User,XML-RPC
+    - TESTS=System,Taxonomy,Theme,Tracker,Translation
+    - TESTS=Trigger,Update,User,XML-RPC
 #   - TESTS_WITH_SPACES="Entity API,Batch API,Field API,Field types,Field UI,File API,File API (remote),Form API,Path API"
 php:
   - '7.1'
