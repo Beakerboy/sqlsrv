@@ -5,13 +5,13 @@ env:
   global:
     - DRUPAL_VERSION=7.78
   jobs:
-    - TESTS=Actions,AJAX,Block,Book,Bootstrap,Cache,Color,Comment,Contextual,Dashboard,DBLog,File,Filter,Forum,Help,Locale,Mail
-    - TESTS=Menu,Pager,Path,PHP,Poll,RDF,Session,Shortcut,Syslog,Trigger,XML-RPC
+    - TESTS=Actions,AJAX,Book,Bootstrap,Cache,Color,Comment,Contextual,Dashboard,DBLog,File,Filter,Forum,Help,Locale,Mail
+    - TESTS=Pager,Path,PHP,Poll,RDF,Session,Shortcut,Syslog,Trigger,XML-RPC
 #   - TESTS_WITH_SPACES="Entity API,Batch API,Field API,Field types,Field UI,File API,File API (remote),Form API,Path API"
 
 matrix:
   allow_failures:
-    - env: TESTS=Aggregator,Block,Contact,Database,Image,OpenID,Node,Search,Statistics,SimpleTest
+    - env: TESTS=Aggregator,Block,Contact,Database,Image,OpenID,Menu,Node,Search,Statistics,SimpleTest
     - env: TESTS=SimpleTest,System,Taxonomy,Theme,Tracker
     - env: TESTS=Translation,Update,User
 
